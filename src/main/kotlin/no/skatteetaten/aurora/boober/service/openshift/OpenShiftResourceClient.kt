@@ -1,13 +1,14 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import java.net.URI
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import no.skatteetaten.aurora.boober.utils.findApiVersion
 import no.skatteetaten.aurora.boober.utils.findOpenShiftApiPrefix
 import no.skatteetaten.aurora.boober.utils.kindsWithoutNamespace
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
@@ -15,9 +16,10 @@ import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
-import java.net.URI
 
-val logger: Logger = LoggerFactory.getLogger(OpenShiftResourceClient::class.java)
+private val logger = KotlinLogging.logger {}
+
+// TODO: Bytte ut denne med den WebClient baserte klienten fra Mokey
 open class OpenShiftResourceClient(
     val tokenProvider: TokenProvider,
     val restTemplateWrapper: OpenShiftRestTemplateWrapper
@@ -25,7 +27,7 @@ open class OpenShiftResourceClient(
 
     fun put(url: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return restTemplateWrapper.exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PUT, URI(url)))
+        return exchange(RequestEntity(payload, headers, HttpMethod.PUT, URI(url)))!!
     }
 
     open fun get(
@@ -44,7 +46,7 @@ open class OpenShiftResourceClient(
 
     open fun post(url: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.POST, URI(url)))!!
+        return exchange(RequestEntity(payload, headers, HttpMethod.POST, URI(url)))!!
     }
 
     fun delete(url: String): ResponseEntity<JsonNode>? {
@@ -74,15 +76,28 @@ open class OpenShiftResourceClient(
         restTemplateWrapper.exchange(requestEntity, retry)
     } catch (e: HttpClientErrorException) {
         if (e.statusCode != HttpStatus.NOT_FOUND) {
+
+            val message = try {
+                val jsonError = jacksonObjectMapper().readTree(e.responseBodyAsByteArray)
+                if (jsonError.has("message")) {
+                    jsonError["message"].textValue()
+                } else {
+                    e.responseBodyAsString
+                }
+            } catch (err: Exception) {
+                e.responseBodyAsString
+            }
+
             logger.info("Failed communicating with openShift code=${e.statusCode} message=${e.message}")
-            throw OpenShiftException("openShiftCommunicationError code=${e.statusCode.value()}", e)
+            throw OpenShiftException(
+                "openShiftCommunicationError code=${e.statusCode.value()} message=${e.message} error=$message",
+                e
+            )
         }
         null
     }
 
     companion object {
-        @JvmStatic
-        @JvmOverloads
         fun generateUrl(kind: String, namespace: String? = null, name: String? = null): String {
 
             val kinds = kind.toLowerCase() + "s"

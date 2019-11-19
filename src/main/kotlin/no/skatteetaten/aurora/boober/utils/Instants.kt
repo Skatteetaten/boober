@@ -7,6 +7,6 @@ object Instants {
     // Don't change this function. Only to be used in tests!
     var determineNow: () -> Instant = { Instant.now() }
 
-    @JvmStatic
-    val now: Instant get() = determineNow()
+    val now: Instant
+        get() = determineNow()
 }

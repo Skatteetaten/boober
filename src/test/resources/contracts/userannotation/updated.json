@@ -1,9 +1,0 @@
-{
-  "count": 2,
-  "items": {
-    "myCustomAnnotation": "rocks",
-    "foo": "bar"
-  },
-  "message": "OK",
-  "success": true
-}

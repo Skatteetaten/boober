@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -20,11 +23,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class RedeployService(
-    val openShiftClient: OpenShiftClient,
-    val openShiftObjectGenerator: OpenShiftObjectGenerator
+    val openShiftClient: OpenShiftClient
 ) {
 
-    data class RedeployResult @JvmOverloads constructor(
+    data class RedeployResult(
         val openShiftResponses: List<OpenShiftResponse> = listOf(),
         val success: Boolean = true,
         val message: String? = null
@@ -107,10 +109,23 @@ class RedeployService(
     }
 
     fun performDeploymentRequest(namespace: String, name: String): OpenShiftResponse {
-        val deploymentRequest = openShiftObjectGenerator.generateDeploymentRequest(name)
+        val deploymentRequest = generateDeploymentRequest(name)
         val url = "${deploymentRequest.apiBaseUrl}/namespaces/$namespace/deploymentconfigs/$name/instantiate"
         val command = OpenshiftCommand(OperationType.CREATE, payload = deploymentRequest, url = url)
 
         return openShiftClient.performOpenShiftCommand(namespace, command)
+    }
+
+    fun generateDeploymentRequest(name: String): JsonNode {
+
+        val deploymentRequest = mapOf(
+            "kind" to "DeploymentRequest",
+            "apiVersion" to "apps.openshift.io/v1",
+            "name" to name,
+            "latest" to true,
+            "force" to true
+        )
+
+        return jacksonObjectMapper().convertValue(deploymentRequest)
     }
 }

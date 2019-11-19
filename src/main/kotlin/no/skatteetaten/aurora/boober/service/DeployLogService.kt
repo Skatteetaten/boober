@@ -3,14 +3,16 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
+
+private val logger = KotlinLogging.logger {}
 
 @Service
 class DeployLogService(
@@ -19,8 +21,6 @@ class DeployLogService(
     @Value("\${integrations.deployLog.git.project}") val project: String,
     @Value("\${integrations.deployLog.git.repo}") val repo: String
 ) {
-
-    val logger: Logger = LoggerFactory.getLogger(DeployLogService::class.java)
 
     private val DEPLOY_PREFIX = "DEPLOY"
 
@@ -32,35 +32,30 @@ class DeployLogService(
     ): List<AuroraDeployResult> {
 
         return deployResult
-            .map {
-                if (it.ignored || it.command == null) {
-                    it
-                } else {
-                    val result = filterDeployInformation(it)
-                    val deployHistory = DeployHistoryEntry(
-                        command = result.command!!,
-                        deployer = deployer,
-                        time = now,
-                        deploymentSpec = result.auroraDeploymentSpecInternal?.let {
-                            renderSpecAsJson(it.spec, true)
-                        } ?: mapOf(),
-                        deployId = result.deployId,
-                        success = result.success,
-                        reason = result.reason ?: "",
-                        result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
-                        projectExist = result.projectExist
+            .map { auroraDeployResult ->
+                val result = filterDeployInformation(auroraDeployResult)
+                val deployHistory = DeployHistoryEntry(
+                    command = result.command,
+                    deployer = deployer, // kan hentes fra comando
+                    time = now,
+                    deploymentSpec = result.auroraDeploymentSpecInternal.let {
+                        renderSpecAsJson(it, true)
+                    },
+                    deployId = result.deployId,
+                    success = result.success,
+                    reason = result.reason ?: "",
+                    result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
+                    projectExist = result.projectExist
+                )
+                try {
+                    val storeResult =
+                        storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal.cluster)
+                    auroraDeployResult.copy(bitbucketStoreResult = storeResult)
+                } catch (e: Exception) {
+                    auroraDeployResult.copy(
+                        bitbucketStoreResult = e.localizedMessage,
+                        reason = auroraDeployResult.reason + " Failed to store deploy result."
                     )
-                    try {
-                        val storeResult =
-                            storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal!!.cluster)
-                        it.copy(bitbucketStoreResult = storeResult)
-                    } catch (e: Exception) {
-                        it.copy(
-                            bitbucketStoreResult = e.localizedMessage,
-                            deployId = "failed",
-                            reason = it.reason + " Failed to store deploy result."
-                        )
-                    }
                 }
             }
     }

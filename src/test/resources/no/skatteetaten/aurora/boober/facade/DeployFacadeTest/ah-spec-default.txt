@@ -1,0 +1,47 @@
+{
+  applicationDeploymentRef: "utv/ah"                      // static
+  configVersion:            "master"                      // static
+  schemaVersion:            "v1"                          // about.json
+  type:                     "localTemplate"               // ah.json
+  applicationPlatform:      "java"                        // default
+  affiliation:              "paas"                        // about.json
+  segment:                  "aurora"                      // about.json
+  cluster:                  "utv"                         // utv/about.json
+  permissions: {
+    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
+  }
+  envName:                  "utv"                         // folderName
+  name:                     "ah"                          // fileName
+  config: {
+    FOO:                    "bar"                         // ah.json
+  }
+  databaseDefaults: {
+    flavor:                 "ORACLE_MANAGED"              // default
+    generate:               true                          // default
+    name:                   "@name@"                      // default
+  }
+  database:                 true                          // ah.json
+  alarm:                    true                          // default
+  pause:                    false                         // default
+  debug:                    false                         // default
+  version:                  "1.3.4"                       // ah.json
+  management:               false                         // default
+  parameters: {
+    FEED_NAME:              "feed"                        // ah.json
+    DOMAIN_NAME:            "localhost"                   // ah.json
+    DB_NAME:                "feed"                        // ah.json
+  }
+  templateFile:             "templates/atomhopper.json"   // ah.json
+  route:                    false                         // default
+  routeDefaults: {
+    host:                   "@name@-@affiliation@-@env@"  // default
+    tls: {
+      enabled:              false                         // default
+      insecurePolicy:       "None"                        // default
+      termination:          "edge"                        // default
+    }
+  }
+  certificate:              false                         // default
+  toxiproxy:                false                         // default
+  webseal:                  false                         // default
+}

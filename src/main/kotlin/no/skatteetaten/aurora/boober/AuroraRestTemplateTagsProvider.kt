@@ -6,7 +6,6 @@ import org.springframework.boot.actuate.metrics.web.client.RestTemplateExchangeT
 import org.springframework.http.HttpRequest
 import org.springframework.http.client.ClientHttpResponse
 import org.springframework.stereotype.Component
-import java.util.Arrays
 
 @Component
 class AuroraRestTemplateTagsProvider : RestTemplateExchangeTagsProvider {
@@ -16,9 +15,10 @@ class AuroraRestTemplateTagsProvider : RestTemplateExchangeTagsProvider {
         request: HttpRequest,
         response: ClientHttpResponse?
     ): Iterable<Tag> {
-        return Arrays.asList(
+        return listOf(
             RestTemplateExchangeTags.method(request),
             RestTemplateExchangeTags.status(response),
-            RestTemplateExchangeTags.clientName(request))
+            RestTemplateExchangeTags.clientName(request)
+        )
     }
 }

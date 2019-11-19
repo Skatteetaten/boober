@@ -5,13 +5,13 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -27,7 +27,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
-import java.nio.charset.Charset
 
 private val userClient = mockk<OpenShiftResourceClient>()
 private val serviceAccountClient = mockk<OpenShiftResourceClient>()
@@ -38,8 +37,6 @@ class OpenShiftClientTest : ResourceLoader() {
     fun setup() {
         clearAllMocks()
     }
-
-    val mapper = ObjectMapper()
 
     val emptyNode = mapper.readValue<JsonNode>("{}")
     val openShiftClient = OpenShiftClient(
@@ -118,15 +115,15 @@ class OpenShiftClientTest : ResourceLoader() {
     @Test
     fun `Creates OpenShiftGroup indexes`() {
 
-        val response = loadResource("response_groups.json")
-        val userResponse = loadResource("response_users.json")
+        val response = loadJsonResource("response_groups.json")
+        val userResponse = loadJsonResource("response_users.json")
         every {
             serviceAccountClient.get("/apis/user.openshift.io/v1/groups")
-        } returns ResponseEntity(jsonMapper().readValue<JsonNode>(response), OK)
+        } returns ResponseEntity(response, OK)
 
         every {
             serviceAccountClient.get("/apis/user.openshift.io/v1/users")
-        } returns ResponseEntity(jsonMapper().readValue<JsonNode>(userResponse), OK)
+        } returns ResponseEntity(userResponse, OK)
 
         val openShiftGroups = openShiftClient.getGroups()
 

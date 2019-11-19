@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.controller.internal
 
 import com.fasterxml.jackson.annotation.JsonGetter
 
+// TODO: Should this be HAL resource?
+// TODO: this should not use Any.
 data class Response(
     val success: Boolean = true,
     val message: String = "OK",

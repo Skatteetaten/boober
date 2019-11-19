@@ -1,0 +1,7 @@
+{
+  "version": "1",
+  "groupId": "org.test",
+  "database": true,
+  "certificate": true,
+  "route": true
+}

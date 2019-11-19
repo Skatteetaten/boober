@@ -1,8 +1,9 @@
 package no.skatteetaten.aurora.boober.controller.security
 
 import com.fasterxml.jackson.databind.JsonNode
+import javax.servlet.http.HttpServletRequest
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -12,15 +13,14 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
 import org.springframework.security.web.util.matcher.RequestMatcher
-import javax.servlet.http.HttpServletRequest
+
+private val logger = KotlinLogging.logger {}
 
 @EnableWebSecurity
 class WebSecurityConfig(
     val authenticationManager: BearerAuthenticationManager,
     @Value("\${management.server.port}") val managementPort: Int
 ) : WebSecurityConfigurerAdapter() {
-
-    private val logger = LoggerFactory.getLogger(WebSecurityConfig::class.java)
 
     override fun configure(http: HttpSecurity) {
 

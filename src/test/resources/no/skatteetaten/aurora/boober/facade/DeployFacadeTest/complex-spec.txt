@@ -1,0 +1,115 @@
+{
+  applicationDeploymentRef:                     "utv/complex"                   // static
+  configVersion:                                "master"                        // static
+  message:                                      "Aurora <3"                     // complex.json
+  ttl:                                          "1d"                            // complex.json
+  schemaVersion:                                "v1"                            // about.json
+  type:                                         "development"                   // complex.json
+  affiliation:                                  "paas"                          // about.json
+  segment:                                      "aurora"                        // about.json
+  cluster:                                      "utv"                           // utv/about-alternate.json
+  permissions: {
+    admin:                                      "APP_PaaS_drift APP_PaaS_utv"   // about.json
+  }
+  envName:                                      "utv"                           // folderName
+  name:                                         "komplex"                       // complex.json
+  env: {
+    ttl:                                        "1d"                            // utv/about-alternate.json
+  }
+  envFile:                                      "about-alternate.json"          // utv/complex.json
+  artifactId:                                   "complex"                       // fileName
+  groupId:                                      "org.test"                      // complex.json
+  version:                                      "1"                             // complex.json
+  config: {
+    FOO:                                        "BAR"                           // complex.json
+    latest: {
+      BAR:                                      "BAZ"                           // complex.json
+    }
+  }
+  database: {
+    complex: {
+      enabled:                                  true                            // complex.json
+    }
+    foo:                                        "123-456"                       // complex.json
+  }
+  management: {
+    path:                                       "/foobar"                       // complex.json
+    port:                                       "8081"                          // complex.json
+  }
+  releaseTo:                                    "komplex"                       // complex.json
+  pause:                                        true                            // complex.json
+  splunkIndex:                                  "test-index"                    // complex.json
+  debug:                                        true                            // complex.json
+  resources: {
+    cpu: {
+      min:                                      "100m"                          // complex.json
+      max:                                      "2000m"                         // complex.json
+    }
+    memory: {
+      min:                                      "64Mi"                          // complex.json
+      max:                                      "128Mi"                         // complex.json
+    }
+  }
+  deployStrategy: {
+    type:                                       "recreate"                      // complex.json
+  }
+  serviceAccount:                               "aurora-fraggle"                // complex.json
+  prometheus: {
+    path:                                       "/prometheus"                   // complex.json
+    port:                                       "8082"                          // complex.json
+  }
+  liveness:                                     true                            // complex.json
+  mounts: {
+    aurora-token: {
+      path:                                     "/u01/secrets/app/aurora-token" // complex.json
+      type:                                     "Secret"                        // complex.json
+      exist:                                    true                            // complex.json
+    }
+    secret-mount: {
+      path:                                     "/u01/foo"                      // complex.json
+      type:                                     "Secret"                        // complex.json
+      secretVault:                              "foo"                           // complex.json
+    }
+    pvc: {
+      path:                                     "/foo"                          // complex.json
+      type:                                     "PVC"                           // complex.json
+      exist:                                    true                            // complex.json
+    }
+    config-mount: {
+      path:                                     "/content"                      // complex.json
+      type:                                     "ConfigMap"                     // complex.json
+      content:                                  {"foo":"bar"}                   // complex.json
+    }
+  }
+  route: {
+    @name@: {
+      tls: {
+        insecurePolicy:                         "Allow"                         // complex.json
+        termination:                            "edge"                          // complex.json
+      }
+    }
+    path: {
+      host:                                     "pathroute"                     // complex.json
+      path:                                     "/path"                         // complex.json
+    }
+    foobar: {
+      host:                                     "foobar"                        // complex.json
+      annotations: {
+        haproxy.router.openshift.io|timeout:    "30s"                           // complex.json
+      }
+    }
+  }
+  secretVaults: {
+    foo: {
+      keys:                                     ["BAR","FOO"]                   // complex.json
+      keyMappings:                              {"BAR":"BAZ"}                   // complex.json
+    }
+  }
+  certificate: {
+    commonName:                                 "komplex"                       // complex.json
+  }
+  webseal: {
+    host:                                       "test"                          // complex.json
+    roles:                                      "admin dev @name@"              // complex.json
+  }
+}

@@ -3,7 +3,9 @@ package no.skatteetaten.aurora.boober.utils
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -43,8 +45,17 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
     }
 }
 
+fun JsonNode.getBoolean(nodeName: String): Boolean {
+    val valueNode = this[nodeName]
+    return when (valueNode) {
+        is BooleanNode -> valueNode.booleanValue()
+        is TextNode -> valueNode.textValue() == "true"
+        else -> false
+    }
+}
+
 fun JsonNode.atNullable(path: String): JsonNode? {
-    val value = this.at(path)
+    val value = this.at(path.ensureStartWith("/"))
     if (value.isMissingNode) {
         return null
     }
@@ -109,7 +120,7 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
         }
     }
 
-    (targetRoot as ObjectNode).set(field, sourceField)
+    (targetRoot as ObjectNode).replace(field, sourceField)
 }
 
 fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
@@ -117,11 +128,14 @@ fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
     val sourceObject = source.at(jsonPtrExpr) as ObjectNode
 
     val mergedObject = sourceObject.deepCopy()
-    this.at(jsonPtrExpr)
-        .takeIf { it is ObjectNode }
-        ?.also { mergedObject.setAll(it as ObjectNode) }
 
-    (this.at(root) as ObjectNode).set(field, mergedObject)
+    val fieldNode = this.at(jsonPtrExpr)
+    if (fieldNode is ObjectNode) {
+        mergedObject.setAll<ObjectNode>(fieldNode)
+    }
+
+    val rootNode = this.at(root) as ObjectNode
+    rootNode.replace(field, mergedObject)
 }
 
 fun JsonNode?.startsWith(pattern: String, message: String): Exception? {

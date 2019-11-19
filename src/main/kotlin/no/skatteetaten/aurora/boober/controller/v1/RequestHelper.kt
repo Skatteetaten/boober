@@ -19,5 +19,5 @@ fun getRefNameFromRequest(): String {
         return "master"
     }
 
-    return ref!!
+    return ref
 }

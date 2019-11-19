@@ -12,7 +12,7 @@ import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.support.PropertiesLoaderUtils
 import org.springframework.stereotype.Service
 
-data class VaultWithAccess @JvmOverloads constructor(
+data class VaultWithAccess(
     val vault: EncryptedFileVault?, // Will be null if the user does not have access
     val vaultName: String,
     val hasAccess: Boolean = true
@@ -32,12 +32,20 @@ class VaultService(
     val encryptionService: EncryptionService,
     val userDetailsProvider: UserDetailsProvider
 ) {
-
     fun findVaultKeys(vaultCollectionName: String, vaultName: String, fileName: String): Set<String> {
         val vaultCollection = findVaultCollection(vaultCollectionName)
         val vault = vaultCollection.findVaultByName(vaultName) ?: return emptySet()
         val content = vault.secrets[fileName] ?: return emptySet()
         return PropertiesLoaderUtils.loadProperties(ByteArrayResource(content)).stringPropertyNames()
+    }
+
+    fun findFileInVault(
+        vaultCollectionName: String,
+        vaultName: String,
+        fileName: String
+    ): ByteArray {
+        val vault = findVault(vaultCollectionName, vaultName)
+        return vault.getFile(fileName)
     }
 
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
@@ -64,7 +72,6 @@ class VaultService(
         }
     }
 
-    @JvmOverloads
     fun createOrUpdateFileInVault(
         vaultCollectionName: String,
         vaultName: String,
@@ -81,15 +88,6 @@ class VaultService(
             gitService.commitAndPushChanges(repo)
             vault
         }
-    }
-
-    fun findFileInVault(
-        vaultCollectionName: String,
-        vaultName: String,
-        fileName: String
-    ): ByteArray {
-        val vault = findVault(vaultCollectionName, vaultName)
-        return vault.getFile(fileName)
     }
 
     fun deleteFileInVault(vaultCollectionName: String, vaultName: String, fileName: String): EncryptedFileVault? {
@@ -134,7 +132,7 @@ class VaultService(
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
-                secrets.forEach({ name, contents -> vault.updateFile(name, contents) })
+                secrets.forEach { (name, contents) -> vault.updateFile(name, contents) }
                 vault.permissions = permissions
                 gitService.commitAndPushChanges(repo)
                 vault
@@ -205,7 +203,6 @@ class VaultService(
         val re = Regex(rePattern)
 
         // Note that a properties file can be delimitered by space and =, very few people know this so we check for it
-        @JvmStatic
         fun assertSecretKeysAreValid(secrets: Map<String, ByteArray>) {
             val filesToKeys = secrets.filter { it.key.endsWith(".properties") }
                 .mapValues {

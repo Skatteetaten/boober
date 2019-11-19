@@ -1,0 +1,27 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "labels": {
+      "app": "komplex",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "komplex",
+      "booberDeployId": "deploy1"
+    },
+    "name": "komplex",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "data": {
+    "latest.properties": "BAR=BAZ"
+  }
+}

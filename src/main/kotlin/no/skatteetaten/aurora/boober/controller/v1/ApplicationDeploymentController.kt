@@ -1,45 +1,33 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
 import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.facade.DeploymentFacade
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
-import no.skatteetaten.aurora.boober.service.ApplicationDeploymentService
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-data class ApplicationDeploymentRefPayload(val adr: List<ApplicationDeploymentRef>)
-data class ApplicationDeploymentPayload(val applicationRefs: List<ApplicationRef>)
-
-data class DeleteResponse(
-    val applicationRef: ApplicationRef,
-    val success: Boolean,
-    val reason: String
-)
-
-data class ExistsResponse(
-    val applicationRef: ApplicationRef,
-    val exists: Boolean,
-    val success: Boolean,
-    val message: String
-)
+/*
+   Controller: Teste grensesnittet. Mocke fasaden
+      - Validere input. kalle fasade. konvertere til response
+      - skal vi ha doc her eller skal vi kun ha det for stubs
+   Fasade: Integrasjonsteste, mocke http
+   Service : Enhetsteste, mocke med mockk
+ */
 
 @RestController
 @RequestMapping("/v1/applicationdeployment")
-class ApplicationDeploymentController(
-    val applicationDeploymentService: ApplicationDeploymentService,
-    val auroraConfigService: AuroraConfigService
-) {
+class ApplicationDeploymentController(private val deploymenFacade: DeploymentFacade) {
 
     @PostMapping("/delete")
     fun delete(@RequestBody applicationDeploymentPayload: ApplicationDeploymentPayload): Response {
 
         val applicationDeploymentDeleteResponse =
-            applicationDeploymentService.executeDelete(applicationDeploymentPayload.applicationRefs)
+            deploymenFacade.executeDelete(applicationDeploymentPayload.applicationRefs)
 
         val deleteResponses = applicationDeploymentDeleteResponse.map {
             DeleteResponse(applicationRef = it.applicationRef, success = it.success, reason = it.message)
@@ -59,10 +47,8 @@ class ApplicationDeploymentController(
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationRefs = auroraConfigService.expandDeploymentRefToApplicationRef(ref, adrPayload.adr)
 
-        val applicationDeploymentResponse =
-            applicationDeploymentService.checkApplicationDeploymentsExists(applicationRefs)
+        val applicationDeploymentResponse = deploymenFacade.deploymentExist(ref, adrPayload.adr)
 
         val existsResponse = applicationDeploymentResponse.map {
             ExistsResponse(
@@ -80,3 +66,19 @@ class ApplicationDeploymentController(
         )
     }
 }
+
+data class ApplicationDeploymentRefPayload(val adr: List<ApplicationDeploymentRef>)
+data class ApplicationDeploymentPayload(val applicationRefs: List<ApplicationRef>)
+
+data class DeleteResponse(
+    val applicationRef: ApplicationRef,
+    val success: Boolean,
+    val reason: String
+)
+
+data class ExistsResponse(
+    val applicationRef: ApplicationRef,
+    val exists: Boolean,
+    val success: Boolean,
+    val message: String
+)

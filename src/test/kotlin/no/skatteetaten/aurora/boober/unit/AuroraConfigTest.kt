@@ -11,13 +11,14 @@ import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.utils.AbstractAuroraConfigTest
-import no.skatteetaten.aurora.boober.utils.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
+import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import org.junit.jupiter.api.Test
 
-class AuroraConfigTest : AbstractAuroraConfigTest() {
+class AuroraConfigTest : ResourceLoader() {
 
-    val aid = ApplicationDeploymentRef("booberdev", "console")
+    val aid = ApplicationDeploymentRef("utv", "simple")
 
     @Test
     fun `Should get all application ids for AuroraConfig`() {
@@ -25,8 +26,8 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
         val auroraConfig = createAuroraConfig(aid)
         val refs = auroraConfig.getApplicationDeploymentRefs()
 
-        assertThat(refs[0].application).isEqualTo("console")
-        assertThat(refs[0].environment).isEqualTo("booberdev")
+        assertThat(refs[0].application).isEqualTo("simple")
+        assertThat(refs[0].environment).isEqualTo("utv")
     }
 
     @Test
@@ -83,7 +84,7 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
     @Test
     fun `Returns files for application with app override`() {
         val auroraConfig = createAuroraConfig(aid)
-        val filesForApplication = auroraConfig.getFilesForApplication(aid, listOf(overrideFile("console.json")))
+        val filesForApplication = auroraConfig.getFilesForApplication(aid, listOf(overrideFile("simple.json")))
         assertThat(filesForApplication.size).isEqualTo(5)
     }
 
@@ -101,77 +102,48 @@ class AuroraConfigTest : AbstractAuroraConfigTest() {
     @Test
     fun `Fails when some files for application are missing`() {
 
-        val referanseAid = ApplicationDeploymentRef("utv", "referanse")
-        val files = createMockFiles("about.json", "referanse.json", "utv/about.json")
+        val referanseAid = ApplicationDeploymentRef("utv", "simple")
+        val files = createMockFiles("about.json", "simple.json", "utv/about.json")
         val auroraConfig = AuroraConfig(files, "aos", "master")
 
         assertThat {
             auroraConfig.getFilesForApplication(referanseAid)
         }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
-            hasMessage("Should find applicationFile utv/referanse.(json|yaml)")
+            hasMessage("Should find applicationFile utv/simple.(json|yaml)")
         }
     }
 
     @Test
     fun `Includes base file in files for application when set`() {
 
-        val aid = ApplicationDeploymentRef("booberdev", "aos-complex")
+        val aid = ApplicationDeploymentRef("utv", "easy")
         val auroraConfig = getAuroraConfigSamples()
 
         val filesForApplication = auroraConfig.getFilesForApplication(aid)
         assertThat(filesForApplication.size).isEqualTo(4)
-        val applicationFile = filesForApplication.find { it.name == "booberdev/aos-complex.json" }
+        val applicationFile = filesForApplication.find { it.name == "utv/easy.json" }
         val baseFile = applicationFile?.asJsonNode?.get("baseFile")?.textValue()
         assertThat(filesForApplication.any { it.name == baseFile }).isTrue()
     }
 
     @Test
-    fun `Patch file`() {
-
-        val filename = "${aid.environment}/${aid.application}.json"
-        val auroraConfig = createAuroraConfig(
-            modify(defaultAuroraConfig(), filename) {
-                it["version"] = "1.0.0"
-            }
-        )
-
-        val jsonOp = """[{
-  "op": "replace",
-  "path": "/version",
-  "value": "3"
-}]
-"""
-
-        val version = auroraConfig.files.find { it.name == filename }?.version
-        val patchFileResponse = auroraConfig.patchFile(filename, jsonOp, version)
-        val patchedAuroraConfig = patchFileResponse.second
-
-        val patchedFile = patchedAuroraConfig.files.find { it.name == filename }
-        assertThat(patchedFile?.asJsonNode?.at("/version")?.textValue()).isEqualTo("3")
-    }
-
-    @Test
     fun `Throw error if baseFile is missing`() {
 
-        val auroraConfigJson = mutableMapOf(
-            "about.json" to DEFAULT_ABOUT,
-            "utv/about.json" to DEFAULT_UTV_ABOUT,
-            "utv/reference.json" to """{ "webseal" : { "roles" : "foobar" }}"""
-        )
-        val auroraConfig = createAuroraConfig(auroraConfigJson)
+        val files = createMockFiles("about.json", "utv/simple.json", "utv/about.json")
+        val auroraConfig = AuroraConfig(files, "aos", "master")
 
         assertThat {
 
             auroraConfig.getFilesForApplication(
                 ApplicationDeploymentRef(
                     "utv",
-                    "reference"
+                    "simple"
                 )
             )
         }.isFailure().all {
             isInstanceOf(IllegalArgumentException::class)
-            hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name reference.")
+            hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name simple.")
         }
     }
 

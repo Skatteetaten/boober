@@ -1,0 +1,166 @@
+{
+  applicationDeploymentRef:                     "utv/complex"                   // static
+  configVersion:                                "master"                        // static
+  message:                                      "Aurora <3"                     // complex.json
+  ttl:                                          "1d"                            // complex.json
+  schemaVersion:                                "v1"                            // about.json
+  type:                                         "development"                   // complex.json
+  applicationPlatform:                          "java"                          // default
+  affiliation:                                  "paas"                          // about.json
+  segment:                                      "aurora"                        // about.json
+  cluster:                                      "utv"                           // utv/about-alternate.json
+  permissions: {
+    admin:                                      "APP_PaaS_drift APP_PaaS_utv"   // about.json
+  }
+  envName:                                      "utv"                           // folderName
+  name:                                         "komplex"                       // complex.json
+  env: {
+    ttl:                                        "1d"                            // utv/about-alternate.json
+  }
+  envFile:                                      "about-alternate.json"          // utv/complex.json
+  artifactId:                                   "complex"                       // fileName
+  groupId:                                      "org.test"                      // complex.json
+  version:                                      "1"                             // complex.json
+  builder: {
+    name:                                       "architect"                     // default
+    version:                                    "1"                             // default
+  }
+  baseImage: {
+    name:                                       "wingnut8"                      // default
+    version:                                    1                               // default
+  }
+  config: {
+    FOO:                                        "BAR"                           // complex.json
+    latest: {
+      BAR:                                      "BAZ"                           // complex.json
+    }
+  }
+  databaseDefaults: {
+    flavor:                                     "ORACLE_MANAGED"                // default
+    generate:                                   true                            // default
+    name:                                       "@name@"                        // default
+  }
+  database: {
+    complex: {
+      enabled:                                  true                            // complex.json
+    }
+    foo:                                        "123-456"                       // complex.json
+  }
+  management: {
+    path:                                       "/foobar"                       // complex.json
+    port:                                       "8081"                          // complex.json
+  }
+  releaseTo:                                    "komplex"                       // complex.json
+  alarm:                                        true                            // default
+  pause:                                        true                            // complex.json
+  splunkIndex:                                  "test-index"                    // complex.json
+  debug:                                        true                            // complex.json
+  resources: {
+    cpu: {
+      min:                                      "100m"                          // complex.json
+      max:                                      "2000m"                         // complex.json
+    }
+    memory: {
+      min:                                      "64Mi"                          // complex.json
+      max:                                      "128Mi"                         // complex.json
+    }
+  }
+  deployStrategy: {
+    type:                                       "recreate"                      // complex.json
+    timeout:                                    180                             // default
+  }
+  replicas:                                     1                               // default
+  serviceAccount:                               "aurora-fraggle"                // complex.json
+  prometheus: {
+    path:                                       "/prometheus"                   // complex.json
+    port:                                       "8082"                          // complex.json
+  }
+  readiness: {
+    port:                                       8080                            // default
+    delay:                                      10                              // default
+    timeout:                                    1                               // default
+  }
+  liveness: {
+    port:                                       8080                            // default
+    delay:                                      10                              // default
+    timeout:                                    1                               // default
+  }
+  mounts: {
+    aurora-token: {
+      path:                                     "/u01/secrets/app/aurora-token" // complex.json
+      type:                                     "Secret"                        // complex.json
+      mountName:                                "aurora-token"                  // default
+      volumeName:                               "aurora-token"                  // default
+      exist:                                    true                            // complex.json
+    }
+    secret-mount: {
+      path:                                     "/u01/foo"                      // complex.json
+      type:                                     "Secret"                        // complex.json
+      mountName:                                "secret-mount"                  // default
+      volumeName:                               "secret-mount"                  // default
+      exist:                                    false                           // default
+      secretVault:                              "foo"                           // complex.json
+    }
+    pvc: {
+      path:                                     "/foo"                          // complex.json
+      type:                                     "PVC"                           // complex.json
+      mountName:                                "pvc"                           // default
+      volumeName:                               "pvc"                           // default
+      exist:                                    true                            // complex.json
+    }
+    config-mount: {
+      path:                                     "/content"                      // complex.json
+      type:                                     "ConfigMap"                     // complex.json
+      mountName:                                "config-mount"                  // default
+      volumeName:                               "config-mount"                  // default
+      exist:                                    false                           // default
+      content:                                  {"foo":"bar"}                   // complex.json
+    }
+  }
+  route: {
+    @name@: {
+      enabled:                                  true                            // default
+      tls: {
+        insecurePolicy:                         "Allow"                         // complex.json
+        termination:                            "edge"                          // complex.json
+      }
+    }
+    path: {
+      enabled:                                  true                            // default
+      host:                                     "pathroute"                     // complex.json
+      path:                                     "/path"                         // complex.json
+    }
+    foobar: {
+      enabled:                                  true                            // default
+      host:                                     "foobar"                        // complex.json
+      annotations: {
+        haproxy.router.openshift.io|timeout:    "30s"                           // complex.json
+      }
+    }
+  }
+  routeDefaults: {
+    host:                                       "@name@-@affiliation@-@env@"    // default
+    tls: {
+      enabled:                                  false                           // default
+      insecurePolicy:                           "None"                          // default
+      termination:                              "edge"                          // default
+    }
+  }
+  secretVaults: {
+    foo: {
+      name:                                     "foo"                           // default
+      enabled:                                  true                            // default
+      file:                                     "latest.properties"             // default
+      keys:                                     ["BAR","FOO"]                   // complex.json
+      keyMappings:                              {"BAR":"BAZ"}                   // complex.json
+    }
+  }
+  certificate: {
+    commonName:                                 "komplex"                       // complex.json
+  }
+  toxiproxy:                                    false                           // default
+  webseal: {
+    host:                                       "test"                          // complex.json
+    roles:                                      "admin dev @name@"              // complex.json
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "apiVersion": "v1",
+  "kind": "PersistentVolumeClaim",
+  "metadata": {
+    "name": "test",
+    "namespace": "utv"
+  },
+  "spec": {
+    "accessModes": [
+      "ReadWriteMany"
+    ],
+    "resources": {
+      "requests": {
+        "storage": "512Mi"
+      }
+    },
+    "volumeName": "pv086"
+  },
+  "status": {
+    "accessModes": [
+      "ReadWriteMany"
+    ],
+    "capacity": {
+      "storage": "15Gi"
+    },
+    "phase": "Bound"
+  }
+}

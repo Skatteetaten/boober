@@ -3,13 +3,13 @@ package no.skatteetaten.aurora.boober.service.vault
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import java.io.File
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import org.apache.commons.io.FileUtils
 import org.springframework.util.DigestUtils
-import java.io.File
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class AuroraPermissions @JvmOverloads constructor(
+data class AuroraPermissions(
     val groups: List<String>? = listOf()
 )
 
@@ -23,7 +23,8 @@ class VaultCollection private constructor(
 ) {
 
     companion object {
-        fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection = VaultCollection(folder, encryptor, decryptor)
+        fun fromFolder(folder: File, encryptor: Encryptor, decryptor: Decryptor): VaultCollection =
+            VaultCollection(folder, encryptor, decryptor)
     }
 
     val name: String
@@ -54,7 +55,6 @@ class VaultCollection private constructor(
     }
 }
 
-// TODO: Det er uheldig at denne klassen som er helt ut i controlleren har avhengighet til filsystetem.
 class EncryptedFileVault private constructor(
     val vaultFolder: File,
     private val encryptor: Encryptor,
@@ -67,9 +67,11 @@ class EncryptedFileVault private constructor(
     companion object {
         private val PERMISSION_FILE = ".permissions"
 
-        @JvmStatic
-        @JvmOverloads
-        fun createFromFolder(vaultFolder: File, encryptor: Encryptor = { String(it) }, decryptor: Decryptor = { it.toByteArray() }): EncryptedFileVault {
+        fun createFromFolder(
+            vaultFolder: File,
+            encryptor: Encryptor = { String(it) },
+            decryptor: Decryptor = { it.toByteArray() }
+        ): EncryptedFileVault {
 
             FileUtils.forceMkdir(vaultFolder)
             return EncryptedFileVault(vaultFolder, encryptor, decryptor)
@@ -102,11 +104,9 @@ class EncryptedFileVault private constructor(
         get() = vaultFolder.listFiles()?.filter { it.isFile } ?: emptyList()
 
     fun getFile(fileName: String): ByteArray {
-
         return secrets.getOrElse(fileName, { throw IllegalArgumentException("No such file $fileName in vault $name") })
     }
 
-    @JvmOverloads
     fun updateFile(fileName: String, fileContents: ByteArray, previousSignature: String? = null) {
 
         validateSignature(fileName, previousSignature)

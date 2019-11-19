@@ -54,3 +54,14 @@ fun String.base64ToJsonNode() =
     } else {
         TextNode(this)
     }
+
+fun convertValueToString(value: Any): String {
+    return when (value) {
+        is String -> value
+        is Number -> value.toString()
+        is Boolean -> value.toString()
+        else -> jacksonObjectMapper().writeValueAsString(value)
+    }
+}
+
+fun String.dockerGroupSafeName() = this.replace(".", "_")

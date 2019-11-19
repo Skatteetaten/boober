@@ -1,0 +1,11 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "data": {
+    "latest.properties": "STRING=Hello\nBOOL=false\nINT=42\nFLOAT=4.2\nARRAY=[4.2,\"STRING\",true]\nURL=https://int-at.skead.no:13110/felles/sikkerhet/stsSikkerhet/v1/validerSaml\nJSON_STRING={\"key\": \"value\"}\nJSON_ARRAY=[ { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:identifikasjon:partsidentifikasjon:root\"], segment: \"part\" }, { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:feed:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"urn:skatteetaten:part:partsregister:hendelselager:*\"], segment: \"part\" } , { uri: \"http://tsl0part-fk1-s-adm01:20000/registry\", urn: [\"no:skatteetaten:sikkerhet:tilgangskontroll:ats:v1\"], segment: \"part\" } ]"
+  }
+}

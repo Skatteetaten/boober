@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.security.Security
+import java.util.Base64
 import no.skatteetaten.aurora.AuroraMetrics
 import org.encryptor4j.Encryptor
 import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.security.Security
-import java.util.Base64
 
 @Service
 class EncryptionService(

@@ -5,9 +5,7 @@ import org.springframework.stereotype.Service
 
 data class VaultRequest(
     val collectionName: String,
-    val name: String,
-    val keys: List<String> = emptyList(),
-    val keyMappings: Map<String, String>? = null
+    val name: String
 )
 
 typealias VaultData = Map<String, ByteArray>
@@ -26,19 +24,35 @@ class VaultResults(val vaultIndex: VaultIndex) {
 }
 
 @Service
-class VaultProvider(val vaultService: VaultService) {
+class VaultProvider(private val vaultService: VaultService) {
+
+    fun findFileInVault(
+        vaultCollectionName: String,
+        vaultName: String,
+        fileName: String
+    ): ByteArray {
+        return vaultService.findFileInVault(vaultCollectionName, vaultName, fileName)
+    }
+
+    fun vaultExists(vaultCollectionName: String, vaultName: String): Boolean {
+        return vaultService.vaultExists(vaultCollectionName, vaultName)
+    }
+
+    fun findVaultKeys(vaultCollectionName: String, vaultName: String, fileName: String): Set<String> {
+        return vaultService.findVaultKeys(vaultCollectionName, vaultName, fileName)
+    }
 
     fun findVaultData(vaultRequests: List<VaultRequest>): VaultResults {
 
         val filteredVaultIndex = vaultRequests.associateBy(
             { it.name },
-            { findVaultData(it) }
+            { findVaultDataSingle(it) }
         )
 
         return VaultResults(filteredVaultIndex)
     }
 
-    fun findVaultData(it: VaultRequest): VaultData {
+    fun findVaultDataSingle(it: VaultRequest): VaultData {
         return vaultService.findVault(it.collectionName, it.name).secrets.mapValues { it.value }
     }
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
@@ -15,17 +16,17 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientCo
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.cache.annotation.Cacheable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 
+private val logger = KotlinLogging.logger {}
+
 enum class OperationType { GET, CREATE, UPDATE, DELETE, NOOP }
 
-data class OpenshiftCommand @JvmOverloads constructor(
+data class OpenshiftCommand(
     val operationType: OperationType,
     val url: String,
     val payload: JsonNode = NullNode.getInstance(),
@@ -40,7 +41,7 @@ data class OpenshiftCommand @JvmOverloads constructor(
     }
 }
 
-data class OpenShiftResponse @JvmOverloads constructor(
+data class OpenShiftResponse(
     val command: OpenshiftCommand,
     val responseBody: JsonNode? = null,
     val success: Boolean = true,
@@ -69,7 +70,7 @@ data class OpenShiftResponse @JvmOverloads constructor(
                 command,
                 response,
                 success = false,
-                exception = e.message,
+                exception = e.message, // TODO If we create a better exception here we can remove some code in the resourceClient
                 httpErrorCode = httpCode
             )
         }
@@ -108,8 +109,6 @@ class OpenShiftClient(
     val mapper: ObjectMapper
 ) {
 
-    val logger: Logger = LoggerFactory.getLogger(OpenShiftClient::class.java)
-
     fun performOpenShiftCommand(namespace: String, command: OpenshiftCommand): OpenShiftResponse {
 
         val kind = command.payload.openshiftKind
@@ -140,15 +139,11 @@ class OpenShiftClient(
     }
 
     @Cacheable("templates")
-    fun getTemplate(template: String): JsonNode? {
-        return try {
+    fun getTemplate(template: String): JsonNode {
 
-            val url = generateUrl(kind = "template", namespace = "openshift", name = template)
-            serviceAccountClient.get(url)?.body
-        } catch (e: Exception) {
-            logger.debug("Failed getting template={}", template)
-            null
-        }
+        val url = generateUrl(kind = "template", namespace = "openshift", name = template)
+        return serviceAccountClient.get(url)?.body
+            ?: throw IllegalArgumentException("Could not find template for url=$url")
     }
 
     @Cacheable("groups")

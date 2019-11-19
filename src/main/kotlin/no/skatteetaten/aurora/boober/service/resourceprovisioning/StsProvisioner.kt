@@ -1,16 +1,5 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import no.skatteetaten.aurora.boober.ServiceTypes
-import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.service.ProvisioningException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.core.io.Resource
-import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
-import org.springframework.web.util.UriComponentsBuilder
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -21,6 +10,18 @@ import java.security.cert.X509Certificate
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.ServiceTypes
+import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.core.io.Resource
+import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriComponentsBuilder
+
+private val logger = KotlinLogging.logger {}
 
 class StsCertificate(
     val crt: ByteArray,
@@ -45,7 +46,6 @@ class StsProvisioner(
     @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
-    val logger: Logger = LoggerFactory.getLogger(StsProvisioner::class.java)
 
     fun generateCertificate(cn: String, name: String, envName: String): StsProvisioningResult {
 
@@ -79,7 +79,6 @@ class StsProvisioner(
 
     companion object {
 
-        @JvmStatic
         fun createStsCert(
             body: InputStream,
             keyPassword: String,

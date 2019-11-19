@@ -40,7 +40,8 @@ class OpenShiftResourceClientTest {
             val responseEntity = openShiftResourceClient.strategicMergePatch("user", "username", TextNode("{}"))
             assertThat(responseEntity.statusCode.value()).isEqualTo(200)
         }
-        assertThat(request.first()?.headers?.get(HttpHeaders.CONTENT_TYPE)).isNotNull().isEqualTo("application/strategic-merge-patch+json")
+        assertThat(request.first()?.headers?.get(HttpHeaders.CONTENT_TYPE)).isNotNull()
+            .isEqualTo("application/strategic-merge-patch+json")
         assertThat(request.first()?.path).isNotNull().isEqualTo("/apis/user.openshift.io/v1/users/username")
     }
 }

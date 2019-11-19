@@ -1,16 +1,11 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.github.fge.jsonpatch.JsonPatch
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
-import no.skatteetaten.aurora.boober.utils.filterNullValues
+import java.io.File
+import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
-import java.io.File
-import java.nio.charset.Charset
 
 data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val version: String) {
 
@@ -19,14 +14,12 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val yamlMapper = jacksonYamlObjectMapper()
         val jsonMapper = jsonMapper()
 
-        @JvmStatic
         fun fromFolder(folderName: String, version: String): AuroraConfig {
 
             val folder = File(folderName)
             return fromFolder(folder, version)
         }
 
-        @JvmStatic
         fun fromFolder(folder: File, version: String): AuroraConfig {
             val files = folder.walkBottomUp()
                 .onEnter { !setOf(".secret", ".git").contains(it.name) }
@@ -49,7 +42,6 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             .map { val (environment, application) = it.split("/"); ApplicationDeploymentRef(environment, application) }
     }
 
-    @JvmOverloads
     fun getFilesForApplication(
         applicationDeploymentRef: ApplicationDeploymentRef,
         overrideFiles: List<AuroraConfigFile> = listOf()
@@ -58,7 +50,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val fileSpec = findFileSpec(applicationDeploymentRef)
 
         val filesForApplication: Map<AuroraConfigFileSpec, AuroraConfigFile?> = findFiles(fileSpec, files)
-        val overrides: List<AuroraConfigFile> = findFiles(fileSpec, overrideFiles).filterNullValues().values.toList()
+        val overrides: List<AuroraConfigFile> = findFiles(fileSpec, overrideFiles).values.filterNotNull().toList()
 
         val missingFileSpec = filesForApplication.filterValues { it == null }.map { it.key }
         if (missingFileSpec.isNotEmpty()) {
@@ -68,7 +60,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             throw IllegalArgumentException("Some required AuroraConfig (json|yaml) files missing. $missingFiles.")
         }
 
-        val applicationFiles = filesForApplication.filterNullValues().values.toList()
+        val applicationFiles = filesForApplication.values.filterNotNull().toList()
         return applicationFiles + overrides
     }
 
@@ -83,7 +75,6 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
 
     fun findFile(filename: String): AuroraConfigFile? = files.find { it.name == filename }
 
-    @JvmOverloads
     fun updateFile(
         name: String,
         contents: String,
@@ -145,11 +136,18 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val envFile = implementationFile.asJsonNode.get("envFile")?.asText()?.removeExtension()
             ?: "about"
 
+        if (!envFile.startsWith("about")) {
+            throw java.lang.IllegalArgumentException("envFile must start with about")
+        }
+
         return setOf(
-            AuroraConfigFileSpec("about", GLOBAL),
-            AuroraConfigFileSpec(baseFile, BASE),
-            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", ENV),
-            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}", APP)
+            AuroraConfigFileSpec("about", AuroraConfigFileType.GLOBAL),
+            AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE),
+            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
+            AuroraConfigFileSpec(
+                "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
+                AuroraConfigFileType.APP
+            )
         )
     }
 }

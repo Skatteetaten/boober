@@ -39,6 +39,8 @@ integrations:
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+        retries: 3
+        backoff: 500
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
 
@@ -64,6 +66,11 @@ logging:
             hibernate: WARN
             springframework: WARN
             apache: WARN
+server:
+    tomcat:
+        mbeanregistry:
+            enabled: true
+
 ---
 spring:
     profiles: local
@@ -72,6 +79,9 @@ openshift:
     cluster: utv
 
 integrations:
+    bitbucket:
+        username: test
+        password: test
     dbh:
         url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
@@ -86,6 +96,8 @@ integrations:
         releases: "container-registry-internal-release.aurora.skead.no:443"
         registry: "container-registry-internal-private-pull.aurora.skead.no:443"
 boober:
+    encrypt:
+        key: test
     openshift:
         tokenLocation: /tmp/boober-token
 

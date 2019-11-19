@@ -6,12 +6,12 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.model.DatabaseInstance
+import no.skatteetaten.aurora.boober.feature.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.utils.logger
 import org.apache.commons.lang3.exception.ExceptionUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
+
+private val logger = KotlinLogging.logger {}
 
 sealed class SchemaProvisionRequest {
 
@@ -92,7 +94,6 @@ data class DbhSchema(
     val affiliation: String
         get() = labels.get("affiliation")!!
 
-    // TOOD: support multiple users with different roles
     val username: String
         get() = users.firstOrNull()?.username ?: ""
 
@@ -115,8 +116,13 @@ class DatabaseSchemaProvisioner(
     val userDetailsProvider: UserDetailsProvider,
     @Value("\${integrations.dbh.url}") val dbhUrl: String
 ) {
-    val logger by logger()
 
+    /*
+      TODO  Error handling, right now provision schema is called in validation for id schemas and schemas with generate false
+      This method will fail on the first error and not collect errors. Should we collect up the errors in a correct way?
+
+      How do we pass state from one step of a feature to another? Because this is actually a use case for it.
+     */
     fun provisionSchemas(schemaProvisionRequests: List<SchemaProvisionRequest>): SchemaProvisionResults {
 
         if (schemaProvisionRequests.isEmpty()) throw IllegalArgumentException("SchemaProvisionRequest cannot be empty")
@@ -151,7 +157,10 @@ class DatabaseSchemaProvisioner(
                 roleString
             )
         } catch (e: Exception) {
-            throw createProvisioningException("Unable to get information on schema with id $id", e)
+            throw createProvisioningException(
+                "Unable to get information on schema with id=$id and affiliation=${details.affiliation}",
+                e
+            )
         }
 
         return parseResponseFailIfEmpty(response)

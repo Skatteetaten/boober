@@ -2,7 +2,7 @@ package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import no.skatteetaten.aurora.boober.service.OpenShiftObjectLabelService
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
@@ -29,9 +29,7 @@ class OpenShiftObjectLabelServiceTest {
     @EnumSource(LabelsTestData::class)
     fun `Truncates labels when too long`(labelData: LabelsTestData) {
         assertThat(
-            OpenShiftObjectLabelService.toOpenShiftSafeLabel(
-                labelData.label
-            )
+            mapOf("label" to labelData.label).normalizeLabels().values.first()
         ).isEqualTo(labelData.expeected)
     }
 }

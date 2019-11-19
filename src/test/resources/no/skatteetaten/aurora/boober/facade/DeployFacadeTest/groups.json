@@ -1,0 +1,36 @@
+{
+  "apiVersion": "v1",
+  "items": [
+    {
+      "apiVersion": "user.openshift.io/v1",
+      "kind": "Group",
+      "metadata": {
+        "name": "APP_PaaS_drift",
+        "resourceVersion": "752942768",
+        "selfLink": "/apis/user.openshift.io/v1/groups/APP_PaaS_drift",
+        "uid": "ac9101d7-6ac5-11e6-b1c7-005056833ec1"
+      },
+      "users": [
+        "hero"
+      ]
+    },
+    {
+      "apiVersion": "user.openshift.io/v1",
+      "kind": "Group",
+      "metadata": {
+        "name": "APP_PaaS_utv",
+        "resourceVersion": "752942768",
+        "selfLink": "/apis/user.openshift.io/v1/groups/APP_PaaS_drift",
+        "uid": "ac9101d7-6ac5-11e6-b1c7-005056833ec1"
+      },
+      "users": [
+        "hero"
+      ]
+    }
+  ],
+  "kind": "List",
+  "metadata": {
+    "resourceVersion": "",
+    "selfLink": ""
+  }
+}

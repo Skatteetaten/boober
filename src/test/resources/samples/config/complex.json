@@ -1,0 +1,107 @@
+{
+  "name": "komplex",
+  "version": "1",
+  "groupId": "org.test",
+  "type": "development",
+  "splunkIndex": "test-index",
+  "prometheus": {
+    "path": "/prometheus",
+    "port": "8082"
+  },
+  "management": {
+    "port": "8081",
+    "path": "/foobar"
+  },
+  "serviceAccount": "aurora-fraggle",
+  "mounts": {
+    "aurora-token": {
+      "path": "/u01/secrets/app/aurora-token",
+      "type": "Secret",
+      "exist": true
+    },
+    "secret-mount": {
+      "type": "Secret",
+      "path": "/u01/foo",
+      "secretVault": "foo"
+    },
+    "pvc": {
+      "type": "PVC",
+      "exist": true,
+      "path": "/foo"
+    },
+    "config-mount": {
+      "type": "ConfigMap",
+      "content": {
+        "foo": "bar"
+      },
+      "path": "/content"
+    }
+  },
+  "resources": {
+    "memory": {
+      "max": "128Mi",
+      "min": "64Mi"
+    },
+    "cpu": {
+      "max": "2000m",
+      "min": "100m"
+    }
+  },
+  "webseal": {
+    "host": "test",
+    "roles": "admin dev @name@"
+  },
+  "config": {
+    "FOO": "BAR",
+    "latest": {
+      "BAR": "BAZ"
+    }
+  },
+  "debug": true,
+  "route": {
+    "@name@": {
+      "tls": {
+        "termination": "edge",
+        "insecurePolicy": "Allow"
+      }
+    },
+    "path": {
+      "host": "pathroute",
+      "path": "/path"
+    },
+    "foobar": {
+      "host": "foobar",
+      "annotations": {
+        "haproxy.router.openshift.io|timeout": "30s"
+      }
+    }
+  },
+  "liveness": true,
+  "releaseTo": "komplex",
+  "deployStrategy": {
+    "type": "recreate"
+  },
+  "ttl": "1d",
+  "pause": true,
+  "message": "Aurora <3",
+  "database": {
+    "complex": {
+      "enabled": true
+    },
+    "foo": "123-456"
+  },
+  "certificate": {
+    "commonName": "komplex"
+  },
+  "secretVaults": {
+    "foo": {
+      "keys": [
+        "BAR",
+        "FOO"
+      ],
+      "keyMappings": {
+        "BAR": "BAZ"
+      }
+    }
+  }
+}

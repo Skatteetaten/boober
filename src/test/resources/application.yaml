@@ -12,39 +12,52 @@ integrations:
     bitbucket:
         username: "foo"
         password: "bar"
-        url: "https://git.aurora.skead.no/"
+        url: "http://localhost:${integrations.bitbucket.port}"
+        port: 8086
+    deployLog:
+        git:
+            project: "ao"
+            repo: "auroradeploymenttags"
     aurora:
         config:
             git:
                 project: "ac"
-                urlPattern: "file:///tmp/boobertest/%s"
-                checkoutPath: "build/boobercheckout"
-        deployLog:
-            git:
-                project: "ao"
-                repo: "auroradeploymenttags"
+                repoPath: "build/gitrepos_auroraconfig_bare"
+                urlPattern: "${integrations.aurora.config.git.repoPath}/%s"
+                checkoutPath: "build/auroraconconfigs"
         vault:
             git:
-                urlPattern: "file:///tmp/vaulttest/%s"
+                repoPath: "build/gitrepos_vault_bare"
+                urlPattern: "${integrations.aurora.vault.git.repoPath}/%s"
                 checkoutPath: "build/vaultcheckout"
     openshift:
-        url: https://${openshift.cluster}-master.paas.skead.no:8443
+        url: "http://localhost:${integrations.openshift.port}"
+        port: 8083
+        retries: 3
+        backoff: 100
     dbh:
-        url: "http://localhost:8080"
+        url: "http://localhost:${integrations.dbh.port}"
+        port: 8084
     skap:
-        url: "http://localhost:8082"
+        url: "http://localhost:${integrations.skap.port}"
+        port: 8082
+    cantus:
+        url: "http://localhost:${integrations.cantus.port}"
+        port: 8085
+        token: "token"
     docker:
-        registry: "docker-registry.aurora.sits.no:5000"
-        releases: "docker-registry.aurora.sits.no:5000"
+        registry: "docker.registry:5000"
+        releases: "docker.release.registry:5000"
 
 
 boober:
     encrypt:
         key: "komogsyngensang"
-        releases: "docker-registry.aurora.sits.no:5000"
         token: "test"
     openshift:
-        token: foo
+        tokenLocation: /tmp/boober-token
+    route:
+        suffix: ".test"
 
 vault:
     operations:
@@ -60,4 +73,3 @@ management:
 
 openshift:
     cluster: utv
-    url: https://${openshift.cluster}-master.paas.skead.no:8443

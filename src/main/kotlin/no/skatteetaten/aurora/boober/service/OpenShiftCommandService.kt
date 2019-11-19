@@ -3,16 +3,20 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.fabric8.kubernetes.api.model.OwnerReference
+import com.fkorotkov.openshift.from
+import com.fkorotkov.openshift.importPolicy
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newImageImportSpec
+import com.fkorotkov.openshift.newImageStreamImport
+import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.to
+import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
 import io.fabric8.openshift.api.model.Route
-import no.skatteetaten.aurora.boober.model.AuroraDeployEnvironment
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
-import no.skatteetaten.aurora.boober.model.TemplateType
+import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
-import no.skatteetaten.aurora.boober.service.internal.ImageStreamImportGenerator
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
@@ -21,7 +25,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType.CREATE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.DELETE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.deploymentConfig
@@ -38,62 +41,11 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.resourceUrl
 import org.springframework.stereotype.Service
 
+// TODO: test, together with deploy service as well as unit tests
 @Service
 class OpenShiftCommandService(
-    val openShiftClient: OpenShiftClient,
-    val openShiftObjectGenerator: OpenShiftObjectGenerator
+    val openShiftClient: OpenShiftClient
 ) {
-
-    fun generateProjectRequest(environment: AuroraDeployEnvironment): OpenshiftCommand {
-
-        val projectRequest = openShiftObjectGenerator.generateProjectRequest(environment)
-        return createOpenShiftCommand(
-            newResource = projectRequest,
-            mergeWithExistingResource = false,
-            retryGetResourceOnFailure = false
-        )
-    }
-
-    fun generateNamespace(environment: AuroraDeployEnvironment): OpenshiftCommand {
-        val namespace = openShiftObjectGenerator.generateNamespace(environment)
-        return createOpenShiftCommand(
-            newResource = namespace,
-            mergeWithExistingResource = true,
-            retryGetResourceOnFailure = true
-        )
-    }
-
-    fun generateRolebindings(environment: AuroraDeployEnvironment): List<OpenshiftCommand> {
-        return openShiftObjectGenerator.generateRolebindings(environment.permissions, environment.namespace)
-            .map {
-                createOpenShiftCommand(
-                    namespace = environment.namespace,
-                    newResource = it,
-                    mergeWithExistingResource = true,
-                    retryGetResourceOnFailure = true
-                )
-            }
-    }
-
-    fun generateOpenshiftObjects(
-        deployId: String,
-        deploymentSpecInternal: AuroraDeploymentSpecInternal,
-        provisioningResult: ProvisioningResult?,
-        mergeWithExistingResource: Boolean,
-        ownerReference: OwnerReference
-    ): List<JsonNode> {
-
-        val namespace = deploymentSpecInternal.environment.namespace
-
-        val unorderedObjects = openShiftObjectGenerator.generateApplicationObjects(
-            deployId,
-            deploymentSpecInternal,
-            provisioningResult,
-            ownerReference
-        )
-
-        return orderObjects(unorderedObjects, deploymentSpecInternal.type, namespace, mergeWithExistingResource)
-    }
 
     fun orderObjects(
         objects: List<JsonNode>,
@@ -157,6 +109,16 @@ class OpenShiftCommandService(
         return dc.spec.replicas == 0
     }
 
+    fun createOpenShiftCommand(
+        namespace: String? = null,
+        newResource: HasMetadata,
+        mergeWithExistingResource: Boolean = true,
+        retryGetResourceOnFailure: Boolean = false
+    ): OpenshiftCommand {
+        val resource: JsonNode = jacksonObjectMapper().convertValue(newResource)
+        return createOpenShiftCommand(namespace, resource, mergeWithExistingResource, retryGetResourceOnFailure)
+    }
+
     /**
      * @param mergeWithExistingResource Whether the OpenShift project the object belongs to exists. If it does, some object types
      * will be updated with information from the existing object to support the update.
@@ -198,6 +160,7 @@ class OpenShiftCommandService(
         }
     }
 
+    // TODO: Should pvc be deletable?
     val deletableResources = listOf(
         "BuildConfig",
         "DeploymentConfig",
@@ -208,7 +171,6 @@ class OpenShiftCommandService(
         "ImageStream"
     )
 
-    @JvmOverloads
     fun createOpenShiftDeleteCommands(
         name: String,
         namespace: String,
@@ -277,6 +239,7 @@ class OpenShiftCommandService(
         }
     }
 
+    // TODO: How we handle errors here is pretty complicated, Clean this up when we move to WebClient?
     fun findErrorMessage(response: OpenShiftResponse): String? {
         if (!response.success) {
             return response.exception
@@ -289,6 +252,35 @@ class OpenShiftCommandService(
             body.openshiftKind == "route" -> body.convert<Route>().findErrorMessage()
             body.openshiftKind == "imagestreamimport" -> body.convert<ImageStreamImport>().findErrorMessage()
             else -> null
+        }
+    }
+}
+
+object ImageStreamImportGenerator {
+
+    fun create(dockerImageUrl: String, imageStreamName: String, isiNamespace: String): ImageStreamImport {
+        return newImageStreamImport {
+            metadata {
+                name = imageStreamName
+                namespace = isiNamespace
+            }
+            spec {
+                import = true
+                images = listOf(newImageImportSpec {
+                    from {
+                        kind = "DockerImage"
+                        name = dockerImageUrl
+                    }
+
+                    to {
+                        name = "default"
+                    }
+
+                    importPolicy {
+                        scheduled = true
+                    }
+                })
+            }
         }
     }
 }

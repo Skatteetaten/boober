@@ -1,0 +1,13 @@
+{
+  "apiVersion" : "v1",
+  "kind" : "Namespace",
+  "metadata" : {
+    "labels" : {
+      "affiliation" : "paas"
+    },
+    "name" : "paas-utv",
+    "annotations" : {
+      "openshift.io/requester" : "hero"
+    }
+  }
+}

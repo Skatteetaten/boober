@@ -3,8 +3,8 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.ObjectMapper
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigField
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigFieldSource
+import no.skatteetaten.aurora.boober.model.AuroraConfigField
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldSource
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP

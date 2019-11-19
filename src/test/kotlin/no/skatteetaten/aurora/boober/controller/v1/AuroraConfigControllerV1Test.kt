@@ -1,116 +1,231 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.anyOrNull
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
+import assertk.assertThat
+import assertk.assertions.isFailure
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.ninjasquad.springmockk.MockkBean
+import io.mockk.every
+import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentType
 import no.skatteetaten.aurora.mockmvc.extensions.get
-import no.skatteetaten.aurora.mockmvc.extensions.mock.withContractResponse
-import no.skatteetaten.aurora.mockmvc.extensions.mock.withNullableContractResponse
 import no.skatteetaten.aurora.mockmvc.extensions.patch
 import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
-import org.mockito.BDDMockito.given
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.boot.test.mock.mockito.MockBean
 import org.springframework.http.HttpHeaders
-import org.springframework.test.web.servlet.MockMvc
 
-@AutoConfigureRestDocs
-@WebMvcTest(controllers = [AuroraConfigControllerV1::class, AuroraConfigResponder::class], secure = false)
-class AuroraConfigControllerV1Test(@Autowired private val mockMvc: MockMvc) {
+@WebMvcTest(controllers = [AuroraConfigControllerV1::class])
+class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
-    @MockBean
-    private lateinit var auroraConfigService: AuroraConfigService
+    @MockkBean
+    private lateinit var facade: AuroraConfigFacade
 
     @Test
-    fun `Patch aurora config`() {
-        given(auroraConfigService.patchAuroraConfigFile(any(), any(), any(), anyOrNull()))
-            .withContractResponse("auroraconfig/auroraconfig") { willReturn(content) }
+    fun `Get aurora config by name`() {
+        every {
+            facade.findAuroraConfigFiles(auroraConfigRef)
+        } returns auroraConfig.files
 
-        mockMvc.patch(
-            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", "paas", "filename"),
-            headers = HttpHeaders().contentType(),
-            body = mapOf("content" to "test-content")
-        ) {
+        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name)) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
-                .responseJsonPath("$.items[0].contents").equalsValue("contents")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
+            responseJsonPath("$.items[0].files.length()").equalsValue(14)
         }
     }
 
     @Test
-    fun `Get aurora config by name`() {
-        given(auroraConfigService.findAuroraConfig(any()))
-            .withContractResponse("auroraconfig/auroraconfig") { willReturn(content) }
+    fun `Get aurora config by name for another branch with queryparam`() {
+        every {
+            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig.files
 
-        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}", "aos")) {
+        mockMvc.get(
+            path = Path("/v1/auroraconfig/{auroraConfigName}?reference={reference}", auroraConfigRef.name, "dev"),
+            docsIdentifier = "reference-queryparam"
+        ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("paas")
-                .responseJsonPath("$.items[0].files.length()").equalsValue(1)
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
+            responseJsonPath("$.items[0].files.length()").equalsValue(14)
+        }
+    }
+
+    @Test
+    fun `Get aurora config by name for another branch with header`() {
+        every {
+            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig.files
+
+        mockMvc.get(
+            path = Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name),
+            headers = HttpHeaders().apply {
+                set("Ref-Name", "dev")
+            },
+            docsIdentifier = "reference-header"
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
+            responseJsonPath("$.items[0].files.length()").equalsValue(14)
+        }
+    }
+
+    @Test
+    fun `Patch aurora config`() {
+
+        val fileName = "simple.json"
+
+        val patch = """[{
+            "op": "add",
+            "path": "/version",
+            "value": "test"
+        }]"""
+
+        val content = """{ "version" : "test" }"""
+        every {
+            facade.patchAuroraConfigFile(auroraConfigRef, fileName, patch, null)
+        } returns auroraConfig.modifyFile(fileName, content)
+
+        mockMvc.patch(
+            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),
+            headers = HttpHeaders().contentType(),
+            body = mapOf("content" to patch)
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(fileName)
+            responseJsonPath("$.items[0].contents").equalsValue(content)
+        }
+    }
+
+    @Test
+    fun `Get aurora config by name fails if only env specified`() {
+        assertThat {
+            mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}?environment={env}", auroraConfigRef.name, "utv")) {
+                statusIsOk()
+                responseJsonPath("$.success").isFalse()
+                responseJsonPath("$.items[0].name").equalsValue("filename")
+                responseJsonPath("$.items[0].contents").equalsValue("contents")
+            }
+        }.isFailure()
+    }
+
+    @Test
+    fun `Get aurora config by name for adr DEPRECATED`() {
+        every {
+            facade.findAuroraConfigFilesForApplicationDeployment(auroraConfigRef, adr)
+        } returns auroraConfig.getFilesForApplication(adr)
+
+        mockMvc.get(
+            Path(
+                "/v1/auroraconfig/{auroraConfigName}?environment={env}&application={app}",
+                auroraConfigRef.name, adr.environment, adr.application
+            )
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items.length()").equalsValue(4)
+            responseJsonPath("$.items[0].name").equalsValue("about.json")
+            responseJsonPath("$.items[1].name").equalsValue("simple.json")
+            responseJsonPath("$.items[2].name").equalsValue("utv/about.json")
+            responseJsonPath("$.items[3].name").equalsValue("utv/simple.json")
+        }
+    }
+
+    @Test
+    fun `Get aurora config by name for adr`() {
+        every {
+            facade.findAuroraConfigFilesForApplicationDeployment(auroraConfigRef, adr)
+        } returns auroraConfig.getFilesForApplication(adr)
+
+        mockMvc.get(
+            Path(
+                "/v1/auroraconfig/{auroraConfigName}/{env}/{app}",
+                auroraConfigRef.name, adr.environment, adr.application
+            )
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items.length()").equalsValue(4)
+            responseJsonPath("$.items[0].name").equalsValue("about.json")
+            responseJsonPath("$.items[1].name").equalsValue("simple.json")
+            responseJsonPath("$.items[2].name").equalsValue("utv/about.json")
+            responseJsonPath("$.items[3].name").equalsValue("utv/simple.json")
         }
     }
 
     @Test
     fun `Get aurora config file by file name`() {
-        given(auroraConfigService.findAuroraConfigFile(any(), any()))
-            .withNullableContractResponse("auroraconfig/auroraconfigfile") { willReturn(content) }
 
-        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", "aos", "filename")) {
+        val fileName = "about.json"
+        val fileContent = auroraConfig.files.find { it.name == fileName }!!
+        every {
+            facade.findAuroraConfigFile(auroraConfigRef, fileName)
+        } returns fileContent
+
+        mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName)) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
-                .responseJsonPath("$.items[0].contents").equalsValue("contents")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(fileName)
+            responseJsonPath("$.items[0].contents").equalsValue(fileContent.contents)
         }
     }
 
     @Test
     fun `Get file names`() {
-        given(auroraConfigService.findAuroraConfigFileNames(any()))
-            .withContractResponse("auroraconfig/filenames") { willReturn(content) }
+        every {
+            facade.findAuroraConfigFileNames(auroraConfigRef)
+        } returns auroraConfig.files.map { it.name }
 
-        mockMvc.get(Path("/v1/auroraconfig/aos/filenames")) {
+        mockMvc.get(Path("/v1/auroraconfig/{auroraConfig}/filenames", auroraConfigRef.name)) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items.length()").equalsValue(4)
-                .responseJsonPath("$.items[0]").equalsValue("file1")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items.length()").equalsValue(14)
         }
     }
 
     @Test
     fun `Update aurora config file`() {
-        given(auroraConfigService.updateAuroraConfigFile(any(), any(), any(), anyOrNull()))
-            .withContractResponse("auroraconfig/auroraconfigresponse") { willReturn(content) }
+
+        // This cannot contain a /, the wiremock test framework we use here will not support it
+        val fileName = "simple.json"
+        val content = """{ "version" : "test" }"""
+
+        every {
+            facade.updateAuroraConfigFile(auroraConfigRef, fileName, content, null)
+        } returns auroraConfig.modifyFile(fileName, content)
 
         mockMvc.put(
-            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", "aos", "filename"),
+            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),
             headers = HttpHeaders().contentType(),
-            body = mapOf("content" to "test-content")
+            body = mapOf("content" to content)
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
-                .responseJsonPath("$.items[0].type").equalsValue("BASE")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue(fileName)
+            responseJsonPath("$.items[0].contents").equalsValue(content)
         }
     }
 
     @Test
     fun `Validate aurora config`() {
+
+        every {
+            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+        } returns listOf()
+
         mockMvc.put(
-            path = Path("/v1/auroraconfig/{fileName}/validate", "filename"),
+            path = Path("/v1/auroraconfig/{auroraConfig}/validate", auroraConfigRef.name),
             headers = HttpHeaders().contentType(),
-            body = mapOf("name" to "name", "files" to emptyList<String>())
+            body = jacksonObjectMapper().writeValueAsString(auroraConfig)
         ) {
             statusIsOk()
-                .responseJsonPath("$.success").isTrue()
-                .responseJsonPath("$.items[0].name").equalsValue("filename")
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("paas")
         }
     }
 }

@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
+import mu.KotlinLogging
 import no.skatteetaten.aurora.AuroraMetrics
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
@@ -9,16 +12,15 @@ import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
-import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 
+private val logger = KotlinLogging.logger {}
+
+// TODO: Move to same place as Configuration?
 @Configuration
 class GitServices(
     val userDetails: UserDetailsProvider,
@@ -68,13 +70,10 @@ open class GitService(
     val metrics: AuroraMetrics
 ) {
 
-    val logger: Logger = LoggerFactory.getLogger(GitService::class.java)
-
     val cp = UsernamePasswordCredentialsProvider(username, password)
 
     val locks = ConcurrentHashMap<String, Any>()
 
-    @JvmOverloads
     fun checkoutRepository(
         repositoryName: String,
         refName: String,
@@ -165,9 +164,13 @@ open class GitService(
             val dir = repoPath.apply { mkdirs() }
             val uri = urlPattern.format(repositoryName)
 
+            val url = if (uri.startsWith("build")) {
+                File(uri).absoluteFile.absolutePath
+            } else uri
+
             try {
                 Git.cloneRepository()
-                    .setURI(uri)
+                    .setURI(url)
                     .setCredentialsProvider(cp)
                     .setDirectory(dir)
                     .call()

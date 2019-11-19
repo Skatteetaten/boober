@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.utils
 
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.support.PropertiesLoaderUtils
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.util.Properties
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.support.PropertiesLoaderUtils
 
 fun filterProperties(properties: ByteArray, keys: List<String>, keyMappings: Map<String, String>?): Properties =
     try {
@@ -53,4 +53,5 @@ fun Properties.toByteArray(): ByteArray = ByteArrayOutputStream()
         baos.toByteArray()
     }
 
-class PropertiesException(override val message: String, override val cause: Throwable) : RuntimeException(message, cause)
+class PropertiesException(override val message: String, override val cause: Throwable) :
+    RuntimeException(message, cause)

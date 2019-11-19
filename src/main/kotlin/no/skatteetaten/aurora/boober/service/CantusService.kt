@@ -1,18 +1,19 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes.CANTUS
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
+private val logger = KotlinLogging.logger {}
+
 data class TagResult(val cmd: TagCommand, val response: JsonNode?, val success: Boolean)
 
-data class TagCommand @JvmOverloads constructor(
+data class TagCommand(
     val name: String,
     val from: String,
     val to: String,
@@ -20,6 +21,7 @@ data class TagCommand @JvmOverloads constructor(
     val toRegistry: String = fromRegistry
 )
 
+// TODO can this just be a map?
 data class CantusTagCommand(
     val from: String,
     val to: String
@@ -34,8 +36,6 @@ class CantusService(
     val client: CantusRestTemplateWrapper
 ) {
 
-    val logger: Logger = LoggerFactory.getLogger(CantusService::class.java)
-
     fun tag(cmd: TagCommand): TagResult {
         val cantusCmd = CantusTagCommand(
             "${cmd.fromRegistry}/${cmd.name}:${cmd.from}",
@@ -46,5 +46,3 @@ class CantusService(
         return TagResult(cmd, resultEntity.body, resultEntity.statusCode.is2xxSuccessful)
     }
 }
-
-fun String.dockerGroupSafeName() = this.replace(".", "_")

@@ -79,7 +79,8 @@
       "kind": "DeploymentConfig",
       "metadata": {
         "labels": {
-          "name": "${NAME}"
+          "name": "${NAME}",
+          "app": "${NAME}-keep"
         },
         "name": "${NAME}"
       },
@@ -110,10 +111,6 @@
               {
                 "capabilities": {},
                 "env": [
-                  {
-                    "name": "SPLUNK_INDEX",
-                    "value": "${SPLUNK_INDEX}"
-                  },
                   {
                     "name": "POD_NAME",
                     "valueFrom": {
@@ -236,17 +233,12 @@
     },
     {
       "name": "DOMAIN_NAME",
-      "description": "Domain name to appear in the links in the feed",
-      "required": true
+      "description": "Domain name to appear in the links in the feed"
     },
     {
       "name": "SCHEME",
       "description": "Scheme used in links in the feed. http/https",
       "value": "http"
-    },
-    {
-      "name": "SPLUNK_INDEX",
-      "description": "Hvilken index i splunk skal brukes? Sett til tom for å ikke logge til splunk. Dette er standard."
     },
     {
       "name": "AFFILIATION",

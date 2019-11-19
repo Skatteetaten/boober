@@ -1,32 +1,21 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import kotlinx.coroutines.async
-import kotlinx.coroutines.newFixedThreadPoolContext
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.slf4j.MDCContext
-import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.ApplicationRef
+import java.io.File
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpecInternal
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.service.GitServices.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.service.GitServices.TargetDomain
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.InvalidRemoteException
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory.getLogger
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import java.io.File
 
-class AuroraConfigWithOverrides(
-    var auroraConfig: AuroraConfig,
-    val overrideFiles: List<AuroraConfigFile> = listOf()
-)
+private val logger = KotlinLogging.logger {}
 
 data class AuroraConfigRef(
     val name: String,
@@ -38,32 +27,22 @@ data class AuroraConfigRef(
 class AuroraConfigService(
     @TargetDomain(AURORA_CONFIG) val gitService: GitService,
     val bitbucketProjectService: BitbucketService,
-    val deploymentSpecValidator: AuroraDeploymentSpecValidator,
+    val auroraDeploymentContextService: AuroraDeploymentContextService,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.validationPoolSize:6}") val validationPoolSize: Int,
     @Value("\${integrations.aurora.config.git.project}") val project: String
 ) {
 
-    val logger: Logger = getLogger(AuroraConfigService::class.java)
     val mapper = jacksonObjectMapper()
-
-    private val dispatcher = newFixedThreadPoolContext(validationPoolSize, "validationPool")
 
     fun findAllAuroraConfigNames(): List<String> {
 
         return bitbucketProjectService.getRepoNames(project)
     }
 
-    fun findExactRef(ref: AuroraConfigRef): String? {
+    fun resolveToExactRef(ref: AuroraConfigRef): AuroraConfigRef {
 
-        return updateLocalFilesFromGit(ref)
-    }
-
-    fun findAuroraConfigFilesForApplicationDeployment(
-        ref: AuroraConfigRef,
-        adr: ApplicationDeploymentRef
-    ): List<AuroraConfigFile> {
-        return findAuroraConfig(ref).getFilesForApplication(adr)
+        val exactRef = updateLocalFilesFromGit(ref)
+        return exactRef?.let { ref.copy(resolvedRef = it) } ?: ref
     }
 
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
@@ -72,46 +51,7 @@ class AuroraConfigService(
         return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName)
     }
 
-    fun findAuroraConfigFileNames(ref: AuroraConfigRef): List<String> {
-
-        val auroraConfig = findAuroraConfig(ref)
-        return auroraConfig.files.map { it.name }
-    }
-
-    fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile? {
-
-        val auroraConfig = findAuroraConfig(ref)
-        return auroraConfig.findFile(fileName)
-            ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig ${ref.name}")
-    }
-
-    @JvmOverloads
-    fun updateAuroraConfigFile(
-        ref: AuroraConfigRef,
-        fileName: String,
-        contents: String,
-        previousVersion: String? = null
-    ): AuroraConfig {
-
-        val oldAuroraConfig = findAuroraConfig(ref)
-        val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
-
-        return saveFile(newFile, auroraConfig)
-    }
-
-    fun patchAuroraConfigFile(
-        ref: AuroraConfigRef,
-        filename: String,
-        jsonPatchOp: String,
-        previousVersion: String? = null
-    ): AuroraConfig {
-
-        val auroraConfig = findAuroraConfig(ref)
-        val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
-
-        return saveFile(newFile, updatedAuroraConfig)
-    }
-
+    // This is called from tests to create AuroraConfig for integration tests
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
 
@@ -120,6 +60,7 @@ class AuroraConfigService(
         val repo = getUpdatedRepo(ref)
         val existing = AuroraConfig.fromFolder(checkoutDir, refName)
 
+        // These lines are never called, since save is only called in tests they can probably be removed.
         existing.files.forEach {
             val outputFile = File(checkoutDir, it.name)
             FileUtils.deleteQuietly(outputFile)
@@ -135,7 +76,7 @@ class AuroraConfigService(
         return auroraConfig
     }
 
-    private fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig): AuroraConfig {
+    fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig, ref: AuroraConfigRef): AuroraConfig {
 
         val watch = StopWatch()
         watch.start("find affected adr")
@@ -148,7 +89,9 @@ class AuroraConfigService(
         watch.start("validate")
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
-        createValidatedAuroraDeploymentSpecs(AuroraConfigWithOverrides(auroraConfig), affectedAid)
+        auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(affectedAid.map {
+            AuroraContextCommand(auroraConfig, it, ref)
+        })
         watch.stop()
 
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
@@ -167,41 +110,6 @@ class AuroraConfigService(
 
         logger.debug(watch.prettyPrint())
         return auroraConfig
-    }
-
-    fun expandDeploymentRefToApplicationRef(
-        ref: AuroraConfigRef,
-        adr: List<ApplicationDeploymentRef>
-    ): List<ApplicationRef> =
-        createValidatedAuroraDeploymentSpecs(ref, adr).map {
-            ApplicationRef(it.environment.namespace, it.name)
-        }
-
-    @JvmOverloads
-    fun createValidatedAuroraDeploymentSpecs(
-        ref: AuroraConfigRef,
-        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-        overrideFiles: List<AuroraConfigFile> = listOf(),
-        resourceValidation: Boolean = true
-    ): List<AuroraDeploymentSpecInternal> {
-
-        val auroraConfig = findAuroraConfig(ref)
-        return createValidatedAuroraDeploymentSpecs(
-            AuroraConfigWithOverrides(auroraConfig, overrideFiles),
-            applicationDeploymentRefs
-        )
-    }
-
-    fun validateAuroraConfig(
-        auroraConfig: AuroraConfig,
-        overrideFiles: List<AuroraConfigFile> = listOf(),
-        resourceValidation: Boolean = true
-    ) {
-        createValidatedAuroraDeploymentSpecs(
-            AuroraConfigWithOverrides(auroraConfig, overrideFiles),
-            auroraConfig.getApplicationDeploymentRefs(),
-            resourceValidation
-        )
     }
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
@@ -226,58 +134,5 @@ class AuroraConfigService(
                 e
             )
         }
-    }
-
-    private fun createValidatedAuroraDeploymentSpecs(
-        auroraConfigWithOverrides: AuroraConfigWithOverrides,
-        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
-        resourceValidation: Boolean = true
-    ): List<AuroraDeploymentSpecInternal> {
-
-        val stopWatch = StopWatch().apply { start() }
-        val specInternals: List<AuroraDeploymentSpecInternal> = runBlocking(
-            MDCContext() + SpringSecurityThreadContextElement()
-        ) {
-            applicationDeploymentRefs.map { aid ->
-                async(dispatcher) {
-                    try {
-                        val spec =
-                            createValidatedAuroraDeploymentSpec(auroraConfigWithOverrides, aid, resourceValidation)
-                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(first = spec, second = null)
-                    } catch (e: Throwable) {
-                        Pair<AuroraDeploymentSpecInternal?, ExceptionWrapper?>(
-                            first = null,
-                            second = ExceptionWrapper(aid, e)
-                        )
-                    }
-                }
-            }
-                .map { it.await() }
-        }.onErrorThrow(::MultiApplicationValidationException)
-        stopWatch.stop()
-        logger.debug("Validated AuroraConfig ${auroraConfigWithOverrides.auroraConfig.name} with ${applicationDeploymentRefs.size} applications in ${stopWatch.totalTimeMillis} millis")
-        return specInternals
-    }
-
-    private fun createValidatedAuroraDeploymentSpec(
-        auroraConfigWithOverrides: AuroraConfigWithOverrides,
-        aid: ApplicationDeploymentRef,
-        resourceValidation: Boolean = true
-    ): AuroraDeploymentSpecInternal {
-
-        val stopWatch = StopWatch().apply { start() }
-        val spec = AuroraDeploymentSpecService.createAuroraDeploymentSpecInternal(
-            auroraConfig = auroraConfigWithOverrides.auroraConfig,
-            applicationDeploymentRef = aid,
-            overrideFiles = auroraConfigWithOverrides.overrideFiles
-        )
-        if (spec.cluster == cluster && resourceValidation) {
-            deploymentSpecValidator.assertIsValid(spec)
-        }
-        stopWatch.stop()
-
-        logger.debug("Created ADC for app=${aid.application}, env=${aid.environment} in ${stopWatch.totalTimeMillis} millis")
-
-        return spec
     }
 }

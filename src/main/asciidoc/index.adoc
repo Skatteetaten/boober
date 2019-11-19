@@ -10,13 +10,14 @@
 [introduction]
 = Introduksjon
 
-
 [[overview]]
 = Oversikt
 
 [[overview-http-verbs]]
 == HTTP verb
+
 API'et prøver å følge standard HTTP og ReST konvensjoner i bruk av HTTP verb.
+
 |===
 | Verb | Bruk
 
@@ -35,6 +36,7 @@ API'et prøver å følge standard HTTP og ReST konvensjoner i bruk av HTTP verb.
 
 [[overview-http-status-codes]]
 == HTTP status koder
+
 Prøver å følge standard HTTP og ReST konvensjoner i bruk av HTTP status koder.
 
 |===

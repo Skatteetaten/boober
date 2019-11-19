@@ -1,0 +1,42 @@
+{
+  "alarm": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "pause": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "management": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  }
+}

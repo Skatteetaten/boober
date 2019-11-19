@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.model
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.mapper.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP_OVERRIDE
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
@@ -84,7 +83,62 @@ data class AuroraConfigFile(
             mapper?.readValue(fixedContent, JsonNode::class.java) ?: TextNode(contents)
         } catch (e: Exception) {
             val message = "AuroraConfigFile=$name is not valid errorMessage=${e.message}"
-            throw AuroraConfigException(message, listOf(ConfigFieldErrorDetail(INVALID, message)))
+            throw AuroraConfigException(
+                message,
+                listOf(ConfigFieldErrorDetail(INVALID, message))
+            )
+        }
+    }
+}
+
+fun List<AuroraConfigFile>.findSubKeysExpanded(name: String): Set<String> {
+    return this.flatMap { ac ->
+        ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+    }.map {
+        "$name/$it"
+    }.toSet()
+}
+
+fun List<AuroraConfigFile>.findSubKeys(name: String): Set<String> {
+    return this.flatMap { ac ->
+        ac.asJsonNode.at("/$name")?.fieldNames()?.asSequence()?.toList() ?: emptyList()
+    }.toSet()
+}
+
+inline fun <reified T> List<AuroraConfigFile>.associateSubKeys(
+    name: String,
+    spec: AuroraDeploymentSpec
+): Map<String, T> {
+    return this.findSubKeys(name).associateWith {
+        spec.get<T>("$name/$it")
+    }
+}
+
+fun List<AuroraConfigFile>.findSubHandlers(
+    key: String,
+    validatorFn: (k: String) -> Validator = { defaultValidator }
+): List<AuroraConfigFieldHandler> {
+
+    return findSubKeys(key).map { subKey ->
+        AuroraConfigFieldHandler("$key/$subKey", validator = validatorFn(subKey))
+    }
+}
+
+fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHandler> {
+
+    val name = "config"
+    val keysStartingWithConfig = this.findSubKeys(name)
+
+    val configKeys: Map<String, Set<String>> = keysStartingWithConfig.associateWith { findSubKeys("$name/$it") }
+
+    return configKeys.flatMap { configFile ->
+        val value = configFile.value
+        if (value.isEmpty()) {
+            listOf(AuroraConfigFieldHandler("$name/${configFile.key}"))
+        } else {
+            value.map { field ->
+                AuroraConfigFieldHandler("$name/${configFile.key}/$field")
+            }
         }
     }
 }

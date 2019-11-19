@@ -1,0 +1,31 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "labels": {
+      "app": "easy",
+      "updatedBy": "hero",
+      "affiliation": "paas",
+      "updateInBoober": "true",
+      "name": "easy",
+      "booberDeployId": "deploy1"
+    },
+    "name": "easy",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "easy",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "host": "easy-paas-utv.test",
+    "to": {
+      "kind": "Service",
+      "name": "easy"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.mapper.AuroraDeploymentSpec
+import java.lang.Integer.max
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
@@ -21,7 +22,8 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
         return if (entry.value.keys.all { defaultKeys.indexOf(it) != -1 }) {
             val keySpaces = " ".repeat(keyMaxLength + 2 - key.length - level * 2)
-            val valueSpaces = " ".repeat(valueMaxLength + 1 - value.length)
+            val valueLength = valueMaxLength + 1 - value.length
+            val valueSpaces = " ".repeat(valueLength)
 
             "$result$indents$key:$keySpaces$value$valueSpaces// $source\n"
         } else {
@@ -44,15 +46,13 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
 
 fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): Map<String, Any> {
 
-    val jsonSpec = deploymentSpec.present(includeDefaults) {
+    return deploymentSpec.present(includeDefaults) { field ->
         mapOf(
-            "source" to it.value.name,
-            "value" to it.value.value,
-            "sources" to it.value.sources.map { mapOf("name" to it.configFile.configName, "value" to it.value) }
+            "source" to field.value.name,
+            "value" to field.value.value,
+            "sources" to field.value.sources.map { mapOf("name" to it.configFile.configName, "value" to it.value) }
         )
     }
-
-    return jsonSpec
 }
 
 fun renderSpecAsJsonOld(
@@ -79,12 +79,14 @@ fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0
 }
 
 fun findMaxValueLength(fields: Map<String, Any>): Int {
-    return fields.map {
-        val value = it.value as Map<String, Any>
-        if (value.containsKey("value")) {
+    return fields.map { field ->
+        val value = field.value as Map<String, Any>
+        val valueLength = if (value.containsKey("value")) {
             value["value"].toString().length
-        } else {
-            findMaxValueLength(value)
-        }
+        } else 0
+
+        val subFields = value.filterNot { it.key == "source" || it.key == "value" }
+        val subKeyLength = findMaxValueLength(subFields)
+        max(valueLength, subKeyLength)
     }.max() ?: 0
 }
