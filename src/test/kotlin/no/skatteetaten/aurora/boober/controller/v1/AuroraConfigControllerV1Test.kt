@@ -144,7 +144,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         mockMvc.get(
             Path(
-                "/v1/auroraconfig/{auroraConfigName}/{env}/{app}",
+                "/v1/auroraconfig/{auroraConfigName}/files/{env}/{app}",
                 auroraConfigRef.name, adr.environment, adr.application
             )
         ) {

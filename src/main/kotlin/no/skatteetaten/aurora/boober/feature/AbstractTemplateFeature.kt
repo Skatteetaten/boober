@@ -48,8 +48,11 @@ abstract class AbstractTemplateFeature(
             AuroraConfigFieldHandler("replicas"),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("prometheus/path"),
-            AuroraConfigFieldHandler("prometheus/port")
-        // TODO: Part har konfigurert applikasjonene sine slik at de har prometheus/path i about filen.
+            AuroraConfigFieldHandler("prometheus/port"),
+            // TODO: Part har konfigurert applikasjonene sine slik at de har prometheus/path i about filen.
+            AuroraConfigFieldHandler("deployStrategy/type"),
+            AuroraConfigFieldHandler("deployStrategy/timeout")
+            // TODO: Sirius har deployStrategy/type for templates
         )
     }
 
