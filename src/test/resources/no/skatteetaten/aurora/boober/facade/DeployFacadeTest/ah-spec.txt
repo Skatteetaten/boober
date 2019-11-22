@@ -1,25 +1,20 @@
-{
-  applicationDeploymentRef: "utv/ah"                      // static
-  configVersion:            "master"                      // static
-  schemaVersion:            "v1"                          // about.json
-  type:                     "localTemplate"               // ah.json
-  affiliation:              "paas"                        // about.json
-  segment:                  "aurora"                      // about.json
-  cluster:                  "utv"                         // utv/about.json
-  permissions: {
-    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
-  }
-  envName:                  "utv"                         // folderName
-  name:                     "ah"                          // fileName
-  config: {
-    FOO:                    "bar"                         // ah.json
-  }
-  database:                 true                          // ah.json
-  version:                  "1.3.4"                       // ah.json
-  parameters: {
-    FEED_NAME:              "feed"                        // ah.json
-    DOMAIN_NAME:            "localhost"                   // ah.json
-    DB_NAME:                "feed"                        // ah.json
-  }
-  templateFile:             "templates/atomhopper.json"   // ah.json
-}
+        static | applicationDeploymentRef: "utv/ah"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+       ah.json | type: "localTemplate"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "ah"
+               | config:
+       ah.json |   FOO: "bar"
+       ah.json | database: true
+       ah.json | version: "1.3.4"
+               | parameters:
+       ah.json |   FEED_NAME: "feed"
+       ah.json |   DOMAIN_NAME: "localhost"
+       ah.json |   DB_NAME: "feed"
+       ah.json | templateFile: "templates/atomhopper.json"
