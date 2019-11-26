@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.facade
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
+import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
@@ -73,13 +74,13 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @Test
     fun `get all config files`() {
         val files = facade.findAuroraConfigFiles(auroraConfigRef)
-        assertThat(files.size).isEqualTo(16)
+        assertThat(files).isNotEmpty()
     }
 
     @Test
     fun `get all config filenames`() {
         val files = facade.findAuroraConfigFileNames(auroraConfigRef)
-        assertThat(files.size).isEqualTo(16)
+        assertThat(files).isNotEmpty()
     }
 
     @Test

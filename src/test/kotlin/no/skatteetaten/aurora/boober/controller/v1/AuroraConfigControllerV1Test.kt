@@ -33,7 +33,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
-            responseJsonPath("$.items[0].files.length()").equalsValue(16)
+            responseJsonPath("$.items[0].files").isNotEmpty()
         }
     }
 
@@ -50,7 +50,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
-            responseJsonPath("$.items[0].files.length()").equalsValue(16)
+            responseJsonPath("$.items[0].files").isNotEmpty()
         }
     }
 
@@ -70,7 +70,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
-            responseJsonPath("$.items[0].files.length()").equalsValue(16)
+            responseJsonPath("$.items[0].files").isNotEmpty()
         }
     }
 
@@ -184,7 +184,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
         mockMvc.get(Path("/v1/auroraconfig/{auroraConfig}/filenames", auroraConfigRef.name)) {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
-            responseJsonPath("$.items.length()").equalsValue(16)
+            responseJsonPath("$.items").isNotEmpty()
         }
     }
 
