@@ -1,107 +1,86 @@
-{
-  applicationDeploymentRef:                     "utv/complex"                   // static
-  configVersion:                                "master"                        // static
-  message:                                      "Aurora <3"                     // complex.json
-  ttl:                                          "1d"                            // complex.json
-  schemaVersion:                                "v1"                            // about.json
-  type:                                         "development"                   // complex.json
-  affiliation:                                  "paas"                          // about.json
-  segment:                                      "aurora"                        // about.json
-  cluster:                                      "utv"                           // utv/about-alternate.json
-  permissions: {
-    admin:                                      "APP_PaaS_drift APP_PaaS_utv"   // about.json
-  }
-  envName:                                      "utv"                           // folderName
-  name:                                         "komplex"                       // complex.json
-  env: {
-    ttl:                                        "1d"                            // utv/about-alternate.json
-  }
-  envFile:                                      "about-alternate.json"          // utv/complex.json
-  artifactId:                                   "complex"                       // fileName
-  groupId:                                      "org.test"                      // complex.json
-  version:                                      "1"                             // complex.json
-  config: {
-    FOO:                                        "BAR"                           // complex.json
-  }
-  database: {
-    complex: {
-      enabled:                                  true                            // complex.json
-    }
-    foo:                                        "123-456"                       // complex.json
-  }
-  management: {
-    path:                                       "/foobar"                       // complex.json
-    port:                                       "8081"                          // complex.json
-  }
-  releaseTo:                                    "komplex"                       // complex.json
-  pause:                                        true                            // complex.json
-  splunkIndex:                                  "test-index"                    // complex.json
-  debug:                                        true                            // complex.json
-  resources: {
-    cpu: {
-      min:                                      "100m"                          // complex.json
-      max:                                      "2000m"                         // complex.json
-    }
-    memory: {
-      min:                                      "64Mi"                          // complex.json
-      max:                                      "128Mi"                         // complex.json
-    }
-  }
-  deployStrategy: {
-    type:                                       "recreate"                      // complex.json
-  }
-  serviceAccount:                               "aurora-fraggle"                // complex.json
-  prometheus: {
-    path:                                       "/prometheus"                   // complex.json
-    port:                                       "8082"                          // complex.json
-  }
-  liveness:                                     true                            // complex.json
-  mounts: {
-    aurora-token: {
-      path:                                     "/u01/secrets/app/aurora-token" // complex.json
-      type:                                     "Secret"                        // complex.json
-      exist:                                    true                            // complex.json
-    }
-    secret-mount: {
-      path:                                     "/u01/foo"                      // complex.json
-      type:                                     "Secret"                        // complex.json
-      secretVault:                              "foo"                           // complex.json
-    }
-    pvc: {
-      path:                                     "/foo"                          // complex.json
-      type:                                     "PVC"                           // complex.json
-      exist:                                    true                            // complex.json
-    }
-  }
-  route: {
-    @name@: {
-      tls: {
-        insecurePolicy:                         "Allow"                         // complex.json
-        termination:                            "edge"                          // complex.json
-      }
-    }
-    path: {
-      host:                                     "pathroute"                     // complex.json
-      path:                                     "/path"                         // complex.json
-    }
-    foobar: {
-      host:                                     "foobar"                        // complex.json
-      annotations: {
-        haproxy.router.openshift.io|timeout:    "30s"                           // complex.json
-      }
-    }
-  }
-  secretVaults: {
-    foo: {
-      keys:                                     ["BAR","FOO"]                   // complex.json
-      keyMappings:                              {"BAR":"BAZ"}                   // complex.json
-    }
-  }
-  certificate: {
-    commonName:                                 "komplex"                       // complex.json
-  }
-  webseal: {
-    host:                                       "test"                          // complex.json
-    roles:                                      "admin dev @name@"              // complex.json
-  }
-}
+                  static | applicationDeploymentRef: "utv/complex"
+                  static | configVersion: "master"
+            complex.json | message: "Aurora <3"
+            complex.json | ttl: "1d"
+              about.json | schemaVersion: "v1"
+            complex.json | type: "development"
+              about.json | affiliation: "paas"
+              about.json | segment: "aurora"
+utv/about-alternate.json | cluster: "utv"
+                         | permissions:
+              about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+              folderName | envName: "utv"
+            complex.json | name: "komplex"
+                         | env:
+utv/about-alternate.json |   ttl: "1d"
+        utv/complex.json | envFile: "about-alternate.json"
+                fileName | artifactId: "complex"
+            complex.json | groupId: "org.test"
+            complex.json | version: "1"
+                         | config:
+            complex.json |   FOO: "BAR"
+                         |   latest:
+            complex.json |     BAR: "BAZ"
+                         | database:
+                         |   complex:
+            complex.json |     enabled: true
+            complex.json |   foo: "123-456"
+                         | management:
+            complex.json |   path: "/foobar"
+            complex.json |   port: "8081"
+            complex.json | releaseTo: "komplex"
+            complex.json | pause: true
+            complex.json | splunkIndex: "test-index"
+            complex.json | debug: true
+                         | resources:
+                         |   cpu:
+            complex.json |     min: "100m"
+            complex.json |     max: "2000m"
+                         |   memory:
+            complex.json |     min: "64Mi"
+            complex.json |     max: "128Mi"
+                         | deployStrategy:
+            complex.json |   type: "recreate"
+            complex.json | serviceAccount: "aurora-fraggle"
+                         | prometheus:
+            complex.json |   path: "/prometheus"
+            complex.json |   port: "8082"
+            complex.json | liveness: true
+                         | mounts:
+                         |   aurora-token:
+            complex.json |     path: "/u01/secrets/app/aurora-token"
+            complex.json |     type: "Secret"
+            complex.json |     exist: true
+                         |   secret-mount:
+            complex.json |     path: "/u01/foo"
+            complex.json |     type: "Secret"
+            complex.json |     secretVault: "foo"
+                         |   pvc:
+            complex.json |     path: "/foo"
+            complex.json |     type: "PVC"
+            complex.json |     exist: true
+                         |   config-mount:
+            complex.json |     path: "/content"
+            complex.json |     type: "ConfigMap"
+            complex.json |     content: {"foo":"bar"}
+                         | route:
+                         |   @name@:
+                         |     tls:
+            complex.json |       insecurePolicy: "Allow"
+            complex.json |       termination: "edge"
+                         |   path:
+            complex.json |     host: "pathroute"
+            complex.json |     path: "/path"
+                         |   foobar:
+            complex.json |     host: "foobar"
+                         |     annotations:
+            complex.json |       haproxy.router.openshift.io|timeout: "30s"
+                         | secretVaults:
+                         |   foo:
+            complex.json |     keys: ["BAR","FOO"]
+            complex.json |     keyMappings: {"BAR":"BAZ"}
+                         | certificate:
+            complex.json |   commonName: "komplex"
+                         | webseal:
+            complex.json |   host: "test"
+            complex.json |   roles: "admin dev @name@"

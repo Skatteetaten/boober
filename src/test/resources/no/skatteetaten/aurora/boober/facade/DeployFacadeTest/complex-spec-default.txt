@@ -1,155 +1,124 @@
-{
-  applicationDeploymentRef:                     "utv/complex"                   // static
-  configVersion:                                "master"                        // static
-  message:                                      "Aurora <3"                     // complex.json
-  ttl:                                          "1d"                            // complex.json
-  schemaVersion:                                "v1"                            // about.json
-  type:                                         "development"                   // complex.json
-  applicationPlatform:                          "java"                          // default
-  affiliation:                                  "paas"                          // about.json
-  segment:                                      "aurora"                        // about.json
-  cluster:                                      "utv"                           // utv/about-alternate.json
-  permissions: {
-    admin:                                      "APP_PaaS_drift APP_PaaS_utv"   // about.json
-  }
-  envName:                                      "utv"                           // folderName
-  name:                                         "komplex"                       // complex.json
-  env: {
-    ttl:                                        "1d"                            // utv/about-alternate.json
-  }
-  envFile:                                      "about-alternate.json"          // utv/complex.json
-  artifactId:                                   "complex"                       // fileName
-  groupId:                                      "org.test"                      // complex.json
-  version:                                      "1"                             // complex.json
-  builder: {
-    name:                                       "architect"                     // default
-    version:                                    "1"                             // default
-  }
-  baseImage: {
-    name:                                       "wingnut8"                      // default
-    version:                                    1                               // default
-  }
-  config: {
-    FOO:                                        "BAR"                           // complex.json
-  }
-  databaseDefaults: {
-    flavor:                                     "ORACLE_MANAGED"                // default
-    generate:                                   true                            // default
-    name:                                       "@name@"                        // default
-  }
-  database: {
-    complex: {
-      enabled:                                  true                            // complex.json
-    }
-    foo:                                        "123-456"                       // complex.json
-  }
-  management: {
-    path:                                       "/foobar"                       // complex.json
-    port:                                       "8081"                          // complex.json
-  }
-  releaseTo:                                    "komplex"                       // complex.json
-  alarm:                                        true                            // default
-  pause:                                        true                            // complex.json
-  splunkIndex:                                  "test-index"                    // complex.json
-  debug:                                        true                            // complex.json
-  resources: {
-    cpu: {
-      min:                                      "100m"                          // complex.json
-      max:                                      "2000m"                         // complex.json
-    }
-    memory: {
-      min:                                      "64Mi"                          // complex.json
-      max:                                      "128Mi"                         // complex.json
-    }
-  }
-  deployStrategy: {
-    type:                                       "recreate"                      // complex.json
-    timeout:                                    180                             // default
-  }
-  replicas:                                     1                               // default
-  serviceAccount:                               "aurora-fraggle"                // complex.json
-  prometheus: {
-    path:                                       "/prometheus"                   // complex.json
-    port:                                       "8082"                          // complex.json
-  }
-  readiness: {
-    port:                                       8080                            // default
-    delay:                                      10                              // default
-    timeout:                                    1                               // default
-  }
-  liveness: {
-    port:                                       8080                            // default
-    delay:                                      10                              // default
-    timeout:                                    1                               // default
-  }
-  mounts: {
-    aurora-token: {
-      path:                                     "/u01/secrets/app/aurora-token" // complex.json
-      type:                                     "Secret"                        // complex.json
-      mountName:                                "aurora-token"                  // default
-      volumeName:                               "aurora-token"                  // default
-      exist:                                    true                            // complex.json
-    }
-    secret-mount: {
-      path:                                     "/u01/foo"                      // complex.json
-      type:                                     "Secret"                        // complex.json
-      mountName:                                "secret-mount"                  // default
-      volumeName:                               "secret-mount"                  // default
-      exist:                                    false                           // default
-      secretVault:                              "foo"                           // complex.json
-    }
-    pvc: {
-      path:                                     "/foo"                          // complex.json
-      type:                                     "PVC"                           // complex.json
-      mountName:                                "pvc"                           // default
-      volumeName:                               "pvc"                           // default
-      exist:                                    true                            // complex.json
-    }
-  }
-  route: {
-    @name@: {
-      enabled:                                  true                            // default
-      tls: {
-        insecurePolicy:                         "Allow"                         // complex.json
-        termination:                            "edge"                          // complex.json
-      }
-    }
-    path: {
-      enabled:                                  true                            // default
-      host:                                     "pathroute"                     // complex.json
-      path:                                     "/path"                         // complex.json
-    }
-    foobar: {
-      enabled:                                  true                            // default
-      host:                                     "foobar"                        // complex.json
-      annotations: {
-        haproxy.router.openshift.io|timeout:    "30s"                           // complex.json
-      }
-    }
-  }
-  routeDefaults: {
-    host:                                       "@name@-@affiliation@-@env@"    // default
-    tls: {
-      enabled:                                  false                           // default
-      insecurePolicy:                           "None"                          // default
-      termination:                              "edge"                          // default
-    }
-  }
-  secretVaults: {
-    foo: {
-      name:                                     "foo"                           // default
-      enabled:                                  true                            // default
-      file:                                     "latest.properties"             // default
-      keys:                                     ["BAR","FOO"]                   // complex.json
-      keyMappings:                              {"BAR":"BAZ"}                   // complex.json
-    }
-  }
-  certificate: {
-    commonName:                                 "komplex"                       // complex.json
-  }
-  toxiproxy:                                    false                           // default
-  webseal: {
-    host:                                       "test"                          // complex.json
-    roles:                                      "admin dev @name@"              // complex.json
-  }
-}
+                  static | applicationDeploymentRef: "utv/complex"
+                  static | configVersion: "master"
+            complex.json | message: "Aurora <3"
+            complex.json | ttl: "1d"
+              about.json | schemaVersion: "v1"
+            complex.json | type: "development"
+                 default | applicationPlatform: "java"
+              about.json | affiliation: "paas"
+              about.json | segment: "aurora"
+utv/about-alternate.json | cluster: "utv"
+                         | permissions:
+              about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+              folderName | envName: "utv"
+            complex.json | name: "komplex"
+                         | env:
+utv/about-alternate.json |   ttl: "1d"
+        utv/complex.json | envFile: "about-alternate.json"
+                fileName | artifactId: "complex"
+            complex.json | groupId: "org.test"
+            complex.json | version: "1"
+                         | builder:
+                 default |   name: "architect"
+                 default |   version: "1"
+                         | baseImage:
+                 default |   name: "wingnut8"
+                 default |   version: 1
+                         | config:
+            complex.json |   FOO: "BAR"
+                         |   latest:
+            complex.json |     BAR: "BAZ"
+                         | databaseDefaults:
+                 default |   flavor: "ORACLE_MANAGED"
+                 default |   generate: true
+                 default |   name: "@name@"
+                         | database:
+                         |   complex:
+            complex.json |     enabled: true
+            complex.json |   foo: "123-456"
+                         | management:
+            complex.json |   path: "/foobar"
+            complex.json |   port: "8081"
+            complex.json | releaseTo: "komplex"
+                 default | alarm: true
+            complex.json | pause: true
+            complex.json | splunkIndex: "test-index"
+            complex.json | debug: true
+                         | resources:
+                         |   cpu:
+            complex.json |     min: "100m"
+            complex.json |     max: "2000m"
+                         |   memory:
+            complex.json |     min: "64Mi"
+            complex.json |     max: "128Mi"
+                         | deployStrategy:
+            complex.json |   type: "recreate"
+                 default |   timeout: 180
+                 default | replicas: 1
+            complex.json | serviceAccount: "aurora-fraggle"
+                         | prometheus:
+            complex.json |   path: "/prometheus"
+            complex.json |   port: "8082"
+                 default | readiness: true
+            complex.json | liveness: true
+                         | mounts:
+                         |   aurora-token:
+            complex.json |     path: "/u01/secrets/app/aurora-token"
+            complex.json |     type: "Secret"
+                 default |     mountName: "aurora-token"
+                 default |     volumeName: "aurora-token"
+            complex.json |     exist: true
+                         |   secret-mount:
+            complex.json |     path: "/u01/foo"
+            complex.json |     type: "Secret"
+                 default |     mountName: "secret-mount"
+                 default |     volumeName: "secret-mount"
+                 default |     exist: false
+            complex.json |     secretVault: "foo"
+                         |   pvc:
+            complex.json |     path: "/foo"
+            complex.json |     type: "PVC"
+                 default |     mountName: "pvc"
+                 default |     volumeName: "pvc"
+            complex.json |     exist: true
+                         |   config-mount:
+            complex.json |     path: "/content"
+            complex.json |     type: "ConfigMap"
+                 default |     mountName: "config-mount"
+                 default |     volumeName: "config-mount"
+                 default |     exist: false
+            complex.json |     content: {"foo":"bar"}
+                         | route:
+                         |   @name@:
+                 default |     enabled: true
+                         |     tls:
+            complex.json |       insecurePolicy: "Allow"
+            complex.json |       termination: "edge"
+                         |   path:
+                 default |     enabled: true
+            complex.json |     host: "pathroute"
+            complex.json |     path: "/path"
+                         |   foobar:
+                 default |     enabled: true
+            complex.json |     host: "foobar"
+                         |     annotations:
+            complex.json |       haproxy.router.openshift.io|timeout: "30s"
+                         | routeDefaults:
+                 default |   host: "@name@-@affiliation@-@env@"
+                         |   tls:
+                 default |     enabled: false
+                 default |     insecurePolicy: "None"
+                 default |     termination: "edge"
+                         | secretVaults:
+                         |   foo:
+                 default |     name: "foo"
+                 default |     enabled: true
+                 default |     file: "latest.properties"
+            complex.json |     keys: ["BAR","FOO"]
+            complex.json |     keyMappings: {"BAR":"BAZ"}
+                         | certificate:
+            complex.json |   commonName: "komplex"
+                 default | toxiproxy: false
+                         | webseal:
+            complex.json |   host: "test"
+            complex.json |   roles: "admin dev @name@"

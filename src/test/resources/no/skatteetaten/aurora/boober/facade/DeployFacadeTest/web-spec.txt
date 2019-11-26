@@ -1,23 +1,19 @@
-{
-  applicationDeploymentRef: "utv/web"                     // static
-  configVersion:            "master"                      // static
-  schemaVersion:            "v1"                          // about.json
-  type:                     "development"                 // web.json
-  applicationPlatform:      "web"                         // web.json
-  affiliation:              "paas"                        // about.json
-  segment:                  "aurora"                      // about.json
-  cluster:                  "utv"                         // utv/about.json
-  permissions: {
-    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
-  }
-  envName:                  "utv"                         // folderName
-  name:                     "web"                         // fileName
-  artifactId:               "web"                         // fileName
-  groupId:                  "org.test"                    // web.json
-  version:                  "develop-SNAPSHOT"            // web.json
-  config: {
-    foo2:                   "baz"                         // web.json
-  }
-  route:                    true                          // web.json
-  toxiproxy:                true                          // web.json
-}
+        static | applicationDeploymentRef: "utv/web"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+      web.json | type: "development"
+      web.json | applicationPlatform: "web"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "web"
+      fileName | artifactId: "web"
+      web.json | groupId: "org.test"
+      web.json | version: "develop-SNAPSHOT"
+               | config:
+      web.json |   foo2: "baz"
+      web.json | route: true
+      web.json | toxiproxy: true
