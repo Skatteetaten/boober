@@ -226,7 +226,10 @@ class SecretVaultFeature(
                 }
             }?.let {
                 VaultSecretEnvResult(
-                    secret.secretVaultName.ensureStartWith(adc.name, "-").ensureEndsWith("vault", "-").toLowerCase(),
+                    secret.secretVaultName.ensureStartWith(adc.name, "-").ensureEndsWith(
+                        "vault",
+                        "-"
+                    ).toLowerCase().replace("_", "-"),
                     it.toMap()
                 )
             }
