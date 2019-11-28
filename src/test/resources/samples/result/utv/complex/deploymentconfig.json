@@ -2,17 +2,11 @@
   "apiVersion" : "apps.openshift.io/v1",
   "kind" : "DeploymentConfig",
   "metadata" : {
-    "annotations" : {
-      "boober.skatteetaten.no/applicationFile" : "utv/complex.json",
-      "console.skatteetaten.no/alarm" : "true",
-      "console.skatteetaten.no/management-path" : ":8081/foobar",
-      "boober.skatteetaten.no/releaseTo" : "komplex"
-    },
     "labels" : {
       "app" : "komplex",
       "updatedBy" : "hero",
+      "updatedAt" : "0",
       "affiliation" : "paas",
-      "updateInBoober" : "true",
       "name" : "komplex",
       "deployTag" : "komplex",
       "paused" : "true",
@@ -43,8 +37,8 @@
         "labels" : {
           "app" : "komplex",
           "updatedBy" : "hero",
+          "updatedAt" : "0",
           "affiliation" : "paas",
-          "updateInBoober" : "true",
           "name" : "komplex",
           "deployTag" : "komplex",
           "paused" : "true"
@@ -93,9 +87,6 @@
             "name" : "FOO",
             "value" : "BAR"
           }, {
-            "name" : "VOLUME_CONFIG",
-            "value" : "/u01/config/configmap"
-          }, {
             "name" : "COMPLEX_DB",
             "value" : "/u01/secrets/app/complex-db/info"
           }, {
@@ -137,9 +128,6 @@
           }, {
             "name" : "VOLUME_PVC",
             "value" : "/foo"
-          }, {
-            "name" : "VOLUME_CONFIG_MOUNT",
-            "value" : "/content"
           }, {
             "name" : "ROUTE_NAME",
             "value" : "komplex-paas-utv.test"
@@ -215,9 +203,6 @@
             "mountPath" : "/u01/secrets/app/komplex-cert",
             "name" : "komplex-cert"
           }, {
-            "mountPath" : "/u01/config/configmap",
-            "name" : "config"
-          }, {
             "mountPath" : "/u01/secrets/app/complex-db",
             "name" : "komplex-complex-db"
           }, {
@@ -232,9 +217,6 @@
           }, {
             "mountPath" : "/foo",
             "name" : "pvc-mount"
-          }, {
-            "mountPath" : "/content",
-            "name" : "config-mount"
           } ]
         } ],
         "dnsPolicy" : "ClusterFirst",
@@ -248,11 +230,6 @@
           "secret" : {
             "secretName" : "komplex-cert"
           }
-        }, {
-          "configMap" : {
-            "name" : "komplex"
-          },
-          "name" : "config"
         }, {
           "name" : "komplex-complex-db",
           "secret" : {
@@ -278,11 +255,6 @@
           "persistentVolumeClaim" : {
             "claimName" : "pvc"
           }
-        }, {
-          "configMap" : {
-            "name" : "komplex-config-mount"
-          },
-          "name" : "config-mount"
         } ]
       }
     },
