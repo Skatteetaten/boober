@@ -34,7 +34,7 @@ val AuroraDeploymentSpec.stsCommonName: String?
 
 private val logger = KotlinLogging.logger { }
 
-//TODO: Should we change this to allow more the one?
+// TODO: Should we change this to allow more the one?
 @ConditionalOnPropertyMissingOrEmpty("integrations.skap.url")
 @Service
 class StsDisabledFeature : Feature {
@@ -118,4 +118,3 @@ class StsFeature(
         }
     }
 }
-
