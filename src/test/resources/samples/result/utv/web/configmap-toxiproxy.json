@@ -5,8 +5,8 @@
     "labels": {
       "app": "web",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "web",
       "booberDeployId": "deploy1"
     },

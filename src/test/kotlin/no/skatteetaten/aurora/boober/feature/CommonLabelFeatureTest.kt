@@ -26,8 +26,8 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
         val labels = mapOf(
             "app" to "simple",
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
+            "updatedAt" to "0",
             "affiliation" to "paas",
-            "updateInBoober" to "true",
             "name" to "simple"
         )
         resources.forEach {

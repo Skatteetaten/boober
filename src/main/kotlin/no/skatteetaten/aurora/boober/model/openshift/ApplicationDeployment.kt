@@ -46,6 +46,8 @@ data class ApplicationDeployment(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApplicationDeploymentSpec(
     var applicationId: String? = null,
+    var updatedAt: String? = null,
+    // TODO: Skal vi bare fjerne selector, vi vet ikke hva den er satt til p.g.a templates uansett.
     var selector: Map<String, String> = emptyMap(),
     var applicationDeploymentId: String = "",
     var applicationName: String? = null,

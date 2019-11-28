@@ -41,7 +41,6 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.resourceUrl
 import org.springframework.stereotype.Service
 
-// TODO: test, together with deploy service as well as unit tests
 @Service
 class OpenShiftCommandService(
     val openShiftClient: OpenShiftClient

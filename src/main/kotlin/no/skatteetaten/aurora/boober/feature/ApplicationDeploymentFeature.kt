@@ -41,6 +41,7 @@ class ApplicationDeploymentFeature : Feature {
         val resource = ApplicationDeployment(
             spec = ApplicationDeploymentSpec(
                 selector = mapOf("name" to adc.name),
+                updatedAt = Instants.now.toString(),
                 message = adc.getOrNull("message"),
                 applicationDeploymentName = adc.name,
                 applicationDeploymentId = applicationDeploymentId,
@@ -55,7 +56,6 @@ class ApplicationDeploymentFeature : Feature {
                 namespace = adc.namespace
                 labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl).normalizeLabels()
             }
-        // TODO: add annotation with updatedAt iso time format
         )
         return setOf(generateResource(resource))
     }

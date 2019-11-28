@@ -28,8 +28,6 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   commonName: "komplex"
                          | config:
             complex.json |   FOO: "BAR"
-                         |   latest:
-            complex.json |     BAR: "BAZ"
                          | databaseDefaults:
                  default |   flavor: "ORACLE_MANAGED"
                  default |   generate: true
@@ -83,13 +81,6 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     mountName: "pvc"
                  default |     volumeName: "pvc"
             complex.json |     exist: true
-                         |   config-mount:
-            complex.json |     path: "/content"
-            complex.json |     type: "ConfigMap"
-                 default |     mountName: "config-mount"
-                 default |     volumeName: "config-mount"
-                 default |     exist: false
-            complex.json |     content: {"foo":"bar"}
                          | route:
                          |   @name@:
                  default |     enabled: true

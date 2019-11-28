@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
@@ -85,7 +83,6 @@ class DeploymentConfigFeature : Feature {
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val dcLabels = createDcLabels(adc).normalizeLabels()
-        val dcAnnotations = createDcAnnotations(adc, cmd)
         val envVars = createEnvVars(adc).toEnvVars()
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
@@ -106,7 +103,6 @@ class DeploymentConfigFeature : Feature {
 
                 dc.spec.template.metadata.labels = dc.spec.template.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
-                dc.metadata.annotations = it.resource.metadata.annotations?.addIfNotNull(dcAnnotations) ?: dcAnnotations
 
                 if (adc.pause) {
                     dc.spec.replicas = 0
@@ -157,24 +153,5 @@ class DeploymentConfigFeature : Feature {
         } else null
 
         return mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel).normalizeLabels()
-    }
-
-    fun createDcAnnotations(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, String> {
-
-        fun escapeOverrides(): String? {
-            val files =
-                cmd.overrideFiles.mapValues { jacksonObjectMapper().readValue(it.value, JsonNode::class.java) }
-            val content = jacksonObjectMapper().writeValueAsString(files)
-            return content.takeIf { it != "{}" }
-        }
-
-        // TODO: None of these are needed anymore. They are in AD file
-        return mapOf(
-            "boober.skatteetaten.no/applicationFile" to cmd.applicationFile.name,
-            "console.skatteetaten.no/alarm" to adc["alarm"],
-            "boober.skatteetaten.no/overrides" to escapeOverrides(),
-            "console.skatteetaten.no/management-path" to adc.managementPath,
-            "boober.skatteetaten.no/releaseTo" to adc.releaseTo
-        ).filterNullValues().filterValues { !it.isBlank() }
     }
 }

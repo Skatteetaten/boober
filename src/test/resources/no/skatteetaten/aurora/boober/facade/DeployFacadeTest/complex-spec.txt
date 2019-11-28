@@ -21,8 +21,6 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   commonName: "komplex"
                          | config:
             complex.json |   FOO: "BAR"
-                         |   latest:
-            complex.json |     BAR: "BAZ"
                          | database:
                          |   complex:
             complex.json |     enabled: true
@@ -61,10 +59,6 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |     path: "/foo"
             complex.json |     type: "PVC"
             complex.json |     exist: true
-                         |   config-mount:
-            complex.json |     path: "/content"
-            complex.json |     type: "ConfigMap"
-            complex.json |     content: {"foo":"bar"}
                          | route:
                          |   @name@:
                          |     tls:

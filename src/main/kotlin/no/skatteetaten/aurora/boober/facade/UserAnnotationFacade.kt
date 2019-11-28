@@ -7,10 +7,10 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.treeToValue
 import com.fkorotkov.kubernetes.newObjectMeta
 import io.fabric8.kubernetes.api.model.ObjectMeta
+import no.skatteetaten.aurora.boober.ClientType
+import no.skatteetaten.aurora.boober.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.ClientType
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClientConfig.TokenSource
 import no.skatteetaten.aurora.boober.utils.base64ToJsonNode
 import no.skatteetaten.aurora.boober.utils.toBase64
 import org.springframework.http.ResponseEntity
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
 @Service
 class UserAnnotationFacade(
     private val userDetailsProvider: UserDetailsProvider,
-    @ClientType(TokenSource.SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
+    @ClientType(SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
 ) {
 
     fun getAnnotations(): Map<String, JsonNode> {

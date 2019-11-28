@@ -42,7 +42,6 @@
           "app": "whoami",
           "booberDeployId": "b455cc1",
           "releasedVersion": "foobar",
-          "updateInBoober": "true",
           "updatedBy": "m89870"
         },
         "annotations": {

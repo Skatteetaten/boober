@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.model
 import com.github.fge.jsonpatch.JsonPatch
 import java.io.File
 import java.nio.charset.Charset
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
@@ -69,7 +70,9 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         files: List<AuroraConfigFile>
     ): Map<AuroraConfigFileSpec, AuroraConfigFile?> {
         return fileSpec.map { spec ->
-            spec to files.find { it.name.removeExtension() == spec.name }
+            spec to files.find { it.name.removeExtension() == spec.name }?.let {
+                it.copy(typeHint = spec.type)
+            }
         }.toMap()
     }
 
@@ -136,17 +139,31 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val envFile = implementationFile.asJsonNode.get("envFile")?.asText()?.removeExtension()
             ?: "about"
 
-        if (!envFile.startsWith("about")) {
-            throw java.lang.IllegalArgumentException("envFile must start with about")
+        require(envFile.startsWith("about")) { "envFile must start with about" }
+
+        val envFileJson = files.find { file ->
+            file.name.startsWith(applicationDeploymentRef.environment) &&
+                file.name.removePrefix("${applicationDeploymentRef.environment}/").removeExtension() == envFile &&
+                !file.override }?.asJsonNode
+            ?: throw java.lang.IllegalArgumentException("Should find envFile $envFile.(json|yaml")
+
+        val include = envFileJson.get("includeEnvFile")?.asText()
+
+        val envFiles = include?.let {
+            require(it.substringAfterLast("/").startsWith(("about"))) { "included envFile must start with about" }
+            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ABOUT)
         }
 
         return setOf(
             AuroraConfigFileSpec("about", AuroraConfigFileType.GLOBAL),
-            AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE),
-            AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
-            AuroraConfigFileSpec(
-                "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
-                AuroraConfigFileType.APP
+            AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE)
+        ).addIfNotNull(envFiles).addIfNotNull(
+            setOf(
+                AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
+                AuroraConfigFileSpec(
+                    "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
+                    AuroraConfigFileType.APP
+                )
             )
         )
     }

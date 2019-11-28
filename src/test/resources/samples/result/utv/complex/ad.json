@@ -5,8 +5,8 @@
     "labels": {
       "app": "komplex",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "komplex",
       "id": "74a691b9358d168e305df7a1ae175a5eefda6754",
       "removeAfter": "86400",
@@ -19,6 +19,7 @@
   },
   "spec": {
     "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
+    "updatedAt": "1970-01-01T00:00:00Z",
     "selector": {
       "name": "komplex"
     },
