@@ -79,11 +79,11 @@ class SecretVaultFeature(
         if (!fullValidation) return emptyList()
 
         return shallowValidation
-                .addIfNotNull(validateVaultExistence(secrets, adc.affiliation))
-                .addIfNotNull(validateKeyMappings(secrets))
-                .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
-                .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
-                .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
+            .addIfNotNull(validateVaultExistence(secrets, adc.affiliation))
+            .addIfNotNull(validateKeyMappings(secrets))
+            .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
+            .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
+            .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
     }
 
     fun validateVaultExistence(
@@ -226,7 +226,10 @@ class SecretVaultFeature(
                 }
             }?.let {
                 VaultSecretEnvResult(
-                    secret.secretVaultName.ensureStartWith(adc.name, "-").ensureEndsWith("vault", "-").toLowerCase(),
+                    secret.secretVaultName
+                        .ensureStartWith(adc.name, "-")
+                        .ensureEndsWith("vault", "-")
+                        .toLowerCase().replace("_", "-"),
                     it.toMap()
                 )
             }
