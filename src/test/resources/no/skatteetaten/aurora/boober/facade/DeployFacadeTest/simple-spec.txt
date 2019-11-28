@@ -1,20 +1,17 @@
-{
-  applicationDeploymentRef: "utv/simple"                  // static
-  configVersion:            "master"                      // static
-  schemaVersion:            "v1"                          // about.json
-  type:                     "deploy"                      // about.json
-  affiliation:              "paas"                        // about.json
-  segment:                  "aurora"                      // about.json
-  cluster:                  "utv"                         // utv/about.json
-  permissions: {
-    admin:                  "APP_PaaS_drift APP_PaaS_utv" // about.json
-  }
-  envName:                  "utv"                         // folderName
-  name:                     "simple"                      // fileName
-  database:                 true                          // simple.json
-  version:                  "1"                           // simple.json
-  artifactId:               "simple"                      // fileName
-  groupId:                  "org.test"                    // simple.json
-  route:                    true                          // simple.json
-  certificate:              true                          // simple.json
-}
+        static | applicationDeploymentRef: "utv/simple"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+    about.json | type: "deploy"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "simple"
+   simple.json | database: true
+   simple.json | version: "1"
+      fileName | artifactId: "simple"
+   simple.json | groupId: "org.test"
+   simple.json | route: true
+   simple.json | certificate: true
