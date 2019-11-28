@@ -2,6 +2,6 @@
   "version": "1",
   "groupId": "org.test",
   "database": true,
-  "certificate": true,
+  "sts": true,
   "route": true
 }

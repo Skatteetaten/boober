@@ -24,6 +24,8 @@ utv/about-alternate.json |   ttl: "1d"
                          | baseImage:
                  default |   name: "wingnut8"
                  default |   version: 1
+                         | certificate:
+            complex.json |   commonName: "komplex"
                          | config:
             complex.json |   FOO: "BAR"
                          |   latest:
@@ -116,8 +118,7 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     file: "latest.properties"
             complex.json |     keys: ["BAR","FOO"]
             complex.json |     keyMappings: {"BAR":"BAZ"}
-                         | certificate:
-            complex.json |   commonName: "komplex"
+                 default | sts: false
                  default | toxiproxy: false
                          | webseal:
             complex.json |   host: "test"

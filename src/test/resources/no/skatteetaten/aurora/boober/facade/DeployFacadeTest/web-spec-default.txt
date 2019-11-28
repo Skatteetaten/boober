@@ -19,6 +19,7 @@ utv/about.json | cluster: "utv"
                | baseImage:
        default |   name: "wrench8"
        default |   version: 1
+       default | certificate: false
                | config:
       web.json |   foo2: "baz"
                | databaseDefaults:
@@ -44,7 +45,7 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "Redirect"
        default |     termination: "edge"
-       default | certificate: false
+       default | sts: false
       web.json | toxiproxy: true
                | deployStrategy:
        default |   type: "rolling"

@@ -1,1132 +1,920 @@
 {
-  "applicationDeploymentRef": {
-    "source": "static",
-    "value": "utv/complex",
-    "sources": [
-      {
-        "name": "static",
-        "value": "utv/complex"
-      }
-    ]
+  "applicationDeploymentRef" : {
+    "source" : "static",
+    "value" : "utv/complex",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "utv/complex"
+    } ]
   },
-  "configVersion": {
-    "source": "static",
-    "value": "master",
-    "sources": [
-      {
-        "name": "static",
-        "value": "master"
-      }
-    ]
+  "configVersion" : {
+    "source" : "static",
+    "value" : "master",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "master"
+    } ]
   },
-  "message": {
-    "source": "complex.json",
-    "value": "Aurora <3",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "Aurora <3"
-      }
-    ]
+  "message" : {
+    "source" : "complex.json",
+    "value" : "Aurora <3",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "Aurora <3"
+    } ]
   },
-  "ttl": {
-    "source": "complex.json",
-    "value": "1d",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "1d"
-      }
-    ]
+  "ttl" : {
+    "source" : "complex.json",
+    "value" : "1d",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "1d"
+    } ]
   },
-  "schemaVersion": {
-    "source": "about.json",
-    "value": "v1",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "v1"
-      }
-    ]
+  "schemaVersion" : {
+    "source" : "about.json",
+    "value" : "v1",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "v1"
+    } ]
   },
-  "type": {
-    "source": "complex.json",
-    "value": "development",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "deploy"
+  "type" : {
+    "source" : "complex.json",
+    "value" : "development",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "deploy"
+    }, {
+      "name" : "complex.json",
+      "value" : "development"
+    } ]
+  },
+  "applicationPlatform" : {
+    "source" : "default",
+    "value" : "java",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "java"
+    } ]
+  },
+  "affiliation" : {
+    "source" : "about.json",
+    "value" : "paas",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "paas"
+    } ]
+  },
+  "segment" : {
+    "source" : "about.json",
+    "value" : "aurora",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "aurora"
+    } ]
+  },
+  "cluster" : {
+    "source" : "utv/about-alternate.json",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "utv"
+    }, {
+      "name" : "utv/about-alternate.json",
+      "value" : "utv"
+    } ]
+  },
+  "permissions" : {
+    "admin" : {
+      "source" : "about.json",
+      "value" : "APP_PaaS_drift APP_PaaS_utv",
+      "sources" : [ {
+        "name" : "about.json",
+        "value" : "APP_PaaS_drift APP_PaaS_utv"
+      } ]
+    }
+  },
+  "envName" : {
+    "source" : "folderName",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "folderName",
+      "value" : "utv"
+    } ]
+  },
+  "name" : {
+    "source" : "complex.json",
+    "value" : "komplex",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "complex"
+    }, {
+      "name" : "complex.json",
+      "value" : "komplex"
+    } ]
+  },
+  "env" : {
+    "ttl" : {
+      "source" : "utv/about-alternate.json",
+      "value" : "1d",
+      "sources" : [ {
+        "name" : "utv/about-alternate.json",
+        "value" : "1d"
+      } ]
+    }
+  },
+  "envFile" : {
+    "source" : "utv/complex.json",
+    "value" : "about-alternate.json",
+    "sources" : [ {
+      "name" : "utv/complex.json",
+      "value" : "about-alternate.json"
+    } ]
+  },
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "complex",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "complex"
+    } ]
+  },
+  "groupId" : {
+    "source" : "complex.json",
+    "value" : "org.test",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "org.test"
+    } ]
+  },
+  "version" : {
+    "source" : "complex.json",
+    "value" : "1",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "1"
+    } ]
+  },
+  "builder" : {
+    "name" : {
+      "source" : "default",
+      "value" : "architect",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "architect"
+      } ]
+    },
+    "version" : {
+      "source" : "default",
+      "value" : "1",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "1"
+      } ]
+    }
+  },
+  "baseImage" : {
+    "name" : {
+      "source" : "default",
+      "value" : "wingnut8",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "wingnut8"
+      } ]
+    },
+    "version" : {
+      "source" : "default",
+      "value" : 1,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 1
+      } ]
+    }
+  },
+  "certificate" : {
+    "commonName" : {
+      "source" : "complex.json",
+      "value" : "komplex",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "komplex"
+      } ]
+    }
+  },
+  "config" : {
+    "FOO" : {
+      "source" : "complex.json",
+      "value" : "BAR",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "BAR"
+      } ]
+    },
+    "latest" : {
+      "BAR" : {
+        "source" : "complex.json",
+        "value" : "BAZ",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "BAZ"
+        } ]
+      }
+    }
+  },
+  "databaseDefaults" : {
+    "flavor" : {
+      "source" : "default",
+      "value" : "ORACLE_MANAGED",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "ORACLE_MANAGED"
+      } ]
+    },
+    "generate" : {
+      "source" : "default",
+      "value" : true,
+      "sources" : [ {
+        "name" : "default",
+        "value" : true
+      } ]
+    },
+    "name" : {
+      "source" : "default",
+      "value" : "@name@",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "@name@"
+      } ]
+    }
+  },
+  "database" : {
+    "complex" : {
+      "enabled" : {
+        "source" : "complex.json",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        }, {
+          "name" : "complex.json",
+          "value" : true
+        } ]
+      }
+    },
+    "foo" : {
+      "source" : "complex.json",
+      "value" : "123-456",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "123-456"
+      } ]
+    }
+  },
+  "management" : {
+    "path" : {
+      "source" : "complex.json",
+      "value" : "/foobar",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "actuator"
+      }, {
+        "name" : "complex.json",
+        "value" : "/foobar"
+      } ]
+    },
+    "port" : {
+      "source" : "complex.json",
+      "value" : "8081",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "8081"
+      }, {
+        "name" : "complex.json",
+        "value" : "8081"
+      } ]
+    }
+  },
+  "releaseTo" : {
+    "source" : "complex.json",
+    "value" : "komplex",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "komplex"
+    } ]
+  },
+  "alarm" : {
+    "source" : "default",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : true
+    } ]
+  },
+  "pause" : {
+    "source" : "complex.json",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    }, {
+      "name" : "complex.json",
+      "value" : true
+    } ]
+  },
+  "splunkIndex" : {
+    "source" : "complex.json",
+    "value" : "test-index",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "test-index"
+    } ]
+  },
+  "debug" : {
+    "source" : "complex.json",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    }, {
+      "name" : "complex.json",
+      "value" : true
+    } ]
+  },
+  "resources" : {
+    "cpu" : {
+      "min" : {
+        "source" : "complex.json",
+        "value" : "100m",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "10m"
+        }, {
+          "name" : "complex.json",
+          "value" : "100m"
+        } ]
       },
-      {
-        "name": "complex.json",
-        "value": "development"
+      "max" : {
+        "source" : "complex.json",
+        "value" : "2000m",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "2000m"
+        }, {
+          "name" : "complex.json",
+          "value" : "2000m"
+        } ]
       }
-    ]
-  },
-  "applicationPlatform": {
-    "source": "default",
-    "value": "java",
-    "sources": [
-      {
-        "name": "default",
-        "value": "java"
-      }
-    ]
-  },
-  "affiliation": {
-    "source": "about.json",
-    "value": "paas",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "paas"
-      }
-    ]
-  },
-  "segment": {
-    "source": "about.json",
-    "value": "aurora",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "aurora"
-      }
-    ]
-  },
-  "cluster": {
-    "source": "utv/about-alternate.json",
-    "value": "utv",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "utv"
+    },
+    "memory" : {
+      "min" : {
+        "source" : "complex.json",
+        "value" : "64Mi",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "128Mi"
+        }, {
+          "name" : "complex.json",
+          "value" : "64Mi"
+        } ]
       },
-      {
-        "name": "utv/about-alternate.json",
-        "value": "utv"
+      "max" : {
+        "source" : "complex.json",
+        "value" : "128Mi",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "512Mi"
+        }, {
+          "name" : "complex.json",
+          "value" : "128Mi"
+        } ]
       }
-    ]
-  },
-  "permissions": {
-    "admin": {
-      "source": "about.json",
-      "value": "APP_PaaS_drift APP_PaaS_utv",
-      "sources": [
-        {
-          "name": "about.json",
-          "value": "APP_PaaS_drift APP_PaaS_utv"
-        }
-      ]
     }
   },
-  "envName": {
-    "source": "folderName",
-    "value": "utv",
-    "sources": [
-      {
-        "name": "folderName",
-        "value": "utv"
-      }
-    ]
+  "deployStrategy" : {
+    "type" : {
+      "source" : "complex.json",
+      "value" : "recreate",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "rolling"
+      }, {
+        "name" : "complex.json",
+        "value" : "recreate"
+      } ]
+    },
+    "timeout" : {
+      "source" : "default",
+      "value" : 180,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 180
+      } ]
+    }
   },
-  "name": {
-    "source": "complex.json",
-    "value": "komplex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
+  "replicas" : {
+    "source" : "default",
+    "value" : 1,
+    "sources" : [ {
+      "name" : "default",
+      "value" : 1
+    } ]
+  },
+  "serviceAccount" : {
+    "source" : "complex.json",
+    "value" : "aurora-fraggle",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "aurora-fraggle"
+    } ]
+  },
+  "prometheus" : {
+    "path" : {
+      "source" : "complex.json",
+      "value" : "/prometheus",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "/prometheus"
+      }, {
+        "name" : "complex.json",
+        "value" : "/prometheus"
+      } ]
+    },
+    "port" : {
+      "source" : "complex.json",
+      "value" : "8082",
+      "sources" : [ {
+        "name" : "default",
+        "value" : 8081
+      }, {
+        "name" : "complex.json",
+        "value" : "8082"
+      } ]
+    }
+  },
+  "readiness" : {
+    "source" : "default",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : true
+    } ],
+    "port" : {
+      "source" : "default",
+      "value" : 8080,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 8080
+      } ]
+    },
+    "delay" : {
+      "source" : "default",
+      "value" : 10,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 10
+      } ]
+    },
+    "timeout" : {
+      "source" : "default",
+      "value" : 1,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 1
+      } ]
+    }
+  },
+  "liveness" : {
+    "source" : "complex.json",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    }, {
+      "name" : "complex.json",
+      "value" : true
+    } ],
+    "port" : {
+      "source" : "default",
+      "value" : 8080,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 8080
+      } ]
+    },
+    "delay" : {
+      "source" : "default",
+      "value" : 10,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 10
+      } ]
+    },
+    "timeout" : {
+      "source" : "default",
+      "value" : 1,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 1
+      } ]
+    }
+  },
+  "mounts" : {
+    "aurora-token" : {
+      "path" : {
+        "source" : "complex.json",
+        "value" : "/u01/secrets/app/aurora-token",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "/u01/secrets/app/aurora-token"
+        } ]
       },
-      {
-        "name": "complex.json",
-        "value": "komplex"
-      }
-    ]
-  },
-  "env": {
-    "ttl": {
-      "source": "utv/about-alternate.json",
-      "value": "1d",
-      "sources": [
-        {
-          "name": "utv/about-alternate.json",
-          "value": "1d"
-        }
-      ]
-    }
-  },
-  "envFile": {
-    "source": "utv/complex.json",
-    "value": "about-alternate.json",
-    "sources": [
-      {
-        "name": "utv/complex.json",
-        "value": "about-alternate.json"
-      }
-    ]
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "complex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
-      }
-    ]
-  },
-  "groupId": {
-    "source": "complex.json",
-    "value": "org.test",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "org.test"
-      }
-    ]
-  },
-  "version": {
-    "source": "complex.json",
-    "value": "1",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "1"
-      }
-    ]
-  },
-  "builder": {
-    "name": {
-      "source": "default",
-      "value": "architect",
-      "sources": [
-        {
-          "name": "default",
-          "value": "architect"
-        }
-      ]
-    },
-    "version": {
-      "source": "default",
-      "value": "1",
-      "sources": [
-        {
-          "name": "default",
-          "value": "1"
-        }
-      ]
-    }
-  },
-  "baseImage": {
-    "name": {
-      "source": "default",
-      "value": "wingnut8",
-      "sources": [
-        {
-          "name": "default",
-          "value": "wingnut8"
-        }
-      ]
-    },
-    "version": {
-      "source": "default",
-      "value": 1,
-      "sources": [
-        {
-          "name": "default",
-          "value": 1
-        }
-      ]
-    }
-  },
-  "config": {
-    "FOO": {
-      "source": "complex.json",
-      "value": "BAR",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "BAR"
-        }
-      ]
-    },
-    "latest": {
-      "BAR": {
-        "source": "complex.json",
-        "value": "BAZ",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "BAZ"
-          }
-        ]
-      }
-    }
-  },
-  "databaseDefaults": {
-    "flavor": {
-      "source": "default",
-      "value": "ORACLE_MANAGED",
-      "sources": [
-        {
-          "name": "default",
-          "value": "ORACLE_MANAGED"
-        }
-      ]
-    },
-    "generate": {
-      "source": "default",
-      "value": true,
-      "sources": [
-        {
-          "name": "default",
-          "value": true
-        }
-      ]
-    },
-    "name": {
-      "source": "default",
-      "value": "@name@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@"
-        }
-      ]
-    }
-  },
-  "database": {
-    "complex": {
-      "enabled": {
-        "source": "complex.json",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          },
-          {
-            "name": "complex.json",
-            "value": true
-          }
-        ]
+      "type" : {
+        "source" : "complex.json",
+        "value" : "Secret",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "Secret"
+        } ]
+      },
+      "mountName" : {
+        "source" : "default",
+        "value" : "aurora-token",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "aurora-token"
+        } ]
+      },
+      "volumeName" : {
+        "source" : "default",
+        "value" : "aurora-token",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "aurora-token"
+        } ]
+      },
+      "exist" : {
+        "source" : "complex.json",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        }, {
+          "name" : "complex.json",
+          "value" : true
+        } ]
       }
     },
-    "foo": {
-      "source": "complex.json",
-      "value": "123-456",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "123-456"
-        }
-      ]
-    }
-  },
-  "management": {
-    "path": {
-      "source": "complex.json",
-      "value": "/foobar",
-      "sources": [
-        {
-          "name": "default",
-          "value": "actuator"
+    "secret-mount" : {
+      "path" : {
+        "source" : "complex.json",
+        "value" : "/u01/foo",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "/u01/foo"
+        } ]
+      },
+      "type" : {
+        "source" : "complex.json",
+        "value" : "Secret",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "Secret"
+        } ]
+      },
+      "mountName" : {
+        "source" : "default",
+        "value" : "secret-mount",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "secret-mount"
+        } ]
+      },
+      "volumeName" : {
+        "source" : "default",
+        "value" : "secret-mount",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "secret-mount"
+        } ]
+      },
+      "exist" : {
+        "source" : "default",
+        "value" : false,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        } ]
+      },
+      "secretVault" : {
+        "source" : "complex.json",
+        "value" : "foo",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "foo"
+        } ]
+      }
+    },
+    "pvc" : {
+      "path" : {
+        "source" : "complex.json",
+        "value" : "/foo",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "/foo"
+        } ]
+      },
+      "type" : {
+        "source" : "complex.json",
+        "value" : "PVC",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "PVC"
+        } ]
+      },
+      "mountName" : {
+        "source" : "default",
+        "value" : "pvc",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "pvc"
+        } ]
+      },
+      "volumeName" : {
+        "source" : "default",
+        "value" : "pvc",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "pvc"
+        } ]
+      },
+      "exist" : {
+        "source" : "complex.json",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        }, {
+          "name" : "complex.json",
+          "value" : true
+        } ]
+      }
+    },
+    "config-mount" : {
+      "path" : {
+        "source" : "complex.json",
+        "value" : "/content",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "/content"
+        } ]
+      },
+      "type" : {
+        "source" : "complex.json",
+        "value" : "ConfigMap",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "ConfigMap"
+        } ]
+      },
+      "mountName" : {
+        "source" : "default",
+        "value" : "config-mount",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "config-mount"
+        } ]
+      },
+      "volumeName" : {
+        "source" : "default",
+        "value" : "config-mount",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "config-mount"
+        } ]
+      },
+      "exist" : {
+        "source" : "default",
+        "value" : false,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        } ]
+      },
+      "content" : {
+        "source" : "complex.json",
+        "value" : {
+          "foo" : "bar"
         },
-        {
-          "name": "complex.json",
-          "value": "/foobar"
-        }
-      ]
-    },
-    "port": {
-      "source": "complex.json",
-      "value": "8081",
-      "sources": [
-        {
-          "name": "default",
-          "value": "8081"
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : {
+            "foo" : "bar"
+          }
+        } ]
+      }
+    }
+  },
+  "route" : {
+    "@name@" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
+      },
+      "tls" : {
+        "insecurePolicy" : {
+          "source" : "complex.json",
+          "value" : "Allow",
+          "sources" : [ {
+            "name" : "complex.json",
+            "value" : "Allow"
+          } ]
         },
-        {
-          "name": "complex.json",
-          "value": "8081"
+        "termination" : {
+          "source" : "complex.json",
+          "value" : "edge",
+          "sources" : [ {
+            "name" : "complex.json",
+            "value" : "edge"
+          } ]
         }
-      ]
-    }
-  },
-  "releaseTo": {
-    "source": "complex.json",
-    "value": "komplex",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "komplex"
-      }
-    ]
-  },
-  "alarm": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ]
-  },
-  "pause": {
-    "source": "complex.json",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      },
-      {
-        "name": "complex.json",
-        "value": true
-      }
-    ]
-  },
-  "splunkIndex": {
-    "source": "complex.json",
-    "value": "test-index",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "test-index"
-      }
-    ]
-  },
-  "debug": {
-    "source": "complex.json",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      },
-      {
-        "name": "complex.json",
-        "value": true
-      }
-    ]
-  },
-  "resources": {
-    "cpu": {
-      "min": {
-        "source": "complex.json",
-        "value": "100m",
-        "sources": [
-          {
-            "name": "default",
-            "value": "10m"
-          },
-          {
-            "name": "complex.json",
-            "value": "100m"
-          }
-        ]
-      },
-      "max": {
-        "source": "complex.json",
-        "value": "2000m",
-        "sources": [
-          {
-            "name": "default",
-            "value": "2000m"
-          },
-          {
-            "name": "complex.json",
-            "value": "2000m"
-          }
-        ]
       }
     },
-    "memory": {
-      "min": {
-        "source": "complex.json",
-        "value": "64Mi",
-        "sources": [
-          {
-            "name": "default",
-            "value": "128Mi"
-          },
-          {
-            "name": "complex.json",
-            "value": "64Mi"
-          }
-        ]
+    "path" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
       },
-      "max": {
-        "source": "complex.json",
-        "value": "128Mi",
-        "sources": [
-          {
-            "name": "default",
-            "value": "512Mi"
-          },
-          {
-            "name": "complex.json",
-            "value": "128Mi"
-          }
-        ]
+      "host" : {
+        "source" : "complex.json",
+        "value" : "pathroute",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "pathroute"
+        } ]
+      },
+      "path" : {
+        "source" : "complex.json",
+        "value" : "/path",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "/path"
+        } ]
+      }
+    },
+    "foobar" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
+      },
+      "host" : {
+        "source" : "complex.json",
+        "value" : "foobar",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "foobar"
+        } ]
+      },
+      "annotations" : {
+        "haproxy.router.openshift.io|timeout" : {
+          "source" : "complex.json",
+          "value" : "30s",
+          "sources" : [ {
+            "name" : "complex.json",
+            "value" : "30s"
+          } ]
+        }
       }
     }
   },
-  "deployStrategy": {
-    "type": {
-      "source": "complex.json",
-      "value": "recreate",
-      "sources": [
-        {
-          "name": "default",
-          "value": "rolling"
+  "routeDefaults" : {
+    "host" : {
+      "source" : "default",
+      "value" : "@name@-@affiliation@-@env@",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "@name@-@affiliation@-@env@"
+      } ]
+    },
+    "tls" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : false,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        } ]
+      },
+      "insecurePolicy" : {
+        "source" : "default",
+        "value" : "None",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "None"
+        } ]
+      },
+      "termination" : {
+        "source" : "default",
+        "value" : "edge",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "edge"
+        } ]
+      }
+    }
+  },
+  "secretVaults" : {
+    "foo" : {
+      "name" : {
+        "source" : "default",
+        "value" : "foo",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "foo"
+        } ]
+      },
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
+      },
+      "file" : {
+        "source" : "default",
+        "value" : "latest.properties",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "latest.properties"
+        } ]
+      },
+      "keys" : {
+        "source" : "complex.json",
+        "value" : [ "BAR", "FOO" ],
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : [ "BAR", "FOO" ]
+        } ]
+      },
+      "keyMappings" : {
+        "source" : "complex.json",
+        "value" : {
+          "BAR" : "BAZ"
         },
-        {
-          "name": "complex.json",
-          "value": "recreate"
-        }
-      ]
-    },
-    "timeout": {
-      "source": "default",
-      "value": 180,
-      "sources": [
-        {
-          "name": "default",
-          "value": 180
-        }
-      ]
-    }
-  },
-  "replicas": {
-    "source": "default",
-    "value": 1,
-    "sources": [
-      {
-        "name": "default",
-        "value": 1
-      }
-    ]
-  },
-  "serviceAccount": {
-    "source": "complex.json",
-    "value": "aurora-fraggle",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "aurora-fraggle"
-      }
-    ]
-  },
-  "prometheus": {
-    "path": {
-      "source": "complex.json",
-      "value": "/prometheus",
-      "sources": [
-        {
-          "name": "default",
-          "value": "/prometheus"
-        },
-        {
-          "name": "complex.json",
-          "value": "/prometheus"
-        }
-      ]
-    },
-    "port": {
-      "source": "complex.json",
-      "value": "8082",
-      "sources": [
-        {
-          "name": "default",
-          "value": 8081
-        },
-        {
-          "name": "complex.json",
-          "value": "8082"
-        }
-      ]
-    }
-  },
-  "readiness": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ],
-    "port": {
-      "source": "default",
-      "value": 8080,
-      "sources": [
-        {
-          "name": "default",
-          "value": 8080
-        }
-      ]
-    },
-    "delay": {
-      "source": "default",
-      "value": 10,
-      "sources": [
-        {
-          "name": "default",
-          "value": 10
-        }
-      ]
-    },
-    "timeout": {
-      "source": "default",
-      "value": 1,
-      "sources": [
-        {
-          "name": "default",
-          "value": 1
-        }
-      ]
-    }
-  },
-  "liveness": {
-    "source": "complex.json",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      },
-      {
-        "name": "complex.json",
-        "value": true
-      }
-    ],
-    "port": {
-      "source": "default",
-      "value": 8080,
-      "sources": [
-        {
-          "name": "default",
-          "value": 8080
-        }
-      ]
-    },
-    "delay": {
-      "source": "default",
-      "value": 10,
-      "sources": [
-        {
-          "name": "default",
-          "value": 10
-        }
-      ]
-    },
-    "timeout": {
-      "source": "default",
-      "value": 1,
-      "sources": [
-        {
-          "name": "default",
-          "value": 1
-        }
-      ]
-    }
-  },
-  "mounts": {
-    "aurora-token": {
-      "path": {
-        "source": "complex.json",
-        "value": "/u01/secrets/app/aurora-token",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/u01/secrets/app/aurora-token"
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : {
+            "BAR" : "BAZ"
           }
-        ]
-      },
-      "type": {
-        "source": "complex.json",
-        "value": "Secret",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "Secret"
-          }
-        ]
-      },
-      "mountName": {
-        "source": "default",
-        "value": "aurora-token",
-        "sources": [
-          {
-            "name": "default",
-            "value": "aurora-token"
-          }
-        ]
-      },
-      "volumeName": {
-        "source": "default",
-        "value": "aurora-token",
-        "sources": [
-          {
-            "name": "default",
-            "value": "aurora-token"
-          }
-        ]
-      },
-      "exist": {
-        "source": "complex.json",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          },
-          {
-            "name": "complex.json",
-            "value": true
-          }
-        ]
-      }
-    },
-    "secret-mount": {
-      "path": {
-        "source": "complex.json",
-        "value": "/u01/foo",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/u01/foo"
-          }
-        ]
-      },
-      "type": {
-        "source": "complex.json",
-        "value": "Secret",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "Secret"
-          }
-        ]
-      },
-      "mountName": {
-        "source": "default",
-        "value": "secret-mount",
-        "sources": [
-          {
-            "name": "default",
-            "value": "secret-mount"
-          }
-        ]
-      },
-      "volumeName": {
-        "source": "default",
-        "value": "secret-mount",
-        "sources": [
-          {
-            "name": "default",
-            "value": "secret-mount"
-          }
-        ]
-      },
-      "exist": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "secretVault": {
-        "source": "complex.json",
-        "value": "foo",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "foo"
-          }
-        ]
-      }
-    },
-    "pvc": {
-      "path": {
-        "source": "complex.json",
-        "value": "/foo",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/foo"
-          }
-        ]
-      },
-      "type": {
-        "source": "complex.json",
-        "value": "PVC",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "PVC"
-          }
-        ]
-      },
-      "mountName": {
-        "source": "default",
-        "value": "pvc",
-        "sources": [
-          {
-            "name": "default",
-            "value": "pvc"
-          }
-        ]
-      },
-      "volumeName": {
-        "source": "default",
-        "value": "pvc",
-        "sources": [
-          {
-            "name": "default",
-            "value": "pvc"
-          }
-        ]
-      },
-      "exist": {
-        "source": "complex.json",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          },
-          {
-            "name": "complex.json",
-            "value": true
-          }
-        ]
-      }
-    },
-    "config-mount": {
-      "path": {
-        "source": "complex.json",
-        "value": "/content",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/content"
-          }
-        ]
-      },
-      "type": {
-        "source": "complex.json",
-        "value": "ConfigMap",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "ConfigMap"
-          }
-        ]
-      },
-      "mountName": {
-        "source": "default",
-        "value": "config-mount",
-        "sources": [
-          {
-            "name": "default",
-            "value": "config-mount"
-          }
-        ]
-      },
-      "volumeName": {
-        "source": "default",
-        "value": "config-mount",
-        "sources": [
-          {
-            "name": "default",
-            "value": "config-mount"
-          }
-        ]
-      },
-      "exist": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "content": {
-        "source": "complex.json",
-        "value": {
-          "foo": "bar"
-        },
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": {
-              "foo": "bar"
-            }
-          }
-        ]
+        } ]
       }
     }
   },
-  "route": {
-    "@name@": {
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "tls": {
-        "insecurePolicy": {
-          "source": "complex.json",
-          "value": "Allow",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "Allow"
-            }
-          ]
-        },
-        "termination": {
-          "source": "complex.json",
-          "value": "edge",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "edge"
-            }
-          ]
-        }
-      }
+  "sts" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "toxiproxy" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "webseal" : {
+    "host" : {
+      "source" : "complex.json",
+      "value" : "test",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "test"
+      } ]
     },
-    "path": {
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "host": {
-        "source": "complex.json",
-        "value": "pathroute",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "pathroute"
-          }
-        ]
-      },
-      "path": {
-        "source": "complex.json",
-        "value": "/path",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/path"
-          }
-        ]
-      }
-    },
-    "foobar": {
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "host": {
-        "source": "complex.json",
-        "value": "foobar",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "foobar"
-          }
-        ]
-      },
-      "annotations": {
-        "haproxy.router.openshift.io|timeout": {
-          "source": "complex.json",
-          "value": "30s",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "30s"
-            }
-          ]
-        }
-      }
-    }
-  },
-  "routeDefaults": {
-    "host": {
-      "source": "default",
-      "value": "@name@-@affiliation@-@env@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@-@affiliation@-@env@"
-        }
-      ]
-    },
-    "tls": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "insecurePolicy": {
-        "source": "default",
-        "value": "None",
-        "sources": [
-          {
-            "name": "default",
-            "value": "None"
-          }
-        ]
-      },
-      "termination": {
-        "source": "default",
-        "value": "edge",
-        "sources": [
-          {
-            "name": "default",
-            "value": "edge"
-          }
-        ]
-      }
-    }
-  },
-  "secretVaults": {
-    "foo": {
-      "name": {
-        "source": "default",
-        "value": "foo",
-        "sources": [
-          {
-            "name": "default",
-            "value": "foo"
-          }
-        ]
-      },
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "file": {
-        "source": "default",
-        "value": "latest.properties",
-        "sources": [
-          {
-            "name": "default",
-            "value": "latest.properties"
-          }
-        ]
-      },
-      "keys": {
-        "source": "complex.json",
-        "value": [
-          "BAR",
-          "FOO"
-        ],
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": [
-              "BAR",
-              "FOO"
-            ]
-          }
-        ]
-      },
-      "keyMappings": {
-        "source": "complex.json",
-        "value": {
-          "BAR": "BAZ"
-        },
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": {
-              "BAR": "BAZ"
-            }
-          }
-        ]
-      }
-    }
-  },
-  "certificate": {
-    "commonName": {
-      "source": "complex.json",
-      "value": "komplex",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "komplex"
-        }
-      ]
-    }
-  },
-  "toxiproxy": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
-  "webseal": {
-    "host": {
-      "source": "complex.json",
-      "value": "test",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "test"
-        }
-      ]
-    },
-    "roles": {
-      "source": "complex.json",
-      "value": "admin dev @name@",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "admin dev @name@"
-        }
-      ]
+    "roles" : {
+      "source" : "complex.json",
+      "value" : "admin dev @name@",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "admin dev @name@"
+      } ]
     }
   }
 }

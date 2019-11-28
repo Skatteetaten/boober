@@ -1,233 +1,198 @@
 {
-  "apiVersion": "apps.openshift.io/v1",
-  "kind": "DeploymentConfig",
-  "metadata": {
-    "annotations": {
-      "boober.skatteetaten.no/applicationFile": "utv/simple.json",
-      "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/actuator"
+  "apiVersion" : "apps.openshift.io/v1",
+  "kind" : "DeploymentConfig",
+  "metadata" : {
+    "annotations" : {
+      "boober.skatteetaten.no/applicationFile" : "utv/simple.json",
+      "console.skatteetaten.no/alarm" : "true",
+      "console.skatteetaten.no/management-path" : ":8081/actuator"
     },
-    "labels": {
-      "app": "simple",
-      "updatedBy": "hero",
-      "affiliation": "paas",
-      "updateInBoober": "true",
-      "name": "simple",
-      "deployTag": "1",
-      "booberDeployId": "deploy1"
+    "labels" : {
+      "app" : "simple",
+      "updatedBy" : "hero",
+      "affiliation" : "paas",
+      "updateInBoober" : "true",
+      "name" : "simple",
+      "deployTag" : "1",
+      "booberDeployId" : "deploy1"
     },
-    "name": "simple",
-    "namespace": "paas-utv",
-    "ownerReferences": [
-      {
-        "apiVersion": "skatteetaten.no/v1",
-        "kind": "ApplicationDeployment",
-        "name": "simple",
-        "uid": "123-123"
-      }
-    ]
+    "name" : "simple",
+    "namespace" : "paas-utv",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "simple",
+      "uid" : "123-123"
+    } ]
   },
-  "spec": {
-    "replicas": 1,
-    "selector": {
-      "name": "simple"
+  "spec" : {
+    "replicas" : 1,
+    "selector" : {
+      "name" : "simple"
     },
-    "strategy": {
-      "rollingParams": {
-        "intervalSeconds": 1,
-        "maxSurge": "25%",
-        "maxUnavailable": 0,
-        "timeoutSeconds": 180,
-        "updatePeriodSeconds": 1
+    "strategy" : {
+      "rollingParams" : {
+        "intervalSeconds" : 1,
+        "maxSurge" : "25%",
+        "maxUnavailable" : 0,
+        "timeoutSeconds" : 180,
+        "updatePeriodSeconds" : 1
       },
-      "type": "Rolling"
+      "type" : "Rolling"
     },
-    "template": {
-      "metadata": {
-        "labels": {
-          "app": "simple",
-          "updatedBy": "hero",
-          "affiliation": "paas",
-          "updateInBoober": "true",
-          "name": "simple",
-          "deployTag": "1"
+    "template" : {
+      "metadata" : {
+        "labels" : {
+          "app" : "simple",
+          "updatedBy" : "hero",
+          "affiliation" : "paas",
+          "updateInBoober" : "true",
+          "name" : "simple",
+          "deployTag" : "1"
         }
       },
-      "spec": {
-        "containers": [
-          {
-            "env": [
-              {
-                "name": "POD_NAME",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.name"
-                  }
-                }
-              },
-              {
-                "name": "POD_NAMESPACE",
-                "valueFrom": {
-                  "fieldRef": {
-                    "apiVersion": "v1",
-                    "fieldPath": "metadata.namespace"
-                  }
-                }
-              },
-              {
-                "name": "HTTP_PORT",
-                "value": "8080"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8081"
-              },
-              {
-                "name": "JOLOKIA_HTTP_PORT",
-                "value": "8778"
-              },
-              {
-                "name": "SIMPLE_DB",
-                "value": "/u01/secrets/app/simple-db/info"
-              },
-              {
-                "name": "SIMPLE_DB_PROPERTIES",
-                "value": "/u01/secrets/app/simple-db/db.properties"
-              },
-              {
-                "name": "DB",
-                "value": "/u01/secrets/app/simple-db/info"
-              },
-              {
-                "name": "DB_PROPERTIES",
-                "value": "/u01/secrets/app/simple-db/db.properties"
-              },
-              {
-                "name": "OPENSHIFT_CLUSTER",
-                "value": "utv"
-              },
-              {
-                "name": "APP_NAME",
-                "value": "simple"
-              },
-              {
-                "name": "ROUTE_NAME",
-                "value": "simple-paas-utv.test"
-              },
-              {
-                "name": "ROUTE_URL",
-                "value": "http://simple-paas-utv.test"
-              },
-              {
-                "name": "STS_CERTIFICATE_URL",
-                "value": "/u01/secrets/app/simple-cert/certificate.crt"
-              },
-              {
-                "name": "STS_PRIVATE_KEY_URL",
-                "value": "/u01/secrets/app/simple-cert/privatekey.key"
-              },
-              {
-                "name": "STS_KEYSTORE_DESCRIPTOR",
-                "value": "/u01/secrets/app/simple-cert/descriptor.properties"
-              },
-              {
-                "name": "VOLUME_SIMPLE_CERT",
-                "value": "/u01/secrets/app/simple-cert"
+      "spec" : {
+        "containers" : [ {
+          "env" : [ {
+            "name" : "POD_NAME",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.name"
               }
-            ],
-            "imagePullPolicy": "IfNotPresent",
-            "name": "simple-java",
-            "ports": [
-              {
-                "containerPort": 8080,
-                "name": "http",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8081,
-                "name": "management",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8778,
-                "name": "jolokia",
-                "protocol": "TCP"
-              }
-            ],
-            "readinessProbe": {
-              "initialDelaySeconds": 10,
-              "tcpSocket": {
-                "port": 8080
-              },
-              "timeoutSeconds": 1
-            },
-            "resources": {
-              "limits": {
-                "cpu": "2000m",
-                "memory": "512Mi"
-              },
-              "requests": {
-                "cpu": "10m",
-                "memory": "128Mi"
-              }
-            },
-            "securityContext": {
-              "privileged": false
-            },
-            "terminationMessagePath": "/dev/termination-log",
-            "volumeMounts": [
-              {
-                "mountPath": "/u01/logs",
-                "name": "application-log-volume"
-              },
-              {
-                "mountPath": "/u01/secrets/app/simple-db",
-                "name": "simple-db"
-              },
-              {
-                "mountPath": "/u01/secrets/app/simple-cert",
-                "name": "simple-cert"
-              }
-            ]
-          }
-        ],
-        "dnsPolicy": "ClusterFirst",
-        "restartPolicy": "Always",
-        "volumes": [
-          {
-            "emptyDir": {},
-            "name": "application-log-volume"
-          },
-          {
-            "name": "simple-db",
-            "secret": {
-              "secretName": "simple-db"
-          }
-          },
-          {
-            "name": "simple-cert",
-            "secret": {
-              "secretName": "simple-cert"
             }
+          }, {
+            "name" : "POD_NAMESPACE",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.namespace"
+              }
+            }
+          }, {
+            "name" : "HTTP_PORT",
+            "value" : "8080"
+          }, {
+            "name" : "MANAGEMENT_HTTP_PORT",
+            "value" : "8081"
+          }, {
+            "name" : "JOLOKIA_HTTP_PORT",
+            "value" : "8778"
+          }, {
+            "name" : "SIMPLE_DB",
+            "value" : "/u01/secrets/app/simple-db/info"
+          }, {
+            "name" : "SIMPLE_DB_PROPERTIES",
+            "value" : "/u01/secrets/app/simple-db/db.properties"
+          }, {
+            "name" : "DB",
+            "value" : "/u01/secrets/app/simple-db/info"
+          }, {
+            "name" : "DB_PROPERTIES",
+            "value" : "/u01/secrets/app/simple-db/db.properties"
+          }, {
+            "name" : "OPENSHIFT_CLUSTER",
+            "value" : "utv"
+          }, {
+            "name" : "APP_NAME",
+            "value" : "simple"
+          }, {
+            "name" : "ROUTE_NAME",
+            "value" : "simple-paas-utv.test"
+          }, {
+            "name" : "ROUTE_URL",
+            "value" : "http://simple-paas-utv.test"
+          }, {
+            "name" : "STS_CERTIFICATE_URL",
+            "value" : "/u01/secrets/app/simple-cert/certificate.crt"
+          }, {
+            "name" : "STS_PRIVATE_KEY_URL",
+            "value" : "/u01/secrets/app/simple-cert/privatekey.key"
+          }, {
+            "name" : "STS_KEYSTORE_DESCRIPTOR",
+            "value" : "/u01/secrets/app/simple-cert/descriptor.properties"
+          }, {
+            "name" : "VOLUME_SIMPLE_STS",
+            "value" : "/u01/secrets/app/simple-cert"
+          }, {
+            "name" : "STS_DISCOVERY_URL",
+            "value" : "https://bigbird-utv.org"
+          } ],
+          "imagePullPolicy" : "IfNotPresent",
+          "name" : "simple-java",
+          "ports" : [ {
+            "containerPort" : 8080,
+            "name" : "http",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8081,
+            "name" : "management",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8778,
+            "name" : "jolokia",
+            "protocol" : "TCP"
+          } ],
+          "readinessProbe" : {
+            "initialDelaySeconds" : 10,
+            "tcpSocket" : {
+              "port" : 8080
+            },
+            "timeoutSeconds" : 1
+          },
+          "resources" : {
+            "limits" : {
+              "cpu" : "2000m",
+              "memory" : "512Mi"
+            },
+            "requests" : {
+              "cpu" : "10m",
+              "memory" : "128Mi"
+            }
+          },
+          "securityContext" : {
+            "privileged" : false
+          },
+          "terminationMessagePath" : "/dev/termination-log",
+          "volumeMounts" : [ {
+            "mountPath" : "/u01/logs",
+            "name" : "application-log-volume"
+          }, {
+            "mountPath" : "/u01/secrets/app/simple-db",
+            "name" : "simple-db"
+          }, {
+            "mountPath" : "/u01/secrets/app/simple-cert",
+            "name" : "simple-sts"
+          } ]
+        } ],
+        "dnsPolicy" : "ClusterFirst",
+        "restartPolicy" : "Always",
+        "volumes" : [ {
+          "emptyDir" : { },
+          "name" : "application-log-volume"
+        }, {
+          "name" : "simple-db",
+          "secret" : {
+            "secretName" : "simple-db"
           }
-        ]
+        }, {
+          "name" : "simple-sts",
+          "secret" : {
+            "secretName" : "simple-sts"
+          }
+        } ]
       }
     },
-    "triggers": [
-      {
-        "imageChangeParams": {
-          "automatic": true,
-          "containerNames": [
-            "simple-java"
-          ],
-          "from": {
-            "kind": "ImageStreamTag",
-            "name": "simple:default"
-          }
-        },
-        "type": "ImageChange"
-      }
-    ]
+    "triggers" : [ {
+      "imageChangeParams" : {
+        "automatic" : true,
+        "containerNames" : [ "simple-java" ],
+        "from" : {
+          "kind" : "ImageStreamTag",
+          "name" : "simple:default"
+        }
+      },
+      "type" : "ImageChange"
+    } ]
   }
 }
