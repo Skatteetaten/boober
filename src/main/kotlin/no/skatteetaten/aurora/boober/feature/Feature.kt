@@ -146,7 +146,8 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
                         validator = { it.pattern(envNamePattern, envNameMessage, false) }),
                 AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
                 AuroraConfigFieldHandler("baseFile"),
-                AuroraConfigFieldHandler("envFile")
+                AuroraConfigFieldHandler("envFile"),
+                AuroraConfigFieldHandler("includeEnvFile")
 
         )
     }

@@ -22,6 +22,7 @@ enum class AuroraConfigFileType {
     GLOBAL_OVERRIDE,
     BASE,
     BASE_OVERRIDE,
+    INCLUDE_ABOUT,
     ENV,
     ENV_OVERRIDE,
     APP,
@@ -37,7 +38,8 @@ data class AuroraConfigFile(
     val name: String,
     val contents: String,
     val override: Boolean = false,
-    val isDefault: Boolean = false
+    val isDefault: Boolean = false,
+    val typeHint: AuroraConfigFileType? = null
 ) {
     val configName
         get() = if (override) "$name.override" else name
@@ -45,13 +47,14 @@ data class AuroraConfigFile(
     val version
         get() = DigestUtils.md5DigestAsHex(jacksonObjectMapper().writeValueAsString(contents).toByteArray())
 
+    // TODO: This cannot be inferred anymore, set it when we create the app
     val type: AuroraConfigFileType
         get() {
 
             val appSpecificFile = !(name.startsWith("about") || name.contains("/about"))
             val hasSubFolder = name.contains("/")
 
-            return when {
+            return typeHint ?: when {
                 isDefault -> DEFAULT
                 !hasSubFolder && !appSpecificFile && !override -> GLOBAL
                 !hasSubFolder && !appSpecificFile && override -> GLOBAL_OVERRIDE

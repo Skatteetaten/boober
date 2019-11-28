@@ -68,6 +68,13 @@ class AuroraConfigTest : ResourceLoader() {
     }
 
     @Test
+    fun `Returns files for application with include env`() {
+        val auroraConfig = getAuroraConfigSamples()
+        val filesForApplication = auroraConfig.getFilesForApplication(ApplicationDeploymentRef("utv", "easy"))
+        assertThat(filesForApplication.size).isEqualTo(4)
+    }
+
+    @Test
     fun `Returns files for application`() {
         val auroraConfig = createAuroraConfig(aid)
         val filesForApplication = auroraConfig.getFilesForApplication(aid)
