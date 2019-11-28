@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.facade
 
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.feature.name
-import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -32,16 +30,13 @@ class DeploymentFacade(
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val applicationRefs =
             adr.map {
-                auroraDeploymentContextService.createAuroraDeploymentContext(
+                auroraDeploymentContextService.findApplicationRef(
                     AuroraContextCommand(
                         auroraConfig,
                         it,
                         ref
                     )
                 )
-            }.map {
-                // TODO: Burde det være en metode i auroraDeploymentContextService på å hente ut disse to? Vi trenger jo ikke gå gjennom alle featurene for å gjøre det?
-                ApplicationRef(it.spec.namespace, it.spec.name)
             }
         return checkApplicationDeploymentsExists(applicationRefs)
     }

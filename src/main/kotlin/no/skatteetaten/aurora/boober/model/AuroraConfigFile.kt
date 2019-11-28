@@ -139,9 +139,7 @@ fun List<AuroraConfigFile>.findConfigFieldHandlers(): List<AuroraConfigFieldHand
         if (value.isEmpty()) {
             listOf(AuroraConfigFieldHandler("$name/${configFile.key}"))
         } else {
-            value.map { field ->
-                AuroraConfigFieldHandler("$name/${configFile.key}/$field")
-            }
+            listOf()
         }
     }
 }

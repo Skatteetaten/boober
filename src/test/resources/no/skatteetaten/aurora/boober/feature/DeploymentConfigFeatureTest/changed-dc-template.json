@@ -2,11 +2,6 @@
   "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
   "metadata": {
-    "annotations": {
-      "boober.skatteetaten.no/applicationFile": "utv/simple.json",
-      "console.skatteetaten.no/alarm": "true",
-      "boober.skatteetaten.no/releaseTo": "test"
-    },
     "labels": {
       "deployTag": "test"
     },

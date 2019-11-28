@@ -249,18 +249,6 @@
           "value": "BAR"
         }
       ]
-    },
-    "latest": {
-      "BAR": {
-        "source": "complex.json",
-        "value": "BAZ",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "BAZ"
-          }
-        ]
-      }
     }
   },
   "databaseDefaults": {
@@ -804,72 +792,6 @@
           {
             "name": "complex.json",
             "value": true
-          }
-        ]
-      }
-    },
-    "config-mount": {
-      "path": {
-        "source": "complex.json",
-        "value": "/content",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/content"
-          }
-        ]
-      },
-      "type": {
-        "source": "complex.json",
-        "value": "ConfigMap",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "ConfigMap"
-          }
-        ]
-      },
-      "mountName": {
-        "source": "default",
-        "value": "config-mount",
-        "sources": [
-          {
-            "name": "default",
-            "value": "config-mount"
-          }
-        ]
-      },
-      "volumeName": {
-        "source": "default",
-        "value": "config-mount",
-        "sources": [
-          {
-            "name": "default",
-            "value": "config-mount"
-          }
-        ]
-      },
-      "exist": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "content": {
-        "source": "complex.json",
-        "value": {
-          "foo": "bar"
-        },
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": {
-              "foo": "bar"
-            }
           }
         ]
       }

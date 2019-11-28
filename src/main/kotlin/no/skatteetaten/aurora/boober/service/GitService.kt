@@ -12,54 +12,8 @@ import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
-import org.springframework.beans.factory.annotation.Qualifier
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
 
 private val logger = KotlinLogging.logger {}
-
-// TODO: Move to same place as Configuration?
-@Configuration
-class GitServices(
-    val userDetails: UserDetailsProvider,
-    val metrics: AuroraMetrics
-) {
-
-    enum class Domain {
-        AURORA_CONFIG,
-        VAULT
-    }
-
-    @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
-    @Retention(AnnotationRetention.RUNTIME)
-    @Qualifier
-    annotation class TargetDomain(val value: Domain)
-
-    @Bean
-    @TargetDomain(Domain.AURORA_CONFIG)
-    @Primary
-    fun auroraConfigGitService(
-        @Value("\${integrations.bitbucket.username}") username: String,
-        @Value("\${integrations.bitbucket.password}") password: String,
-        @Value("\${integrations.aurora.config.git.urlPattern}") urlPattern: String,
-        @Value("\${integrations.aurora.config.git.checkoutPath}") checkoutPath: String
-    ): GitService {
-        return GitService(userDetails, urlPattern, checkoutPath, username, password, metrics)
-    }
-
-    @Bean
-    @TargetDomain(Domain.VAULT)
-    fun vaultGitService(
-        @Value("\${integrations.bitbucket.username}") username: String,
-        @Value("\${integrations.bitbucket.password}") password: String,
-        @Value("\${integrations.aurora.vault.git.urlPattern}") urlPattern: String,
-        @Value("\${integrations.aurora.vault.git.checkoutPath}") checkoutPath: String
-    ): GitService {
-        return GitService(userDetails, urlPattern, checkoutPath, username, password, metrics)
-    }
-}
 
 open class GitService(
     val userDetails: UserDetailsProvider,

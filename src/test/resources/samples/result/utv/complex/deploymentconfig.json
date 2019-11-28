@@ -2,17 +2,11 @@
   "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
   "metadata": {
-    "annotations": {
-      "boober.skatteetaten.no/applicationFile": "utv/complex.json",
-      "console.skatteetaten.no/alarm": "true",
-      "console.skatteetaten.no/management-path": ":8081/foobar",
-      "boober.skatteetaten.no/releaseTo": "komplex"
-    },
     "labels": {
       "app": "komplex",
       "updatedBy": "hero",
+      "updatedAt": "0",
       "affiliation": "paas",
-      "updateInBoober": "true",
       "name": "komplex",
       "deployTag": "komplex",
       "paused": "true",
@@ -45,8 +39,8 @@
         "labels": {
           "app": "komplex",
           "updatedBy": "hero",
+          "updatedAt": "0",
           "affiliation": "paas",
-          "updateInBoober": "true",
           "name": "komplex",
           "deployTag": "komplex",
           "paused": "true"
@@ -89,10 +83,6 @@
               {
                 "name": "FOO",
                 "value": "BAR"
-              },
-              {
-                "name": "VOLUME_CONFIG",
-                "value": "/u01/config/configmap"
               },
               {
                 "name": "COMPLEX_DB",
@@ -149,10 +139,6 @@
               {
                 "name": "VOLUME_PVC",
                 "value": "/foo"
-              },
-              {
-                "name": "VOLUME_CONFIG_MOUNT",
-                "value": "/content"
               },
               {
                 "name": "ROUTE_NAME",
@@ -252,10 +238,6 @@
                 "name": "application-log-volume"
               },
               {
-                "mountPath": "/u01/config/configmap",
-                "name": "config"
-              },
-              {
                 "mountPath": "/u01/secrets/app/complex-db",
                 "name": "komplex-complex-db"
               },
@@ -276,10 +258,6 @@
                 "name": "pvc-mount"
               },
               {
-                "mountPath": "/content",
-                "name": "config-mount"
-              },
-              {
                 "mountPath": "/u01/secrets/app/komplex-cert",
                 "name": "komplex-cert"
               }
@@ -293,12 +271,6 @@
           {
             "emptyDir": {},
             "name": "application-log-volume"
-          },
-          {
-            "configMap": {
-              "name": "komplex"
-          },
-            "name": "config"
           },
           {
             "name": "komplex-complex-db",
@@ -329,12 +301,6 @@
             "persistentVolumeClaim": {
               "claimName": "pvc"
             }
-          },
-          {
-            "configMap": {
-              "name": "komplex-config-mount"
-            },
-            "name": "config-mount"
           },
           {
             "name": "komplex-cert",

@@ -12,7 +12,6 @@
       "app": "aos-simple",
       "updatedBy": "hero",
       "affiliation": "aos",
-      "updateInBoober": "true",
       "booberDeployId": "123",
       "name": "aos-simple",
       "deployTag": "1.0.4",
@@ -45,8 +44,8 @@
         "labels": {
           "app": "aos-simple",
           "updatedBy": "hero",
+          "updatedAt": "0",
           "affiliation": "aos",
-          "updateInBoober": "true",
           "booberDeployId": "123",
           "name": "aos-simple",
           "deployTag": "1.0.4",

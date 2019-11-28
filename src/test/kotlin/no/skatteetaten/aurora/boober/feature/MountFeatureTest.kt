@@ -5,7 +5,6 @@ import assertk.assertions.isEqualTo
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newPersistentVolumeClaim
 import com.fkorotkov.kubernetes.newSecret
-import io.fabric8.kubernetes.api.model.ConfigMap
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
@@ -68,15 +67,6 @@ class MountFeatureTest : AbstractFeatureTest() {
              }"""
 
     @Test
-    fun `Should generate handlers`() {
-
-        val handlers = createAuroraConfigFieldHandlers(configMapJson)
-
-        val mountHandlers = handlers.filter { it.name.startsWith("mounts") }
-        assertThat(mountHandlers.size).isEqualTo(7)
-    }
-
-    @Test
     fun `Should generate handlers for no mounts`() {
         val handlers = createAuroraConfigFieldHandlers("{}")
 
@@ -99,11 +89,7 @@ class MountFeatureTest : AbstractFeatureTest() {
             "Secret mount=mount with vaultName set cannot be marked as existing"
         ),
         PATH_REQUIRED(""" "type" : "ConfigMap" """, "Path is required for mount"),
-        WRONG_MOUNT_TYPE(""" "type" : "Foo" """, "Must be one of [ConfigMap, Secret, PVC]"),
-        CONFIGMAP_MOUNT_REQUIRES_CONTENT(
-            """"type": "ConfigMap", "path": "/u01/foo"""",
-            "Mount with type=ConfigMap namespace=paas-utv name=mount does not have required content block"
-        )
+        WRONG_MOUNT_TYPE(""" "type" : "Foo" """, "Must be one of [Secret, PVC]")
     }
 
     @ParameterizedTest
@@ -139,30 +125,6 @@ class MountFeatureTest : AbstractFeatureTest() {
 
         assertThat { createAuroraDeploymentContext(secretVaultJson) }
             .singleApplicationError("Referenced Vault foo in Vault Collection paas does not exist")
-    }
-
-    @Test
-    fun `should generate configMap`() {
-
-        val resources = generateResources(configMapJson)
-
-        val configMap = resources.first().resource as ConfigMap
-        assertThat(configMap.metadata.name).isEqualTo("simple-mount")
-        assertThat(configMap.metadata.namespace).isEqualTo("paas-utv")
-        assertThat(configMap.data).isEqualTo(mapOf("FOO" to "BAR"))
-    }
-
-    @Test
-    fun `should modify deploymentConfig and add configMap`() {
-
-        val (dcResource, attachmentResource) = generateResources(
-            configMapJson,
-            createEmptyDeploymentConfig()
-        )
-
-        assertThat(attachmentResource).auroraResourceCreatedByThisFeature()
-
-        assertThat(dcResource).auroraResourceMountsAttachment(attachmentResource.resource)
     }
 
     @Test

@@ -27,7 +27,6 @@ private val logger = KotlinLogging.logger {}
 
 private const val REQUEST_ENTITY = "requestEntity"
 
-// TODO: make it possible to configure retrying, for some tests it makes sense to disable it
 open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, val retries: Int = 3, val backoff: Long = 500) {
 
     private val retryTemplate = retryTemplate(logger)

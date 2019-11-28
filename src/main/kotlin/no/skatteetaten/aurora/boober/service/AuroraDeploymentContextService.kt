@@ -4,6 +4,9 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.headerHandlers
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.model.ApplicationRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
@@ -53,8 +56,17 @@ class AuroraDeploymentContextService(
         return result.mapNotNull { it.first }
     }
 
-    // TODO: Kan denne være private hvis vi har en metode for å hente spec og en for å hente ApplicationRef?
-    fun createAuroraDeploymentContext(
+    fun findApplicationRef(deployCommand: AuroraContextCommand): ApplicationRef {
+
+        val adc = createAuroraDeploymentContext(deployCommand)
+        return ApplicationRef(adc.spec.namespace, adc.spec.name)
+    }
+
+    // Do not want to expose createADC without it beeing validated
+    fun findApplicationDeploymentSpec(deployCommand: AuroraContextCommand) =
+        createAuroraDeploymentContext(deployCommand).spec
+
+    private fun createAuroraDeploymentContext(
         deployCommand: AuroraContextCommand
     ): AuroraDeploymentContext {
 
