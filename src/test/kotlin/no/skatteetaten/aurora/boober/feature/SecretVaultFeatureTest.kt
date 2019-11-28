@@ -168,7 +168,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should modify deploymentConfig and add auroraVaultSecret-normalize`() {
+    fun `should modify deploymentConfig and add auroraVaultSecret normalize _ and uppercase letters`() {
 
         mockVault("Foo_Bar")
         val resource = generateResources(
@@ -186,6 +186,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
 
         val attachmentResource = resource.last()
         assertThat(attachmentResource.resource.metadata.name).isEqualTo(attachmentResource.resource.metadata.name.toLowerCase())
+        assertThat(attachmentResource.resource.metadata.name).isEqualTo("simple-foo-bar-vault")
         assertEnvVarMounted(attachmentResource, "FOO_BAR", foo)
     }
 
