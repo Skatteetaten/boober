@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import java.io.File
-import java.util.concurrent.ConcurrentHashMap
 import mu.KotlinLogging
 import no.skatteetaten.aurora.AuroraMetrics
 import org.eclipse.jgit.api.CreateBranchCommand
@@ -12,6 +10,8 @@ import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 private val logger = KotlinLogging.logger {}
 
@@ -96,7 +96,7 @@ open class GitService(
         return git
     }
 
-    private fun findRef(git: Git, refName: String): Ref {
+    fun findRef(git: Git, refName: String): Ref {
         val ref = git.repository.findRef(refName)
 
         return ref ?: git.repository.findRef("origin/$refName")
@@ -135,7 +135,7 @@ open class GitService(
         }
     }
 
-    fun commitAndPushChanges(repo: Git, commitMessage: String? = null) {
+    fun commitAndPushChanges(repo: Git, ref: String = "refs/heads/master", commitMessage: String? = null) {
 
         repo.add().addFilepattern(".").call()
         val status = repo.status().call()
@@ -151,7 +151,7 @@ open class GitService(
                 .call()
             repo.push()
                 .setCredentialsProvider(cp)
-                .add("refs/heads/master")
+                .add(ref)
                 .call()
         } catch (e: EmtpyCommitException) {
             // Ignore empty commits. It's ok.

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import java.io.File
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.Domain.AURORA_CONFIG
 import no.skatteetaten.aurora.boober.TargetDomain
@@ -14,6 +13,7 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
@@ -104,7 +104,9 @@ class AuroraConfigService(
 
         watch.start("git")
         val repo = Git.open(checkoutDir)
-        gitService.commitAndPushChanges(repo)
+
+        val gitRef = gitService.findRef(repo, ref.refName)
+        gitService.commitAndPushChanges(repo, gitRef.name)
         repo.close()
         watch.stop()
 
