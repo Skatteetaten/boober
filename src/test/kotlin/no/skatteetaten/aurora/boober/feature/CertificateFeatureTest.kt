@@ -15,11 +15,9 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisionin
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 
-class StsFeatureTest : AbstractFeatureTest() {
+class CertificateFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = StsFeature(stsProvisioner, bigBirdUrl)
-
-    val bigBirdUrl = "http://bibird.url.org"
+        get() = CertificateFeature(stsProvisioner)
 
     val stsProvisioner: StsProvisioner = mockk()
 
@@ -34,7 +32,7 @@ class StsFeatureTest : AbstractFeatureTest() {
 
         val resources = generateResources(
             """{
-            "sts" : true,
+            "certificate" : true,
             "groupId" : "org.test"
            }""", createEmptyDeploymentConfig()
         )
@@ -75,8 +73,7 @@ class StsFeatureTest : AbstractFeatureTest() {
                 "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
                 "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
                 "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
-                "VOLUME_SIMPLE_STS" to baseUrl,
-                "STS_DISCOVERY_URL" to bigBirdUrl
+                "VOLUME_SIMPLE_CERT" to baseUrl
             )
         )
     }
@@ -87,13 +84,13 @@ class StsFeatureTest : AbstractFeatureTest() {
         val ctx = createAuroraDeploymentContext(
             """{
             "groupId" : "org.simple",
-            "sts" : {
-              "cn" : "fooo"
+            "certificate" : {
+              "commonName" : "fooo"
             }
-        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : "true" }"""))
+        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : "true" }"""))
         )
 
-        assertThat(ctx.spec.stsCommonName).isEqualTo("fooo")
+        assertThat(ctx.spec.certificateCommonName).isEqualTo("fooo")
     }
 
     @Test
@@ -102,12 +99,12 @@ class StsFeatureTest : AbstractFeatureTest() {
         val ctx = createAuroraDeploymentContext(
             """{
             "groupId" : "org.simple",
-            "sts" : {
-              "cn" : "fooo"
+            "certificate" : {
+              "commonName" : "fooo"
             }
-        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : false }"""))
+        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : false }"""))
         )
 
-        assertThat(ctx.spec.stsCommonName).isEqualTo("fooo")
+        assertThat(ctx.spec.certificateCommonName).isEqualTo("fooo")
     }
 }

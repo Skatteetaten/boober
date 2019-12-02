@@ -9,9 +9,9 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "simple"
+   simple.json | groupId: "org.test"
    simple.json | database: true
    simple.json | version: "1"
       fileName | artifactId: "simple"
-   simple.json | groupId: "org.test"
    simple.json | route: true
-   simple.json | certificate: true
+   simple.json | sts: true

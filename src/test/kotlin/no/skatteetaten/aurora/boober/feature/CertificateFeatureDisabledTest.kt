@@ -5,18 +5,20 @@ import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
-class StsFeatureDisabledTest : AbstractFeatureTest() {
+class CertificateFeatureDisabledTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = StsDisabledFeature()
+        get() = CertificateDisabledFeature()
 
     @Test
     fun `get error if trying to create certificate when feature disabled`() {
 
-        assertThat { generateResources(
-            """{ 
-               "sts" : true,
+        assertThat {
+            generateResources(
+                """{ 
+               "certificate" : true,
                "groupId" : "org.test"
            }"""
-        ) }.singleApplicationError("STS is not supported")
+            )
+        }.singleApplicationError("STS is not supported")
     }
 }

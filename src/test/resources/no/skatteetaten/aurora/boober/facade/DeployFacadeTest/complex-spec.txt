@@ -17,6 +17,8 @@ utv/about-alternate.json |   ttl: "1d"
                 fileName | artifactId: "complex"
             complex.json | groupId: "org.test"
             complex.json | version: "1"
+                         | certificate:
+            complex.json |   commonName: "komplex"
                          | config:
             complex.json |   FOO: "BAR"
                          | database:
@@ -73,8 +75,6 @@ utv/about-alternate.json |   ttl: "1d"
                          |   foo:
             complex.json |     keys: ["BAR","FOO"]
             complex.json |     keyMappings: {"BAR":"BAZ"}
-                         | certificate:
-            complex.json |   commonName: "komplex"
                          | webseal:
             complex.json |   host: "test"
             complex.json |   roles: "admin dev @name@"

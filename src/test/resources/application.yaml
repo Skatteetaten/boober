@@ -14,6 +14,8 @@ integrations:
         password: "bar"
         url: "http://localhost:${integrations.bitbucket.port}"
         port: 8086
+    bigbird:
+        url: "https://bigbird-utv.org"
     deployLog:
         git:
             project: "ao"

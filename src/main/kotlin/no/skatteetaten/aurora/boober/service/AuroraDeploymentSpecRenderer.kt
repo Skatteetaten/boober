@@ -58,39 +58,3 @@ fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Bool
         )
     }
 }
-
-fun renderSpecAsJsonOld(
-    includeDefaults: Boolean,
-    deploymentSpecInternal: AuroraDeploymentSpec
-): Map<String, Any> {
-    return deploymentSpecInternal.present(includeDefaults) {
-        mapOf(
-            "source" to it.value.name,
-            "value" to it.value.value
-        )
-    }
-}
-
-fun findMaxKeyLength(fields: Map<String, Any>, indent: Int, accumulated: Int = 0): Int {
-    return fields.map {
-        val value = it.value as Map<String, Any>
-        if (value.containsKey("source")) {
-            it.key.length + accumulated
-        } else {
-            findMaxKeyLength(value, indent, accumulated + indent)
-        }
-    }.max()?.let { it + 1 } ?: 0
-}
-
-fun findMaxValueLength(fields: Map<String, Any>): Int {
-    return fields.map { field ->
-        val value = field.value as Map<String, Any>
-        val valueLength = if (value.containsKey("value")) {
-            value["value"].toString().length
-        } else 0
-
-        val subFields = value.filterNot { it.key == "source" || it.key == "value" }
-        val subKeyLength = findMaxValueLength(subFields)
-        max(valueLength, subKeyLength)
-    }.max() ?: 0
-}
