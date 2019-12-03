@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.model
 
 import com.github.fge.jsonpatch.JsonPatch
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
+import java.io.File
+import java.nio.charset.Charset
 
 data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val version: String) {
 
@@ -151,7 +151,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
 
         val envFiles = include?.let {
             require(it.substringAfterLast("/").startsWith(("about"))) { "included envFile must start with about" }
-            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ABOUT)
+            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
         }
 
         return setOf(
