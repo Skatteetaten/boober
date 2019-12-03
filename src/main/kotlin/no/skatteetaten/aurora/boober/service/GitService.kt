@@ -96,7 +96,7 @@ open class GitService(
         return git
     }
 
-    private fun findRef(git: Git, refName: String): Ref {
+    fun findRef(git: Git, refName: String): Ref {
         val ref = git.repository.findRef(refName)
 
         return ref ?: git.repository.findRef("origin/$refName")
@@ -135,7 +135,7 @@ open class GitService(
         }
     }
 
-    fun commitAndPushChanges(repo: Git, commitMessage: String? = null) {
+    fun commitAndPushChanges(repo: Git, ref: String = "refs/heads/master", commitMessage: String? = null) {
 
         repo.add().addFilepattern(".").call()
         val status = repo.status().call()
@@ -151,7 +151,7 @@ open class GitService(
                 .call()
             repo.push()
                 .setCredentialsProvider(cp)
-                .add("refs/heads/master")
+                .add(ref)
                 .call()
         } catch (e: EmtpyCommitException) {
             // Ignore empty commits. It's ok.

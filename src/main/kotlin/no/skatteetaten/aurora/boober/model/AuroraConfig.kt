@@ -151,7 +151,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
 
         val envFiles = include?.let {
             require(it.substringAfterLast("/").startsWith(("about"))) { "included envFile must start with about" }
-            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ABOUT)
+            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
         }
 
         return setOf(

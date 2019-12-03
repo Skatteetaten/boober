@@ -104,7 +104,9 @@ class AuroraConfigService(
 
         watch.start("git")
         val repo = Git.open(checkoutDir)
-        gitService.commitAndPushChanges(repo)
+
+        val gitRef = gitService.findRef(repo, ref.refName)
+        gitService.commitAndPushChanges(repo, gitRef.name)
         repo.close()
         watch.stop()
 
