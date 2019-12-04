@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.boot.convert.DurationStyle.SIMPLE
 import org.springframework.stereotype.Service
 
@@ -32,7 +31,6 @@ class ApplicationDeploymentFeature : Feature {
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
-        val applicationDeploymentId = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
         val ttl = adc.ttl?.let {
             val removeInstant = Instants.now + it
             "removeAfter" to removeInstant.epochSecond.toString()
@@ -44,7 +42,7 @@ class ApplicationDeploymentFeature : Feature {
                 updatedAt = Instants.now.toString(),
                 message = adc.getOrNull("message"),
                 applicationDeploymentName = adc.name,
-                applicationDeploymentId = applicationDeploymentId,
+                applicationDeploymentId = adc.applicationDeploymentId,
                 command = ApplicationDeploymentCommand(
                     cmd.overrideFiles,
                     cmd.applicationDeploymentRef,
@@ -54,7 +52,7 @@ class ApplicationDeploymentFeature : Feature {
             _metadata = newObjectMeta {
                 name = adc.name
                 namespace = adc.namespace
-                labels = mapOf("id" to applicationDeploymentId).addIfNotNull(ttl).normalizeLabels()
+                labels = mapOf("id" to adc.applicationDeploymentId).addIfNotNull(ttl).normalizeLabels()
             }
         )
         return setOf(generateResource(resource))

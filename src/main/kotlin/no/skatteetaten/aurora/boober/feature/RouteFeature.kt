@@ -58,8 +58,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return getRoute(adc, cmd).map {
-            val resource = generateRoute(
-                route = it,
+            val resource = it.generateOpenShiftRoute(
                 routeNamespace = adc.namespace,
                 serviceName = adc.name,
                 routeSuffix = routeSuffix
@@ -135,39 +134,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 "ROUTE_URL" to "${it.protocol}$url"
             ).toEnvVars()
             resources.addEnvVar(routeVars, this::class.java)
-        }
-    }
-
-    fun generateRoute(
-        route: no.skatteetaten.aurora.boober.feature.Route,
-        routeNamespace: String,
-        serviceName: String,
-        routeSuffix: String
-    ): Route {
-        return newRoute {
-            metadata {
-                name = route.objectName
-                namespace = routeNamespace
-                if (route.annotations.isNotEmpty()) {
-                    annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
-                }
-            }
-            spec {
-                to {
-                    kind = "Service"
-                    name = serviceName
-                }
-                route.tls?.let {
-                    tls {
-                        insecureEdgeTerminationPolicy = it.insecurePolicy.name
-                        termination = it.termination.name.toLowerCase()
-                    }
-                }
-                host = "${route.host}$routeSuffix"
-                route.path?.let {
-                    path = it
-                }
-            }
         }
     }
 
@@ -256,7 +222,7 @@ data class Route(
     val objectName: String,
     val host: String,
     val path: String? = null,
-    val annotations: Map<String, String>,
+    val annotations: Map<String, String> = emptyMap(),
     val tls: SecureRoute? = null
 ) {
     val target: String
@@ -266,6 +232,39 @@ data class Route(
         get(): String = if (tls != null) "https://" else "http://"
 
     fun url(urlSuffix: String) = "$host$urlSuffix".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
+
+    fun generateOpenShiftRoute(
+        routeNamespace: String,
+        serviceName: String,
+        routeSuffix: String
+    ): Route {
+        val route = this
+        return newRoute {
+            metadata {
+                name = route.objectName
+                namespace = routeNamespace
+                if (route.annotations.isNotEmpty()) {
+                    annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
+                }
+            }
+            spec {
+                to {
+                    kind = "Service"
+                    name = serviceName
+                }
+                route.tls?.let {
+                    tls {
+                        insecureEdgeTerminationPolicy = it.insecurePolicy.name
+                        termination = it.termination.name.toLowerCase()
+                    }
+                }
+                host = "${route.host}$routeSuffix"
+                route.path?.let {
+                    path = it
+                }
+            }
+        }
+    }
 }
 
 enum class InsecurePolicy {
