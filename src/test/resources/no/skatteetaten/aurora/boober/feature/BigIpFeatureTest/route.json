@@ -2,8 +2,11 @@
   "apiVersion" : "route.openshift.io/v1",
   "kind" : "Route",
   "metadata" : {
-    "name" : "simple-bigip",
-    "namespace" : "paas-utv"
+    "annotations": {
+      "haproxy.router.openshift.io/timeout": "30s"
+    },
+    "name": "simple-bigip",
+    "namespace": "paas-utv"
   },
   "spec" : {
     "host" : "1d5da0b933ade4bfd6773579b9fb5cc2afb57378.test.foo",

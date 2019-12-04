@@ -29,15 +29,18 @@ class BigIpFeature(
             AuroraConfigFieldHandler("bigip/externalHost"),
             AuroraConfigFieldHandler("bigip/oauthScopes"),
             AuroraConfigFieldHandler("bigip/apiPaths")
-            // TODO: Annotations på route.
-        )
+        ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         val routeName = "${adc.name}-bigip"
 
-        val auroraRoute = Route(routeName, adc.applicationDeploymentId)
+        val auroraRoute = Route(
+            objectName = routeName,
+            host = adc.applicationDeploymentId,
+            annotations = adc.getRouteAnnotations("bigip/annotations/")
+        )
 
         val bigIp = BigIp(
             _metadata =

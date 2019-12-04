@@ -33,7 +33,10 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         val (routeResource, bigIpResource) = generateResources(
             """{
             "bigip" : {
-              "service" : "simple"
+              "service" : "simple",
+              "annotations" : {
+                "haproxy.router.openshift.io|timeout" : "30s"
+               }
             }
         }""", createdResources = 2
         )
@@ -46,5 +49,22 @@ class BigIpFeatureTest : AbstractFeatureTest() {
 
         val bigIpSpec: BigIpSpec = (bigIpResource.resource as BigIp).spec
         assertThat(routeResource.resource.metadata.name).isEqualTo(bigIpSpec.routeName)
+    }
+
+    @Test
+    fun `test render spec for bigip`() {
+
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+            "bigip" : {
+              "service" : "simple",
+              "annotations" : {
+                "haproxy.router.openshift.io|timeout" : "30s"
+               }
+            }
+        }"""
+        )
+
+        assertThat(spec).auroraDeploymentSpecMatches("spec-default.json")
     }
 }

@@ -158,20 +158,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }.toSet()
     }
 
-    fun findRouteAnnotationHandlers(
-        prefix: String,
-        applicationFiles: List<AuroraConfigFile>
-    ): Set<AuroraConfigFieldHandler> {
-
-        return applicationFiles.findSubHandlers("$prefix/annotations", validatorFn = { key ->
-            {
-                if (key.contains("/")) {
-                    IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")
-                } else null
-            }
-        }).toSet()
-    }
-
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
@@ -279,3 +265,17 @@ data class SecureRoute(
     val insecurePolicy: InsecurePolicy,
     val termination: TlsTermination
 )
+
+fun findRouteAnnotationHandlers(
+    prefix: String,
+    applicationFiles: List<AuroraConfigFile>
+): Set<AuroraConfigFieldHandler> {
+
+    return applicationFiles.findSubHandlers("$prefix/annotations", validatorFn = { key ->
+        {
+            if (key.contains("/")) {
+                IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")
+            } else null
+        }
+    }).toSet()
+}
