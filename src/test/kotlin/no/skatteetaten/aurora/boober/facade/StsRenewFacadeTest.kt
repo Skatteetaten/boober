@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.MediaType.APPLICATION_JSON_UTF8_VALUE
+import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(
@@ -42,7 +42,7 @@ class StsRenewFacadeTest : AbstractSpringBootTest() {
             rule {
                 MockResponse().setResponseCode(200)
                     .setBody(body)
-                    .setHeader("Content-Type", APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", APPLICATION_JSON_VALUE)
             }
         }
 

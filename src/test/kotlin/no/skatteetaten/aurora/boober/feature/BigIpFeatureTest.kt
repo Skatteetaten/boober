@@ -23,7 +23,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                }"""
             )
         }.singleApplicationError(
-            "Config for application simple in environment utv contains errors. Service name for BIG-IP is required."
+            "bigip/service is required if any other bigip flags are set"
         )
     }
 

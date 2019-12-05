@@ -63,7 +63,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
                     .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
@@ -119,7 +119,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             rule {
                 MockResponse().setResponseCode(200)
                     .setBody(body)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
@@ -152,16 +152,16 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
                     .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
-        cantuMock {
+        cantusMock {
             rule {
                 MockResponse()
                     .setBody(""" { "success" : true }""")
                     .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
@@ -195,7 +195,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             rule {
                 MockResponse().setResponseCode(200)
                     .setBody(body)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
@@ -280,7 +280,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
                     .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 

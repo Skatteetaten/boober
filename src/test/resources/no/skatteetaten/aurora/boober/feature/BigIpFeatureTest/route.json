@@ -3,7 +3,8 @@
   "kind" : "Route",
   "metadata" : {
     "annotations": {
-      "haproxy.router.openshift.io/timeout": "30s"
+      "haproxy.router.openshift.io/timeout": "30s",
+      "bigipRoute": "true"
     },
     "name": "simple-bigip",
     "namespace": "paas-utv"

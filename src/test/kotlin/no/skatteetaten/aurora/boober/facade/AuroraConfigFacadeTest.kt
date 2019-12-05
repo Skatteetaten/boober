@@ -141,7 +141,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json", "DeployFacadeTest"))
                     .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
@@ -255,7 +255,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
                 val json = mapOf("values" to listOf(mapOf("slug" to "paas")))
                 MockResponse()
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
                     .setResponseCode(200)
                     .setBody(
                         jacksonObjectMapper()

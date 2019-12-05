@@ -116,24 +116,40 @@
       } ]
     }
   },
-  "envFile" : {
-    "source" : "utv/complex.json",
-    "value" : "about-alternate.json",
-    "sources" : [ {
-      "name" : "utv/complex.json",
-      "value" : "about-alternate.json"
-    } ]
+  "envFile": {
+    "source": "utv/complex.json",
+    "value": "about-alternate.json",
+    "sources": [
+      {
+        "name": "utv/complex.json",
+        "value": "about-alternate.json"
+      }
+    ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "complex",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "complex"
-    } ]
+  "bigip": {
+    "service": {
+      "source": "complex.json",
+      "value": "simple-utv",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "simple-utv"
+        }
+      ]
+    }
   },
-  "groupId" : {
-    "source" : "complex.json",
+  "artifactId": {
+    "source": "fileName",
+    "value": "complex",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "complex"
+      }
+    ]
+  },
+  "groupId": {
+    "source": "complex.json",
     "value" : "org.test",
     "sources" : [ {
       "name" : "complex.json",

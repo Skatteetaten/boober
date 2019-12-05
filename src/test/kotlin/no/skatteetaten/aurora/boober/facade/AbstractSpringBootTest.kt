@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -23,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import java.time.Instant
 
 typealias MockRule = RecordedRequest.() -> MockResponse?
 typealias MockFlag = RecordedRequest.() -> Boolean?
@@ -67,7 +67,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         return MockResponse()
             .setResponseCode(200)
             .setBody(jacksonObjectMapper().writeValueAsString(ad))
-            .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
     }
 
     data class MockRules(
@@ -162,7 +162,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         return httpMockServer(bitbucketPort.toInt(), block)
     }
 
-    fun cantuMock(block: HttpMock.() -> Unit = {}): MockWebServer {
+    fun cantusMock(block: HttpMock.() -> Unit = {}): MockWebServer {
         return httpMockServer(cantusPort.toInt(), block)
     }
 
@@ -184,7 +184,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     fun mockJsonFromFile(fileName: String): MockResponse {
         return MockResponse()
             .setBody(loadBufferResource(fileName, DeployFacadeTest::class.java.simpleName))
-            .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+            .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
     }
 
     @BeforeEach
@@ -202,9 +202,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 fun json(body: String) =
     MockResponse().setResponseCode(200)
         .setBody(body)
-        .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+        .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
 
 fun json(body: Any) =
     MockResponse().setResponseCode(200)
         .setBody(jacksonObjectMapper().writeValueAsString(body))
-        .setHeader("Content-Type", MediaType.APPLICATION_JSON_UTF8_VALUE)
+        .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)

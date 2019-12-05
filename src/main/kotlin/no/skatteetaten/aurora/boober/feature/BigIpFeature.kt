@@ -8,7 +8,8 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpKonfigurasjonstjenesten
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
-import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -19,13 +20,7 @@ class BigIpFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-            // TODO: This is wrong, if bigip is set then it needs to exist.
-            AuroraConfigFieldHandler(
-                name = "bigip/service",
-                validator = {
-                    it.notBlank("Service name for BIG-IP is required")
-                }
-            ),
+            AuroraConfigFieldHandler("bigip/service"),
             AuroraConfigFieldHandler("bigip/asmPolicy"),
             AuroraConfigFieldHandler("bigip/externalHost"),
             AuroraConfigFieldHandler("bigip/oauthScopes"),
@@ -33,14 +28,29 @@ class BigIpFeature(
         ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles)
     }
 
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+        if (adc.hasSubKeys("bigip") && adc.getOrNull<String>("bigip/service").isNullOrEmpty()) {
+            throw AuroraDeploymentSpecValidationException("bigip/service is required if any other bigip flags are set")
+        }
+        return emptyList()
+    }
+
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+
+        if (!adc.hasSubKeys("bigip")) {
+            return emptySet()
+        }
 
         val routeName = "${adc.name}-bigip"
 
         val auroraRoute = Route(
             objectName = routeName,
             host = adc.applicationDeploymentId,
-            annotations = adc.getRouteAnnotations("bigip/annotations/")
+            annotations = adc.getRouteAnnotations("bigip/annotations/").addIfNotNull("bigipRoute" to "true")
         )
 
         val bigIp = BigIp(
