@@ -19,6 +19,7 @@ class BigIpFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
+            // TODO: This is wrong, if bigip is set then it needs to exist.
             AuroraConfigFieldHandler(
                 name = "bigip/service",
                 validator = {

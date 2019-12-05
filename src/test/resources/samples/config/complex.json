@@ -66,6 +66,9 @@
       }
     }
   },
+  "bigip" : {
+    "service" : "simple-utv"
+  },
   "liveness": true,
   "releaseTo": "komplex",
   "deployStrategy": {
