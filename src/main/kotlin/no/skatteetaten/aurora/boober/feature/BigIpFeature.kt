@@ -54,8 +54,7 @@ class BigIpFeature(
         )
 
         val bigIp = BigIp(
-            _metadata =
-            newObjectMeta {
+            _metadata = newObjectMeta {
                 name = adc.name
                 namespace = adc.namespace
             },
