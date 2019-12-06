@@ -86,7 +86,7 @@ class StsFeature(
         return adc.stsCommonName?.let {
             val result = sts.generateCertificate(it, adc.name, adc.envName)
 
-            val secret = StsSecretGenerator.create(adc.name, result, adc.namespace)
+            val secret = StsSecretGenerator.create(adc.name, result, adc.namespace, "sts")
             setOf(generateResource(secret))
         } ?: emptySet()
     }

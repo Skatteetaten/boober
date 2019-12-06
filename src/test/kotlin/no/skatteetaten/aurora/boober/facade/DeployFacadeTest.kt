@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.messageContains
@@ -209,6 +210,15 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         assertThat(result.first().auroraDeploymentSpecInternal).auroraDeploymentSpecMatchesSpecFiles("$app-spec")
         assertThat(result).auroraDeployResultMatchesFiles()
+
+        if (app == "complex") {
+            assertThat(result.first().warnings).isEqualTo(
+                listOf(
+                    "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmfull!",
+                    "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
+                )
+            )
+        }
     }
 
     @Test

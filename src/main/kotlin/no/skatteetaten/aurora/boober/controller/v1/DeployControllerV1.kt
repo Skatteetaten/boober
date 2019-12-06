@@ -60,7 +60,8 @@ data class DeployResponse(
     val success: Boolean = true,
     val reason: String? = null,
     val tagResponse: TagResult? = null,
-    val projectExist: Boolean = false
+    val projectExist: Boolean = false,
+    val warnings: List<String> = emptyList()
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

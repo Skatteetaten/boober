@@ -5,6 +5,10 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
+import no.skatteetaten.aurora.boober.feature.CertificateFeature
+import no.skatteetaten.aurora.boober.feature.RouteFeature
+import no.skatteetaten.aurora.boober.feature.StsFeature
+import no.skatteetaten.aurora.boober.feature.WebsealFeature
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
@@ -113,6 +117,7 @@ class OpenShiftDeployer(
         env: AuroraEnvironmentResult
     ): AuroraDeployResult {
 
+        val warnings = findWarnings(cmd)
         logger.debug { "Apply application ${cmd.context.cmd.applicationDeploymentRef}" }
         val projectExist = env.projectExist
         val context = cmd.context
@@ -130,7 +135,8 @@ class OpenShiftDeployer(
                 deployCommand = cmd,
                 openShiftResponses = listOf(applicationResult),
                 success = false,
-                reason = "Creating application object failed"
+                reason = "Creating application object failed",
+                warnings = warnings
             )
         }
 
@@ -151,7 +157,8 @@ class OpenShiftDeployer(
         val rawResult = AuroraDeployResult(
             tagResponse = tagResult,
             deployCommand = cmd,
-            projectExist = env.projectExist
+            projectExist = env.projectExist,
+            warnings = warnings
         )
 
         logger.info("TagResult=${tagResult?.success}")
@@ -203,6 +210,37 @@ class OpenShiftDeployer(
             tagResponse = tagResult,
             reason = redeployResult.message
         )
+    }
+
+    private fun findWarnings(cmd: AuroraDeployCommand): List<String> {
+
+        val resources = cmd.resources
+
+        val webSeal = resources.any {
+            it.resource.kind == "Service" && it.sources.any { source ->
+                source.feature.simpleName == WebsealFeature::class.java.simpleName
+            }
+        }
+        val route = resources.any {
+            it.createdSource.feature.simpleName == RouteFeature::class.java.simpleName
+        }
+
+        val websealWarning = if (webSeal && route) {
+            "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmfull!"
+        } else null
+
+        val sts = resources.any {
+            it.createdSource.feature.simpleName == StsFeature::class.java.simpleName
+        }
+        val certificate = resources.any {
+            it.createdSource.feature.simpleName == CertificateFeature::class.java.simpleName
+        }
+
+        val stsWarning = if (sts && certificate) {
+            "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
+        } else null
+
+        return listOfNotNull(websealWarning, stsWarning)
     }
 
     private fun applyOpenShiftApplicationObjects(
