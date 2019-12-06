@@ -10,7 +10,7 @@
         }
       ]
     },
-    "annotations": {
+    "routeAnnotations": {
       "haproxy.router.openshift.io|timeout": {
         "source": "utv/simple.json",
         "value": "30s",

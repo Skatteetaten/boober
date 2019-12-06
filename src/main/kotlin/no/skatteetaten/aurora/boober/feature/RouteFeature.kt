@@ -268,10 +268,11 @@ data class SecureRoute(
 
 fun findRouteAnnotationHandlers(
     prefix: String,
-    applicationFiles: List<AuroraConfigFile>
+    applicationFiles: List<AuroraConfigFile>,
+    annotationsKey: String = "annotations"
 ): Set<AuroraConfigFieldHandler> {
 
-    return applicationFiles.findSubHandlers("$prefix/annotations", validatorFn = { key ->
+    return applicationFiles.findSubHandlers("$prefix/$annotationsKey", validatorFn = { key ->
         {
             if (key.contains("/")) {
                 IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")

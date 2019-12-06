@@ -25,7 +25,7 @@ class BigIpFeature(
             AuroraConfigFieldHandler("bigip/externalHost"),
             AuroraConfigFieldHandler("bigip/oauthScopes"),
             AuroraConfigFieldHandler("bigip/apiPaths")
-        ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles)
+        ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles, "routeAnnotations")
     }
 
     override fun validate(
@@ -50,7 +50,7 @@ class BigIpFeature(
         val auroraRoute = Route(
             objectName = routeName,
             host = adc.applicationDeploymentId,
-            annotations = adc.getRouteAnnotations("bigip/annotations/").addIfNotNull("bigipRoute" to "true")
+            annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 
         val bigIp = BigIp(

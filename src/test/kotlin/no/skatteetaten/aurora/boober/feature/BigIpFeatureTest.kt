@@ -34,7 +34,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
             """{
             "bigip" : {
               "service" : "simple",
-              "annotations" : {
+              "routeAnnotations" : {
                 "haproxy.router.openshift.io|timeout" : "30s"
                }
             }
@@ -58,7 +58,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
             """{
             "bigip" : {
               "service" : "simple",
-              "annotations" : {
+              "routeAnnotations" : {
                 "haproxy.router.openshift.io|timeout" : "30s"
                }
             }
