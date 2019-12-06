@@ -43,7 +43,8 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
                 openShiftResponses = it.openShiftResponses,
                 deploymentSpec = it.auroraDeploymentSpecInternal.let { internalSpec ->
                     renderSpecAsJson(internalSpec, true)
-                }
+                },
+                warnings = it.warnings
             )
         }
 
