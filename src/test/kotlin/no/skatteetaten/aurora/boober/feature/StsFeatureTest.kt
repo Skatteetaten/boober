@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.feature
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.Secret
-import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import java.io.ByteArrayInputStream
@@ -65,20 +64,15 @@ class StsFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource)
             .auroraResourceModifiedByThisFeatureWithComment("Added env vars, volume mount, volume")
 
-        val dc = dcResource.resource as DeploymentConfig
-        val env = dc.spec.template.spec.containers.first().env.associate {
-            it.name to it.value
-        }
         val baseUrl = "$secretsPath/simple-cert"
-        assertThat(env).isEqualTo(
-            mapOf(
-                "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
-                "VOLUME_SIMPLE_STS" to baseUrl,
-                "STS_DISCOVERY_URL" to bigBirdUrl
-            )
+        val envVars = mapOf(
+            "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+            "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+            "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
+            "STS_DISCOVERY_URL" to bigBirdUrl
         )
+
+        assertThat(dcResource).auroraResourceMountsAttachment(secret, envVars)
     }
 
     @Test
