@@ -120,18 +120,15 @@ class AuroraDeploymentContextService(
             spec.copy(fields = fields)
         }
 
-        val warnings = findWarnings(deployCommand, featureAdc)
-        // todo here we need to run warnings
         return AuroraDeploymentContext(
             spec,
             cmd = deployCommand,
             features = featureAdc,
             featureHandlers = featureHandlers,
-            warnings = warnings
+            warnings = findWarnings(deployCommand, featureAdc)
         )
     }
 
-    // denne må flyttes til AuroraDeploymentContext
     private fun findWarnings(cmd: AuroraContextCommand, features: Map<Feature, AuroraDeploymentSpec>): List<String> {
 
         fun logWarning(warning: String) {
