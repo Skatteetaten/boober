@@ -36,6 +36,8 @@ class AuroraDeploymentContextService(
 
                 val errors = context.validate(resourceValidation).flatMap { it.value }
 
+                //todo here we need to run warnings
+
                 if (errors.isEmpty()) {
                     context to null
                 } else {

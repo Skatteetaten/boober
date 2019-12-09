@@ -212,7 +212,13 @@ class OpenShiftDeployer(
         )
     }
 
+    //denne må flyttes til AuroraDeploymentContext
     private fun findWarnings(cmd: AuroraDeployCommand): List<String> {
+
+        fun logWarning(warning: String) {
+            val auroraConfigRef = cmd.context.cmd.auroraConfigRef
+            logger.info("AuroraConfigWarning auroraConfig=${auroraConfigRef.name} auroraConfigGitReference=${auroraConfigRef.refName} deploymentReference=${cmd.context.cmd.applicationDeploymentRef} warning=$warning")
+        }
 
         val resources = cmd.resources
 
@@ -226,6 +232,7 @@ class OpenShiftDeployer(
         }
 
         val websealWarning = if (webSeal && route) {
+            logWarning("websealAndRoute")
             "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmfull!"
         } else null
 
@@ -237,6 +244,7 @@ class OpenShiftDeployer(
         }
 
         val stsWarning = if (sts && certificate) {
+            logWarning("stsAndCertificate")
             "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
         } else null
 
