@@ -131,10 +131,11 @@ object StsSecretGenerator {
     fun create(
         appName: String,
         stsProvisionResults: StsProvisioningResult,
-        secretNamespace: String
+        secretNamespace: String,
+        certSuffix: String = "cert"
     ): Secret {
 
-        val secretName = "$appName-cert"
+        val secretName = "$appName-$certSuffix"
         val baseUrl = "$secretsPath/$secretName/keystore.jks"
         val cert = stsProvisionResults.cert
         return newSecret {
