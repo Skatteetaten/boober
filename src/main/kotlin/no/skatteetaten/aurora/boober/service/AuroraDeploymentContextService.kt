@@ -1,7 +1,11 @@
 package no.skatteetaten.aurora.boober.service
 
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.CertificateFeature
 import no.skatteetaten.aurora.boober.feature.Feature
+import no.skatteetaten.aurora.boober.feature.RouteFeature
+import no.skatteetaten.aurora.boober.feature.StsFeature
+import no.skatteetaten.aurora.boober.feature.WebsealFeature
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.feature.name
@@ -36,7 +40,6 @@ class AuroraDeploymentContextService(
 
                 val errors = context.validate(resourceValidation).flatMap { it.value }
 
-                //todo here we need to run warnings
 
                 if (errors.isEmpty()) {
                     context to null
@@ -118,11 +121,52 @@ class AuroraDeploymentContextService(
             spec.copy(fields = fields)
         }
 
+        val warnings = findWarnings(deployCommand, featureAdc)
+        //todo here we need to run warnings
         return AuroraDeploymentContext(
             spec,
             cmd = deployCommand,
             features = featureAdc,
-            featureHandlers = featureHandlers
+            featureHandlers = featureHandlers,
+            warnings = warnings
         )
     }
+
+    //denne må flyttes til AuroraDeploymentContext
+    private fun findWarnings(cmd: AuroraContextCommand, features: Map<Feature, AuroraDeploymentSpec>): List<String> {
+
+        fun logWarning(warning: String) {
+            val auroraConfigRef = cmd.auroraConfigRef
+            logger.info("AuroraConfigWarning auroraConfig=${auroraConfigRef.name} auroraConfigGitReference=${auroraConfigRef.refName} deploymentReference=${cmd.applicationDeploymentRef} warning=$warning")
+        }
+
+        val webSeal = features.filter { (feature, spec) ->
+            feature is WebsealFeature && feature.willCreateResource(spec)
+        }.isNotEmpty()
+
+        val route = features.filter { (feature, spec) ->
+            feature is RouteFeature && feature.willCreateResource(spec, cmd)
+        }.isNotEmpty()
+
+        val websealWarning = if (webSeal && route) {
+            logWarning("websealAndRoute")
+            "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmfull!"
+        } else null
+
+        val sts = features.filter { (feature, spec) ->
+            feature is StsFeature && feature.willCreateResource(spec)
+        }.isNotEmpty()
+
+        val certificate = features.filter { (feature, spec) ->
+            feature is CertificateFeature && feature.willCreateResource(spec)
+        }.isNotEmpty()
+
+        val stsWarning = if (sts && certificate) {
+            logWarning("stsAndCertificate")
+            "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
+        } else null
+
+        return listOfNotNull(websealWarning, stsWarning)
+    }
 }
+

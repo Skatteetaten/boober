@@ -117,4 +117,6 @@ class StsFeature(
             resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount), this::class.java)
         }
     }
+
+    fun willCreateResource(spec: AuroraDeploymentSpec) = spec.stsCommonName != null
 }
