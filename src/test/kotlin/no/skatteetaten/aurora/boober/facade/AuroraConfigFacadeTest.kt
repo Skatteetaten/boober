@@ -116,6 +116,9 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             auroraConfigRef = auroraConfigRef
         )
         assertThat(validated.size).isEqualTo(6)
+
+        val complex = validated.find { it.cmd.applicationDeploymentRef == ApplicationDeploymentRef(environment = "utv", application = "complex") }
+        assertThat(complex?.warnings?.size).isNotNull()
     }
 
     @Test

@@ -40,7 +40,6 @@ class AuroraDeploymentContextService(
 
                 val errors = context.validate(resourceValidation).flatMap { it.value }
 
-
                 if (errors.isEmpty()) {
                     context to null
                 } else {
@@ -122,7 +121,7 @@ class AuroraDeploymentContextService(
         }
 
         val warnings = findWarnings(deployCommand, featureAdc)
-        //todo here we need to run warnings
+        // todo here we need to run warnings
         return AuroraDeploymentContext(
             spec,
             cmd = deployCommand,
@@ -132,7 +131,7 @@ class AuroraDeploymentContextService(
         )
     }
 
-    //denne må flyttes til AuroraDeploymentContext
+    // denne må flyttes til AuroraDeploymentContext
     private fun findWarnings(cmd: AuroraContextCommand, features: Map<Feature, AuroraDeploymentSpec>): List<String> {
 
         fun logWarning(warning: String) {
@@ -169,4 +168,3 @@ class AuroraDeploymentContextService(
         return listOfNotNull(websealWarning, stsWarning)
     }
 }
-
