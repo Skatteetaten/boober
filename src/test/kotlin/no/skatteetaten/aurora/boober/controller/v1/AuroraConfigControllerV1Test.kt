@@ -228,4 +228,24 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.items[0].name").equalsValue("paas")
         }
     }
+
+
+    @Test
+    fun `Validate aurora config merge with existing`() {
+
+        every {
+            facade.validateAuroraConfig(
+                localAuroraConfig = any(),
+                resourceValidation = false,
+                auroraConfigRef = auroraConfigRef, mergeWithRemoteConfig = true)
+        } returns listOf()
+
+        mockMvc.put(
+            path = Path("/v1/auroraconfig/{auroraConfig}/validate?mergeWithRemoteConfig=true", auroraConfigRef.name)
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].name").equalsValue("paas")
+        }
+    }
 }
