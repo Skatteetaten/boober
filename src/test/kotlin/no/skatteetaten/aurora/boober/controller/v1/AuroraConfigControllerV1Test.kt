@@ -215,7 +215,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Validate aurora config`() {
 
         every {
-            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+            facade.validateAuroraConfig(auroraConfig, false, auroraConfigRef)
         } returns listOf()
 
         mockMvc.put(

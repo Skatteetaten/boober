@@ -6,6 +6,7 @@ import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -152,6 +153,49 @@ class AuroraConfigTest : ResourceLoader() {
             isInstanceOf(IllegalArgumentException::class)
             hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name simple.")
         }
+    }
+
+    @Test
+    fun `Should merge with remote and override file`() {
+        val auroraConfig = getAuroraConfigSamples()
+
+        val fileName = "utv/simple.json"
+        assertThat(auroraConfig.findFile(fileName)).isNotNull()
+
+        val fileContent = """{ "version" : 1 }"""
+        val newAuroraConfig =
+            AuroraConfig(listOf(AuroraConfigFile(fileName, contents = fileContent)), auroraConfig.name, "local")
+
+        val merged = auroraConfig.merge(newAuroraConfig)
+
+        assertThat(merged.findFile(fileName)?.contents).isEqualTo(fileContent)
+    }
+
+    @Test
+    fun `Should merge with remote and add new file`() {
+        val auroraConfig = getAuroraConfigSamples()
+
+        val fileName = "new-app.json"
+        assertThat(auroraConfig.findFile(fileName)).isNull()
+
+        val fileContent = """{ "groupId" : "foo.bar" }"""
+        val newAuroraConfig =
+            AuroraConfig(listOf(AuroraConfigFile(fileName, contents = fileContent)), auroraConfig.name, "local")
+
+        val merged = auroraConfig.merge(newAuroraConfig)
+
+        assertThat(merged.findFile(fileName)?.contents).isEqualTo(fileContent)
+    }
+
+    @Test
+    fun `Should keep existing config if local is empty`() {
+        val auroraConfig = getAuroraConfigSamples()
+
+        val newAuroraConfig = AuroraConfig(emptyList(), auroraConfig.name, "local")
+
+        val merged = auroraConfig.merge(newAuroraConfig)
+
+        assertThat(auroraConfig).isEqualTo(merged)
     }
 
     fun createMockFiles(vararg files: String): List<AuroraConfigFile> {

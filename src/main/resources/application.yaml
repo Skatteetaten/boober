@@ -81,14 +81,10 @@ openshift:
     cluster: utv
 
 integrations:
-    bitbucket:
-        username: test
-        password: test
     dbh:
         url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
-        token: "detteertull"
     skap:
         url: http://localhost:9090
     openshift:
@@ -98,8 +94,6 @@ integrations:
         releases: "container-registry-internal-release.aurora.skead.no:443"
         registry: "container-registry-internal-private-pull.aurora.skead.no:443"
 boober:
-    encrypt:
-        key: test
     openshift:
         tokenLocation: /tmp/boober-token
 

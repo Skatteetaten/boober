@@ -85,15 +85,17 @@ class AuroraConfigControllerV1(
     fun validateAuroraConfig(
         @PathVariable name: String,
         @RequestParam("resourceValidation", required = false, defaultValue = "false") resourceValidation: Boolean,
+        @RequestParam("mergeWithRemoteConfig", required = false, defaultValue = "false") mergeWithRemoteConfig: Boolean,
         @RequestBody payload: AuroraConfigResource
     ): Response {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val auroraConfig = payload.toAuroraConfig(ref)
         auroraConfigFacade.validateAuroraConfig(
-            auroraConfig,
-            resourceValidation = resourceValidation,
-            auroraConfigRef = ref
+                auroraConfig,
+                resourceValidation = resourceValidation,
+                auroraConfigRef = ref,
+                mergeWithRemoteConfig = mergeWithRemoteConfig
         )
         return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it.name, it.files) })
     }
@@ -118,7 +120,7 @@ class AuroraConfigControllerV1(
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
         val auroraConfig: AuroraConfig =
-            auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
+                auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
         val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -146,7 +148,7 @@ class AuroraConfigControllerV1(
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
         val configFiles = auroraConfigFile
-            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
+                .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
         val response = Response(items = configFiles)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
         return ResponseEntity(response, headers, HttpStatus.OK)

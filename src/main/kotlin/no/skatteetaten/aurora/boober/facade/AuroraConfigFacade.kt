@@ -75,13 +75,21 @@ class AuroraConfigFacade(
     }
 
     fun validateAuroraConfig(
-        auroraConfig: AuroraConfig,
-        overrideFiles: List<AuroraConfigFile> = listOf(),
+        localAuroraConfig: AuroraConfig,
         resourceValidation: Boolean = true,
-        auroraConfigRef: AuroraConfigRef
+        auroraConfigRef: AuroraConfigRef,
+        mergeWithRemoteConfig: Boolean = false
     ): List<AuroraDeploymentContext> {
+
+        val auroraConfig = if (mergeWithRemoteConfig) {
+            val remoteAuroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRef)
+            remoteAuroraConfig.merge(localAuroraConfig)
+        } else {
+            localAuroraConfig
+        }
+
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
-            AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)
+            AuroraContextCommand(auroraConfig, it, auroraConfigRef, emptyList())
         }
         return auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
     }
