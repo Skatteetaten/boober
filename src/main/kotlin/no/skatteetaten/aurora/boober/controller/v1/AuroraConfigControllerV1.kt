@@ -90,7 +90,7 @@ class AuroraConfigControllerV1(
     ): Response {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        val auroraConfig = payload?.toAuroraConfig(ref) ?: AuroraConfig(files = emptyList(), name=name, version ="empty")
+        val auroraConfig = payload?.toAuroraConfig(ref) ?: AuroraConfig(files = emptyList(), name = name, version = "empty")
         auroraConfigFacade.validateAuroraConfig(
                 auroraConfig,
                 resourceValidation = resourceValidation,

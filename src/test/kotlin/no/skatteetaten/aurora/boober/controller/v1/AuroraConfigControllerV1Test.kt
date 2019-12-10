@@ -229,7 +229,6 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
         }
     }
 
-
     @Test
     fun `Validate aurora config merge with existing`() {
 
