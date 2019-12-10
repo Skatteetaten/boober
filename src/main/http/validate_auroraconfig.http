@@ -1,4 +1,0 @@
-GET {{apiUrl}}/v1/auroraconfig/paas/validate
-Authorization:Bearer {{token}}
-
-###

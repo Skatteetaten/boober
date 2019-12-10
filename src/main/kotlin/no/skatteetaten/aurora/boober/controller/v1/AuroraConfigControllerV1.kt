@@ -86,11 +86,11 @@ class AuroraConfigControllerV1(
         @PathVariable name: String,
         @RequestParam("resourceValidation", required = false, defaultValue = "false") resourceValidation: Boolean,
         @RequestParam("mergeWithRemoteConfig", required = false, defaultValue = "false") mergeWithRemoteConfig: Boolean,
-        @RequestBody payload: AuroraConfigResource
+        @RequestBody payload: AuroraConfigResource?
     ): Response {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        val auroraConfig = payload.toAuroraConfig(ref)
+        val auroraConfig = payload?.toAuroraConfig(ref) ?: AuroraConfig(files = emptyList(), name=name, version ="empty")
         auroraConfigFacade.validateAuroraConfig(
                 auroraConfig,
                 resourceValidation = resourceValidation,
