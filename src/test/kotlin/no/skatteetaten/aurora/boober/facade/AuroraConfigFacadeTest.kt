@@ -115,10 +115,8 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             resourceValidation = false,
             auroraConfigRef = auroraConfigRef
         )
-        assertThat(validated.size).isEqualTo(6)
 
-        val complex = validated.find { it.cmd.applicationDeploymentRef == ApplicationDeploymentRef(environment = "utv", application = "complex") }
-        assertThat(complex?.warnings?.size).isNotNull()
+        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isNotNull()
     }
 
     @Test
@@ -153,7 +151,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             resourceValidation = true,
             auroraConfigRef = auroraConfigRef
         )
-        assertThat(validated.size).isEqualTo(6)
+        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isNotNull()
     }
 
     @Test

@@ -5,17 +5,23 @@ import assertk.assertions.isFailure
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
+import java.lang.RuntimeException
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.service.ContextErrors
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentType
 import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.patch
 import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.status
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 
 @WebMvcTest(controllers = [AuroraConfigControllerV1::class])
 class AuroraConfigControllerV1Test : AbstractControllerTest() {
@@ -212,20 +218,68 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     }
 
     @Test
-    fun `Validate aurora config`() {
+    fun `Validate aurora config no errors and no warnings`() {
 
         every {
             facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
-        } returns listOf()
+        } returns emptyMap()
 
         mockMvc.put(
             path = Path("/v1/auroraconfig/{auroraConfig}/validate", auroraConfigRef.name),
             headers = HttpHeaders().contentType(),
+            docsIdentifier = "validate_auroraconfig",
             body = jacksonObjectMapper().writeValueAsString(auroraConfig)
         ) {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
-            responseJsonPath("$.items[0].name").equalsValue("paas")
+            responseJsonPath("$.items").isEmpty()
+        }
+    }
+
+    @Test
+    fun `Validate aurora config warnings`() {
+
+        every {
+            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+        } returns mapOf(adr to listOf("This is a warning"))
+
+        mockMvc.put(
+            path = Path("/v1/auroraconfig/{auroraConfig}/validate", auroraConfigRef.name),
+            headers = HttpHeaders().contentType(),
+            docsIdentifier = "validate_auroraconfig_warnings",
+            body = jacksonObjectMapper().writeValueAsString(auroraConfig)
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items[0].details[0].message").equalsValue("This is a warning")
+            responseJsonPath("$.items[0].details[0].type").equalsValue("WARNING")
+        }
+    }
+
+    @Test
+    fun `Validate aurora config errors`() {
+
+        every {
+            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+        } throws MultiApplicationValidationException(
+            listOf(
+                ContextErrors(
+                    command = AuroraContextCommand(auroraConfig, adr, auroraConfigRef),
+                    errors = listOf(RuntimeException("This is an error"))
+                )
+            )
+        )
+
+        mockMvc.put(
+            path = Path("/v1/auroraconfig/{auroraConfig}/validate", auroraConfigRef.name),
+            headers = HttpHeaders().contentType(),
+            docsIdentifier = "validate_auroraconfig_warnings",
+            body = jacksonObjectMapper().writeValueAsString(auroraConfig)
+        ) {
+            status(HttpStatus.BAD_REQUEST)
+            responseJsonPath("$.success").isFalse()
+            responseJsonPath("$.items[0].details[0].message").equalsValue("This is an error")
+            responseJsonPath("$.items[0].details[0].type").equalsValue("GENERIC")
         }
     }
 }

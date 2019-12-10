@@ -6,7 +6,8 @@ enum class ErrorType {
     ILLEGAL,
     MISSING,
     INVALID,
-    GENERIC
+    GENERIC,
+    WARNING
 }
 
 data class ApplicationError(
