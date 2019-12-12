@@ -146,7 +146,7 @@ class AuroraDeploymentContextService(
 
         val websealWarning = if (webSeal && route) {
             logWarning("websealAndRoute")
-            "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmfull!"
+            "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful!"
         } else null
 
         val sts = features.filter { (feature, spec) ->

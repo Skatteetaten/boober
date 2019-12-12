@@ -258,9 +258,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
         val simplified = adc.isSimplifiedAndEnabled("route")
 
-        val expanded = cmd.applicationFiles.findSubKeys("route").filter {
+        val expanded = cmd.applicationFiles.findSubKeys("route").any {
             adc.getOrNull<Boolean>("route/$it/enabled") == true
-        }.isNotEmpty()
+        }
 
         return simplified || expanded
     }

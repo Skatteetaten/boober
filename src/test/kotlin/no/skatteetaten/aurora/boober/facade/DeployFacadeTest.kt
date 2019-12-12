@@ -214,7 +214,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         if (app == "complex") {
             assertThat(result.first().warnings).isEqualTo(
                 listOf(
-                    "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmfull!",
+                    "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful!",
                     "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
                 )
             )
