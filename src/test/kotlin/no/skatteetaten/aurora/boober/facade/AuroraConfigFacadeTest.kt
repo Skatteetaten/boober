@@ -9,9 +9,11 @@ import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -94,6 +96,36 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     fun `find auroraconfig file`() {
         val file = facade.findAuroraConfigFile(auroraConfigRef, "utv/simple.json")
         assertThat(file).isNotNull()
+    }
+
+    @Test
+    fun `validate and merge remote aurora config `() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+
+        val localAuroraConfig = AuroraConfig(
+            files = listOf(AuroraConfigFile("utv/simple.json", """{ "type" : "foobar" }""")),
+            name = "paas",
+            version = "local"
+        )
+
+        assertThat {
+            facade.validateAuroraConfig(
+                localAuroraConfig,
+                resourceValidation = false,
+                auroraConfigRef = auroraConfigRef,
+                mergeWithRemoteConfig = true
+            )
+        }.singleApplicationError("Config for application simple in environment utv contains errors. Must be one of [deploy, development, localTemplate, template].")
     }
 
     @Test

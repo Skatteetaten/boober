@@ -221,7 +221,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Validate aurora config no errors and no warnings`() {
 
         every {
-            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+            facade.validateAuroraConfig(auroraConfig, false, auroraConfigRef)
         } returns emptyMap()
 
         mockMvc.put(
@@ -240,7 +240,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Validate aurora config warnings`() {
 
         every {
-            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+            facade.validateAuroraConfig(auroraConfig, false, auroraConfigRef)
         } returns mapOf(adr to listOf("This is a warning"))
 
         mockMvc.put(
@@ -260,7 +260,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Validate aurora config errors`() {
 
         every {
-            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+            facade.validateAuroraConfig(auroraConfig, false, auroraConfigRef)
         } throws MultiApplicationValidationException(
             listOf(
                 ContextErrors(
@@ -280,6 +280,24 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.success").isFalse()
             responseJsonPath("$.items[0].details[0].message").equalsValue("This is an error")
             responseJsonPath("$.items[0].details[0].type").equalsValue("GENERIC")
+        }
+    }
+
+    @Test
+    fun `Validate aurora config merge with existing`() {
+
+        every {
+            facade.validateAuroraConfig(
+                localAuroraConfig = any(),
+                resourceValidation = false,
+                auroraConfigRef = auroraConfigRef, mergeWithRemoteConfig = true)
+        } returns emptyMap()
+
+        mockMvc.put(
+            path = Path("/v1/auroraconfig/{auroraConfig}/validate?mergeWithRemoteConfig=true", auroraConfigRef.name)
+        ) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
         }
     }
 }

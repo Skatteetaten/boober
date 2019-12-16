@@ -1,0 +1,13 @@
+PUT {{apiUrl}}/v1/auroraconfig/paas/validate?mergeWithRemoteConfig=true
+Authorization:Bearer {{token}}
+Content-Type: application/json
+
+{
+  "name": "paas",
+  "files": [{
+      "name" : "dbh/referanse.json",
+      "contents" : " { \"type\" : \"foobar\" }"
+  }]
+}
+
+###

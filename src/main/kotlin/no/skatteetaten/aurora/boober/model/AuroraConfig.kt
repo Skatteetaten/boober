@@ -144,7 +144,8 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
         val envFileJson = files.find { file ->
             file.name.startsWith(applicationDeploymentRef.environment) &&
                 file.name.removePrefix("${applicationDeploymentRef.environment}/").removeExtension() == envFile &&
-                !file.override }?.asJsonNode
+                !file.override
+        }?.asJsonNode
             ?: throw java.lang.IllegalArgumentException("Should find envFile $envFile.(json|yaml")
 
         val include = envFileJson.get("includeEnvFile")?.asText()
@@ -166,5 +167,22 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
                 )
             )
         )
+    }
+
+    fun merge(localAuroraConfig: AuroraConfig): AuroraConfig {
+
+        if (localAuroraConfig.files.isEmpty()) {
+            return this
+        }
+
+        val newVersion = "${this.version}.dirty"
+
+        val newFileNames = localAuroraConfig.files.map { it.name }.toSet()
+
+        val notInLocal = this.files.filterNot { newFileNames.contains(it.name) }
+
+        val files = localAuroraConfig.files + notInLocal
+
+        return AuroraConfig(files, localAuroraConfig.name, newVersion)
     }
 }
