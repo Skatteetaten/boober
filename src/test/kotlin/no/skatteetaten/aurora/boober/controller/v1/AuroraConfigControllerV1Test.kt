@@ -298,7 +298,6 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
         ) {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
-
         }
     }
 }

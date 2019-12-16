@@ -98,7 +98,6 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         assertThat(file).isNotNull()
     }
 
-
     @Test
     fun `validate and merge remote aurora config `() {
 
