@@ -9,9 +9,11 @@ import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -96,7 +98,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         assertThat(file).isNotNull()
     }
 
-    /*
+
     @Test
     fun `validate and merge remote aurora config `() {
 
@@ -125,7 +127,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 mergeWithRemoteConfig = true
             )
         }.singleApplicationError("Config for application simple in environment utv contains errors. Must be one of [deploy, development, localTemplate, template].")
-    }*/
+    }
 
     @Test
     fun `validate sample aurora config `() {
