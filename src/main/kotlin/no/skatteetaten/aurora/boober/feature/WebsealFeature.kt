@@ -41,4 +41,10 @@ class WebsealFeature : Feature {
             }
         }
     }
+
+    fun willCreateResource(adc: AuroraDeploymentSpec): Boolean {
+        return adc.featureEnabled("webseal") {
+            true
+        } ?: false
+    }
 }

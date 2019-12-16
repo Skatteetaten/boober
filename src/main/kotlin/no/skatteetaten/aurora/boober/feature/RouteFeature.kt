@@ -250,6 +250,20 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
         return tlsErrors.addIfNotNull(duplicateRouteErrors).addIfNotNull(duplicateHostError)
     }
+
+    fun willCreateResource(
+        adc: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand
+    ): Boolean {
+
+        val simplified = adc.isSimplifiedAndEnabled("route")
+
+        val expanded = cmd.applicationFiles.findSubKeys("route").any {
+            adc.getOrNull<Boolean>("route/$it/enabled") == true
+        }
+
+        return simplified || expanded
+    }
 }
 
 data class Route(

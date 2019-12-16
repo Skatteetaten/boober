@@ -4,7 +4,6 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
@@ -74,16 +73,24 @@ class AuroraConfigFacade(
         return auroraConfig.files.map { it.name }
     }
 
+    // Returns a map of ADR -> Warnings if that adr has warnings. In case of errors an exception is thrown
     fun validateAuroraConfig(
         auroraConfig: AuroraConfig,
         overrideFiles: List<AuroraConfigFile> = listOf(),
         resourceValidation: Boolean = true,
         auroraConfigRef: AuroraConfigRef
-    ): List<AuroraDeploymentContext> {
+    ): Map<ApplicationDeploymentRef, List<String>> {
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
             AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)
         }
-        return auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
+
+        val result =
+            auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
+
+        return result.filter { it.warnings.isNotEmpty() }
+            .associate {
+                it.cmd.applicationDeploymentRef to it.warnings
+            }
     }
 
     fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile {

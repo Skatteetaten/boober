@@ -820,11 +820,14 @@
     }
   },
   "sts" : {
-    "source" : "default",
-    "value" : false,
+    "source" : "complex.json",
+    "value" : true,
     "sources" : [ {
       "name" : "default",
       "value" : false
+    }, {
+      "name" : "complex.json",
+      "value" : true
     } ]
   },
   "toxiproxy" : {
