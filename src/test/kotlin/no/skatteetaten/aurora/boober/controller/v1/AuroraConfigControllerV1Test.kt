@@ -240,7 +240,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Validate aurora config warnings`() {
 
         every {
-            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+            facade.validateAuroraConfig(auroraConfig, false, auroraConfigRef)
         } returns mapOf(adr to listOf("This is a warning"))
 
         mockMvc.put(
@@ -260,7 +260,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     fun `Validate aurora config errors`() {
 
         every {
-            facade.validateAuroraConfig(auroraConfig, emptyList(), false, auroraConfigRef)
+            facade.validateAuroraConfig(auroraConfig, false, auroraConfigRef)
         } throws MultiApplicationValidationException(
             listOf(
                 ContextErrors(
@@ -291,14 +291,14 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
                 localAuroraConfig = any(),
                 resourceValidation = false,
                 auroraConfigRef = auroraConfigRef, mergeWithRemoteConfig = true)
-        } returns listOf()
+        } returns emptyMap()
 
         mockMvc.put(
             path = Path("/v1/auroraconfig/{auroraConfig}/validate?mergeWithRemoteConfig=true", auroraConfigRef.name)
         ) {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
-            responseJsonPath("$.items[0].name").equalsValue("paas")
+
         }
     }
 }
