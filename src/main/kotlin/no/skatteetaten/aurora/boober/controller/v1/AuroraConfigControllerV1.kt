@@ -7,9 +7,12 @@ import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companion.fromAuroraConfig
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.ApplicationError
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
+import no.skatteetaten.aurora.boober.model.ErrorDetail
+import no.skatteetaten.aurora.boober.model.ErrorType
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -91,13 +94,21 @@ class AuroraConfigControllerV1(
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val auroraConfig = payload?.toAuroraConfig(ref) ?: AuroraConfig(files = emptyList(), name = name, version = "empty")
-        auroraConfigFacade.validateAuroraConfig(
+        val refsWithWarnings = auroraConfigFacade.validateAuroraConfig(
                 auroraConfig,
                 resourceValidation = resourceValidation,
                 auroraConfigRef = ref,
                 mergeWithRemoteConfig = mergeWithRemoteConfig
         )
-        return Response(items = listOf(auroraConfig).map { fromAuroraConfig(it.name, it.files) })
+        val items = refsWithWarnings.map { (adr, warnings) ->
+            ApplicationError(
+                application = adr.application,
+                environment = adr.environment,
+                details = warnings.map { ErrorDetail(ErrorType.WARNING, it) }
+            )
+        }
+
+        return Response(items = items)
     }
 
     @GetMapping("/**")

@@ -22,7 +22,8 @@ data class AuroraDeployResult(
     val projectExist: Boolean = false,
     val tagResponse: TagResult? = null,
     val bitbucketStoreResult: String? = null,
-    val deployCommand: AuroraDeployCommand
+    val deployCommand: AuroraDeployCommand,
+    val warnings: List<String> = emptyList()
 // what if there is an error will this command always be there?
 ) {
     val auroraDeploymentSpecInternal: AuroraDeploymentSpec get() = deployCommand.context.spec

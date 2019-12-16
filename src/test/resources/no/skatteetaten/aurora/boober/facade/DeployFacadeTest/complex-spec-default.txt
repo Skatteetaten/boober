@@ -109,7 +109,7 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     file: "latest.properties"
             complex.json |     keys: ["BAR","FOO"]
             complex.json |     keyMappings: {"BAR":"BAZ"}
-                 default | sts: false
+            complex.json | sts: true
                  default | toxiproxy: false
                          | webseal:
             complex.json |   host: "test"

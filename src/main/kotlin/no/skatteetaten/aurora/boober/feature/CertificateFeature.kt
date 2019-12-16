@@ -120,6 +120,8 @@ class CertificateFeature(val sts: StsProvisioner) : Feature {
             resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount), this::class.java)
         }
     }
+
+    fun willCreateResource(spec: AuroraDeploymentSpec) = spec.certificateCommonName != null
 }
 
 object StsSecretGenerator {

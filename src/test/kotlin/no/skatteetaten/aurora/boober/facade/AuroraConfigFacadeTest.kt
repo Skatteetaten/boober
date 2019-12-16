@@ -146,7 +146,8 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             resourceValidation = false,
             auroraConfigRef = auroraConfigRef
         )
-        assertThat(validated.size).isEqualTo(6)
+
+        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isEqualTo(2)
     }
 
     @Test
@@ -181,7 +182,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             resourceValidation = true,
             auroraConfigRef = auroraConfigRef
         )
-        assertThat(validated.size).isEqualTo(6)
+        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isNotNull()
     }
 
     @Test

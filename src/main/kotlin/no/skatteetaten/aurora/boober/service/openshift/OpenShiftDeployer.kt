@@ -113,6 +113,7 @@ class OpenShiftDeployer(
         env: AuroraEnvironmentResult
     ): AuroraDeployResult {
 
+        val warnings = cmd.context.warnings
         logger.debug { "Apply application ${cmd.context.cmd.applicationDeploymentRef}" }
         val projectExist = env.projectExist
         val context = cmd.context
@@ -130,7 +131,8 @@ class OpenShiftDeployer(
                 deployCommand = cmd,
                 openShiftResponses = listOf(applicationResult),
                 success = false,
-                reason = "Creating application object failed"
+                reason = "Creating application object failed",
+                warnings = warnings
             )
         }
 
@@ -151,7 +153,8 @@ class OpenShiftDeployer(
         val rawResult = AuroraDeployResult(
             tagResponse = tagResult,
             deployCommand = cmd,
-            projectExist = env.projectExist
+            projectExist = env.projectExist,
+            warnings = warnings
         )
 
         logger.info("TagResult=${tagResult?.success}")
