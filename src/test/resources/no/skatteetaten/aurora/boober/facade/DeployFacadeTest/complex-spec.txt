@@ -77,6 +77,7 @@ utv/about-alternate.json |   ttl: "1d"
                          |   foo:
             complex.json |     keys: ["BAR","FOO"]
             complex.json |     keyMappings: {"BAR":"BAZ"}
+            complex.json | sts: true
                          | webseal:
             complex.json |   host: "test"
             complex.json |   roles: "admin dev @name@"

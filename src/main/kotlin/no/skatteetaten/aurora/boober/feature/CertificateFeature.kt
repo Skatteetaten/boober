@@ -120,6 +120,8 @@ class CertificateFeature(val sts: StsProvisioner) : Feature {
             resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount), this::class.java)
         }
     }
+
+    fun willCreateResource(spec: AuroraDeploymentSpec) = spec.certificateCommonName != null
 }
 
 object StsSecretGenerator {
@@ -131,10 +133,11 @@ object StsSecretGenerator {
     fun create(
         appName: String,
         stsProvisionResults: StsProvisioningResult,
-        secretNamespace: String
+        secretNamespace: String,
+        certSuffix: String = "cert"
     ): Secret {
 
-        val secretName = "$appName-cert"
+        val secretName = "$appName-$certSuffix"
         val baseUrl = "$secretsPath/$secretName/keystore.jks"
         val cert = stsProvisionResults.cert
         return newSecret {

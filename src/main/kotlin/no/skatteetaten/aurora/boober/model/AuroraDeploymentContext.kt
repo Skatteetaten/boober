@@ -129,5 +129,6 @@ data class AuroraDeploymentContext(
     val spec: AuroraDeploymentSpec,
     val cmd: AuroraContextCommand,
     val features: FeatureSpec,
-    val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>>
+    val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>>,
+    val warnings: List<String> = emptyList()
 )

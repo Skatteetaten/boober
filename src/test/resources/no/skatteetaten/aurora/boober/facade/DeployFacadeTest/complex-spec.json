@@ -545,6 +545,17 @@
       }
     }
   },
+  "sts" : {
+    "source" : "complex.json",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    }, {
+      "name" : "complex.json",
+      "value" : true
+    } ]
+  },
   "webseal" : {
     "host" : {
       "source" : "complex.json",

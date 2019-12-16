@@ -86,6 +86,7 @@
   "certificate": {
     "commonName": "komplex"
   },
+  "sts" : true,
   "secretVaults": {
     "foo": {
       "keys": [

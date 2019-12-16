@@ -79,10 +79,9 @@ data class AuroraDeploymentSpec(
     fun hasSubKeys(name: String): Boolean = getSubKeys(name).isNotEmpty()
 
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
-        val subKeys = fields
+        return fields
             .filter { it.key.startsWith("$name/") }
             .mapKeys { replacer.replace(it.key) }
-        return subKeys
     }
 
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()

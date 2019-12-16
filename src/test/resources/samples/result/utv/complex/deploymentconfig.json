@@ -152,6 +152,21 @@
                 "optional" : false
               }
             }
+          }, {
+            "name" : "STS_CERTIFICATE_URL",
+            "value" : "/u01/secrets/app/komplex-cert/certificate.crt"
+          }, {
+            "name" : "STS_PRIVATE_KEY_URL",
+            "value" : "/u01/secrets/app/komplex-cert/privatekey.key"
+          }, {
+            "name" : "STS_KEYSTORE_DESCRIPTOR",
+            "value" : "/u01/secrets/app/komplex-cert/descriptor.properties"
+          }, {
+            "name" : "VOLUME_KOMPLEX_STS",
+            "value" : "/u01/secrets/app/komplex-cert"
+          }, {
+            "name" : "STS_DISCOVERY_URL",
+            "value" : "https://bigbird-utv.org"
           } ],
           "imagePullPolicy" : "IfNotPresent",
           "livenessProbe" : {
@@ -217,6 +232,9 @@
           }, {
             "mountPath" : "/foo",
             "name" : "pvc-mount"
+          }, {
+            "mountPath" : "/u01/secrets/app/komplex-cert",
+            "name" : "komplex-sts"
           } ]
         } ],
         "dnsPolicy" : "ClusterFirst",
@@ -254,6 +272,11 @@
           "name" : "pvc-mount",
           "persistentVolumeClaim" : {
             "claimName" : "pvc"
+          }
+        }, {
+          "name" : "komplex-sts",
+          "secret" : {
+            "secretName" : "komplex-sts"
           }
         } ]
       }

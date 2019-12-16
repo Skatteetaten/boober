@@ -43,7 +43,8 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
                 openShiftResponses = it.openShiftResponses,
                 deploymentSpec = it.auroraDeploymentSpecInternal.let { internalSpec ->
                     renderSpecAsJson(internalSpec, true)
-                }
+                },
+                warnings = it.warnings
             )
         }
 
@@ -60,7 +61,8 @@ data class DeployResponse(
     val success: Boolean = true,
     val reason: String? = null,
     val tagResponse: TagResult? = null,
-    val projectExist: Boolean = false
+    val projectExist: Boolean = false,
+    val warnings: List<String> = emptyList()
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
