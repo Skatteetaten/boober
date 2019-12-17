@@ -64,7 +64,7 @@ class StsFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource)
             .auroraResourceModifiedByThisFeatureWithComment("Added env vars, volume mount, volume")
 
-        val baseUrl = "$secretsPath/simple-cert"
+        val baseUrl = "$secretsPath/simple-sts"
         val envVars = mapOf(
             "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
             "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
