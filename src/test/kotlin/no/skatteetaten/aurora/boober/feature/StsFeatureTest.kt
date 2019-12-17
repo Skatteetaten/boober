@@ -5,14 +5,14 @@ import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.Secret
 import io.mockk.every
 import io.mockk.mockk
-import java.io.ByteArrayInputStream
-import java.time.Duration
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
+import java.io.ByteArrayInputStream
+import java.time.Duration
 
 class StsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -64,7 +64,7 @@ class StsFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource)
             .auroraResourceModifiedByThisFeatureWithComment("Added env vars, volume mount, volume")
 
-        val baseUrl = "$secretsPath/simple-cert"
+        val baseUrl = "$secretsPath/simple-sts"
         val envVars = mapOf(
             "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
             "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
