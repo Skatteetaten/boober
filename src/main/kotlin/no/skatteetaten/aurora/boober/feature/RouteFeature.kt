@@ -256,13 +256,15 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         cmd: AuroraContextCommand
     ): Boolean {
 
-        val simplified = adc.isSimplifiedAndEnabled("route")
+        val simplified = adc.isSimplifiedConfig("route")
 
-        val expanded = cmd.applicationFiles.findSubKeys("route").any {
-            adc.getOrNull<Boolean>("route/$it/enabled") == true
+        if (simplified) {
+            return adc["route"]
         }
 
-        return simplified || expanded
+        return cmd.applicationFiles.findSubKeys("route").any {
+            adc.getOrNull<Boolean>("route/$it/enabled") == true
+        }
     }
 }
 
