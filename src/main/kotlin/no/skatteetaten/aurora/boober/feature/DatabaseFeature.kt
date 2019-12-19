@@ -175,10 +175,9 @@ class DatabaseFeature(
             } else {
                 SchemaForAppRequest(
                     environment = adc.envName,
-                    application = adc.name,
+                    application = it.applicationLabel ?: adc.name,
                     details = details,
-                    generate = it.generate,
-                    applicationQueryLabel = it.applicationLabel
+                    generate = it.generate
                 )
             }
         }

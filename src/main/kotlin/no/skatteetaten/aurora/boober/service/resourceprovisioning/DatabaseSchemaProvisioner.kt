@@ -64,8 +64,7 @@ data class SchemaForAppRequest(
     val environment: String,
     val application: String,
     val generate: Boolean,
-    override val details: SchemaRequestDetails,
-    val applicationQueryLabel: String? = null
+    override val details: SchemaRequestDetails
 ) : SchemaProvisionRequest()
 
 data class SchemaProvisionResult(
@@ -173,7 +172,7 @@ class DatabaseSchemaProvisioner(
         val labels = mutableMapOf(
             "affiliation" to request.details.affiliation,
             "environment" to "${request.details.affiliation}-${request.environment}",
-            "application" to (request.applicationQueryLabel ?: request.application),
+            "application" to request.application,
             "name" to request.details.schemaName,
             "userId" to user.username
         )
@@ -183,8 +182,6 @@ class DatabaseSchemaProvisioner(
             if (find == null && !request.generate) {
                 throw ProvisioningException("Could not find schema with labels=$labels, generate disabled.")
             }
-            // Reset application label, so that if we create a new database the label will be for this application
-            labels["application"] = request.application
             find ?: createSchema(labels, request.details)
         } catch (e: Exception) {
             val rootCauseMessage = ExceptionUtils.getRootCauseMessage(e)
