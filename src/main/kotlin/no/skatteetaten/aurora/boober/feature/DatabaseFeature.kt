@@ -175,7 +175,7 @@ class DatabaseFeature(
             } else {
                 SchemaForAppRequest(
                     environment = adc.envName,
-                    application = adc.name,
+                    application = it.applicationLabel ?: adc.name,
                     details = details,
                     generate = it.generate
                 )
@@ -214,7 +214,6 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
             roles = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
             exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc)
-
         )
         if (adc.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
@@ -266,7 +265,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                     labels = instanceLabels
                 ),
                 roles = defaultDb.roles + roles,
-                exposeTo = defaultDb.exposeTo + exposeTo
+                exposeTo = defaultDb.exposeTo + exposeTo,
+                applicationLabel = adc.getOrNull("$key/applicationLabel")
             )
         }
     }
@@ -309,6 +309,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
             AuroraConfigFieldHandler("$db/generate"),
             AuroraConfigFieldHandler("$db/name"),
+            AuroraConfigFieldHandler("$db/applicationLabel"),
             AuroraConfigFieldHandler("$db/id"),
             AuroraConfigFieldHandler(
                 "$db/flavor", validator = { node ->
@@ -433,7 +434,8 @@ data class Database(
     val generate: Boolean,
     val exposeTo: Map<String, String> = emptyMap(),
     val roles: Map<String, DatabasePermission> = emptyMap(),
-    val instance: DatabaseInstance
+    val instance: DatabaseInstance,
+    val applicationLabel: String? = null
 )
 
 data class DatabaseInstance(
