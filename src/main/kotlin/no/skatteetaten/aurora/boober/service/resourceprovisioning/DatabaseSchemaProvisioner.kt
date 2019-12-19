@@ -178,8 +178,6 @@ class DatabaseSchemaProvisioner(
             "userId" to user.username
         )
 
-
-
         val (dbhSchema, responseText) = try {
             val find = findSchemaByLabels(labels, request.details)
             if (find == null && !request.generate) {
