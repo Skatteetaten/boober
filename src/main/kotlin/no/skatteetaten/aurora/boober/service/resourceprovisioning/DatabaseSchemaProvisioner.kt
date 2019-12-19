@@ -169,7 +169,7 @@ class DatabaseSchemaProvisioner(
     private fun provisionForApplication(request: SchemaForAppRequest): SchemaProvisionResult {
 
         val user = userDetailsProvider.getAuthenticatedUser()
-        val labels = mutableMapOf(
+        val labels = mapOf(
             "affiliation" to request.details.affiliation,
             "environment" to "${request.details.affiliation}-${request.environment}",
             "application" to request.application,
