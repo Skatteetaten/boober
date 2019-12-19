@@ -10,8 +10,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -43,6 +41,8 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 private val logger = KotlinLogging.logger { }
 
@@ -177,7 +177,8 @@ class DatabaseFeature(
                     environment = adc.envName,
                     application = adc.name,
                     details = details,
-                    generate = it.generate
+                    generate = it.generate,
+                    applicationQueryLabel = it.applicationLabel
                 )
             }
         }
@@ -214,7 +215,6 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
             roles = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
             exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc)
-
         )
         if (adc.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
@@ -266,7 +266,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                     labels = instanceLabels
                 ),
                 roles = defaultDb.roles + roles,
-                exposeTo = defaultDb.exposeTo + exposeTo
+                exposeTo = defaultDb.exposeTo + exposeTo,
+                applicationLabel = adc.getOrNull("$key/applicationLabel")
             )
         }
     }
@@ -309,6 +310,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
             AuroraConfigFieldHandler("$db/generate"),
             AuroraConfigFieldHandler("$db/name"),
+            AuroraConfigFieldHandler("$db/applicationLabel"),
             AuroraConfigFieldHandler("$db/id"),
             AuroraConfigFieldHandler(
                 "$db/flavor", validator = { node ->
@@ -433,7 +435,8 @@ data class Database(
     val generate: Boolean,
     val exposeTo: Map<String, String> = emptyMap(),
     val roles: Map<String, DatabasePermission> = emptyMap(),
-    val instance: DatabaseInstance
+    val instance: DatabaseInstance,
+    val applicationLabel: String? = null
 )
 
 data class DatabaseInstance(
