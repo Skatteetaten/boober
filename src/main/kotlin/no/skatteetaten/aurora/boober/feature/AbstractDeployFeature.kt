@@ -46,6 +46,7 @@ import no.skatteetaten.aurora.boober.model.Paths
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
@@ -177,6 +178,7 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler(
                 "prometheus",
                 defaultValue = true,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler(
@@ -188,6 +190,7 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler(
                 "readiness",
                 defaultValue = true,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("readiness/port", defaultValue = 8080),
@@ -196,6 +199,7 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler("readiness/timeout", defaultValue = 1),
             AuroraConfigFieldHandler(
                 "liveness",
+                validator = { it.boolean() },
                 defaultValue = false,
                 canBeSimplifiedConfig = true
             ),

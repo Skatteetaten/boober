@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
+import no.skatteetaten.aurora.boober.utils.boolean
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -43,6 +44,7 @@ class StsDisabledFeature : Feature {
             AuroraConfigFieldHandler(
                 "sts",
                 defaultValue = false,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("sts/cn"),

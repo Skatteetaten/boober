@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -55,6 +56,7 @@ class MountFeature(
                 ),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/exist",
+                    validator = { it.boolean() },
                     defaultValue = false
                 ),
                 AuroraConfigFieldHandler("mounts/$mountName/secretVault")

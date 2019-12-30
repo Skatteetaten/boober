@@ -10,8 +10,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -37,12 +35,15 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestD
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 private val logger = KotlinLogging.logger { }
 
@@ -196,6 +197,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
         return (dbDefaultsHandlers + dbHandlers + listOf(
             AuroraConfigFieldHandler(
                 "database",
+                validator = { it.boolean() },
                 defaultValue = false,
                 canBeSimplifiedConfig = true
             )
@@ -307,7 +309,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
         val mainHandlers = listOf(
             AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
-            AuroraConfigFieldHandler("$db/generate"),
+            AuroraConfigFieldHandler("$db/generate", validator = { it.boolean() }),
             AuroraConfigFieldHandler("$db/name"),
             AuroraConfigFieldHandler("$db/applicationLabel"),
             AuroraConfigFieldHandler("$db/id"),
@@ -339,6 +341,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 }),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/generate",
+                validator = { it.boolean() },
                 defaultValue = true
             ),
             AuroraConfigFieldHandler(

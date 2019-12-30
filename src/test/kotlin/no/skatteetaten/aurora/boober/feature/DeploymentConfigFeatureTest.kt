@@ -3,14 +3,82 @@ package no.skatteetaten.aurora.boober.feature
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
+import assertk.assertions.isSuccess
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
 class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = DeploymentConfigFeature()
+
+    @Test
+    fun `should allow objects if validation is boolean and not required`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                    "version" : "1",
+                    "management" : {
+                      "path" : "/foo"
+                    }
+               }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
+    fun `should allow literal boolean value for pause flag`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                    "version" : "1",
+                    "pause" : true
+                    
+               }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
+    fun `should allow string literal true value for pause flag`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                    "version" : "1",
+                    "pause" : "true"
+                    
+               }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
+    fun `should allow string literal value TRUE for puase flag`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                    "version" : "1",
+                    "pause" : "TRUE"
+                    
+               }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
+    fun `should not allow misspelled false for boolean flag`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                    "version" : "1",
+                    "pause" : "fasle"
+                    
+               }"""
+            )
+        }.singleApplicationError("Not a valid boolean value.")
+    }
 
     @Test
     fun `template type should not have default resource requirements`() {

@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
@@ -33,6 +34,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             AuroraConfigFieldHandler(
                 "route",
                 defaultValue = false,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler(
@@ -41,6 +43,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             ),
             AuroraConfigFieldHandler(
                 "routeDefaults/tls/enabled",
+                validator = { it.boolean() },
                 defaultValue = false
             ),
             AuroraConfigFieldHandler(
