@@ -82,6 +82,7 @@ class CertificateFeature(val sts: StsProvisioner) : Feature {
             AuroraConfigFieldHandler(
                 "certificate",
                 defaultValue = false,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("certificate/commonName"),
