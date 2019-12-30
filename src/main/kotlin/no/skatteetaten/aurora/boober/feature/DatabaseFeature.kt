@@ -308,7 +308,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
     ): List<AuroraConfigFieldHandler> {
 
         val mainHandlers = listOf(
-            AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
+            AuroraConfigFieldHandler("$db/enabled", defaultValue = true, validator = { it.boolean() }),
             AuroraConfigFieldHandler("$db/generate", validator = { it.boolean() }),
             AuroraConfigFieldHandler("$db/name"),
             AuroraConfigFieldHandler("$db/applicationLabel"),
