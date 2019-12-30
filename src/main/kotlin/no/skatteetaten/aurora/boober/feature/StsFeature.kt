@@ -77,6 +77,7 @@ class StsFeature(
             AuroraConfigFieldHandler(
                 "sts",
                 defaultValue = false,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("sts/cn"),

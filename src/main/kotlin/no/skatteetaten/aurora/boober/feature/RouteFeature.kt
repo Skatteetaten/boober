@@ -181,7 +181,11 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         return routeHandlers.flatMap { key ->
 
             listOf(
-                AuroraConfigFieldHandler("$key/enabled", defaultValue = true),
+                AuroraConfigFieldHandler(
+                    "$key/enabled",
+                    validator = { it.boolean() },
+                    defaultValue = true
+                ),
                 AuroraConfigFieldHandler("$key/host"),
                 AuroraConfigFieldHandler("$key/path",
                     validator = { it?.startsWith("/", "Path must start with /") }),
