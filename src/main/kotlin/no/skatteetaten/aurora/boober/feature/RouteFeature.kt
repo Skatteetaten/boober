@@ -189,7 +189,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 AuroraConfigFieldHandler("$key/host"),
                 AuroraConfigFieldHandler("$key/path",
                     validator = { it?.startsWith("/", "Path must start with /") }),
-                AuroraConfigFieldHandler("$key/tls/enabled"),
+                AuroraConfigFieldHandler("$key/tls/enabled", validator = { it.boolean() }),
                 AuroraConfigFieldHandler("$key/tls/insecurePolicy",
                     validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }, required = false) }),
                 AuroraConfigFieldHandler("$key/tls/termination",
