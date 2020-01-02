@@ -173,12 +173,12 @@ fun JsonNode?.durationString(): Exception? {
     return null
 }
 
-fun JsonNode?.boolean(required: Boolean = true): Exception? {
+fun JsonNode?.boolean(required: Boolean = false): Exception? {
     val candidates = listOf("true", "false")
 
     if (this == null) {
         return if (required) {
-            IllegalArgumentException("Not a valid boolean value.")
+            IllegalArgumentException("Required boolean value is not set.")
         } else {
             null
         }
