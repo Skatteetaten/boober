@@ -14,6 +14,8 @@ import no.skatteetaten.aurora.boober.utils.pattern
 
 interface Feature {
 
+    fun HasMetadata.generateAuroraResource(header: Boolean = false) = generateResource(this, header)
+
     fun generateResource(content: HasMetadata, header: Boolean = false) =
             AuroraResource(content, AuroraResourceSource(this::class.java), header = header)
 
