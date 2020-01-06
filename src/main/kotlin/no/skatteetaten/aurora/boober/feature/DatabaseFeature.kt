@@ -13,7 +13,6 @@ import io.fabric8.kubernetes.api.model.VolumeMount
 import java.io.ByteArrayOutputStream
 import java.util.Properties
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -59,7 +58,7 @@ class DatabaseDisabledFeature(
     ): List<Exception> {
         val databases = findDatabases(adc, cmd)
         if (databases.isNotEmpty()) {
-            return listOf(AuroraConfigException("Databases are not supported in this cluster"))
+            return listOf(IllegalArgumentException("Databases are not supported in this cluster"))
         }
         return emptyList()
     }

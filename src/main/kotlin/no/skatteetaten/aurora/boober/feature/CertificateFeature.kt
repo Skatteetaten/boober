@@ -10,7 +10,6 @@ import io.fabric8.kubernetes.api.model.Secret
 import java.io.ByteArrayOutputStream
 import java.util.Properties
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -65,7 +64,7 @@ class CertificateDisabledFeature : Feature {
     ): List<Exception> {
         adc.certificateCommonName?.let {
             if (it.isNotEmpty()) {
-                return listOf(AuroraConfigException("STS is not supported."))
+                return listOf(IllegalArgumentException("STS is not supported."))
             }
         }
         return emptyList()
