@@ -77,10 +77,12 @@ openshift:
     cluster: utv
 
 integrations:
+    dbh:
+        url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
-    #   skap:
-    #        url: http://localhost:9090
+        skap:
+            url: http://localhost:9090
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
