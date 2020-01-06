@@ -10,8 +10,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -42,6 +40,8 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 private val logger = KotlinLogging.logger { }
 
@@ -58,7 +58,7 @@ class DatabaseDisabledFeature(
     ): List<Exception> {
         val databases = findDatabases(adc, cmd)
         if (databases.isNotEmpty()) {
-            return listOf(RuntimeException("Databases are not supported in this cluster"))
+            return listOf(IllegalArgumentException("Databases are not supported in this cluster"))
         }
         return emptyList()
     }
