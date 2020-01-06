@@ -99,16 +99,16 @@
             "value" : "http://simple-paas-utv.test"
           }, {
             "name" : "STS_CERTIFICATE_URL",
-            "value" : "/u01/secrets/app/simple-cert/certificate.crt"
+            "value": "/u01/secrets/app/simple-sts/certificate.crt"
           }, {
             "name" : "STS_PRIVATE_KEY_URL",
-            "value" : "/u01/secrets/app/simple-cert/privatekey.key"
+            "value": "/u01/secrets/app/simple-sts/privatekey.key"
           }, {
             "name" : "STS_KEYSTORE_DESCRIPTOR",
-            "value" : "/u01/secrets/app/simple-cert/descriptor.properties"
+            "value": "/u01/secrets/app/simple-sts/descriptor.properties"
           }, {
             "name" : "VOLUME_SIMPLE_STS",
-            "value" : "/u01/secrets/app/simple-cert"
+            "value": "/u01/secrets/app/simple-sts"
           }, {
             "name" : "STS_DISCOVERY_URL",
             "value" : "https://bigbird-utv.org"
@@ -155,10 +155,11 @@
           }, {
             "mountPath" : "/u01/secrets/app/simple-db",
             "name" : "simple-db"
-          }, {
-            "mountPath" : "/u01/secrets/app/simple-cert",
-            "name" : "simple-sts"
-          } ]
+          },
+            {
+              "mountPath": "/u01/secrets/app/simple-sts",
+              "name": "simple-sts"
+            } ]
         } ],
         "dnsPolicy" : "ClusterFirst",
         "restartPolicy" : "Always",

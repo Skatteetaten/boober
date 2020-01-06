@@ -3,9 +3,12 @@ package no.skatteetaten.aurora.boober.feature
 import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isTrue
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -340,5 +343,60 @@ class RouteFeatureTest : AbstractFeatureTest() {
         if (expected != actual) {
             expected(":${show(actual)} to be:${show(expected)}")
         }
+    }
+
+    @Test
+    fun `should create resource if route is simplified`() {
+        val ctx = createAuroraDeploymentContext(
+            """{
+                  "route" : true
+                }"""
+        )
+
+        val routeFeature: RouteFeature = feature as RouteFeature
+        assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isTrue()
+    }
+
+    @Test
+    fun `should create route if simplified overwritten and enabled expanded`() {
+        val ctx = createAuroraDeploymentContext(
+            """{
+                     "route" : {
+                              "foo" : {
+                                "enabled" : true
+                              }
+                            }
+                }""", files = listOf(
+                AuroraConfigFile(
+                    "utv/about.json", contents = """{
+                        "route" : false
+                         }"""
+                )
+            )
+        )
+
+        val routeFeature: RouteFeature = feature as RouteFeature
+        assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isTrue()
+    }
+
+    @Test
+    fun `should not create route if overrwritten and diabled`() {
+        val ctx = createAuroraDeploymentContext("""{
+                  "route" : false
+                }""", files = listOf(
+                AuroraConfigFile(
+                    "utv/about.json", contents = """{
+                            "route" : {
+                              "foo" : {
+                                "enabled" : true
+                              }
+                            }
+                         }"""
+                )
+            )
+        )
+
+        val routeFeature: RouteFeature = feature as RouteFeature
+        assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isFalse()
     }
 }

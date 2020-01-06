@@ -93,7 +93,7 @@ class StsFeature(
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         adc.stsCommonName?.let {
-            val baseUrl = "$secretsPath/${adc.name}-cert"
+            val baseUrl = "$secretsPath/${adc.name}-sts"
             val stsVars = mapOf(
                 "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
                 "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",

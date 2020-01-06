@@ -60,7 +60,9 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }
 
         dbhMock {
-            rule {
+            rule({
+                path.contains("application%3Dsimple")
+            }) {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
                     .setResponseCode(200)

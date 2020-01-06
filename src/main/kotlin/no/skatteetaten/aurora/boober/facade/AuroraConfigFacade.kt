@@ -75,13 +75,20 @@ class AuroraConfigFacade(
 
     // Returns a map of ADR -> Warnings if that adr has warnings. In case of errors an exception is thrown
     fun validateAuroraConfig(
-        auroraConfig: AuroraConfig,
-        overrideFiles: List<AuroraConfigFile> = listOf(),
+        localAuroraConfig: AuroraConfig,
         resourceValidation: Boolean = true,
-        auroraConfigRef: AuroraConfigRef
+        auroraConfigRef: AuroraConfigRef,
+        mergeWithRemoteConfig: Boolean = false
     ): Map<ApplicationDeploymentRef, List<String>> {
+
+        val auroraConfig = if (mergeWithRemoteConfig) {
+            val remoteAuroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRef)
+            remoteAuroraConfig.merge(localAuroraConfig)
+        } else {
+            localAuroraConfig
+        }
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
-            AuroraContextCommand(auroraConfig, it, auroraConfigRef, overrideFiles)
+            AuroraContextCommand(auroraConfig, it, auroraConfigRef, emptyList())
         }
 
         val result =
