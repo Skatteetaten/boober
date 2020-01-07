@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fkorotkov.kubernetes.newVolume
-import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.secret
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
@@ -9,8 +7,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.Paths.secretsPath
-import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
@@ -72,10 +68,12 @@ class StsFeature(
     val sts: StsProvisioner,
     @Value("\${integrations.bigbird.url}") val bigBirdUrl: String
 ) : Feature {
+    private val suffix = "sts"
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
-                "sts",
+                suffix,
                 defaultValue = false,
                 validator = { it.boolean() },
                 canBeSimplifiedConfig = true
@@ -89,35 +87,20 @@ class StsFeature(
         return adc.stsCommonName?.let {
             val result = sts.generateCertificate(it, adc.name, adc.envName)
 
-            val secret = StsSecretGenerator.create(adc.name, result, adc.namespace, "sts")
+            val secret = StsSecretGenerator.create(adc.name, result, adc.namespace, suffix)
             setOf(generateResource(secret))
         } ?: emptySet()
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         adc.stsCommonName?.let {
-            val baseUrl = "$secretsPath/${adc.name}-sts"
-            val stsVars = mapOf(
-                "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
-                "VOLUME_${adc.name}_STS".toUpperCase() to baseUrl,
-                "STS_DISCOVERY_URL" to bigBirdUrl
-
-            ).toEnvVars()
-
-            val mount = newVolumeMount {
-                name = "${adc.name}-sts"
-                mountPath = baseUrl
-            }
-
-            val volume = newVolume {
-                name = "${adc.name}-sts"
-                secret {
-                    secretName = "${adc.name}-sts"
-                }
-            }
-            resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount), this::class.java)
+            StsSecretGenerator.attachSecret(
+                appName = adc.name,
+                certSuffix = suffix,
+                resources = resources,
+                source = this::class.java,
+                additionalEnv = mapOf("STS_DISCOVERY_URL" to bigBirdUrl)
+            )
         }
     }
 

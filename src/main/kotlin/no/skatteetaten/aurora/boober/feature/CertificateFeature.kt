@@ -10,7 +10,6 @@ import io.fabric8.kubernetes.api.model.Secret
 import java.io.ByteArrayOutputStream
 import java.util.Properties
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -67,7 +66,7 @@ class CertificateDisabledFeature : Feature {
     ): List<Exception> {
         adc.certificateCommonName?.let {
             if (it.isNotEmpty()) {
-                return listOf(AuroraConfigException("STS is not supported."))
+                return listOf(IllegalArgumentException("STS is not supported."))
             }
         }
         return emptyList()
@@ -77,6 +76,9 @@ class CertificateDisabledFeature : Feature {
 @Service
 @ConditionalOnProperty("integrations.skap.url")
 class CertificateFeature(val sts: StsProvisioner) : Feature {
+
+    private val suffix = "cert"
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
@@ -96,31 +98,17 @@ class CertificateFeature(val sts: StsProvisioner) : Feature {
 
             val secret = StsSecretGenerator.create(adc.name, result, adc.namespace)
             setOf(generateResource(secret))
-        } ?: emptySet<AuroraResource>()
+        } ?: emptySet()
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         adc.certificateCommonName?.let {
-            val baseUrl = "$secretsPath/${adc.name}-cert"
-            val stsVars = mapOf(
-                "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
-                "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
-                "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
-                "VOLUME_${adc.name}_CERT".toUpperCase() to baseUrl
-            ).toEnvVars()
-
-            val mount = newVolumeMount {
-                name = "${adc.name}-cert"
-                mountPath = baseUrl
-            }
-
-            val volume = newVolume {
-                name = "${adc.name}-cert"
-                secret {
-                    secretName = "${adc.name}-cert"
-                }
-            }
-            resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount), this::class.java)
+            StsSecretGenerator.attachSecret(
+                appName = adc.name,
+                certSuffix = suffix,
+                resources = resources,
+                source = this::class.java
+            )
         }
     }
 
@@ -133,6 +121,41 @@ object StsSecretGenerator {
     const val APP_ANNOTATION = "gillis.skatteetaten.no/app"
     const val COMMON_NAME_ANNOTATION = "gillis.skatteetaten.no/commonName"
 
+    private fun createBasePath(sName: String) = "$secretsPath/$sName"
+
+    private fun createSecretName(appName: String, certSuffix: String) = "$appName-$certSuffix"
+
+    fun attachSecret(
+        appName: String,
+        certSuffix: String,
+        resources: Set<AuroraResource>,
+        source: Class<out Feature>,
+        additionalEnv: Map<String, String> = emptyMap()
+    ) {
+        val sName = createSecretName(appName, certSuffix)
+        val baseUrl = createBasePath(sName)
+        val stsVars = mapOf(
+            "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
+            "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
+            "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
+            "VOLUME_$sName".toUpperCase() to baseUrl
+        ).addIfNotNull(additionalEnv)
+            .toEnvVars()
+
+        val mount = newVolumeMount {
+            name = sName
+            mountPath = baseUrl
+        }
+
+        val volume = newVolume {
+            name = sName
+            secret {
+                secretName = sName
+            }
+        }
+        resources.addVolumesAndMounts(stsVars, listOf(volume), listOf(mount), source)
+    }
+
     fun create(
         appName: String,
         stsProvisionResults: StsProvisioningResult,
@@ -140,18 +163,18 @@ object StsSecretGenerator {
         certSuffix: String = "cert"
     ): Secret {
 
-        val secretName = "$appName-$certSuffix"
-        val baseUrl = "$secretsPath/$secretName/keystore.jks"
+        val secretName = createSecretName(appName, certSuffix)
+        val baseUrl = "${createBasePath(secretName)}/keystore.jks"
         val cert = stsProvisionResults.cert
         return newSecret {
             metadata {
                 labels =
-                    mapOf(StsSecretGenerator.RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()).normalizeLabels()
+                    mapOf(RENEW_AFTER_LABEL to stsProvisionResults.renewAt.epochSecond.toString()).normalizeLabels()
                 name = secretName
                 namespace = secretNamespace
                 annotations = mapOf(
-                    StsSecretGenerator.APP_ANNOTATION to appName,
-                    StsSecretGenerator.COMMON_NAME_ANNOTATION to stsProvisionResults.cn
+                    APP_ANNOTATION to appName,
+                    COMMON_NAME_ANNOTATION to stsProvisionResults.cn
                 )
             }
             data = mapOf(

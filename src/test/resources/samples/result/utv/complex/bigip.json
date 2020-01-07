@@ -1,0 +1,30 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "BigIp",
+  "metadata": {
+    "labels": {
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "komplex",
+      "booberDeployId": "deploy1"
+    },
+    "name": "komplex",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "routeName": "komplex-bigip",
+    "konfigtjenesten": {
+      "service": "simple-utv"
+    }
+  }
+}

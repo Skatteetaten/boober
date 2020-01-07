@@ -101,7 +101,15 @@ data class AuroraDeploymentSpec(
      * (ie. ["value1", "value2"]) as a String list.
      */
     fun getDelimitedStringOrArrayAsSet(name: String, delimiter: String = ","): Set<String> {
-        return fields[name]?.extractDelimitedStringOrArrayAsSet(delimiter) ?: emptySet()
+        return getDelimitedStringOrArrayAsSetOrNull(name, delimiter) ?: emptySet()
+    }
+
+    /**
+     * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
+     * (ie. ["value1", "value2"]) as a String list.
+     */
+    fun getDelimitedStringOrArrayAsSetOrNull(name: String, delimiter: String = ","): Set<String>? {
+        return fields[name]?.extractDelimitedStringOrArrayAsSet(delimiter)
     }
 
     inline fun <reified T> getOrNull(name: String): T? = fields[name]?.getNullableValue()

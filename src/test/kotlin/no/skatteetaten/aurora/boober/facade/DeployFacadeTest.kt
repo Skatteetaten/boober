@@ -159,7 +159,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
 
-        cantuMock {
+        cantusMock {
             rule {
                 MockResponse()
                     .setBody(""" { "success" : true }""")

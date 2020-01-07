@@ -61,8 +61,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return getRoute(adc, cmd).map {
-            val resource = generateRoute(
-                route = it,
+            val resource = it.generateOpenShiftRoute(
                 routeNamespace = adc.namespace,
                 serviceName = adc.name,
                 routeSuffix = routeSuffix
@@ -141,39 +140,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }
     }
 
-    fun generateRoute(
-        route: no.skatteetaten.aurora.boober.feature.Route,
-        routeNamespace: String,
-        serviceName: String,
-        routeSuffix: String
-    ): Route {
-        return newRoute {
-            metadata {
-                name = route.objectName
-                namespace = routeNamespace
-                if (route.annotations.isNotEmpty()) {
-                    annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
-                }
-            }
-            spec {
-                to {
-                    kind = "Service"
-                    name = serviceName
-                }
-                route.tls?.let {
-                    tls {
-                        insecureEdgeTerminationPolicy = it.insecurePolicy.name
-                        termination = it.termination.name.toLowerCase()
-                    }
-                }
-                host = "${route.host}$routeSuffix"
-                route.path?.let {
-                    path = it
-                }
-            }
-        }
-    }
-
     fun findRouteHandlers(applicationFiles: List<AuroraConfigFile>): Set<AuroraConfigFieldHandler> {
 
         val routeHandlers = applicationFiles.findSubKeysExpanded("route")
@@ -197,20 +163,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
             ) + findRouteAnnotationHandlers(key, applicationFiles)
         }.toSet()
-    }
-
-    fun findRouteAnnotationHandlers(
-        prefix: String,
-        applicationFiles: List<AuroraConfigFile>
-    ): Set<AuroraConfigFieldHandler> {
-
-        return applicationFiles.findSubHandlers("$prefix/annotations", validatorFn = { key ->
-            {
-                if (key.contains("/")) {
-                    IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")
-                } else null
-            }
-        }).toSet()
     }
 
     override fun validate(
@@ -279,7 +231,7 @@ data class Route(
     val objectName: String,
     val host: String,
     val path: String? = null,
-    val annotations: Map<String, String>,
+    val annotations: Map<String, String> = emptyMap(),
     val tls: SecureRoute? = null
 ) {
     val target: String
@@ -289,6 +241,39 @@ data class Route(
         get(): String = if (tls != null) "https://" else "http://"
 
     fun url(urlSuffix: String) = "$host$urlSuffix".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
+
+    fun generateOpenShiftRoute(
+        routeNamespace: String,
+        serviceName: String,
+        routeSuffix: String
+    ): Route {
+        val route = this
+        return newRoute {
+            metadata {
+                name = route.objectName
+                namespace = routeNamespace
+                if (route.annotations.isNotEmpty()) {
+                    annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
+                }
+            }
+            spec {
+                to {
+                    kind = "Service"
+                    name = serviceName
+                }
+                route.tls?.let {
+                    tls {
+                        insecureEdgeTerminationPolicy = it.insecurePolicy.name
+                        termination = it.termination.name.toLowerCase()
+                    }
+                }
+                host = "${route.host}$routeSuffix"
+                route.path?.let {
+                    path = it
+                }
+            }
+        }
+    }
 }
 
 enum class InsecurePolicy {
@@ -303,3 +288,18 @@ data class SecureRoute(
     val insecurePolicy: InsecurePolicy,
     val termination: TlsTermination
 )
+
+fun findRouteAnnotationHandlers(
+    prefix: String,
+    applicationFiles: List<AuroraConfigFile>,
+    annotationsKey: String = "annotations"
+): Set<AuroraConfigFieldHandler> {
+
+    return applicationFiles.findSubHandlers("$prefix/$annotationsKey", validatorFn = { key ->
+        {
+            if (key.contains("/")) {
+                IllegalArgumentException("Annotation $key cannot contain '/'. Use '|' instead")
+            } else null
+        }
+    }).toSet()
+}

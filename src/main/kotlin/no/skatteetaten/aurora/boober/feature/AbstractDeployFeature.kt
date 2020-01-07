@@ -61,6 +61,7 @@ val AuroraDeploymentSpec.name get(): String = this["name"]
 val AuroraDeploymentSpec.affiliation get(): String = this["affiliation"]
 val AuroraDeploymentSpec.type get(): TemplateType = this["type"]
 
+val AuroraDeploymentSpec.applicationDeploymentId: String get() = DigestUtils.sha1Hex("${this.namespace}/${this.name}")
 val AuroraDeploymentSpec.namespace
     get(): String {
         return when {

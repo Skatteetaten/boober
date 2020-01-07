@@ -1,0 +1,26 @@
+{
+  "bigip": {
+    "service": {
+      "source": "utv/simple.json",
+      "value": "simple",
+      "sources": [
+        {
+          "name": "utv/simple.json",
+          "value": "simple"
+        }
+      ]
+    },
+    "routeAnnotations": {
+      "haproxy.router.openshift.io|timeout": {
+        "source": "utv/simple.json",
+        "value": "30s",
+        "sources": [
+          {
+            "name": "utv/simple.json",
+            "value": "30s"
+          }
+        ]
+      }
+    }
+  }
+}
