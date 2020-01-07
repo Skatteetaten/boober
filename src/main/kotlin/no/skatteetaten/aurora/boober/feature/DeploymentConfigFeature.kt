@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
@@ -55,7 +56,11 @@ class DeploymentConfigFeature : Feature {
                 AuroraConfigFieldHandler("resources/cpu/max", defaultValue = "2000m"),
                 AuroraConfigFieldHandler("resources/memory/min", defaultValue = "128Mi"),
                 AuroraConfigFieldHandler("resources/memory/max", defaultValue = "512Mi"),
-                AuroraConfigFieldHandler("management", defaultValue = true, canBeSimplifiedConfig = true),
+                AuroraConfigFieldHandler(
+                    "management",
+                    defaultValue = true,
+                    canBeSimplifiedConfig = true,
+                    validator = { it.boolean() }),
                 AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
                 AuroraConfigFieldHandler("management/port", defaultValue = "8081")
             )
@@ -66,7 +71,11 @@ class DeploymentConfigFeature : Feature {
                 AuroraConfigFieldHandler("resources/cpu/max"),
                 AuroraConfigFieldHandler("resources/memory/min"),
                 AuroraConfigFieldHandler("resources/memory/max"),
-                AuroraConfigFieldHandler("management", defaultValue = false, canBeSimplifiedConfig = true)
+                AuroraConfigFieldHandler(
+                    "management",
+                    defaultValue = false,
+                    canBeSimplifiedConfig = true,
+                    validator = { it.boolean() })
             )
         }
         return setOf(
@@ -74,10 +83,10 @@ class DeploymentConfigFeature : Feature {
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("releaseTo"),
-            AuroraConfigFieldHandler("alarm", defaultValue = true),
-            AuroraConfigFieldHandler("pause", defaultValue = false),
+            AuroraConfigFieldHandler("alarm", defaultValue = true, validator = { it.boolean() }),
+            AuroraConfigFieldHandler("pause", defaultValue = false, validator = { it.boolean() }),
             AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("debug", defaultValue = false)
+            AuroraConfigFieldHandler("debug", defaultValue = false, validator = { it.boolean() })
         ).addIfNotNull(templateSpecificHeaders)
     }
 

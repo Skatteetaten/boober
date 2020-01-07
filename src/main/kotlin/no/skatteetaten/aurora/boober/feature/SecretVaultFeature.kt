@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultSecretEnvResult
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterProperties
@@ -47,6 +48,7 @@ class SecretVaultFeature(
                 ),
                 AuroraConfigFieldHandler(
                     "secretVaults/$key/enabled",
+                    validator = { it.boolean() },
                     defaultValue = true
                 ),
                 AuroraConfigFieldHandler(

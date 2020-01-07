@@ -173,6 +173,26 @@ fun JsonNode?.durationString(): Exception? {
     return null
 }
 
+fun JsonNode?.boolean(required: Boolean = false): Exception? {
+    val candidates = listOf("true", "false")
+
+    if (this == null) {
+        return if (required) {
+            IllegalArgumentException("Required boolean value is not set.")
+        } else {
+            null
+        }
+    }
+    if (this.isBoolean) {
+        return null
+    }
+
+    if (!candidates.contains(this.textValue().toLowerCase())) {
+        return IllegalArgumentException("Not a valid boolean value.")
+    }
+    return null
+}
+
 fun JsonNode?.oneOf(candidates: List<String>, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {

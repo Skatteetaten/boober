@@ -24,6 +24,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 
 val AuroraDeploymentSpec.toxiProxy: String?
     get() =
@@ -39,6 +40,7 @@ class ToxiproxySidecarFeature : Feature {
             AuroraConfigFieldHandler(
                 "toxiproxy",
                 defaultValue = false,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3")

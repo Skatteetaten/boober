@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.apache.commons.codec.binary.Base64
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -50,6 +51,7 @@ class CertificateDisabledFeature : Feature {
             AuroraConfigFieldHandler(
                 "certificate",
                 defaultValue = false,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("certificate/commonName"),
@@ -82,6 +84,7 @@ class CertificateFeature(val sts: StsProvisioner) : Feature {
             AuroraConfigFieldHandler(
                 "certificate",
                 defaultValue = false,
+                validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("certificate/commonName"),

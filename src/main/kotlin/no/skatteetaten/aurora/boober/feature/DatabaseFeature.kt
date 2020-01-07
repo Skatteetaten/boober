@@ -36,6 +36,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestD
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
@@ -195,6 +196,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
         return (dbDefaultsHandlers + dbHandlers + listOf(
             AuroraConfigFieldHandler(
                 "database",
+                validator = { it.boolean() },
                 defaultValue = false,
                 canBeSimplifiedConfig = true
             )
@@ -305,8 +307,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
     ): List<AuroraConfigFieldHandler> {
 
         val mainHandlers = listOf(
-            AuroraConfigFieldHandler("$db/enabled", defaultValue = true),
-            AuroraConfigFieldHandler("$db/generate"),
+            AuroraConfigFieldHandler("$db/enabled", defaultValue = true, validator = { it.boolean() }),
+            AuroraConfigFieldHandler("$db/generate", validator = { it.boolean() }),
             AuroraConfigFieldHandler("$db/name"),
             AuroraConfigFieldHandler("$db/applicationLabel"),
             AuroraConfigFieldHandler("$db/id"),
@@ -338,6 +340,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 }),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/generate",
+                validator = { it.boolean() },
                 defaultValue = true
             ),
             AuroraConfigFieldHandler(
