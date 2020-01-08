@@ -129,10 +129,10 @@ class OpenShiftClientTest : ResourceLoader() {
 
         assertThat(openShiftGroups).isNotNull()
         assertThat(openShiftGroups.getGroupsForUser("k1111111")).isEqualTo(
-            listOf("APP_PaaS_drift", "APP_PaaS_utv", "system:authenticated")
+            listOf("APP_PaaS_drift", "APP_PaaS_utv")
         )
         assertThat(openShiftGroups.getGroupsForUser("k3222222")).isEqualTo(
-            listOf("APP_PROJ1_drift", "system:authenticated")
+            listOf("APP_PROJ1_drift")
         )
 
         assertThat(
@@ -148,34 +148,6 @@ class OpenShiftClientTest : ResourceLoader() {
                 "m7777777",
                 "y8888888",
                 "y9999999"
-            )
-        )
-        assertThat(openShiftGroups.getUsersForGroup("system:authenticated")).isEqualTo(
-            listOf(
-                "mTestUser",
-                "k2222222",
-                "k1111111",
-                "k1222222",
-                "k3333333",
-                "k4444444",
-                "k3222222",
-                "k4222222",
-                "k7111111",
-                "y5555555",
-                "y8888888",
-                "y9999999",
-                "m2111111",
-                "m3111111",
-                "m4111111",
-                "m5111111",
-                "m5222222",
-                "m6222222",
-                "y6222222",
-                "m6111111",
-                "m6666666",
-                "m7777777",
-                "m8111111",
-                "x9111111"
             )
         )
     }
