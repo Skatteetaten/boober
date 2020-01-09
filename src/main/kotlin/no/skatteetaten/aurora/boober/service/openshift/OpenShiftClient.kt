@@ -149,24 +149,15 @@ class OpenShiftClient(
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
 
-        fun getAllDeclaredUserGroups(): Map<String, List<String>> {
-            val url = generateUrl(kind = "group")
-            val groupItems = getResponseBodyItems(url)
-            return groupItems
-                .filter { it["users"] is ArrayNode }
-                .associate { users ->
-                    val name = users["metadata"]["name"].asText()
-                    name to (users["users"] as ArrayNode).map { it.asText() }
-                }
-        }
-
-        fun getAllImplicitUserGroups(): Map<String, List<String>> {
-            val implicitGroup = "system:authenticated"
-            val userItems = getResponseBodyItems(generateUrl("user"))
-            return mapOf(implicitGroup to userItems.map { it["metadata"]["name"].asText() })
-        }
-
-        return OpenShiftGroups(getAllDeclaredUserGroups() + getAllImplicitUserGroups())
+        val url = generateUrl(kind = "group")
+        val groupItems = getResponseBodyItems(url)
+        val groups = groupItems
+            .filter { it["users"] is ArrayNode }
+            .associate { users ->
+                val name = users["metadata"]["name"].asText()
+                name to (users["users"] as ArrayNode).map { it.asText() }
+            }
+        return OpenShiftGroups(groups)
     }
 
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
