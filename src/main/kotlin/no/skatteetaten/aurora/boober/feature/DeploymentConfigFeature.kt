@@ -20,6 +20,8 @@ import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
 
+const val ANNOTATION_BOOBER_DEPLOYTAG = "boober.skatteetaten.no/deployTag"
+
 fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<String, Quantity?> {
     val field = this.getOrNull<String>("resources/$resource/$classifier")
 
@@ -111,6 +113,9 @@ class DeploymentConfigFeature : Feature {
                 }
 
                 dc.spec.template.metadata.labels = dc.spec.template.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
+                dc.spec.template.metadata.annotations = mapOf(
+                    ANNOTATION_BOOBER_DEPLOYTAG to adc.dockerTag
+                )
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
 
                 if (adc.pause) {

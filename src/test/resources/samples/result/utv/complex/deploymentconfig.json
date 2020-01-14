@@ -34,6 +34,9 @@
     },
     "template" : {
       "metadata" : {
+        "annotations" : {
+          "boober.skatteetaten.no/deployTag" : "komplex"
+        },
         "labels" : {
           "app" : "komplex",
           "updatedBy" : "hero",
