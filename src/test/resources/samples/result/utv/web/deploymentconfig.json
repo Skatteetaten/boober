@@ -39,6 +39,9 @@
     },
     "template": {
       "metadata": {
+        "annotations" : {
+          "boober.skatteetaten.no/deployTag" : "develop-SNAPSHOT"
+        },
         "labels": {
           "app": "web",
           "updatedBy": "hero",
