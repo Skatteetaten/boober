@@ -64,8 +64,8 @@ class AuroraConfigFacade(
         return auroraConfigService.findAuroraConfig(ref).getFilesForApplication(adr)
     }
 
-    fun findAuroraConfigFiles(ref: AuroraConfigRef): List<AuroraConfigFile> {
-        return auroraConfigService.findAuroraConfig(ref).files
+    fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
+        return auroraConfigService.findAuroraConfig(ref)
     }
 
     fun findAuroraConfigFileNames(ref: AuroraConfigRef): List<String> {

@@ -73,7 +73,7 @@ class AuroraConfigControllerV1(
         }
 
         // TODO: remove all the above and the request param when mokey is changed
-        return Response(items = listOf(fromAuroraConfig(name, auroraConfigFacade.findAuroraConfigFiles(ref))))
+        return Response(items = listOf(fromAuroraConfig(auroraConfigFacade.findAuroraConfig(ref))))
     }
 
     @GetMapping("/filenames")
@@ -93,12 +93,18 @@ class AuroraConfigControllerV1(
     ): Response {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        val auroraConfig = payload?.toAuroraConfig(ref) ?: AuroraConfig(files = emptyList(), name = name, version = "empty")
+        val auroraConfig =
+            payload?.toAuroraConfig(ref) ?: AuroraConfig(
+                files = emptyList(),
+                name = name,
+                ref = "empty",
+                resolvedRef = "empty"
+            )
         val refsWithWarnings = auroraConfigFacade.validateAuroraConfig(
-                auroraConfig,
-                resourceValidation = resourceValidation,
-                auroraConfigRef = ref,
-                mergeWithRemoteConfig = mergeWithRemoteConfig
+            auroraConfig,
+            resourceValidation = resourceValidation,
+            auroraConfigRef = ref,
+            mergeWithRemoteConfig = mergeWithRemoteConfig
         )
         val items = refsWithWarnings.map { (adr, warnings) ->
             ApplicationError(
@@ -131,7 +137,7 @@ class AuroraConfigControllerV1(
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
         val auroraConfig: AuroraConfig =
-                auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
+            auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
         val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
@@ -159,26 +165,33 @@ class AuroraConfigControllerV1(
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
         val configFiles = auroraConfigFile
-                .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
+            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
         val response = Response(items = configFiles)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
         return ResponseEntity(response, headers, HttpStatus.OK)
     }
 }
 
-// TODO: should this include the ref used to fetch the AuroraConfig?
 data class AuroraConfigResource(
     val name: String,
+    val ref: String,
+    val resolvedRef: String,
     val files: List<AuroraConfigFileResource> = listOf()
 ) {
     fun toAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.name, it.contents) }
-        return AuroraConfig(auroraConfigFiles, ref.name, ref.refName)
+        return AuroraConfig(auroraConfigFiles, ref.name, ref.refName, "")
     }
 
     companion object {
-        fun fromAuroraConfig(name: String, files: List<AuroraConfigFile>): AuroraConfigResource {
-            return AuroraConfigResource(name, files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
+        fun fromAuroraConfig(
+            auroraConfig: AuroraConfig
+        ): AuroraConfigResource {
+            return AuroraConfigResource(
+                auroraConfig.name,
+                auroraConfig.ref,
+                auroraConfig.resolvedRef,
+                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
         }
     }
 }

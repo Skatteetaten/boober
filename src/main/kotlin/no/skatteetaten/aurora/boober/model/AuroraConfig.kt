@@ -8,20 +8,20 @@ import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
-data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val version: String) {
+data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val ref: String, val resolvedRef: String = ref) {
 
     companion object {
 
         val yamlMapper = jacksonYamlObjectMapper()
         val jsonMapper = jsonMapper()
 
-        fun fromFolder(folderName: String, version: String): AuroraConfig {
+        fun fromFolder(folderName: String, ref: String, resolvedRef: String): AuroraConfig {
 
             val folder = File(folderName)
-            return fromFolder(folder, version)
+            return fromFolder(folder, ref, resolvedRef)
         }
 
-        fun fromFolder(folder: File, version: String): AuroraConfig {
+        fun fromFolder(folder: File, ref: String, resolvedRef: String): AuroraConfig {
             val files = folder.walkBottomUp()
                 .onEnter { !setOf(".secret", ".git").contains(it.name) }
                 .filter { it.isFile && listOf("json", "yaml").contains(it.extension) }
@@ -31,7 +31,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
                 it.key to it.value.readText(Charset.defaultCharset())
             }.toMap()
 
-            return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, folder.name, version)
+            return AuroraConfig(nodes.map { AuroraConfigFile(it.key, it.value, false) }, folder.name, ref, resolvedRef)
         }
     }
 
@@ -175,7 +175,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             return this
         }
 
-        val newVersion = "${this.version}.dirty"
+        val newVersion = "${this.ref}.dirty"
 
         val newFileNames = localAuroraConfig.files.map { it.name }.toSet()
 
@@ -183,6 +183,6 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
 
         val files = localAuroraConfig.files + notInLocal
 
-        return AuroraConfig(files, localAuroraConfig.name, newVersion)
+        return AuroraConfig(files, localAuroraConfig.name, newVersion, newVersion)
     }
 }

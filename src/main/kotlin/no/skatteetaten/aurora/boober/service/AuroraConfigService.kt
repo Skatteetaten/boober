@@ -39,16 +39,9 @@ class AuroraConfigService(
         return bitbucketProjectService.getRepoNames(project)
     }
 
-    fun resolveToExactRef(ref: AuroraConfigRef): AuroraConfigRef {
-
-        val exactRef = updateLocalFilesFromGit(ref)
-        return exactRef?.let { ref.copy(resolvedRef = it) } ?: ref
-    }
-
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
-
-        updateLocalFilesFromGit(ref)
-        return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName)
+        val exactRef = updateLocalFilesFromGit(ref)
+        return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName, exactRef)
     }
 
     // This is called from tests to create AuroraConfig for integration tests
@@ -58,7 +51,7 @@ class AuroraConfigService(
         val refName = "master"
         val ref = AuroraConfigRef(auroraConfig.name, refName)
         val repo = getUpdatedRepo(ref)
-        val existing = AuroraConfig.fromFolder(checkoutDir, refName)
+        val existing = AuroraConfig.fromFolder(checkoutDir, refName, "test")
 
         // These lines are never called, since save is only called in tests they can probably be removed.
         existing.files.forEach {
@@ -116,13 +109,13 @@ class AuroraConfigService(
 
     private fun getAuroraConfigFolder(name: String) = File(gitService.checkoutPath, name)
 
-    private fun updateLocalFilesFromGit(ref: AuroraConfigRef): String? {
+    private fun updateLocalFilesFromGit(ref: AuroraConfigRef): String {
         val repository = getUpdatedRepo(ref)
 
         val head = repository.repository.exactRef("HEAD").objectId?.abbreviate(8)?.name()
 
         repository.close()
-        return head
+        return head ?: "empty"
     }
 
     private fun getUpdatedRepo(ref: AuroraConfigRef): Git {

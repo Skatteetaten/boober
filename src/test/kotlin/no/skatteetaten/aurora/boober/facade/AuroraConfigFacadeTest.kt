@@ -75,7 +75,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Test
     fun `get all config files`() {
-        val files = facade.findAuroraConfigFiles(auroraConfigRef)
+        val files = facade.findAuroraConfig(auroraConfigRef).files
         assertThat(files).isNotEmpty()
     }
 
@@ -115,7 +115,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val localAuroraConfig = AuroraConfig(
             files = listOf(AuroraConfigFile("utv/simple.json", """{ "type" : "foobar" }""")),
             name = "paas",
-            version = "local"
+            ref = "local"
         )
 
         assertThat {

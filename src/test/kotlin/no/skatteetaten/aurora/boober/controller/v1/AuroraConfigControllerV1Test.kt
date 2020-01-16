@@ -32,8 +32,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Get aurora config by name`() {
         every {
-            facade.findAuroraConfigFiles(auroraConfigRef)
-        } returns auroraConfig.files
+            facade.findAuroraConfig(auroraConfigRef)
+        } returns auroraConfig
 
         mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name)) {
             statusIsOk()
@@ -46,8 +46,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Get aurora config by name for another branch with queryparam`() {
         every {
-            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
-        } returns auroraConfig.files
+            facade.findAuroraConfig(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig
 
         mockMvc.get(
             path = Path("/v1/auroraconfig/{auroraConfigName}?reference={reference}", auroraConfigRef.name, "dev"),
@@ -63,8 +63,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Get aurora config by name for another branch with header`() {
         every {
-            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
-        } returns auroraConfig.files
+            facade.findAuroraConfig(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig
 
         mockMvc.get(
             path = Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name),
