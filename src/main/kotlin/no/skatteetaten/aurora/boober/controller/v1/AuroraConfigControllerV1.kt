@@ -47,7 +47,7 @@ class AuroraConfigControllerV1(
         val files = auroraConfigFacade.findAuroraConfigFilesForApplicationDeployment(ref, adr)
 
         return Response(items = files.map {
-            AuroraConfigFileResource(it.name, it.contents, it.type)
+            AuroraConfigFileResource(it.name, it.contents, it.version, it.type)
         })
     }
 
@@ -65,7 +65,7 @@ class AuroraConfigControllerV1(
             val files = auroraConfigFacade.findAuroraConfigFilesForApplicationDeployment(ref, adr)
 
             return Response(items = files.map {
-                AuroraConfigFileResource(it.name, it.contents, it.type)
+                AuroraConfigFileResource(it.name, it.contents, it.version, it.type)
             })
         }
         if (application != null || environment != null) {
@@ -165,7 +165,7 @@ class AuroraConfigControllerV1(
 
     private fun createAuroraConfigFileResponse(auroraConfigFile: AuroraConfigFile): ResponseEntity<Response> {
         val configFiles = auroraConfigFile
-            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.type)) }
+            .let { listOf(AuroraConfigFileResource(it.name, it.contents, it.version, it.type)) }
         val response = Response(items = configFiles)
         val headers = HttpHeaders().apply { eTag = "\"${auroraConfigFile.version}\"" }
         return ResponseEntity(response, headers, HttpStatus.OK)
@@ -191,7 +191,7 @@ data class AuroraConfigResource(
                 auroraConfig.name,
                 auroraConfig.ref,
                 auroraConfig.resolvedRef,
-                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.type) })
+                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.version, it.type) })
         }
     }
 }
@@ -199,6 +199,7 @@ data class AuroraConfigResource(
 data class AuroraConfigFileResource(
     val name: String,
     val contents: String,
+    val version: String,
     val type: AuroraConfigFileType? = null
 )
 
