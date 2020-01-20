@@ -73,8 +73,15 @@ server:
 spring:
     profiles: local
 
+
+management.server.port : 9091
+
+server:
+    port: 9090
+
 openshift:
     cluster: utv
+
 
 integrations:
     dbh:
