@@ -199,7 +199,7 @@ data class AuroraConfigResource(
 data class AuroraConfigFileResource(
     val name: String,
     val contents: String,
-    val version: String,
+    val contentHash: String? = null,
     val type: AuroraConfigFileType? = null
 )
 

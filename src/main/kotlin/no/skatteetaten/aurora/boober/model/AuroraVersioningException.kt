@@ -4,10 +4,10 @@ data class VersioningError(
     val auroraConfigName: String,
     val fileName: String,
     val currentHash: String,
-    val providedHash: String
+    val providedHash: String? = null
 )
 
-class AuroraVersioningException(auroraConfig: AuroraConfig, currentFile: AuroraConfigFile, previousVersion: String) :
+class AuroraVersioningException(auroraConfig: AuroraConfig, currentFile: AuroraConfigFile, previousVersion: String?) :
     PreconditionFailureException("The provided version of the current file ($previousVersion) in AuroraConfig ${auroraConfig.name} is not correct (${currentFile.version})") {
     val errors: List<VersioningError>
 

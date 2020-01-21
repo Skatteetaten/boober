@@ -93,7 +93,7 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             files.add(newFile)
         } else {
             val currentFile = files[indexOfFileToUpdate]
-            if (previousVersion != null && currentFile.version != previousVersion) {
+            if (currentFile.version != previousVersion) {
                 throw AuroraVersioningException(this, currentFile, previousVersion)
             }
             files[indexOfFileToUpdate] = newFile

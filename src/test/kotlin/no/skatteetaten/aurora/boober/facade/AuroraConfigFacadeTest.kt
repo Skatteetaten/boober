@@ -268,10 +268,13 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }]"""
 
         val filename = "utv/simple.json"
+        val findAuroraConfigFile = facade.findAuroraConfigFile(auroraConfigRef, filename)
+
         val result = facade.patchAuroraConfigFile(
             ref = auroraConfigRef,
             filename = filename,
-            jsonPatchOp = patch
+            jsonPatchOp = patch,
+            previousVersion = findAuroraConfigFile.version
         )
 
         val file = result.files.find { it.name == filename }
