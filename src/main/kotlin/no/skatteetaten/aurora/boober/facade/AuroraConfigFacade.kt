@@ -125,12 +125,13 @@ class AuroraConfigFacade(
         filename: String,
         jsonPatchOp: String,
         previousVersion: String? = null
-    ): AuroraConfig {
+    ): AuroraConfigFile {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
+        val savedConfig = auroraConfigService.saveFile(newFile, updatedAuroraConfig, ref)
 
-        return auroraConfigService.saveFile(newFile, updatedAuroraConfig, ref)
+        return savedConfig.findFile(filename)!!
     }
 
     fun findAllAuroraConfigNames() = auroraConfigService.findAllAuroraConfigNames()

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
 import java.io.File
 import java.nio.charset.Charset
@@ -8,7 +9,12 @@ import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
-data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val ref: String, val resolvedRef: String = ref) {
+data class AuroraConfig(
+    val files: List<AuroraConfigFile>,
+    val name: String,
+    val ref: String,
+    val resolvedRef: String = ref
+) {
 
     companion object {
 
@@ -114,13 +120,34 @@ data class AuroraConfig(val files: List<AuroraConfigFile>, val name: String, val
             ?: throw IllegalArgumentException("No such file $filename in AuroraConfig $name")
 
         val fileContents = patch.apply(auroraConfigFile.asJsonNode)
-
-        val writeMapper = if (filename.endsWith(".yaml")) {
-            yamlMapper
-        } else jsonMapper
+        val writeMapper = findObjectMapperForFileType(filename)
 
         val rawContents = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(fileContents)
-        return updateFile(filename, rawContents, previousVersion)
+        val patchFile = AuroraConfigFile(filename, rawContents)
+
+        val files = files.toMutableList()
+        val indexOfFileToUpdate = files.indexOfFirst { it.name == filename }
+
+        if (indexOfFileToUpdate == -1) {
+            files.add(patchFile)
+        } else {
+            val currentFile = files[indexOfFileToUpdate]
+            if (previousVersion != null && currentFile.version != previousVersion) {
+                throw AuroraVersioningException(this, currentFile, previousVersion)
+            }
+
+            files[indexOfFileToUpdate] = patchFile
+        }
+
+        return Pair(patchFile, this.copy(files = files))
+    }
+
+    private fun findObjectMapperForFileType(filename: String): ObjectMapper {
+        return if (filename.endsWith(".yaml")) {
+            yamlMapper
+        } else {
+            jsonMapper
+        }
     }
 
     private fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {

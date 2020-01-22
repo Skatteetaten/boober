@@ -277,9 +277,8 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             previousVersion = findAuroraConfigFile.version
         )
 
-        val file = result.files.find { it.name == filename }
-        assertThat(file).isNotNull()
-        val json: JsonNode = jacksonObjectMapper().readTree(file?.contents)
+        assertThat(result).isNotNull()
+        val json: JsonNode = jacksonObjectMapper().readTree(result.contents)
         assertThat(json.at("/version").textValue()).isEqualTo("test")
     }
 

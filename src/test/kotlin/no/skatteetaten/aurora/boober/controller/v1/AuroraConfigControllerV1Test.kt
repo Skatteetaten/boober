@@ -7,6 +7,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import java.lang.RuntimeException
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
@@ -94,7 +95,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
         val content = """{ "version" : "test" }"""
         every {
             facade.patchAuroraConfigFile(auroraConfigRef, fileName, patch, null)
-        } returns auroraConfig.modifyFile(fileName, content)
+        } returns AuroraConfigFile(fileName, content)
 
         mockMvc.patch(
             path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),

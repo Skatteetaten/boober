@@ -152,9 +152,12 @@ class AuroraConfigControllerV1(
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
 
-        val auroraConfig = auroraConfigFacade.patchAuroraConfigFile(ref, fileName, payload.content)
-        // uhm okai why !! here
-        val auroraConfigFile = auroraConfig.findFile(fileName)!!
+        val auroraConfigFile = auroraConfigFacade.patchAuroraConfigFile(
+            ref = ref,
+            filename = fileName,
+            jsonPatchOp = payload.content
+        )
+
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
