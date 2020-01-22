@@ -128,7 +128,7 @@ class AuroraConfigFacade(
     ): AuroraConfigFile {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp )
+        val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp)
         auroraConfigService.saveFile(newFile, updatedAuroraConfig, ref)
 
         return newFile
