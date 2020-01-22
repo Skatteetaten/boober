@@ -82,62 +82,49 @@ data class AuroraConfig(
         }.toMap()
     }
 
-    fun findFile(filename: String): AuroraConfigFile? = files.find { it.name == filename }
-
     fun updateFile(
         name: String,
         contents: String,
         previousVersion: String? = null
     ): Pair<AuroraConfigFile, AuroraConfig> {
 
-        val files = files.toMutableList()
-        val indexOfFileToUpdate = files.indexOfFirst { it.name == name }
-
-        val newFile = AuroraConfigFile(name, contents)
-
-        if (indexOfFileToUpdate == -1) {
-            files.add(newFile)
-        } else {
-            val currentFile = files[indexOfFileToUpdate]
-            if (currentFile.version != previousVersion) {
-                throw AuroraVersioningException(this, currentFile, previousVersion)
-            }
-            files[indexOfFileToUpdate] = newFile
+        val indexedValue = files.withIndex().find {
+            it.value.name == name
         }
+
+        val files = files.toMutableList()
+        val newFile = AuroraConfigFile(name, contents)
+        if (indexedValue == null) {
+            files.add(newFile)
+            return Pair(newFile, this.copy(files = files))
+        }
+
+        val currentFile = indexedValue.value
+        if (currentFile.version != previousVersion) {
+            throw AuroraVersioningException(this, currentFile, previousVersion)
+        }
+        files[indexedValue.index] = newFile
 
         return Pair(newFile, this.copy(files = files))
     }
 
     fun patchFile(
         filename: String,
-        jsonPatchOp: String,
-        previousVersion: String? = null
+        jsonPatchOp: String
     ): Pair<AuroraConfigFile, AuroraConfig> {
 
         val patch: JsonPatch = yamlMapper.readValue(jsonPatchOp, JsonPatch::class.java)
-
-        val auroraConfigFile = findFile(filename)
-            ?: throw IllegalArgumentException("No such file $filename in AuroraConfig $name")
+        val (indexOfFileToUpdate, auroraConfigFile) = files.withIndex().find {
+            it.value.name == filename
+        } ?: throw IllegalArgumentException("No such file $filename in AuroraConfig $name")
 
         val fileContents = patch.apply(auroraConfigFile.asJsonNode)
         val writeMapper = findObjectMapperForFileType(filename)
-
         val rawContents = writeMapper.writerWithDefaultPrettyPrinter().writeValueAsString(fileContents)
         val patchFile = AuroraConfigFile(filename, rawContents)
 
         val files = files.toMutableList()
-        val indexOfFileToUpdate = files.indexOfFirst { it.name == filename }
-
-        if (indexOfFileToUpdate == -1) {
-            files.add(patchFile)
-        } else {
-            val currentFile = files[indexOfFileToUpdate]
-            if (previousVersion != null && currentFile.version != previousVersion) {
-                throw AuroraVersioningException(this, currentFile, previousVersion)
-            }
-
-            files[indexOfFileToUpdate] = patchFile
-        }
+        files[indexOfFileToUpdate] = patchFile
 
         return Pair(patchFile, this.copy(files = files))
     }

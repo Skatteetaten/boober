@@ -103,7 +103,7 @@ class AuroraConfigFacade(
     fun findAuroraConfigFile(ref: AuroraConfigRef, fileName: String): AuroraConfigFile {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return auroraConfig.findFile(fileName)
+        return auroraConfig.files.find { it.name == fileName }
             ?: throw IllegalArgumentException("No such file $fileName in AuroraConfig ${ref.name}")
     }
 
@@ -112,26 +112,26 @@ class AuroraConfigFacade(
         fileName: String,
         contents: String,
         previousVersion: String? = null
-    ): AuroraConfig {
+    ): AuroraConfigFile {
 
         val oldAuroraConfig = auroraConfigService.findAuroraConfig(ref)
         val (newFile, auroraConfig) = oldAuroraConfig.updateFile(fileName, contents, previousVersion)
 
-        return auroraConfigService.saveFile(newFile, auroraConfig, ref)
+        auroraConfigService.saveFile(newFile, auroraConfig, ref)
+        return newFile
     }
 
     fun patchAuroraConfigFile(
         ref: AuroraConfigRef,
         filename: String,
-        jsonPatchOp: String,
-        previousVersion: String? = null
+        jsonPatchOp: String
     ): AuroraConfigFile {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp, previousVersion)
-        val savedConfig = auroraConfigService.saveFile(newFile, updatedAuroraConfig, ref)
+        val (newFile, updatedAuroraConfig) = auroraConfig.patchFile(filename, jsonPatchOp )
+        auroraConfigService.saveFile(newFile, updatedAuroraConfig, ref)
 
-        return savedConfig.findFile(filename)!!
+        return newFile
     }
 
     fun findAllAuroraConfigNames() = auroraConfigService.findAllAuroraConfigNames()

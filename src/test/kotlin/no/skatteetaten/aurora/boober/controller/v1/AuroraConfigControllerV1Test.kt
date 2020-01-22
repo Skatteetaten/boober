@@ -94,7 +94,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         val content = """{ "version" : "test" }"""
         every {
-            facade.patchAuroraConfigFile(auroraConfigRef, fileName, patch, null)
+            facade.patchAuroraConfigFile(auroraConfigRef, fileName, patch)
         } returns AuroraConfigFile(fileName, content)
 
         mockMvc.patch(
@@ -204,7 +204,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         every {
             facade.updateAuroraConfigFile(auroraConfigRef, fileName, content, null)
-        } returns auroraConfig.modifyFile(fileName, content)
+        } returns AuroraConfigFile(fileName, content)
 
         mockMvc.put(
             path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),

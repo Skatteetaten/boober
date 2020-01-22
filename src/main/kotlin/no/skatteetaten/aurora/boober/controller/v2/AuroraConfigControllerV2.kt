@@ -51,8 +51,7 @@ class AuroraConfigControllerV2(
         val fileName = payload.fileName
 
         return try {
-            val auroraConfig = auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
-            val file = auroraConfig.findFile(fileName)!!
+            val file = auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
 
             Response(success = true, message = "File $fileName successfully added/updated",
                 items = listOf(ChangedAuroraConfigFileResponse(file =

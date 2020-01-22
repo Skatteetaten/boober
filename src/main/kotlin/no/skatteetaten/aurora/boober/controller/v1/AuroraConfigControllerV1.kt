@@ -136,9 +136,8 @@ class AuroraConfigControllerV1(
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = extractFileName(name, request)
-        val auroraConfig: AuroraConfig =
+        val auroraConfigFile =
             auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
-        val auroraConfigFile = auroraConfig.findFile(fileName)!!
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
 

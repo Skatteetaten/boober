@@ -219,16 +219,15 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val fileToChange = "utv/simple.json"
         val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
 
-        val result = facade.updateAuroraConfigFile(
+        val file = facade.updateAuroraConfigFile(
             auroraConfigRef,
             fileToChange,
             """{"version": "1.0.0"}""",
             theFileToChange.version
         )
 
-        val file = result.files.find { it.name == fileToChange }
         assertThat(file).isNotNull()
-        val json: JsonNode = jacksonObjectMapper().readTree(file?.contents)
+        val json: JsonNode = jacksonObjectMapper().readTree(file.contents)
         assertThat(json.at("/version").textValue()).isEqualTo("1.0.0")
     }
 
@@ -273,8 +272,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val result = facade.patchAuroraConfigFile(
             ref = auroraConfigRef,
             filename = filename,
-            jsonPatchOp = patch,
-            previousVersion = findAuroraConfigFile.version
+            jsonPatchOp = patch
         )
 
         assertThat(result).isNotNull()
