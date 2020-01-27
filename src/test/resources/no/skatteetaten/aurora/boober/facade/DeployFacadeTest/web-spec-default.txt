@@ -54,4 +54,5 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
-       default | webseal: false
+               | webseal:
+      web.json |   strict: false

@@ -461,11 +461,13 @@
     } ]
   },
   "webseal" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
+    "strict" : {
+      "source" : "web.json",
+      "value" : false,
+      "sources" : [ {
+        "name" : "web.json",
+        "value" : false
+      } ]
+    }
   }
 }

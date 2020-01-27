@@ -3,11 +3,25 @@ package no.skatteetaten.aurora.boober.feature
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
 class WebSealFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = WebsealFeature()
+
+    @Test
+    fun `should not allow misspelled false for boolean webseal|strict flag`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                    "webseal" : {
+                      "strict" : "fasle"
+                     }
+               }"""
+            )
+        }.singleApplicationError("Not a valid boolean value.")
+    }
 
     @Test
     fun `should annotate service with webseal labels`() {

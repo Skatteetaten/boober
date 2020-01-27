@@ -137,7 +137,7 @@ class AuroraDeploymentContextService(
         }
 
         val webSeal = features.filter { (feature, spec) ->
-            feature is WebsealFeature && feature.willCreateResource(spec)
+            feature is WebsealFeature && feature.willCreateResource(spec) && feature.shouldWarnAboutFeature(spec)
         }.isNotEmpty()
 
         val route = features.filter { (feature, spec) ->
@@ -146,7 +146,7 @@ class AuroraDeploymentContextService(
 
         val websealWarning = if (webSeal && route) {
             logWarning("websealAndRoute")
-            "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful!"
+            "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this error."
         } else null
 
         val sts = features.filter { (feature, spec) ->
