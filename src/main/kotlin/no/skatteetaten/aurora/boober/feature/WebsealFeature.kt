@@ -20,7 +20,7 @@ class WebsealFeature : Feature {
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("webseal/host"),
-            AuroraConfigFieldHandler("webseal/strict", validator = { it.boolean()}),
+            AuroraConfigFieldHandler("webseal/strict", validator = { it.boolean() }),
             AuroraConfigFieldHandler("webseal/roles")
         )
     }
@@ -51,5 +51,5 @@ class WebsealFeature : Feature {
         } ?: false
     }
 
-    fun shouldWarnAboutFeature(adc: AuroraDeploymentSpec) : Boolean = adc.getOrNull("webseal/strict") ?: true
+    fun shouldWarnAboutFeature(adc: AuroraDeploymentSpec): Boolean = adc.getOrNull("webseal/strict") ?: true
 }
