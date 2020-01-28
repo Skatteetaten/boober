@@ -148,7 +148,7 @@ fun stubAuroraDeploymentContext(): AuroraDeploymentContext {
                     AuroraConfigFile("utv/simple.json", "{}")
                 ),
                 name = "paas",
-                version = "1"
+                ref = "1"
             ),
             applicationDeploymentRef = ApplicationDeploymentRef("utv", "simple"),
             auroraConfigRef = AuroraConfigRef("test", "master", "123")
@@ -231,7 +231,7 @@ class AuroraConfigSamples {
                     it.value,
                     false
                 )
-            }, "paas", "master")
+            }, "paas", "master", "")
         }
 
         fun getSampleFiles(aid: ApplicationDeploymentRef, additionalFile: String? = null): Map<String, String> {

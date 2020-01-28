@@ -75,7 +75,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Test
     fun `get all config files`() {
-        val files = facade.findAuroraConfigFiles(auroraConfigRef)
+        val files = facade.findAuroraConfig(auroraConfigRef).files
         assertThat(files).isNotEmpty()
     }
 
@@ -115,7 +115,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val localAuroraConfig = AuroraConfig(
             files = listOf(AuroraConfigFile("utv/simple.json", """{ "type" : "foobar" }""")),
             name = "paas",
-            version = "local"
+            ref = "local"
         )
 
         assertThat {
@@ -219,16 +219,15 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val fileToChange = "utv/simple.json"
         val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
 
-        val result = facade.updateAuroraConfigFile(
+        val file = facade.updateAuroraConfigFile(
             auroraConfigRef,
             fileToChange,
             """{"version": "1.0.0"}""",
             theFileToChange.version
         )
 
-        val file = result.files.find { it.name == fileToChange }
         assertThat(file).isNotNull()
-        val json: JsonNode = jacksonObjectMapper().readTree(file?.contents)
+        val json: JsonNode = jacksonObjectMapper().readTree(file.contents)
         assertThat(json.at("/version").textValue()).isEqualTo("1.0.0")
     }
 
@@ -268,15 +267,16 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }]"""
 
         val filename = "utv/simple.json"
+        val findAuroraConfigFile = facade.findAuroraConfigFile(auroraConfigRef, filename)
+
         val result = facade.patchAuroraConfigFile(
             ref = auroraConfigRef,
             filename = filename,
             jsonPatchOp = patch
         )
 
-        val file = result.files.find { it.name == filename }
-        assertThat(file).isNotNull()
-        val json: JsonNode = jacksonObjectMapper().readTree(file?.contents)
+        assertThat(result).isNotNull()
+        val json: JsonNode = jacksonObjectMapper().readTree(result.contents)
         assertThat(json.at("/version").textValue()).isEqualTo("test")
     }
 

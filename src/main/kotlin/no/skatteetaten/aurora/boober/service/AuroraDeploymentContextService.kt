@@ -80,7 +80,7 @@ class AuroraDeploymentContextService(
                 handlers = headerHandlers,
                 files = deployCommand.applicationFiles,
                 applicationDeploymentRef = deployCommand.applicationDeploymentRef,
-                auroraConfigVersion = deployCommand.auroraConfig.version
+                auroraConfigVersion = deployCommand.auroraConfig.ref
             )
 
         AuroraDeploymentSpecConfigFieldValidator(
@@ -103,7 +103,7 @@ class AuroraDeploymentContextService(
             handlers = allHandlers,
             files = deployCommand.applicationFiles,
             applicationDeploymentRef = deployCommand.applicationDeploymentRef,
-            auroraConfigVersion = deployCommand.auroraConfig.version,
+            auroraConfigVersion = deployCommand.auroraConfig.ref,
             replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
         )
         AuroraDeploymentSpecConfigFieldValidator(
