@@ -108,8 +108,9 @@ class DeployFacade(
         applicationDeploymentRefs: List<ApplicationDeploymentRef>,
         overrides: List<AuroraConfigFile>
     ): List<AuroraContextCommand> {
-        val auroraConfigRefExact = auroraConfigService.resolveToExactRef(ref)
-        val auroraConfig = auroraConfigService.findAuroraConfig(auroraConfigRefExact)
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
+        // TODO: Do we really need this? Can we not fetch it from auroraConfig
+        val auroraConfigRefExact = ref.copy(resolvedRef = auroraConfig.resolvedRef)
 
         return applicationDeploymentRefs.parallelMap {
             AuroraContextCommand(auroraConfig, it, auroraConfigRefExact, overrides)

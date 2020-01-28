@@ -7,6 +7,7 @@ import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
 import java.lang.RuntimeException
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
@@ -32,8 +33,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Get aurora config by name`() {
         every {
-            facade.findAuroraConfigFiles(auroraConfigRef)
-        } returns auroraConfig.files
+            facade.findAuroraConfig(auroraConfigRef)
+        } returns auroraConfig
 
         mockMvc.get(Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name)) {
             statusIsOk()
@@ -46,8 +47,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Get aurora config by name for another branch with queryparam`() {
         every {
-            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
-        } returns auroraConfig.files
+            facade.findAuroraConfig(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig
 
         mockMvc.get(
             path = Path("/v1/auroraconfig/{auroraConfigName}?reference={reference}", auroraConfigRef.name, "dev"),
@@ -63,8 +64,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Get aurora config by name for another branch with header`() {
         every {
-            facade.findAuroraConfigFiles(auroraConfigRef.copy(refName = "dev"))
-        } returns auroraConfig.files
+            facade.findAuroraConfig(auroraConfigRef.copy(refName = "dev"))
+        } returns auroraConfig
 
         mockMvc.get(
             path = Path("/v1/auroraconfig/{auroraConfigName}", auroraConfigRef.name),
@@ -93,8 +94,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         val content = """{ "version" : "test" }"""
         every {
-            facade.patchAuroraConfigFile(auroraConfigRef, fileName, patch, null)
-        } returns auroraConfig.modifyFile(fileName, content)
+            facade.patchAuroraConfigFile(auroraConfigRef, fileName, patch)
+        } returns AuroraConfigFile(fileName, content)
 
         mockMvc.patch(
             path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),
@@ -203,7 +204,7 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
 
         every {
             facade.updateAuroraConfigFile(auroraConfigRef, fileName, content, null)
-        } returns auroraConfig.modifyFile(fileName, content)
+        } returns AuroraConfigFile(fileName, content)
 
         mockMvc.put(
             path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),

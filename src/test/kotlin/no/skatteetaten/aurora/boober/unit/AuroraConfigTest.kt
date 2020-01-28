@@ -56,7 +56,7 @@ class AuroraConfigTest : ResourceLoader() {
         val updates = """{ "version": "4"}"""
         val fileName = "boobertest/console.json"
 
-        assertThat(auroraConfig.findFile(fileName)).isNull()
+        assertThat(auroraConfig.files.find { it.name == fileName }).isNull()
 
         val updatedAuroraConfig = auroraConfig.updateFile(fileName, updates).second
 
@@ -160,7 +160,7 @@ class AuroraConfigTest : ResourceLoader() {
         val auroraConfig = getAuroraConfigSamples()
 
         val fileName = "utv/simple.json"
-        assertThat(auroraConfig.findFile(fileName)).isNotNull()
+        assertThat(auroraConfig.files.find { it.name == fileName }).isNotNull()
 
         val fileContent = """{ "version" : 1 }"""
         val newAuroraConfig =
@@ -168,7 +168,7 @@ class AuroraConfigTest : ResourceLoader() {
 
         val merged = auroraConfig.merge(newAuroraConfig)
 
-        assertThat(merged.findFile(fileName)?.contents).isEqualTo(fileContent)
+        assertThat(merged.files.find { it.name == fileName }?.contents).isEqualTo(fileContent)
     }
 
     @Test
@@ -176,7 +176,7 @@ class AuroraConfigTest : ResourceLoader() {
         val auroraConfig = getAuroraConfigSamples()
 
         val fileName = "new-app.json"
-        assertThat(auroraConfig.findFile(fileName)).isNull()
+        assertThat(auroraConfig.files.find { it.name == fileName }).isNull()
 
         val fileContent = """{ "groupId" : "foo.bar" }"""
         val newAuroraConfig =
@@ -184,7 +184,7 @@ class AuroraConfigTest : ResourceLoader() {
 
         val merged = auroraConfig.merge(newAuroraConfig)
 
-        assertThat(merged.findFile(fileName)?.contents).isEqualTo(fileContent)
+        assertThat(merged.files.find { it.name == fileName }?.contents).isEqualTo(fileContent)
     }
 
     @Test
