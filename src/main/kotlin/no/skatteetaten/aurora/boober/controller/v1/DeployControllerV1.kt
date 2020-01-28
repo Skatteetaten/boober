@@ -35,6 +35,7 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
             deploy = payload.deploy
         ).map {
             DeployResponse(
+                auroraConfigRef = it.command.auroraConfig,
                 deployId = it.deployId,
                 success = it.success,
                 reason = it.reason,
@@ -55,6 +56,7 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
 }
 
 data class DeployResponse(
+    val auroraConfigRef: AuroraConfigRef,
     val deploymentSpec: Map<String, Any>?,
     val deployId: String,
     val openShiftResponses: List<OpenShiftResponse>,
