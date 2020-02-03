@@ -11,7 +11,6 @@ import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentType
 import no.skatteetaten.aurora.mockmvc.extensions.get
-import no.skatteetaten.aurora.mockmvc.extensions.printResponseBody
 import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.status
@@ -20,7 +19,6 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import java.lang.RuntimeException
 
 @WebMvcTest(controllers = [AuroraConfigControllerV2::class])
 class AuroraConfigControllerV2Test : AbstractControllerTest() {
@@ -75,12 +73,14 @@ class AuroraConfigControllerV2Test : AbstractControllerTest() {
 
         every {
             facade.updateAuroraConfigFile(any(), any(), any(), any())
-        } throws MultiApplicationValidationException(listOf(
-            ContextErrors(
-                command = AuroraContextCommand(auroraConfig, adr, auroraConfigRef),
-                errors = listOf(RuntimeException("This is an error"))
+        } throws MultiApplicationValidationException(
+            listOf(
+                ContextErrors(
+                    command = AuroraContextCommand(auroraConfig, adr, auroraConfigRef),
+                    errors = listOf(RuntimeException("This is an error"))
+                )
             )
-        ))
+        )
 
         val payload = """{ "abc": "cba" }"""
         val fileName = "file/name.txt"
@@ -94,7 +94,6 @@ class AuroraConfigControllerV2Test : AbstractControllerTest() {
                 .responseJsonPath("$.success").isFalse()
                 .responseJsonPath("$.message").contains("An error occurred for one or more applications")
                 .responseJsonPath("$.items").isNotEmpty()
-
         }
     }
 }

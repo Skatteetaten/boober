@@ -10,7 +10,6 @@ import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigResource.Companio
 import no.skatteetaten.aurora.boober.controller.v1.clearQuotes
 import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
-import no.skatteetaten.aurora.boober.model.ApplicationError
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import org.springframework.http.HttpHeaders
 import org.springframework.web.bind.annotation.GetMapping
@@ -65,7 +64,6 @@ class AuroraConfigControllerV2(
         )
     }
 }
-
 
 data class ContentPayloadV2(
     @JsonRawValue
