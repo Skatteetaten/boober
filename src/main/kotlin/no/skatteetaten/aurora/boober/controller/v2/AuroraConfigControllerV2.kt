@@ -12,7 +12,6 @@ import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.ApplicationError
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import org.springframework.http.HttpHeaders
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -50,36 +49,23 @@ class AuroraConfigControllerV2(
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
         val fileName = payload.fileName
 
-        return try {
-            val file = auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
+        val file = auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
 
-            Response(success = true, message = "File $fileName successfully added/updated",
-                items = listOf(ChangedAuroraConfigFileResponse(file =
-                AuroraConfigFileResource(
-                    file.name,
-                    file.contents,
-                    file.version,
-                    file.type
+        return Response(
+            success = true,
+            message = "File $fileName successfully added/updated",
+            items = listOf(
+                    AuroraConfigFileResource(
+                        file.name,
+                        file.contents,
+                        file.version,
+                        file.type
                 )
-                )))
-        } catch (e: MultiApplicationValidationException) {
-
-            /*
-              We do not want a 400 BAD REQUEST here since the we know how to handle the incoming body, but it results in errors.
-             */
-            Response(
-                success = false,
-                message = "Failed to update/add files, there are validation errors",
-                items = listOf(ChangedAuroraConfigFileResponse(errors = e.toValidationErrors()))
             )
-        }
+        )
     }
 }
 
-data class ChangedAuroraConfigFileResponse(
-    val errors: List<ApplicationError> = emptyList(),
-    val file: AuroraConfigFileResource? = null
-)
 
 data class ContentPayloadV2(
     @JsonRawValue
