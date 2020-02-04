@@ -5,16 +5,20 @@ import io.mockk.every
 import no.skatteetaten.aurora.boober.controller.v1.AbstractControllerTest
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentType
 import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
+import no.skatteetaten.aurora.mockmvc.extensions.status
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 
 @WebMvcTest(controllers = [AuroraConfigControllerV2::class])
 class AuroraConfigControllerV2Test : AbstractControllerTest() {
@@ -69,7 +73,14 @@ class AuroraConfigControllerV2Test : AbstractControllerTest() {
 
         every {
             facade.updateAuroraConfigFile(any(), any(), any(), any())
-        } throws MultiApplicationValidationException(emptyList())
+        } throws MultiApplicationValidationException(
+            listOf(
+                ContextErrors(
+                    command = AuroraContextCommand(auroraConfig, adr, auroraConfigRef),
+                    errors = listOf(RuntimeException("This is an error"))
+                )
+            )
+        )
 
         val payload = """{ "abc": "cba" }"""
         val fileName = "file/name.txt"
@@ -79,9 +90,9 @@ class AuroraConfigControllerV2Test : AbstractControllerTest() {
             body = mapOf("content" to payload, "fileName" to fileName),
             headers = HttpHeaders().contentType()
         ) {
-            statusIsOk()
+            status(HttpStatus.BAD_REQUEST)
                 .responseJsonPath("$.success").isFalse()
-                .responseJsonPath("$.message").contains("there are validation errors")
+                .responseJsonPath("$.message").contains("An error occurred for one or more applications")
                 .responseJsonPath("$.items").isNotEmpty()
         }
     }
