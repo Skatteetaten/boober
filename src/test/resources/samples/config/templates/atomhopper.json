@@ -146,6 +146,10 @@
                     "value": "${DB_NAME}"
                   },
                   {
+                    "name": "CLUSTER",
+                    "value": "${CLUSTER}"
+                  },
+                  {
                     "name": "HOST_NAME",
                     "value": "${DOMAIN_NAME}"
                   },
@@ -225,6 +229,11 @@
       "name": "DB_NAME",
       "description": "Name of the database",
       "required": true
+    },
+    {
+      "name": "CLUSTER",
+      "description": "Cluster name",
+      "required": false
     },
     {
       "name": "MAX_MEMORY",

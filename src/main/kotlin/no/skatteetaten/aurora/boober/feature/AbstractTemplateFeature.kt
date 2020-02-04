@@ -122,7 +122,8 @@ abstract class AbstractTemplateFeature(
             "SPLUNK_INDEX" to adc.splunkIndex,
             "VERSION" to adc.getOrNull<String>("version"),
             "REPLICAS" to adc.getOrNull<String>("replicas"),
-            "NAME" to adc.name
+            "NAME" to adc.name,
+            "CLUSTER" to cluster
         ).filterNullValues()
     }
 

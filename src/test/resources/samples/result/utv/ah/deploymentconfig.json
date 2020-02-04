@@ -91,6 +91,10 @@
                 "value": "feed"
               },
               {
+              "name" : "CLUSTER",
+              "value" : "utv"
+              },
+              {
                 "name": "HOST_NAME",
                 "value": "localhost"
               },
