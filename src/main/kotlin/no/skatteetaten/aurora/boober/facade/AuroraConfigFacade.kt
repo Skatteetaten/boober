@@ -87,7 +87,10 @@ class AuroraConfigFacade(
         } else {
             localAuroraConfig
         }
+
         val commands = auroraConfig.getApplicationDeploymentRefs().map {
+            // this is to validate that there are no dangling files
+            auroraConfig.getFilesForApplication(it)
             AuroraContextCommand(auroraConfig, it, auroraConfigRef, emptyList())
         }
 
