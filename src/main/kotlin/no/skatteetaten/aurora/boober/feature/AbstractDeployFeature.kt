@@ -454,13 +454,15 @@ abstract class AbstractDeployFeature(
         container: List<Container>
     ): Deployment {
 
+        //https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
         return newDeployment {
             metadata {
                 name = adc.name
                 namespace = adc.namespace
             }
             spec {
-                //       paused = true
+
+                progressDeadlineSeconds = adc["deployStrategy/timeout"]
                 strategy {
                     val deployType: String = adc["deployStrategy/type"]
                     if (deployType == "rolling") {

@@ -21,6 +21,7 @@
     } ]
   },
   "spec" : {
+    "progressDeadlineSeconds" : 180,
     "replicas" : 1,
     "selector" : {
       "matchLabels" : {
