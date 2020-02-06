@@ -30,6 +30,7 @@ import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newDeploymentConfig
 import com.fkorotkov.openshift.newDeploymentTriggerPolicy
 import com.fkorotkov.openshift.newImageStream
+import com.fkorotkov.openshift.newRecreateDeploymentStrategyParams
 import com.fkorotkov.openshift.newTagReference
 import com.fkorotkov.openshift.recreateParams
 import com.fkorotkov.openshift.rollingParams
@@ -469,6 +470,8 @@ abstract class AbstractDeployFeature(
                             maxSurge = IntOrString("25%")
                             maxUnavailable = IntOrString(0)
                         }
+                    } else {
+                        type= "Recreate"
                     }
                 }
                 replicas = adc["replicas"]
