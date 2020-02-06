@@ -92,7 +92,7 @@ enum class TemplateType(
     template(false)
 }
 
-enum class DeploymnetState{
+enum class DeploymentState{
     deploymentConfig,
     deployment
 }
@@ -118,7 +118,7 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
                  AuroraConfigFieldHandler(
                 "deployState",
                      defaultValue = "deploymentConfig",
-                     validator = { node -> node.oneOf(DeploymnetState.values().map { it.toString() }) }),
+                     validator = { node -> node.oneOf(DeploymentState.values().map { it.toString() }) }),
                 AuroraConfigFieldHandler(
                         "applicationPlatform",
                         defaultValue = "java",

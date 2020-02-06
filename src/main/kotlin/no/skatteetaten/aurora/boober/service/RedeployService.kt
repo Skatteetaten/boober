@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
-import no.skatteetaten.aurora.boober.feature.DeploymnetState
+import no.skatteetaten.aurora.boober.feature.DeploymentState
 import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -52,13 +52,13 @@ class RedeployService(
     fun triggerRedeploy(
         openShiftResponses: List<OpenShiftResponse>,
         type: TemplateType,
-        deployState: DeploymnetState = DeploymnetState.deploymentConfig
+        deployState: DeploymentState = DeploymentState.deploymentConfig
     ): RedeployResult {
 
         if (type == TemplateType.development) {
             return RedeployResult(message = "No deploy made since type=$type, deploy via oc start-build.")
         }
-        if(deployState== DeploymnetState.deployment) {
+        if(deployState== DeploymentState.deployment) {
             return RedeployResult(message = "Kubernetes Deployment applied.")
         }
 

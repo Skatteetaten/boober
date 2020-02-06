@@ -16,12 +16,24 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import org.springframework.stereotype.Service
 
 @Service
 class BuildFeature : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type == TemplateType.development
+    }
+
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+        if(adc.deployState== DeploymentState.deployment) {
+            throw AuroraDeploymentSpecValidationException("Development type is not supported for deployState=deployment")
+        }
+        return emptyList()
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {

@@ -30,7 +30,6 @@ import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newDeploymentConfig
 import com.fkorotkov.openshift.newDeploymentTriggerPolicy
 import com.fkorotkov.openshift.newImageStream
-import com.fkorotkov.openshift.newRecreateDeploymentStrategyParams
 import com.fkorotkov.openshift.newTagReference
 import com.fkorotkov.openshift.recreateParams
 import com.fkorotkov.openshift.rollingParams
@@ -69,7 +68,7 @@ val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: t
 val AuroraDeploymentSpec.name get(): String = this["name"]
 val AuroraDeploymentSpec.affiliation get(): String = this["affiliation"]
 val AuroraDeploymentSpec.type get(): TemplateType = this["type"]
-val AuroraDeploymentSpec.deployState get(): DeploymnetState = this["deployState"]
+val AuroraDeploymentSpec.deployState get(): DeploymentState = this["deployState"]
 
 val AuroraDeploymentSpec.applicationDeploymentId: String get() = DigestUtils.sha1Hex("${this.namespace}/${this.name}")
 val AuroraDeploymentSpec.namespace
@@ -223,7 +222,7 @@ abstract class AbstractDeployFeature(
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
 
-        return if (adc.deployState == DeploymnetState.deployment) {
+        return if (adc.deployState == DeploymentState.deployment) {
             setOf(
                 generateResource(createDeployment(adc, createContainers(adc))),
                 generateResource(createService(adc))
@@ -358,7 +357,7 @@ abstract class AbstractDeployFeature(
                     }
                 }
             )
-            if(adc.deployState== DeploymnetState.deployment) {
+            if(adc.deployState== DeploymentState.deployment) {
                image = dockerImage
             }
             name = containerName
