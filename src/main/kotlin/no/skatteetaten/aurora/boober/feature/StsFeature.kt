@@ -35,9 +35,6 @@ private val logger = KotlinLogging.logger { }
 @ConditionalOnPropertyMissingOrEmpty("integrations.skap.url")
 @Service
 class StsDisabledFeature : Feature {
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type != TemplateType.deployment
-    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
@@ -73,10 +70,6 @@ class StsFeature(
     @Value("\${integrations.bigbird.url}") val bigBirdUrl: String
 ) : Feature {
     private val suffix = "sts"
-
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type != TemplateType.deployment
-    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(

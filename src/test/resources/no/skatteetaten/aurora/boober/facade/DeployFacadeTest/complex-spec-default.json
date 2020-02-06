@@ -50,6 +50,14 @@
       "value" : "development"
     } ]
   },
+  "deployState" : {
+    "source" : "default",
+    "value" : "deploymentConfig",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "deploymentConfig"
+    } ]
+  },
   "applicationPlatform" : {
     "source" : "default",
     "value" : "java",
@@ -124,40 +132,34 @@
       } ]
     }
   },
-  "envFile": {
-    "source": "utv/complex.json",
-    "value": "about-alternate.json",
-    "sources": [
-      {
-        "name": "utv/complex.json",
-        "value": "about-alternate.json"
-      }
-    ]
+  "envFile" : {
+    "source" : "utv/complex.json",
+    "value" : "about-alternate.json",
+    "sources" : [ {
+      "name" : "utv/complex.json",
+      "value" : "about-alternate.json"
+    } ]
   },
-  "bigip": {
-    "service": {
-      "source": "complex.json",
-      "value": "simple-utv",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "simple-utv"
-        }
-      ]
+  "bigip" : {
+    "service" : {
+      "source" : "complex.json",
+      "value" : "simple-utv",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "simple-utv"
+      } ]
     }
   },
-  "artifactId": {
-    "source": "fileName",
-    "value": "complex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
-      }
-    ]
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "complex",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "complex"
+    } ]
   },
-  "groupId": {
-    "source": "complex.json",
+  "groupId" : {
+    "source" : "complex.json",
     "value" : "org.test",
     "sources" : [ {
       "name" : "complex.json",

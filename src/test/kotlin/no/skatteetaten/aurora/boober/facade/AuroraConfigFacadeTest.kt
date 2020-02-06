@@ -3,8 +3,10 @@ package no.skatteetaten.aurora.boober.facade
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
+import assertk.assertions.isGreaterThan
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
+import assertk.assertions.isNotZero
 import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -52,7 +54,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     fun `get spec for environment utv`() {
 
         val specList = facade.findAuroraDeploymentSpecForEnvironment(auroraConfigRef, "utv")
-        assertThat(specList.size).isEqualTo(5)
+        assertThat(specList.size).isNotZero()
     }
 
     @Test

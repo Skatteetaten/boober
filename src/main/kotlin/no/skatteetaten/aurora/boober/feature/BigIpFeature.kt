@@ -18,10 +18,6 @@ class BigIpFeature(
     @Value("\${boober.route.suffix}") val routeSuffix: String
 ) : Feature {
 
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type != TemplateType.deployment
-    }
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler("bigip/service"),

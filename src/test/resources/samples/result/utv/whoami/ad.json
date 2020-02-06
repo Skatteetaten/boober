@@ -1,0 +1,44 @@
+{
+  "apiVersion" : "skatteetaten.no/v1",
+  "kind" : "ApplicationDeployment",
+  "metadata" : {
+    "labels" : {
+      "app" : "whoami",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "affiliation" : "paas",
+      "name" : "whoami",
+      "id" : "0a5b9f33defce603dae3b3ce5c4babc19ee75086",
+      "applicationId" : "6d2152b95c871a1a78dc2fdf7626bde179a441e4",
+      "booberDeployId" : "deploy1"
+    },
+    "name" : "whoami",
+    "namespace" : "paas-utv",
+    "uid" : "123-123"
+  },
+  "spec" : {
+    "applicationId" : "6d2152b95c871a1a78dc2fdf7626bde179a441e4",
+    "updatedAt" : "1970-01-01T00:00:00Z",
+    "selector" : {
+      "name" : "whoami"
+    },
+    "applicationDeploymentId" : "0a5b9f33defce603dae3b3ce5c4babc19ee75086",
+    "applicationName" : "whoami",
+    "applicationDeploymentName" : "whoami",
+    "databases" : [ "fd59dba9-7d67-4ea2-bb98-081a5df8c387" ],
+    "managementPath" : ":8081/actuator",
+    "deployTag" : "1",
+    "command" : {
+      "overrideFiles" : { },
+      "applicationDeploymentRef" : {
+        "environment" : "utv",
+        "application" : "whoami"
+      },
+      "auroraConfig" : {
+        "name" : "paas",
+        "refName" : "master",
+        "resolvedRef" : "123abb"
+      }
+    }
+  }
+}

@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import java.time.Instant
 import mu.KotlinLogging
@@ -13,6 +14,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 
 private val logger = KotlinLogging.logger {}
+
 /*
   An dataclass to hold a HasMetadata resource that will be mutated in the generation process
 
@@ -43,6 +45,15 @@ fun Set<AuroraResource>.addEnvVar(
         dc.allNonSideCarContainers.forEach { container ->
             container.env.addAll(envVars)
         }
+
+    }
+    this.filter { it.resource.kind == "Deployment" }.forEach {
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars"))
+        val dc: Deployment = it.resource as Deployment
+        dc.allNonSideCarContainers.forEach { container ->
+            container.env.addAll(envVars)
+        }
+
     }
 }
 
@@ -55,6 +66,15 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val dc: DeploymentConfig = it.resource as DeploymentConfig
+        dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
+        dc.allNonSideCarContainers.forEach { container ->
+            container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
+            container.env = container.env.addIfNotNull(envVars)
+        }
+    }
+    this.filter { it.resource.kind == "Deployment" }.forEach {
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
+        val dc: Deployment = it.resource as Deployment
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
         dc.allNonSideCarContainers.forEach { container ->
             container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)

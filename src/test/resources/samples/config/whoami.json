@@ -1,0 +1,7 @@
+{
+  "version": "1",
+  "groupId": "org.test",
+  "type": "deploy",
+  "deployState": "deployment",
+  "database": true
+}
