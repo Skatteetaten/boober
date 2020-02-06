@@ -19,7 +19,9 @@ class OperationScopeFeature(
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
-        if (operationScopeConfiguration.isBlank()) return
+        if (operationScopeConfiguration.isBlank()) {
+            return
+        }
 
         resources.forEach {
             modifyResource(it, "Added operationScope")
