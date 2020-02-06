@@ -74,10 +74,10 @@ spring:
     profiles: local
 
 
-management.server.port : 9091
+management.server.port : 8081
 
 server:
-    port: 9090
+    port: 8080
 
 openshift:
     cluster: utv

@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.security
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.TextNode
 import java.util.regex.Pattern
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
@@ -37,12 +38,17 @@ class BearerAuthenticationManager(
     override fun authenticate(authentication: Authentication?): Authentication {
 
         val token = getBearerTokenFromAuthentication(authentication)
+        // TODO: sjekk at denne token kan koble mot master api.
+
+        /*
+        we turn this off for now on kubernetes. All users are named kubernetes and are i
         val openShiftUser = getOpenShiftUser(token)
         val grantedAuthorities = getGrantedAuthoritiesForUser(openShiftUser)
+         */
 
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
         // (don't end the authentication chain).
-        return PreAuthenticatedAuthenticationToken(openShiftUser, token, grantedAuthorities)
+        return PreAuthenticatedAuthenticationToken(TextNode("kubernetes"), token, emptyList())
             .apply { isAuthenticated = false }
     }
 

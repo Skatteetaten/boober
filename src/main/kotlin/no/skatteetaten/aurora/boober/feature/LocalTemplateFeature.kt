@@ -14,7 +14,7 @@ class LocalTemplateFeature(
     @Value("\${openshift.cluster}") c: String
 ) : AbstractTemplateFeature(c) {
 
-    override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.localTemplate
+    override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.localTemplate && header.deployState != DeploymentState.deployment
 
     override fun templateHandlers(
         files: List<AuroraConfigFile>,

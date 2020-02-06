@@ -54,20 +54,25 @@ class EnvironmentFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
+        val resources = if (adc.deployState != DeploymentState.deployment) {
+            setOf(
+                generateResource(
+                    generateProjectRequest(adc),
+                    header = true
+                )
+            )
+        } else emptySet()
+
         val rolebindings = generateRolebindings(adc).map {
             generateResource(it, header = true)
         }.toSet()
-        return setOf(
-            generateResource(
-                generateProjectRequest(adc),
-                header = true
-            ),
 
+        return resources.addIfNotNull(
             generateResource(
                 generateNamespace(adc),
                 header = true
             )
-        ).addIfNotNull(rolebindings).toSet()
+        ).addIfNotNull(rolebindings)
     }
 
     fun generateNamespace(adc: AuroraDeploymentSpec): Namespace {
@@ -155,6 +160,8 @@ class EnvironmentFeature(
             throw AuroraDeploymentSpecValidationException("permissions.admin cannot be empty")
         }
 
+        /*
+        TODO: We have no overview on groups on kubernetes
         val openShiftGroups = openShiftClient.getGroups()
 
         val nonExistantDeclaredGroups = adminGroups.filter { !openShiftGroups.groupExist(it) }
@@ -169,6 +176,8 @@ class EnvironmentFeature(
         if (0 == sumMembers) {
             throw AuroraDeploymentSpecValidationException("All groups=[${adminGroups.joinToString(", ")}] are empty")
         }
+
+         */
     }
 
     fun createRoleBinding(

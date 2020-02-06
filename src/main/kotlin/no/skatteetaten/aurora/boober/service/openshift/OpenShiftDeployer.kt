@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
+import no.skatteetaten.aurora.boober.feature.DeploymentState
 import no.skatteetaten.aurora.boober.feature.deployState
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
 import no.skatteetaten.aurora.boober.feature.name
@@ -45,7 +46,7 @@ class OpenShiftDeployer(
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         return envDeploys.mapValues { (ns, commands) ->
-            val env = prepareDeployEnvironment(ns, commands.first().headerResources)
+            val env = prepareDeployEnvironment(ns, commands.first().headerResources, commands.first().context.spec.deployState == DeploymentState.deploymentConfig)
 
             if (!env.success) {
                 commands.map {
@@ -66,32 +67,59 @@ class OpenShiftDeployer(
         }
     }
 
-    private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
+    private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>, projectRequest:Boolean=true): AuroraEnvironmentResult {
 
         logger.debug { "Create env with name $namespace" }
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         val projectExist = openShiftClient.projectExists(namespace)
-        val projectResponse = projectExist.whenFalse {
-            openShiftCommandBuilder.createOpenShiftCommand(
-                newResource = resources.find { it.resource.kind == "ProjectRequest" }?.resource
-                    ?: throw Exception("Could not find project request"),
-                mergeWithExistingResource = false,
-                retryGetResourceOnFailure = false
-            ).let {
-                openShiftClient.performOpenShiftCommand(namespace, it)
-                    .also { Thread.sleep(2000) }
+        val environmentResponses = if(!projectRequest) {
+
+            val namespaceResponse = projectExist.whenFalse {
+                openShiftCommandBuilder.createOpenShiftCommand(
+                    newResource = resources.find { it.resource.kind == "Namespace" }?.resource
+                        ?: throw Exception("Could not find namespace"),
+                    mergeWithExistingResource = false,
+                    retryGetResourceOnFailure = false
+                ).let {
+                    openShiftClient.performOpenShiftCommand(namespace, it)
+                        .also { Thread.sleep(2000) }
+                }
             }
+
+            val otherEnvResources = resources.filter { it.resource.kind != "Namespace" }.map {
+                openShiftCommandBuilder.createOpenShiftCommand(
+                    namespace = it.resource.metadata.namespace,
+                    newResource = it.resource,
+                    retryGetResourceOnFailure = true
+                )
+            }
+            val resourceResponse = otherEnvResources.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+
+            listOfNotNull(namespaceResponse).addIfNotNull(resourceResponse)
+
+        } else {
+            val projectResponse = projectExist.whenFalse {
+                openShiftCommandBuilder.createOpenShiftCommand(
+                    newResource = resources.find { it.resource.kind == "ProjectRequest" }?.resource
+                        ?: throw Exception("Could not find project request"),
+                    mergeWithExistingResource = false,
+                    retryGetResourceOnFailure = false
+                ).let {
+                    openShiftClient.performOpenShiftCommand(namespace, it)
+                        .also { Thread.sleep(2000) }
+                }
+            }
+            val otherEnvResources = resources.filter { it.resource.kind != "ProjectRequest" }.map {
+                openShiftCommandBuilder.createOpenShiftCommand(
+                    namespace = it.resource.metadata.namespace,
+                    newResource = it.resource,
+                    retryGetResourceOnFailure = true
+                )
+            }
+            val resourceResponse = otherEnvResources.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+            listOfNotNull(projectResponse).addIfNotNull(resourceResponse)
         }
-        val otherEnvResources = resources.filter { it.resource.kind != "ProjectRequest" }.map {
-            openShiftCommandBuilder.createOpenShiftCommand(
-                namespace = it.resource.metadata.namespace,
-                newResource = it.resource,
-                retryGetResourceOnFailure = true
-            )
-        }
-        val resourceResponse = otherEnvResources.map { openShiftClient.performOpenShiftCommand(namespace, it) }
-        val environmentResponses = listOfNotNull(projectResponse).addIfNotNull(resourceResponse)
 
         val success = environmentResponses.all { it.success }
 

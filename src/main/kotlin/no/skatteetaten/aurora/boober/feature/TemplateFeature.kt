@@ -16,7 +16,7 @@ class TemplateFeature(
     val openShiftClient: OpenShiftClient,
     @Value("\${openshift.cluster}") c: String
 ) : AbstractTemplateFeature(c) {
-    override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.template
+    override fun enable(header: AuroraDeploymentSpec) = header.type == TemplateType.template && header.deployState != DeploymentState.deployment
 
     override fun templateHandlers(
         files: List<AuroraConfigFile>,
