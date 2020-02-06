@@ -32,7 +32,7 @@
         "maxSurge" : "25%",
         "maxUnavailable" : 0
       },
-      "type" : "Rolling"
+      "type" : "RollingUpdate"
     },
     "template" : {
       "metadata" : {
@@ -94,6 +94,7 @@
             "name" : "APP_NAME",
             "value" : "whoami"
           } ],
+          "image" : "docker.registry:5000/org_test/whoami:1",
           "imagePullPolicy" : "IfNotPresent",
           "name" : "whoami-java",
           "ports" : [ {

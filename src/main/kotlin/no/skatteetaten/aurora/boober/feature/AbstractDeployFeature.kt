@@ -221,6 +221,7 @@ abstract class AbstractDeployFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
+
         return if (adc.deployState == DeploymnetState.deployment) {
             setOf(
                 generateResource(createDeployment(adc, createContainers(adc))),
@@ -322,6 +323,8 @@ abstract class AbstractDeployFeature(
         containerArgs: List<String> = emptyList()
     ): Container {
 
+        val dockerImage = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+
         return newContainer {
 
             terminationMessagePath = "/dev/termination-log"
@@ -354,6 +357,9 @@ abstract class AbstractDeployFeature(
                     }
                 }
             )
+            if(adc.deployState== DeploymnetState.deployment) {
+               image = dockerImage
+            }
             name = containerName
             ports = containerPorts.map {
                 newContainerPort {
@@ -458,7 +464,7 @@ abstract class AbstractDeployFeature(
                 strategy {
                     val deployType: String = adc["deployStrategy/type"]
                     if (deployType == "rolling") {
-                        type = "Rolling"
+                        type = "RollingUpdate"
                         rollingUpdate {
                             maxSurge = IntOrString("25%")
                             maxUnavailable = IntOrString(0)
