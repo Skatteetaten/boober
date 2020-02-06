@@ -154,6 +154,9 @@ abstract class AbstractDeployFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) : Feature {
 
+    // TODO: k8s
+
+
     abstract fun createContainers(adc: AuroraDeploymentSpec): List<Container>
 
     abstract fun enable(platform: ApplicationPlatform): Boolean

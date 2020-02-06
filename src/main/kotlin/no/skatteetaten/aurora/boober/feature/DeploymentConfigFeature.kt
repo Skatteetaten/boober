@@ -49,6 +49,13 @@ val AuroraDeploymentSpec.managementPath
 
 @Service
 class DeploymentConfigFeature : Feature {
+
+    // TODO: k8s
+
+    override fun enable(header: AuroraDeploymentSpec): Boolean {
+        return header.type != TemplateType.deployment
+    }
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val templateSpecificHeaders = if (header.type.completelyGenerated) {

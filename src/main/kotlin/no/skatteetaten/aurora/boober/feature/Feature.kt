@@ -89,7 +89,8 @@ enum class TemplateType(
     deploy(true),
     development(true),
     localTemplate(false),
-    template(false)
+    template(false),
+    deployment(true)
 }
 
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
