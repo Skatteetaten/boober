@@ -11,6 +11,7 @@
       "sprocket.sits.no/service.webseal-roles": "admin dev komplex"
     },
     "labels": {
+      "operationScope" : "aos-4016",
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",

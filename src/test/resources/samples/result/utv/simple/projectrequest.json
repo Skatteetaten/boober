@@ -2,6 +2,9 @@
   "apiVersion": "project.openshift.io/v1",
   "kind": "ProjectRequest",
   "metadata": {
+    "labels" : {
+      "operationScope" : "aos-4016"
+    },
     "name": "paas-utv"
   }
 }

@@ -8,6 +8,7 @@
       "prometheus.io/scrape": "false"
     },
     "labels": {
+      "operationScope" : "aos-4016",
       "app": "ah",
       "updatedBy": "hero",
       "updatedAt": "0",
