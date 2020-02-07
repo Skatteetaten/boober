@@ -9,6 +9,7 @@
       "prometheus.io/port": "8081"
     },
     "labels": {
+      "operationScope" : "aos-4016",
       "app": "easy",
       "updatedBy": "hero",
       "updatedAt": "0",

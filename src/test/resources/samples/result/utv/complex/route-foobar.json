@@ -6,6 +6,7 @@
       "haproxy.router.openshift.io/timeout": "30s"
     },
     "labels": {
+      "operationScope" : "aos-4016",
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",

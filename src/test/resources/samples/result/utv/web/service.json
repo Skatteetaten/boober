@@ -10,6 +10,7 @@
       "sprocket.sits.no/service.webseal" : "web-paas-utv"
     },
     "labels" : {
+      "operationScope" : "aos-4016",
       "app" : "web",
       "updatedBy" : "hero",
       "updatedAt" : "0",

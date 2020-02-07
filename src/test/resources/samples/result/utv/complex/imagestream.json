@@ -3,6 +3,7 @@
   "kind": "ImageStream",
   "metadata": {
     "labels": {
+      "operationScope" : "aos-4016",
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
