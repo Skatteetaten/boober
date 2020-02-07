@@ -174,7 +174,6 @@ class AuroraConfigControllerV1(
     }
 }
 
-
 data class AuroraConfigInputResource(
     val name: String,
     val files: List<AuroraConfigFileResource> = listOf()
