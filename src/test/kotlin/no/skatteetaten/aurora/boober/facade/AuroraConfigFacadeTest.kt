@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
+import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.messageContains
@@ -10,8 +12,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
@@ -126,6 +130,95 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 mergeWithRemoteConfig = true
             )
         }.singleApplicationError("Config for application simple in environment utv contains errors. Must be one of [deploy, development, localTemplate, template].")
+    }
+
+    @Test
+    fun `validate should fail if duplicate fileName with different extension`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+        val config = getAuroraConfigSamples()
+        val newConfig = config.copy(files = config.files + AuroraConfigFile("utv/ah.yaml", "---"))
+
+        assertThat {
+            facade.validateAuroraConfig(
+                newConfig,
+                resourceValidation = false,
+                auroraConfigRef = auroraConfigRef
+            )
+        }.isFailure()
+            .isInstanceOf(AuroraDeploymentSpecValidationException::class)
+            .hasMessage("The following files are ambigious [utv/ah.json, utv/ah.yaml]")
+    }
+
+    @Test
+    fun `validate should fail if dangling comma in file`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+        val config = getAuroraConfigSamples()
+        val newConfig = config.copy(files = config.files.filter { it.name != "utv/ah.json" } + AuroraConfigFile(
+            "utv/ah.json", """
+            {
+            "config" : {
+               "FOO" : "BAR", 
+               "BAR" : "BAZ",
+            }
+        """
+        ))
+
+        assertThat {
+            facade.validateAuroraConfig(
+                newConfig,
+                resourceValidation = false,
+                auroraConfigRef = auroraConfigRef
+            )
+        }.isFailure()
+            .isInstanceOf(AuroraConfigException::class)
+            .messageContains(" AuroraConfigFile=utv/ah.json is not valid errorMessage=Unexpected character ('}'")
+    }
+
+    @Test
+    fun `validate should fail if file has dangling application file `() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+        val config = getAuroraConfigSamples()
+        val newConfig = config.copy(files = config.files + AuroraConfigFile("utv/ah2.yaml", "---"))
+
+        assertThat {
+            facade.validateAuroraConfig(
+                newConfig,
+                resourceValidation = false,
+                auroraConfigRef = auroraConfigRef
+            )
+        }.isFailure()
+            .isInstanceOf(IllegalArgumentException::class)
+            .hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name ah2.")
     }
 
     @Test

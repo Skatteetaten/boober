@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
 import java.io.File
 import java.nio.charset.Charset
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
@@ -41,7 +42,19 @@ data class AuroraConfig(
         }
     }
 
+    private fun findDuplicateFiles(): Map<String, List<String>> {
+        return files.groupBy { it.name.removeExtension() }.filter { it.value.size > 1 }.mapValues { it.value.map { it.name } }
+    }
+
     fun getApplicationDeploymentRefs(): List<ApplicationDeploymentRef> {
+
+        // ensure that the filename is not duplicated
+        val duplicateFiles = findDuplicateFiles()
+        if (duplicateFiles.isNotEmpty()) {
+            val errorMessages: List<String> = duplicateFiles.map { it.value.joinToString(separator = ", ", prefix = "[", postfix = "]") }
+            val errorMessage = errorMessages.joinToString(" and ")
+            throw AuroraDeploymentSpecValidationException("The following files are ambigious $errorMessage")
+        }
 
         return files
             .map { it.name.removeExtension() }
@@ -160,7 +173,7 @@ data class AuroraConfig(
                 file.name.removePrefix("${applicationDeploymentRef.environment}/").removeExtension() == envFile &&
                 !file.override
         }?.asJsonNode
-            ?: throw java.lang.IllegalArgumentException("Should find envFile $envFile.(json|yaml")
+            ?: throw java.lang.IllegalArgumentException("EnvFile $envFile.(json|yaml) missing for application: $applicationDeploymentRef")
 
         val include = envFileJson.get("includeEnvFile")?.asText()
 
