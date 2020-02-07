@@ -89,7 +89,7 @@ class AuroraConfigControllerV1(
         @PathVariable name: String,
         @RequestParam("resourceValidation", required = false, defaultValue = "false") resourceValidation: Boolean,
         @RequestParam("mergeWithRemoteConfig", required = false, defaultValue = "false") mergeWithRemoteConfig: Boolean,
-        @RequestBody payload: AuroraConfigResource?
+        @RequestBody payload: AuroraConfigInputResource?
     ): Response {
 
         val ref = AuroraConfigRef(name, getRefNameFromRequest())
@@ -174,16 +174,23 @@ class AuroraConfigControllerV1(
     }
 }
 
-data class AuroraConfigResource(
+
+data class AuroraConfigInputResource(
     val name: String,
-    val ref: String,
-    val resolvedRef: String,
     val files: List<AuroraConfigFileResource> = listOf()
 ) {
     fun toAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
         val auroraConfigFiles = files.map { AuroraConfigFile(it.name, it.contents) }
         return AuroraConfig(auroraConfigFiles, ref.name, ref.refName, "")
     }
+}
+
+data class AuroraConfigResource(
+    val name: String,
+    val ref: String,
+    val resolvedRef: String,
+    val files: List<AuroraConfigFileResource> = listOf()
+) {
 
     companion object {
         fun fromAuroraConfig(
