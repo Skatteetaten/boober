@@ -2,19 +2,15 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
-import com.fkorotkov.kubernetes.newObjectReference
 import com.fkorotkov.kubernetes.rbac.metadata
 import com.fkorotkov.kubernetes.rbac.newRoleBinding
 import com.fkorotkov.kubernetes.rbac.newSubject
 import com.fkorotkov.kubernetes.rbac.roleRef
 import com.fkorotkov.openshift.metadata
-import com.fkorotkov.openshift.newOpenshiftRoleBinding
 import com.fkorotkov.openshift.newProjectRequest
 import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.Namespace
-import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.kubernetes.api.model.rbac.RoleBinding
-import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
 import java.time.Duration
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler

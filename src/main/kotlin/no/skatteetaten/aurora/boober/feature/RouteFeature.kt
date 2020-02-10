@@ -267,7 +267,7 @@ data class Route(
                 if (route.annotations.isNotEmpty()) {
                     annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
                         .addIfNotNull("kubernetes.io/ingress.class" to "alb")
-                        .addIfNotNull( "alb.ingress.kubernetes.io/scheme" to "internet-facing")
+                        .addIfNotNull("alb.ingress.kubernetes.io/scheme" to "internet-facing")
                 }
             }
             spec {
@@ -279,7 +279,7 @@ data class Route(
                                     path = "/*"
                                     backend {
                                         serviceName = sName
-                                        servicePort= IntOrString(80)
+                                        servicePort = IntOrString(80)
                                     }
                                 }
                             )

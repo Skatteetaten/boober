@@ -67,13 +67,13 @@ class OpenShiftDeployer(
         }
     }
 
-    private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>, projectRequest:Boolean=true): AuroraEnvironmentResult {
+    private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>, projectRequest: Boolean = true): AuroraEnvironmentResult {
 
         logger.debug { "Create env with name $namespace" }
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         val projectExist = openShiftClient.projectExists(namespace)
-        val environmentResponses = if(!projectRequest) {
+        val environmentResponses = if (!projectRequest) {
 
             val namespaceResponse = projectExist.whenFalse {
                 openShiftCommandBuilder.createOpenShiftCommand(
@@ -97,7 +97,6 @@ class OpenShiftDeployer(
             val resourceResponse = otherEnvResources.map { openShiftClient.performOpenShiftCommand(namespace, it) }
 
             listOfNotNull(namespaceResponse).addIfNotNull(resourceResponse)
-
         } else {
             val projectResponse = projectExist.whenFalse {
                 openShiftCommandBuilder.createOpenShiftCommand(

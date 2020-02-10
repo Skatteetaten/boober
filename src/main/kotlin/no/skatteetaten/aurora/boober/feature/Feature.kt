@@ -92,7 +92,7 @@ enum class TemplateType(
     template(false)
 }
 
-enum class DeploymentState{
+enum class DeploymentState {
     deploymentConfig,
     deployment
 }

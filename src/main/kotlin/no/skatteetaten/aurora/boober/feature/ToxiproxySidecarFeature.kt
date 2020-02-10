@@ -82,7 +82,7 @@ class ToxiproxySidecarFeature : Feature {
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Deployment") {
-                //TODO: refactor
+                // TODO: refactor
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
                 val dc: Deployment = it.resource as Deployment
                 val podSpec = dc.spec.template.spec

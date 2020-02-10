@@ -30,7 +30,7 @@ class BuildFeature : Feature {
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        if(adc.deployState== DeploymentState.deployment) {
+        if (adc.deployState == DeploymentState.deployment) {
             throw AuroraDeploymentSpecValidationException("Development type is not supported for deployState=deployment")
         }
         return emptyList()

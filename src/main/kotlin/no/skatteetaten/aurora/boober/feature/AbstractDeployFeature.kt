@@ -221,7 +221,6 @@ abstract class AbstractDeployFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
-
         return if (adc.deployState == DeploymentState.deployment) {
             setOf(
                 generateResource(createDeployment(adc, createContainers(adc))),
@@ -354,8 +353,8 @@ abstract class AbstractDeployFeature(
                     }
                 }
             )
-            if(adc.deployState== DeploymentState.deployment) {
-               image = dockerImage
+            if (adc.deployState == DeploymentState.deployment) {
+                image = dockerImage
             }
             name = containerName
             ports = containerPorts.map {
@@ -451,7 +450,7 @@ abstract class AbstractDeployFeature(
         container: List<Container>
     ): Deployment {
 
-        //https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+        // https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
         return newDeployment {
             metadata {
                 name = adc.name
@@ -469,7 +468,7 @@ abstract class AbstractDeployFeature(
                             maxUnavailable = IntOrString(0)
                         }
                     } else {
-                        type= "Recreate"
+                        type = "Recreate"
                     }
                 }
                 replicas = adc["replicas"]

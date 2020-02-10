@@ -1,9 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import com.fasterxml.jackson.databind.JsonNode
 import javax.servlet.http.HttpServletRequest
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -45,8 +43,8 @@ class WebSecurityConfig(
             val username: String = "aurora"
             val fullName: String? = "aurora"
 
-            val authorities= listOf(
-                SimpleGrantedAuthority( "system:masters"),
+            val authorities = listOf(
+                SimpleGrantedAuthority("system:masters"),
                 SimpleGrantedAuthority("APP_PaaS_utv"),
                 SimpleGrantedAuthority("UTV_Utvikler"),
                 SimpleGrantedAuthority("APP_PaaS_drift"))

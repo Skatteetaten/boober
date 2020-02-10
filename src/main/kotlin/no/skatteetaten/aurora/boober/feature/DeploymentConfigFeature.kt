@@ -143,10 +143,10 @@ class DeploymentConfigFeature : Feature {
                     }
                 }
             } else if (it.resource.kind == "Deployment") {
-                //TODO: Join with above
+                // TODO: Join with above
                 val dc: Deployment = it.resource as Deployment
 
-                //TODO: generate with pause
+                // TODO: generate with pause
                 modifyResource(it, "Added labels, annotations, shared env vars and request limits")
                 if (dc.spec.template.metadata == null) {
                     dc.spec.template.metadata = ObjectMeta()

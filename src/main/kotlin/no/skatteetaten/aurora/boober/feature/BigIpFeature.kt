@@ -18,7 +18,6 @@ class BigIpFeature(
     @Value("\${boober.route.suffix}") val routeSuffix: String
 ) : Feature {
 
-
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.deployState != DeploymentState.deployment
     }

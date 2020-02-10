@@ -45,7 +45,6 @@ fun Set<AuroraResource>.addEnvVar(
         dc.allNonSideCarContainers.forEach { container ->
             container.env.addAll(envVars)
         }
-
     }
     this.filter { it.resource.kind == "Deployment" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars"))
@@ -53,7 +52,6 @@ fun Set<AuroraResource>.addEnvVar(
         dc.allNonSideCarContainers.forEach { container ->
             container.env.addAll(envVars)
         }
-
     }
 }
 
