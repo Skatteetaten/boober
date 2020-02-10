@@ -24,7 +24,6 @@ class OpenshiftApiUrlsTest {
         SERVICE("service", "foo", "bar", "/api/v1/namespaces/bar/services/foo")
     }
 
-
     @ParameterizedTest
     @EnumSource(OpenShiftUrlTestData::class)
     fun `Should create correct url`(test: OpenShiftUrlTestData) {

@@ -1,19 +1,5 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFalse
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.mockk.every
-import io.mockk.mockk
-import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
-import org.junit.Ignore
-import org.junit.jupiter.api.Test
-import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class BearerAuthenticationManagerTest {
@@ -51,5 +37,4 @@ class BearerAuthenticationManagerTest {
         assertThat(authentication.isAuthenticated).isFalse()
         assertThat(authentication.authorities).isEqualTo(authorityGroups)
     }*/
-
 }
