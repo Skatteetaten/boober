@@ -27,7 +27,7 @@ class S3DisabledFeature : Feature {
 }
 */
 
-//@ConditionalOnPropertyMissingOrEmpty("integrations.s3.url")
+// @ConditionalOnPropertyMissingOrEmpty("integrations.s3.url")
 @Service
 class S3Feature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
