@@ -54,5 +54,5 @@ testlogger {
     theme = ThemeType.PLAIN
 }
 
-tasks.test { onlyIf{false} }
-tasks.asciidoctor { onlyIf{false} }
+tasks.test { onlyIf { false } }
+tasks.asciidoctor { onlyIf { false } }
