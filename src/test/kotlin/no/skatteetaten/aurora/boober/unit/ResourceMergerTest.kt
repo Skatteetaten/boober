@@ -23,8 +23,7 @@ class ResourceMergerTest : ResourceLoader() {
                 "/spec/triggers/1/imageChange/lastTriggeredImageID"
             )
         ),
-        CONFIGMAP(listOf("/metadata/resourceVersion")),
-        NAMESPACE(listOf("/metadata/annotations"))
+        CONFIGMAP(listOf("/metadata/resourceVersion"))
     }
 
     @ParameterizedTest

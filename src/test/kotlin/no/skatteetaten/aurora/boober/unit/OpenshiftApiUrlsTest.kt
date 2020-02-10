@@ -7,10 +7,12 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
+@Ignore("kubernetes")
 class OpenshiftApiUrlsTest {
 
     enum class OpenShiftUrlTestData(
@@ -19,11 +21,9 @@ class OpenshiftApiUrlsTest {
         val namespace: String?,
         val url: String
     ) {
-        USER("user", "foo", null, "/apis/user.openshift.io/v1/users/foo"),
-        TEMPLATE("processedtemplate", null, "bar", "/oapi/v1/namespaces/bar/processedtemplates"),
-        PROJECT("project", "foo", null, "/apis/project.openshift.io/v1/projects/foo"),
         SERVICE("service", "foo", "bar", "/api/v1/namespaces/bar/services/foo")
     }
+
 
     @ParameterizedTest
     @EnumSource(OpenShiftUrlTestData::class)

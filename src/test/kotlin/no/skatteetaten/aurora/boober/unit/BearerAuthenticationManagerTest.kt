@@ -11,6 +11,7 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
+import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -21,6 +22,8 @@ class BearerAuthenticationManagerTest {
     val token = "some_token"
     val authorityGroups = groups.map { SimpleGrantedAuthority(it) }
 
+    /*
+    @Ignore("kubernetes")
     @Test
     fun `Gets authorities from OpenShift groups`() {
 
@@ -47,5 +50,6 @@ class BearerAuthenticationManagerTest {
 
         assertThat(authentication.isAuthenticated).isFalse()
         assertThat(authentication.authorities).isEqualTo(authorityGroups)
-    }
+    }*/
+
 }

@@ -183,7 +183,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 
     fun mockJsonFromFile(fileName: String): MockResponse {
         return MockResponse()
-            .setBody(loadBufferResource(fileName, DeployFacadeTest::class.java.simpleName))
+            .setBody(loadBufferResource(fileName, DeploymentFacadeTest::class.java.simpleName))
             .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
     }
 

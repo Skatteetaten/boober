@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+/*
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isSuccess
@@ -7,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import org.junit.Ignore
 import org.junit.jupiter.api.Test
 
 class JavaDeployFeatureTest : AbstractFeatureTest() {
@@ -106,3 +108,4 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("envFile must start with about")
     }
 }
+*/

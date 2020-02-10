@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
+import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -31,6 +32,7 @@ import org.springframework.web.client.HttpClientErrorException
 private val userClient = mockk<OpenShiftResourceClient>()
 private val serviceAccountClient = mockk<OpenShiftResourceClient>()
 
+@Ignore
 class OpenShiftClientTest : ResourceLoader() {
 
     @BeforeEach
@@ -112,6 +114,7 @@ class OpenShiftClientTest : ResourceLoader() {
         verify(exactly = 0) { otherClient.post(any(), any()) }
     }
 
+    /*
     @Test
     fun `Creates OpenShiftGroup indexes`() {
 
@@ -151,7 +154,7 @@ class OpenShiftClientTest : ResourceLoader() {
             )
         )
     }
-
+*/
     @Test
     fun `Should record exception when command fails`() {
         val jsonMap = mapOf(

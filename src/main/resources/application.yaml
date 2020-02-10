@@ -73,15 +73,13 @@ server:
 spring:
     profiles: local
 
-
 management.server.port : 8081
 
 server:
     port: 8080
 
 openshift:
-    cluster: utv
-
+    cluster: eks
 
 integrations:
     dbh:
@@ -92,10 +90,10 @@ integrations:
         url: http://localhost:9090
     openshift:
         port: 8443
-        url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+        url: https://B522621924BDC3A78C54C1D2C322B272.sk1.eu-north-1.eks.amazonaws.com
     docker:
         releases: "container-registry-internal-release.aurora.skead.no:443"
-        registry: "container-registry-internal-private-pull.aurora.skead.no:443"
+        registry: "container-registry-internal-private-pull.skatteetaten.io:443"
 boober:
     openshift:
         tokenLocation: /tmp/boober-token
