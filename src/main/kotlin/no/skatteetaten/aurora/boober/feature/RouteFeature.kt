@@ -1,10 +1,19 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fkorotkov.kubernetes.extensions.backend
+import com.fkorotkov.kubernetes.extensions.http
+import com.fkorotkov.kubernetes.extensions.metadata
+import com.fkorotkov.kubernetes.extensions.newHTTPIngressPath
+import com.fkorotkov.kubernetes.extensions.newIngress
+import com.fkorotkov.kubernetes.extensions.newIngressRule
+import com.fkorotkov.kubernetes.extensions.spec
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newRoute
 import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.tls
 import com.fkorotkov.openshift.to
+import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.extensions.Ingress
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -67,9 +76,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return getRoute(adc, cmd).map {
-            val resource = it.generateOpenShiftRoute(
+            // TODO: fix
+            val resource = it.generateIngress(
                 routeNamespace = adc.namespace,
-                serviceName = adc.name,
+                sName = adc.name,
                 routeSuffix = routeSuffix
             )
             generateResource(resource)
@@ -247,6 +257,43 @@ data class Route(
         get(): String = if (tls != null) "https://" else "http://"
 
     fun url(urlSuffix: String) = "$host$urlSuffix".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
+
+    fun generateIngress(
+        routeNamespace: String,
+        sName: String,
+        routeSuffix: String
+    ): Ingress {
+        val route = this
+        // TODO: convert to ingress no support for path based route, tls or setting hostname here yet
+        return newIngress {
+            metadata {
+                name = route.objectName
+                namespace = routeNamespace
+                if (route.annotations.isNotEmpty()) {
+                    annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
+                        .addIfNotNull("kubernetes.io/ingress.class" to "alb")
+                        .addIfNotNull( "alb.ingress.kubernetes.io/scheme" to "internet-facing")
+                }
+            }
+            spec {
+                rules = listOf(
+                    newIngressRule {
+                        http {
+                            paths = listOf(
+                                newHTTPIngressPath {
+                                    path = "/*"
+                                    backend {
+                                        serviceName = sName
+                                        servicePort= IntOrString(80)
+                                    }
+                                }
+                            )
+                        }
+                    }
+                )
+            }
+        }
+    }
 
     fun generateOpenShiftRoute(
         routeNamespace: String,
