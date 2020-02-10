@@ -3,12 +3,17 @@ package no.skatteetaten.aurora.boober.feature
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
 import com.fkorotkov.kubernetes.newObjectReference
+import com.fkorotkov.kubernetes.rbac.metadata
+import com.fkorotkov.kubernetes.rbac.newRoleBinding
+import com.fkorotkov.kubernetes.rbac.newSubject
+import com.fkorotkov.kubernetes.rbac.roleRef
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newOpenshiftRoleBinding
 import com.fkorotkov.openshift.newProjectRequest
 import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.ObjectReference
+import io.fabric8.kubernetes.api.model.rbac.RoleBinding
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
 import java.time.Duration
@@ -111,7 +116,7 @@ class EnvironmentFeature(
         return Permissions(admin = adminPermission, view = viewPermission)
     }
 
-    fun generateRolebindings(adc: AuroraDeploymentSpec): List<OpenshiftRoleBinding> {
+    fun generateRolebindings(adc: AuroraDeploymentSpec): List<RoleBinding> {
 
         val permissions = extractPermissions(adc)
 
@@ -184,14 +189,15 @@ class EnvironmentFeature(
         rolebindingName: String,
         permission: Permission,
         rolebindingNamespace: String
-    ): OpenshiftRoleBinding {
+    ): RoleBinding {
 
-        return newOpenshiftRoleBinding {
+        return newRoleBinding {
             metadata {
                 name = rolebindingName
                 namespace = rolebindingNamespace
             }
 
+            /*
             permission.groups?.let {
                 groupNames = it.toList()
             }
@@ -199,14 +205,16 @@ class EnvironmentFeature(
                 userNames = it.toList()
             }
 
-            val userRefeerences: List<ObjectReference> = permission.users.map {
-                newObjectReference {
+             */
+
+            val userRefeerences = permission.users.map {
+                newSubject {
                     kind = "User"
                     name = it
                 }
             }
             val groupRefeerences = permission.groups?.map {
-                newObjectReference {
+                newSubject {
                     kind = "Group"
                     name = it
                 }
@@ -216,6 +224,7 @@ class EnvironmentFeature(
 
             roleRef {
                 name = rolebindingName
+                kind = "Role"
             }
         }
     }

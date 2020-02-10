@@ -26,7 +26,7 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "persistentvolumeclaim" -> updatePersistentVolumeClaim(mergedResource, existingResource)
         "deploymentconfig" -> updateDeploymentConfig(mergedResource, existingResource)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
-        "namespace" -> updateNamespace(mergedResource, existingResource)
+       // "namespace" -> updateNamespace(mergedResource, existingResource)
     }
     return mergedResource
 }

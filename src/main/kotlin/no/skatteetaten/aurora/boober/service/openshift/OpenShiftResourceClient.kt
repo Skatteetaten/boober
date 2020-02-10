@@ -46,6 +46,7 @@ open class OpenShiftResourceClient(
 
     open fun post(url: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val headers: HttpHeaders = getAuthorizationHeaders()
+        logger.trace("Posting body={}", jacksonObjectMapper().writeValueAsString(payload))
         return exchange(RequestEntity(payload, headers, HttpMethod.POST, URI(url)))!!
     }
 

@@ -166,7 +166,8 @@ class OpenShiftClient(
     }
 
     fun projectExists(name: String): Boolean {
-        val url = generateUrl("project", name = name)
+        val url = generateUrl("namespace", name = name)
+        logger.info("URL=$url")
         serviceAccountClient.get(url, retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
             if (phase == "Active") {

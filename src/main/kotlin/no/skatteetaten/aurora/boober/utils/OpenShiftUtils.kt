@@ -37,14 +37,6 @@ fun findApiVersion(kind: String): String =
 
 val apiGroups: Map<String, List<String>> =
     mapOf(
-        "skatteetaten.no/v1" to listOf("applicationdeployment"),
-        "apps.openshift.io/v1" to listOf("deploymentconfig", "deploymentrequest"),
-        "route.openshift.io/v1" to listOf("route"),
-        "user.openshift.io/v1" to listOf("user", "group"),
-        "project.openshift.io/v1" to listOf("project", "projectrequest"),
-        "template.openshift.io/v1" to listOf("template"),
-        "image.openshift.io/v1" to listOf("imagestream", "imagestreamtag", "imagestreamimport"),
-        "authorization.openshift.io/v1" to listOf("rolebinding"),
-        "build.openshift.io/v1" to listOf("buildconfig")
-
+        "apps/v1" to listOf("deployment"),
+        "skatteetaten.no/v1" to listOf("applicationdeployment")
     )

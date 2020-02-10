@@ -161,13 +161,15 @@ class OpenShiftCommandService(
 
     // TODO: Should pvc be deletable?
     val deletableResources = listOf(
-        "BuildConfig",
-        "DeploymentConfig",
+      //  "BuildConfig",
+      //  "DeploymentConfig",
+   //     "Ingress",
+        "Deployment",
         "ConfigMap",
         "Secret",
-        "Service",
-        "Route",
-        "ImageStream"
+        "Service"
+     //   "Route",
+     //   "ImageStream"
     )
 
     fun createOpenShiftDeleteCommands(

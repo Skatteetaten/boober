@@ -280,13 +280,10 @@ abstract class AbstractDeployFeature(
                         protocol = "TCP"
                         port = PortNumbers.HTTP_PORT
                         targetPort = IntOrString(PortNumbers.INTERNAL_HTTP_PORT)
-                        nodePort = 0
                     }
                 )
-
                 selector = mapOf("name" to adc.name)
-                type = "ClusterIP"
-                sessionAffinity = "None"
+                type = "NodePort"
             }
         }
     }
