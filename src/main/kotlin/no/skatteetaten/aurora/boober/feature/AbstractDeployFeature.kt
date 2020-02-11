@@ -282,7 +282,6 @@ abstract class AbstractDeployFeature(
                     }
                 )
                 selector = mapOf("name" to adc.name)
-                type = "NodePort"
             }
         }
     }

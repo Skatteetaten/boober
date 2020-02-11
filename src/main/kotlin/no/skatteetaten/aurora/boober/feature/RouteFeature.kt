@@ -259,20 +259,19 @@ data class Route(
         routeSuffix: String
     ): Ingress {
         val route = this
-        // TODO: convert to ingress no support for path based route, tls or setting hostname here yet
         return newIngress {
             metadata {
                 name = route.objectName
                 namespace = routeNamespace
                 if (route.annotations.isNotEmpty()) {
                     annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
-                        .addIfNotNull("kubernetes.io/ingress.class" to "alb")
-                        .addIfNotNull("alb.ingress.kubernetes.io/scheme" to "internet-facing")
+                        .addIfNotNull("kubernetes.io/ingress.class" to "traefik")
                 }
             }
             spec {
                 rules = listOf(
                     newIngressRule {
+                        host = "${route.host}$routeSuffix"
                         http {
                             paths = listOf(
                                 newHTTPIngressPath {
