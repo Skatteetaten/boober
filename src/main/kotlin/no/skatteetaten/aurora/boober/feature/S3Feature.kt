@@ -78,9 +78,11 @@ class S3Feature : Feature {
                 namespace = adc.namespace
             }
             data = mapOf(
-                "url" to "http://minio-aurora-dev.utv.paas.skead.no",
+                "serviceEndpoint" to "http://minio-aurora-dev.utv.paas.skead.no",
                 "accessKey" to "aurora",
-                "secretKey" to "fragleberget"
+                "secretKey" to "fragleberget",
+                "bucketName" to "utv",
+                "objectPrefix" to adc.applicationDeploymentId
             ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
         }
     }
