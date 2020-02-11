@@ -275,7 +275,10 @@ data class Route(
                         http {
                             paths = listOf(
                                 newHTTPIngressPath {
-                                    path = "/*"
+                                    path = "/"
+                                    route.path?.let {
+                                        path = it
+                                    }
                                     backend {
                                         serviceName = sName
                                         servicePort = IntOrString(80)
