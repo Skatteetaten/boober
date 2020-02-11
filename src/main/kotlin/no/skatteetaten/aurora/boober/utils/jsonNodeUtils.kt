@@ -84,7 +84,7 @@ val JsonNode.namedUrl: String
     get() = "${this.resourceUrl}/${this.openshiftName}"
 
 val JsonNode.pluralOpenShiftKind: String
-    get() : String {
+    get(): String {
         val kind = this.openshiftKind
         return if (kind.endsWith("s")) {
             "${kind}es"
