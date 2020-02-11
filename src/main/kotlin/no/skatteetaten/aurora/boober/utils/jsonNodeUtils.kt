@@ -78,13 +78,22 @@ val JsonNode.apiBaseUrl: String
     get() = "/${this.apiPrefix}/${this.apiVersion}"
 
 val JsonNode.resourceUrl: String
-    get() = "${this.apiBaseUrl}/${this.openshiftKind}s"
+    get() = "${this.apiBaseUrl}/${this.pluralOpenShiftKind}"
 
 val JsonNode.namedUrl: String
     get() = "${this.resourceUrl}/${this.openshiftName}"
 
+val JsonNode.pluralOpenShiftKind: String
+    get() : String {
+        val kind = this.openshiftKind
+        return if (kind.endsWith("s")) {
+            "${kind}es"
+        } else {
+            "${kind}s"
+        }
+    }
 val JsonNode.namespacedResourceUrl: String
-    get() = "${this.apiBaseUrl}/namespaces/${this.namespace}/${this.openshiftKind}s"
+    get() = "${this.apiBaseUrl}/namespaces/${this.namespace}/${this.pluralOpenShiftKind}"
 
 val JsonNode.namespacedNamedUrl: String
     get() = "${this.namespacedResourceUrl}/${this.openshiftName}"
