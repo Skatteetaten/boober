@@ -12,7 +12,9 @@ class S3FeatureTest : AbstractFeatureTest() {
     fun a() {
         val resources = generateResources(
             """{ 
-               "s3" : true
+               "beta" : {
+                   "s3": true
+               }
            }""", createdResources = 1, resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 

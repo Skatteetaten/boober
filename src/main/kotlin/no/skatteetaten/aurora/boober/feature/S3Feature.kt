@@ -33,7 +33,7 @@ class S3Feature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
-                "s3",
+                "beta/s3",
                 validator = { it.boolean() },
                 defaultValue = false,
                 canBeSimplifiedConfig = true
@@ -63,7 +63,7 @@ class S3Feature : Feature {
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        val isS3Enabled: Boolean = adc["s3"]
+        val isS3Enabled: Boolean = adc["beta/s3"]
         if (!isS3Enabled) return emptySet()
 
         val credentialsSecret = adc.createS3Secret()
