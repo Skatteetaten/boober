@@ -169,12 +169,7 @@ class OpenShiftClient(
         val url = generateUrl("namespace", name = name)
         logger.info("URL=$url")
         serviceAccountClient.get(url, retry = false)?.body?.let {
-            val phase = it.at("/status/phase").textValue()
-            if (phase == "Active") {
-                return true
-            } else {
-                throw IllegalStateException("Project $name already exists but is in an illegal state ($phase)")
-            }
+            return true
         }
         return false
     }

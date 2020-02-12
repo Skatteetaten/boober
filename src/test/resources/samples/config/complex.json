@@ -2,7 +2,7 @@
   "name": "komplex",
   "version": "1",
   "groupId": "org.test",
-  "type": "development",
+  "type": "deploy",
   "splunkIndex": "test-index",
   "prometheus": {
     "path": "/prometheus",
@@ -40,10 +40,6 @@
       "min": "100m"
     }
   },
-  "webseal": {
-    "host": "test",
-    "roles": "admin dev @name@"
-  },
   "config": {
     "FOO": "BAR"
   },
@@ -65,9 +61,6 @@
         "haproxy.router.openshift.io|timeout": "30s"
       }
     }
-  },
-  "bigip" : {
-    "service" : "simple-utv"
   },
   "liveness": true,
   "releaseTo": "komplex",

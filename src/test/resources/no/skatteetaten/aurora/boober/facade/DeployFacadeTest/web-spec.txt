@@ -1,7 +1,8 @@
         static | applicationDeploymentRef: "utv/web"
         static | configVersion: "master"
     about.json | schemaVersion: "v1"
-      web.json | type: "development"
+      web.json | type: "deploy"
+    about.json | deployState: "deployment"
       web.json | applicationPlatform: "web"
     about.json | affiliation: "paas"
     about.json | segment: "aurora"
@@ -10,12 +11,10 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "web"
-      fileName | artifactId: "web"
       web.json | groupId: "org.test"
-      web.json | version: "develop-SNAPSHOT"
                | config:
       web.json |   foo2: "baz"
+      web.json | version: "develop-SNAPSHOT"
       web.json | route: true
       web.json | toxiproxy: true
-               | webseal:
-      web.json |   strict: false
+      fileName | artifactId: "web"

@@ -2,13 +2,10 @@
   "applicationPlatform": "web",
   "groupId": "org.test",
   "version": "develop-SNAPSHOT",
-  "type": "development",
+  "type": "deploy",
   "route": true,
   "config": {
     "foo2": "baz"
-  },
-  "webseal" : {
-    "strict": false
   },
   "toxiproxy": true
 }

@@ -1,6 +1,6 @@
 {
-  "apiVersion" : "apps.openshift.io/v1",
-  "kind" : "DeploymentConfig",
+  "apiVersion" : "apps/v1",
+  "kind" : "Deployment",
   "metadata" : {
     "labels" : {
       "app" : "simple",
@@ -21,19 +21,19 @@
     } ]
   },
   "spec" : {
+    "progressDeadlineSeconds" : 180,
     "replicas" : 1,
     "selector" : {
-      "name" : "simple"
+      "matchLabels" : {
+        "name" : "simple"
+      }
     },
     "strategy" : {
-      "rollingParams" : {
-        "intervalSeconds" : 1,
+      "rollingUpdate" : {
         "maxSurge" : "25%",
-        "maxUnavailable" : 0,
-        "timeoutSeconds" : 180,
-        "updatePeriodSeconds" : 1
+        "maxUnavailable" : 0
       },
-      "type" : "Rolling"
+      "type" : "RollingUpdate"
     },
     "template" : {
       "metadata" : {
@@ -102,20 +102,21 @@
             "value" : "http://simple-paas-utv.test"
           }, {
             "name" : "STS_CERTIFICATE_URL",
-            "value": "/u01/secrets/app/simple-sts/certificate.crt"
+            "value" : "/u01/secrets/app/simple-sts/certificate.crt"
           }, {
             "name" : "STS_PRIVATE_KEY_URL",
-            "value": "/u01/secrets/app/simple-sts/privatekey.key"
+            "value" : "/u01/secrets/app/simple-sts/privatekey.key"
           }, {
             "name" : "STS_KEYSTORE_DESCRIPTOR",
-            "value": "/u01/secrets/app/simple-sts/descriptor.properties"
+            "value" : "/u01/secrets/app/simple-sts/descriptor.properties"
           }, {
             "name" : "VOLUME_SIMPLE_STS",
-            "value": "/u01/secrets/app/simple-sts"
+            "value" : "/u01/secrets/app/simple-sts"
           }, {
             "name" : "STS_DISCOVERY_URL",
             "value" : "https://bigbird-utv.org"
           } ],
+          "image" : "docker.registry:5000/org_test/simple:1",
           "imagePullPolicy" : "IfNotPresent",
           "name" : "simple-java",
           "ports" : [ {
@@ -158,11 +159,10 @@
           }, {
             "mountPath" : "/u01/secrets/app/simple-db",
             "name" : "simple-db"
-          },
-            {
-              "mountPath": "/u01/secrets/app/simple-sts",
-              "name": "simple-sts"
-            } ]
+          }, {
+            "mountPath" : "/u01/secrets/app/simple-sts",
+            "name" : "simple-sts"
+          } ]
         } ],
         "dnsPolicy" : "ClusterFirst",
         "restartPolicy" : "Always",
@@ -181,17 +181,6 @@
           }
         } ]
       }
-    },
-    "triggers" : [ {
-      "imageChangeParams" : {
-        "automatic" : true,
-        "containerNames" : [ "simple-java" ],
-        "from" : {
-          "kind" : "ImageStreamTag",
-          "name" : "simple:default"
-        }
-      },
-      "type" : "ImageChange"
-    } ]
+    }
   }
 }

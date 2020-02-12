@@ -6,8 +6,10 @@ import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class BigIpFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = BigIpFeature(".test.foo")

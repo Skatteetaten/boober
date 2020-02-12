@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.unit
 
-/*
 import assertk.assertThat
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
@@ -47,8 +46,8 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         Instants.determineNow = { Instant.EPOCH }
     }
 
-    @Ignore("kubernetes")
 
+    @Test
     fun `Should create delete command for all resources with given deployId`() {
 
         val name = "complex"
@@ -57,7 +56,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         val adr = ApplicationDeploymentRef(namespace, name)
         val configMapList = newConfigMapList { }
         val responses = createResponsesFromResultFiles(adr)
-            .addIfNotNull("configmap" to jsonMapper().convertValue<JsonNode>(configMapList))
+            .addIfNotNull("ConfigMap" to jsonMapper().convertValue<JsonNode>(configMapList))
 
         responses.forEach {
             val kind = it.key
@@ -75,7 +74,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
 
         val commands = openShiftCommandBuilder.createOpenShiftDeleteCommands(name, namespace, deployId)
 
-        listOf("BuildConfig", "DeploymentConfig", "ImageStream", "Service", "Secret").forEach {
+        listOf("Deployment", "Service", "Secret").forEach {
             assertThat(containsKind(it, commands)).isTrue()
         }
     }
@@ -105,4 +104,3 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         }
     }
 }
-*/

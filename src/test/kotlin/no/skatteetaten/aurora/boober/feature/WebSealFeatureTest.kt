@@ -4,8 +4,10 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class WebSealFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = WebsealFeature()

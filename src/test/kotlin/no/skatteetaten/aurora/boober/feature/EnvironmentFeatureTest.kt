@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-/*
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
@@ -13,13 +12,12 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.Ignore
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
-@Ignore("kubernetes")
 class EnvironmentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = EnvironmentFeature(openShiftClient, userDetailsProvider)
@@ -43,7 +41,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]")
     }
 
-    @Ignore("kubernetes")
+
+    @Disabled
     @Test
     fun `should fail validation if specified admin groups are empty`() {
 
@@ -90,7 +89,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("permissions.admin cannot be empty")
     }
 
-    @Ignore("kubernetes")
+    @Disabled
     @Test
     fun `should fail validation if admin group does not exist`() {
 
@@ -107,7 +106,6 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("[APP_PaaS_drift, APP_PaaS_utv] are not valid groupNames")
     }
 
-    @Ignore("kubernetes")
     @Test
     fun `should generate environment resources`() {
         every { openShiftClient.getGroups() } returns OpenShiftGroups(
@@ -124,7 +122,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             )
         )
 
-        val (projectResource, namespaceResource, rolebindingResource, viewRolebindingResource) =
+        val (namespaceResource, rolebindingResource, viewRolebindingResource) =
             generateResources(
                 files = listOf(
                     AuroraConfigFile(
@@ -139,10 +137,10 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             }"""
                     )
                 ),
-                createdResources = 4
+                createdResources = 3
             )
 
-        assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
+       // assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
         assertThat(namespaceResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("namespace.json")
         assertThat(rolebindingResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("rolebinding.json")
@@ -264,4 +262,3 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             )
     }
 }
-*/

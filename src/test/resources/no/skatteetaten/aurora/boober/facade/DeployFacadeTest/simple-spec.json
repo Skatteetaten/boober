@@ -31,6 +31,17 @@
       "value" : "deploy"
     } ]
   },
+  "deployState" : {
+    "source" : "about.json",
+    "value" : "deployment",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "deploymentConfig"
+    }, {
+      "name" : "about.json",
+      "value" : "deployment"
+    } ]
+  },
   "affiliation" : {
     "source" : "about.json",
     "value" : "paas",

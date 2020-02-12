@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-/*
 import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -14,9 +13,9 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.Ignore
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
-@Ignore("kubernetes")
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = RouteFeature(".test.foo")
@@ -152,7 +151,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
 
-    @Ignore("kubernetes")
     @Test
     fun `should generate simple route`() {
 
@@ -240,6 +238,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
     }
 
+    @Disabled
     @Test
     fun `should generate simple route with tls`() {
 
@@ -309,6 +308,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
     }
 
+    @Disabled
     @Test
     fun `should generate two routes with tls on one of them`() {
 
@@ -405,4 +405,3 @@ class RouteFeatureTest : AbstractFeatureTest() {
         assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isFalse()
     }
 }
-*/

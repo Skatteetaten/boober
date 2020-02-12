@@ -14,15 +14,12 @@
   "spec" : {
     "ports" : [ {
       "name" : "http",
-      "nodePort" : 0,
       "port" : 80,
       "protocol" : "TCP",
       "targetPort" : 8080
     } ],
     "selector" : {
       "name" : "simple"
-    },
-    "sessionAffinity" : "None",
-    "type" : "ClusterIP"
+    }
   }
 }

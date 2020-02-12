@@ -1,8 +1,8 @@
         static | applicationDeploymentRef: "utv/web"
         static | configVersion: "master"
     about.json | schemaVersion: "v1"
-      web.json | type: "development"
-       default | deployState: "deploymentConfig"
+      web.json | type: "deploy"
+    about.json | deployState: "deployment"
       web.json | applicationPlatform: "web"
     about.json | affiliation: "paas"
     about.json | segment: "aurora"
@@ -11,16 +11,8 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "web"
-      fileName | artifactId: "web"
-      web.json | groupId: "org.test"
-      web.json | version: "develop-SNAPSHOT"
-               | builder:
-       default |   name: "architect"
-       default |   version: "1"
-               | baseImage:
-       default |   name: "wrench8"
-       default |   version: 1
        default | certificate: false
+      web.json | groupId: "org.test"
                | config:
       web.json |   foo2: "baz"
                | databaseDefaults:
@@ -32,6 +24,7 @@ utv/about.json | cluster: "utv"
        default | alarm: true
        default | pause: false
        default | debug: false
+      web.json | version: "develop-SNAPSHOT"
                | resources:
                |   cpu:
        default |     min: "10m"
@@ -48,6 +41,7 @@ utv/about.json | cluster: "utv"
        default |     termination: "edge"
        default | sts: false
       web.json | toxiproxy: true
+      fileName | artifactId: "web"
                | deployStrategy:
        default |   type: "rolling"
        default |   timeout: 180
@@ -55,5 +49,3 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
-               | webseal:
-      web.json |   strict: false

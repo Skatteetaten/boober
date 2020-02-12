@@ -7,8 +7,10 @@ import io.mockk.every
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
+@Disabled
 class TemplateFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = TemplateFeature(openShiftClient, "utv")

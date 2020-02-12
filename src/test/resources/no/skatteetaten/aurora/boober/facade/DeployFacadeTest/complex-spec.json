@@ -41,13 +41,24 @@
   },
   "type" : {
     "source" : "complex.json",
-    "value" : "development",
+    "value" : "deploy",
     "sources" : [ {
       "name" : "about.json",
       "value" : "deploy"
     }, {
       "name" : "complex.json",
-      "value" : "development"
+      "value" : "deploy"
+    } ]
+  },
+  "deployState" : {
+    "source" : "about.json",
+    "value" : "deployment",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "deploymentConfig"
+    }, {
+      "name" : "about.json",
+      "value" : "deployment"
     } ]
   },
   "affiliation" : {
@@ -116,52 +127,12 @@
       } ]
     }
   },
-  "envFile": {
-    "source": "utv/complex.json",
-    "value": "about-alternate.json",
-    "sources": [
-      {
-        "name": "utv/complex.json",
-        "value": "about-alternate.json"
-      }
-    ]
-  },
-  "bigip": {
-    "service": {
-      "source": "complex.json",
-      "value": "simple-utv",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "simple-utv"
-        }
-      ]
-    }
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "complex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
-      }
-    ]
-  },
-  "groupId": {
-    "source": "complex.json",
-    "value" : "org.test",
+  "envFile" : {
+    "source" : "utv/complex.json",
+    "value" : "about-alternate.json",
     "sources" : [ {
-      "name" : "complex.json",
-      "value" : "org.test"
-    } ]
-  },
-  "version" : {
-    "source" : "complex.json",
-    "value" : "1",
-    "sources" : [ {
-      "name" : "complex.json",
-      "value" : "1"
+      "name" : "utv/complex.json",
+      "value" : "about-alternate.json"
     } ]
   },
   "certificate" : {
@@ -173,6 +144,14 @@
         "value" : "komplex"
       } ]
     }
+  },
+  "groupId" : {
+    "source" : "complex.json",
+    "value" : "org.test",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "org.test"
+    } ]
   },
   "config" : {
     "FOO" : {
@@ -269,6 +248,14 @@
       "value" : true
     } ]
   },
+  "version" : {
+    "source" : "complex.json",
+    "value" : "1",
+    "sources" : [ {
+      "name" : "complex.json",
+      "value" : "1"
+    } ]
+  },
   "resources" : {
     "cpu" : {
       "min" : {
@@ -318,6 +305,14 @@
         } ]
       }
     }
+  },
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "complex",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "complex"
+    } ]
   },
   "deployStrategy" : {
     "type" : {
@@ -555,23 +550,5 @@
       "name" : "complex.json",
       "value" : true
     } ]
-  },
-  "webseal" : {
-    "host" : {
-      "source" : "complex.json",
-      "value" : "test",
-      "sources" : [ {
-        "name" : "complex.json",
-        "value" : "test"
-      } ]
-    },
-    "roles" : {
-      "source" : "complex.json",
-      "value" : "admin dev @name@",
-      "sources" : [ {
-        "name" : "complex.json",
-        "value" : "admin dev @name@"
-      } ]
-    }
   }
 }

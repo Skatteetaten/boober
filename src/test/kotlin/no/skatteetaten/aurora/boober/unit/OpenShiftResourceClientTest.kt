@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.unit
 
-/*
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
@@ -12,12 +11,10 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrap
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.Ignore
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.http.HttpHeaders
 
-@Ignore
 class OpenShiftResourceClientTest {
 
     private val server = MockWebServer()
@@ -35,7 +32,6 @@ class OpenShiftResourceClientTest {
         openShiftRestTemplateWrapper
     )
 
-    @Ignore("kubernetes")
     @Test
     fun `Patch user annotation`() {
         val response = """{ "metadata": { "annotations": { "foo": "bar" } } }"""
@@ -50,4 +46,3 @@ class OpenShiftResourceClientTest {
     }
 }
 
- */

@@ -1,12 +1,10 @@
 {
-  "apiVersion" : "v1",
-  "kind" : "Service",
+  "apiVersion" : "extensions/v1beta1",
+  "kind" : "Ingress",
   "metadata" : {
     "annotations" : {
-      "prometheus.io/scheme" : "http",
-      "prometheus.io/scrape" : "true",
-      "prometheus.io/path" : "/prometheus",
-      "prometheus.io/port" : "8082"
+      "haproxy.router.openshift.io/timeout" : "30s",
+      "kubernetes.io/ingress.class" : "traefik"
     },
     "labels" : {
       "app" : "komplex",
@@ -16,7 +14,7 @@
       "name" : "komplex",
       "booberDeployId" : "deploy1"
     },
-    "name" : "komplex",
+    "name" : "komplex-foobar",
     "namespace" : "paas-utv",
     "ownerReferences" : [ {
       "apiVersion" : "skatteetaten.no/v1",
@@ -26,14 +24,17 @@
     } ]
   },
   "spec" : {
-    "ports" : [ {
-      "name" : "http",
-      "port" : 80,
-      "protocol" : "TCP",
-      "targetPort" : 8080
-    } ],
-    "selector" : {
-      "name" : "komplex"
-    }
+    "rules" : [ {
+      "host" : "foobar.test",
+      "http" : {
+        "paths" : [ {
+          "backend" : {
+            "serviceName" : "komplex",
+            "servicePort" : 80
+          },
+          "path" : "/"
+        } ]
+      }
+    } ]
   }
 }

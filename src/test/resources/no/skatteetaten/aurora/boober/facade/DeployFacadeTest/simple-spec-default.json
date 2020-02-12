@@ -32,11 +32,14 @@
     } ]
   },
   "deployState" : {
-    "source" : "default",
-    "value" : "deploymentConfig",
+    "source" : "about.json",
+    "value" : "deployment",
     "sources" : [ {
       "name" : "default",
       "value" : "deploymentConfig"
+    }, {
+      "name" : "about.json",
+      "value" : "deployment"
     } ]
   },
   "applicationPlatform" : {
@@ -404,14 +407,6 @@
     } ]
   },
   "toxiproxy" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "webseal" : {
     "source" : "default",
     "value" : false,
     "sources" : [ {

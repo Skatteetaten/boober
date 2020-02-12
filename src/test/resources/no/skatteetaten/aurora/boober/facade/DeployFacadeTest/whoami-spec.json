@@ -35,13 +35,13 @@
     } ]
   },
   "deployState" : {
-    "source" : "whoami.json",
+    "source" : "about.json",
     "value" : "deployment",
     "sources" : [ {
       "name" : "default",
       "value" : "deploymentConfig"
     }, {
-      "name" : "whoami.json",
+      "name" : "about.json",
       "value" : "deployment"
     } ]
   },

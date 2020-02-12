@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isNotNull
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -18,8 +19,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -31,7 +32,6 @@ import org.springframework.web.client.HttpClientErrorException
 private val userClient = mockk<OpenShiftResourceClient>()
 private val serviceAccountClient = mockk<OpenShiftResourceClient>()
 
-@Ignore
 class OpenShiftClientTest : ResourceLoader() {
 
     @BeforeEach
@@ -113,7 +113,6 @@ class OpenShiftClientTest : ResourceLoader() {
         verify(exactly = 0) { otherClient.post(any(), any()) }
     }
 
-    /*
     @Test
     fun `Creates OpenShiftGroup indexes`() {
 
@@ -153,7 +152,7 @@ class OpenShiftClientTest : ResourceLoader() {
             )
         )
     }
-*/
+
     @Test
     fun `Should record exception when command fails`() {
         val jsonMap = mapOf(

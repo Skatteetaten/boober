@@ -25,13 +25,24 @@
   },
   "type" : {
     "source" : "web.json",
-    "value" : "development",
+    "value" : "deploy",
     "sources" : [ {
       "name" : "about.json",
       "value" : "deploy"
     }, {
       "name" : "web.json",
-      "value" : "development"
+      "value" : "deploy"
+    } ]
+  },
+  "deployState" : {
+    "source" : "about.json",
+    "value" : "deployment",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "deploymentConfig"
+    }, {
+      "name" : "about.json",
+      "value" : "deployment"
     } ]
   },
   "applicationPlatform" : {
@@ -98,28 +109,12 @@
       "value" : "web"
     } ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "web",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "web"
-    } ]
-  },
   "groupId" : {
     "source" : "web.json",
     "value" : "org.test",
     "sources" : [ {
       "name" : "web.json",
       "value" : "org.test"
-    } ]
-  },
-  "version" : {
-    "source" : "web.json",
-    "value" : "develop-SNAPSHOT",
-    "sources" : [ {
-      "name" : "web.json",
-      "value" : "develop-SNAPSHOT"
     } ]
   },
   "config" : {
@@ -131,6 +126,14 @@
         "value" : "baz"
       } ]
     }
+  },
+  "version" : {
+    "source" : "web.json",
+    "value" : "develop-SNAPSHOT",
+    "sources" : [ {
+      "name" : "web.json",
+      "value" : "develop-SNAPSHOT"
+    } ]
   },
   "route" : {
     "source" : "web.json",
@@ -154,14 +157,12 @@
       "value" : true
     } ]
   },
-  "webseal" : {
-    "strict" : {
-      "source" : "web.json",
-      "value" : false,
-      "sources" : [ {
-        "name" : "web.json",
-        "value" : false
-      } ]
-    }
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "web",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "web"
+    } ]
   }
 }

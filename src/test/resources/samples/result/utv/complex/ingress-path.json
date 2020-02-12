@@ -1,13 +1,7 @@
 {
-  "apiVersion" : "v1",
-  "kind" : "Service",
+  "apiVersion" : "extensions/v1beta1",
+  "kind" : "Ingress",
   "metadata" : {
-    "annotations" : {
-      "prometheus.io/scheme" : "http",
-      "prometheus.io/scrape" : "true",
-      "prometheus.io/path" : "/prometheus",
-      "prometheus.io/port" : "8082"
-    },
     "labels" : {
       "app" : "komplex",
       "updatedBy" : "hero",
@@ -16,7 +10,7 @@
       "name" : "komplex",
       "booberDeployId" : "deploy1"
     },
-    "name" : "komplex",
+    "name" : "komplex-path",
     "namespace" : "paas-utv",
     "ownerReferences" : [ {
       "apiVersion" : "skatteetaten.no/v1",
@@ -26,14 +20,17 @@
     } ]
   },
   "spec" : {
-    "ports" : [ {
-      "name" : "http",
-      "port" : 80,
-      "protocol" : "TCP",
-      "targetPort" : 8080
-    } ],
-    "selector" : {
-      "name" : "komplex"
-    }
+    "rules" : [ {
+      "host" : "pathroute.test",
+      "http" : {
+        "paths" : [ {
+          "backend" : {
+            "serviceName" : "komplex",
+            "servicePort" : 80
+          },
+          "path" : "/path"
+        } ]
+      }
+    } ]
   }
 }

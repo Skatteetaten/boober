@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.facade
 
-/*
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
@@ -19,6 +18,7 @@ import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -30,7 +30,6 @@ import org.springframework.test.annotation.DirtiesContext
 
 private val logger = KotlinLogging.logger { }
 
-@Ignore
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     properties = ["integrations.openshift.retries=0"]
@@ -47,7 +46,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
     }
 
-    @Ignore("kubernetes")
+    @Disabled
     @Test
     fun `deploy application when another exist`() {
 
@@ -142,7 +141,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["whoami", "simple", "web", "ah", "complex"])
+    @CsvSource(value = ["whoami", "simple", "web", "complex"])
     fun `deploy application`(app: String) {
 
         skapMock {
@@ -220,7 +219,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         if (app == "complex") {
             assertThat(result.first().warnings).isEqualTo(
                 listOf(
-                    "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
                     "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
                 )
             )
@@ -290,8 +288,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             .messageContains("Overrides files 'utv/foobar.json' does not apply to any deploymentReference (utv/simple)")
     }
 
-
-    @Ignore("kubernetes")
+    @Disabled
     @Test
     fun `fail deploy if there are duplicate resources generated`() {
 
@@ -316,10 +313,10 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         assertThat {
             facade.executeDeploy(
-                auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "ah")),
+                auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")),
                 overrides = listOf(
                     AuroraConfigFile(
-                        "utv/ah.json",
+                        "utv/simple.json",
                         contents = """{ "route" : "true" }""",
                         override = true
                     )
@@ -328,4 +325,3 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }.singleApplicationError("The following resources are generated more then once route/ah")
     }
 }
-*/

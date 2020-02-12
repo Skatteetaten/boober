@@ -1,19 +1,27 @@
 {
-  "apiVersion": "route.openshift.io/v1",
-  "kind": "Route",
-  "metadata": {
-    "annotations": {
-      "foo/baz": "baz",
-      "foo/bar": "bar"
+  "apiVersion" : "extensions/v1beta1",
+  "kind" : "Ingress",
+  "metadata" : {
+    "annotations" : {
+      "foo/baz" : "baz",
+      "foo/bar" : "bar",
+      "kubernetes.io/ingress.class" : "traefik"
     },
-    "name": "simple",
-    "namespace": "paas-utv"
+    "name" : "simple",
+    "namespace" : "paas-utv"
   },
-  "spec": {
-    "host": "simple-paas-utv.test.foo",
-    "to": {
-      "kind": "Service",
-      "name": "simple"
-    }
+  "spec" : {
+    "rules" : [ {
+      "host" : "simple-paas-utv.test.foo",
+      "http" : {
+        "paths" : [ {
+          "backend" : {
+            "serviceName" : "simple",
+            "servicePort" : 80
+          },
+          "path" : "/"
+        } ]
+      }
+    } ]
   }
 }

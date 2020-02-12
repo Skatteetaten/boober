@@ -25,21 +25,24 @@
   },
   "type" : {
     "source" : "web.json",
-    "value" : "development",
+    "value" : "deploy",
     "sources" : [ {
       "name" : "about.json",
       "value" : "deploy"
     }, {
       "name" : "web.json",
-      "value" : "development"
+      "value" : "deploy"
     } ]
   },
   "deployState" : {
-    "source" : "default",
-    "value" : "deploymentConfig",
+    "source" : "about.json",
+    "value" : "deployment",
     "sources" : [ {
       "name" : "default",
       "value" : "deploymentConfig"
+    }, {
+      "name" : "about.json",
+      "value" : "deployment"
     } ]
   },
   "applicationPlatform" : {
@@ -106,12 +109,12 @@
       "value" : "web"
     } ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "web",
+  "certificate" : {
+    "source" : "default",
+    "value" : false,
     "sources" : [ {
-      "name" : "fileName",
-      "value" : "web"
+      "name" : "default",
+      "value" : false
     } ]
   },
   "groupId" : {
@@ -120,58 +123,6 @@
     "sources" : [ {
       "name" : "web.json",
       "value" : "org.test"
-    } ]
-  },
-  "version" : {
-    "source" : "web.json",
-    "value" : "develop-SNAPSHOT",
-    "sources" : [ {
-      "name" : "web.json",
-      "value" : "develop-SNAPSHOT"
-    } ]
-  },
-  "builder" : {
-    "name" : {
-      "source" : "default",
-      "value" : "architect",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "architect"
-      } ]
-    },
-    "version" : {
-      "source" : "default",
-      "value" : "1",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "1"
-      } ]
-    }
-  },
-  "baseImage" : {
-    "name" : {
-      "source" : "default",
-      "value" : "wrench8",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "wrench8"
-      } ]
-    },
-    "version" : {
-      "source" : "default",
-      "value" : 1,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 1
-      } ]
-    }
-  },
-  "certificate" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
     } ]
   },
   "config" : {
@@ -264,6 +215,14 @@
     "sources" : [ {
       "name" : "default",
       "value" : false
+    } ]
+  },
+  "version" : {
+    "source" : "web.json",
+    "value" : "develop-SNAPSHOT",
+    "sources" : [ {
+      "name" : "web.json",
+      "value" : "develop-SNAPSHOT"
     } ]
   },
   "resources" : {
@@ -378,6 +337,14 @@
       } ]
     }
   },
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "web",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "web"
+    } ]
+  },
   "deployStrategy" : {
     "type" : {
       "source" : "default",
@@ -467,15 +434,5 @@
       "name" : "default",
       "value" : false
     } ]
-  },
-  "webseal" : {
-    "strict" : {
-      "source" : "web.json",
-      "value" : false,
-      "sources" : [ {
-        "name" : "web.json",
-        "value" : false
-      } ]
-    }
   }
 }

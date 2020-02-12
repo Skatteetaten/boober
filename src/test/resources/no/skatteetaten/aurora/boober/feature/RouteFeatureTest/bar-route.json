@@ -1,15 +1,22 @@
 {
-  "apiVersion": "route.openshift.io/v1",
-  "kind": "Route",
-  "metadata": {
-    "name": "simple-bar",
-    "namespace": "paas-utv"
+  "apiVersion" : "extensions/v1beta1",
+  "kind" : "Ingress",
+  "metadata" : {
+    "name" : "simple-bar",
+    "namespace" : "paas-utv"
   },
-  "spec": {
-    "host": "simple-paas-utv.test.foo",
-    "to": {
-      "kind": "Service",
-      "name": "simple"
-    }
+  "spec" : {
+    "rules" : [ {
+      "host" : "simple-paas-utv.test.foo",
+      "http" : {
+        "paths" : [ {
+          "backend" : {
+            "serviceName" : "simple",
+            "servicePort" : 80
+          },
+          "path" : "/"
+        } ]
+      }
+    } ]
   }
 }

@@ -2,7 +2,7 @@
         static | configVersion: "master"
     about.json | schemaVersion: "v1"
    whoami.json | type: "deploy"
-   whoami.json | deployState: "deployment"
+    about.json | deployState: "deployment"
     about.json | affiliation: "paas"
     about.json | segment: "aurora"
 utv/about.json | cluster: "utv"

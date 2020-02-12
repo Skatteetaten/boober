@@ -1,21 +1,16 @@
 {
-  "apiVersion": "authorization.openshift.io/v1",
-  "kind": "RoleBinding",
-  "metadata": {
-    "name": "view",
-    "namespace": "paas-utv"
+  "apiVersion" : "rbac.authorization.k8s.io/v1",
+  "kind" : "RoleBinding",
+  "metadata" : {
+    "name" : "view",
+    "namespace" : "paas-utv"
   },
-  "groupNames": [
-    "APP_PaaS_test"
-  ],
-  "roleRef": {
-    "name": "view"
+  "roleRef" : {
+    "kind" : "Role",
+    "name" : "view"
   },
-  "subjects": [
-    {
-      "kind": "Group",
-      "name": "APP_PaaS_test"
-    }
-  ],
-  "userNames": []
+  "subjects" : [ {
+    "kind" : "Group",
+    "name" : "APP_PaaS_test"
+  } ]
 }

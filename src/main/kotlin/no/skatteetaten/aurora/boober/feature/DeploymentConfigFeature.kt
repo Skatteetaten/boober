@@ -5,7 +5,6 @@ import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.api.model.QuantityBuilder
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -27,7 +26,7 @@ fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<St
     val field = this.getOrNull<String>("resources/$resource/$classifier")
 
     return resource to field?.let {
-        QuantityBuilder().withAmount(it).build()
+        Quantity(it)
     }
 }
 

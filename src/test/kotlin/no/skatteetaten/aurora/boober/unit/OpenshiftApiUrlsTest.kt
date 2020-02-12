@@ -7,12 +7,12 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import org.junit.Ignore
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
 
-@Ignore("kubernetes")
+@Disabled
 class OpenshiftApiUrlsTest {
 
     enum class OpenShiftUrlTestData(
