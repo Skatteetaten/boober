@@ -76,6 +76,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
     val cluster = "utv"
     val affiliation = "paas"
+    val appName = "simple"
 
     val openShiftClient: OpenShiftClient = mockk()
 
@@ -86,7 +87,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createEmptyImageStream() =
         AuroraResource(newImageStream {
             metadata {
-                name = "simple"
+                name = appName
                 namespace = "paas-utv"
             }
             spec {

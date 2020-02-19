@@ -5,12 +5,16 @@ import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
+import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.boolean
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
@@ -29,11 +33,12 @@ class S3DisabledFeature : Feature {
 
 // @ConditionalOnPropertyMissingOrEmpty("integrations.s3.url")
 @Service
-class S3Feature : Feature {
+class S3Feature(val s3Provisioner: S3Provisioner) : Feature {
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
-                "beta/s3",
+                FEATURE_FIELD_NAME,
                 validator = { it.boolean() },
                 defaultValue = false,
                 canBeSimplifiedConfig = true
@@ -42,50 +47,62 @@ class S3Feature : Feature {
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val s3SecretResource = resources.find { it.resource.metadata.name == adc.s3SecretName } ?: return
 
-        val s3Secret = s3SecretResource.resource as Secret
+        val s3Secret = resources.find { it.resource.metadata.name == adc.s3SecretName }
+            ?.let { it.resource as Secret } ?: return
 
-        val envVarsFromConfig = s3Secret.data.map { (propertyName, _) ->
-            newEnvVar {
-                name = "S3_${propertyName.toUpperCase()}"
-                valueFrom {
-                    secretKeyRef {
-                        key = propertyName
-                        name = s3Secret.metadata.name
-                        optional = false
-                    }
-                }
-            }
-        }
-
-        resources.addEnvVar(envVarsFromConfig, this::class.java)
+        val envVars = s3Secret.createEnvVarRefs(prefix = "S3_")
+        addEnvVarsToDcContainers(resources, envVars)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        val isS3Enabled: Boolean = adc["beta/s3"]
-        if (!isS3Enabled) return emptySet()
+        if (!adc.isS3Enabled) return emptySet()
 
-        val credentialsSecret = adc.createS3Secret()
-        return setOf(generateResource(credentialsSecret))
+        val request = adc.createS3ProvisioningRequest()
+        val result = s3Provisioner.provision(request)
+        val s3Secret = result.createS3Secret(adc.namespace, adc.s3SecretName)
+
+        return setOf(s3Secret.generateAuroraResource())
     }
+}
 
-    fun AuroraDeploymentSpec.createS3Secret(): Secret {
-        val adc = this
-        return newSecret {
-            metadata {
-                name = adc.s3SecretName
-                namespace = adc.namespace
+private const val FEATURE_FIELD_NAME = "beta/s3"
+
+private fun AuroraDeploymentSpec.createS3ProvisioningRequest() = S3ProvisioningRequest(affiliation, envName, name)
+private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
+private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)
+
+fun Feature.addEnvVarsToDcContainers(resources: Set<AuroraResource>, envVars: List<EnvVar>) {
+    resources.addEnvVar(envVars, this.javaClass)
+}
+
+private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { it.key }, prefix: String = "") =
+    properties.map { propertyName ->
+        val envVarName = "$prefix${propertyName}".toUpperCase()
+        val secretName = this.metadata.name
+        newEnvVar {
+            name = envVarName
+            valueFrom {
+                secretKeyRef {
+                    key = propertyName
+                    name = secretName
+                    optional = false
+                }
             }
-            data = mapOf(
-                "serviceEndpoint" to "http://minio-aurora-dev.utv.paas.skead.no",
-                "accessKey" to "aurora",
-                "secretKey" to "fragleberget",
-                "bucketName" to "utv",
-                "objectPrefix" to adc.applicationDeploymentId
-            ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
         }
     }
 
-    private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
+fun S3ProvisioningResult.createS3Secret(nsName: String, s3SecretName: String) = newSecret {
+    metadata {
+        name = s3SecretName
+        namespace = nsName
+    }
+    data = mapOf(
+        "serviceEndpoint" to serviceEndpoint,
+        "accessKey" to accessKey,
+        "secretKey" to secretKey,
+        "bucketName" to bucketName,
+        "objectPrefix" to objectPrefix
+    ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
 }
+
