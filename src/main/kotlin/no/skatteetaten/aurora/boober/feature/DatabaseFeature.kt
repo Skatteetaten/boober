@@ -105,14 +105,13 @@ class DatabaseFeature(
         val schemaRequests = createSchemaRequest(databases, adc)
         val schemaProvisionResult = databaseSchemaProvisioner.provisionSchemas(schemaRequests)
 
-        val toSet = schemaProvisionResult.results.map {
+        return schemaProvisionResult.results.map {
             val secretName =
                 "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name, "-")
             DbhSecretGenerator.createDbhSecret(it, secretName, adc.namespace)
         }.map {
             generateResource(it)
         }.toSet()
-        return toSet
     }
 
     fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {

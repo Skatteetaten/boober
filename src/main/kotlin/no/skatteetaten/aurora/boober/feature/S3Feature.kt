@@ -78,7 +78,7 @@ fun Feature.addEnvVarsToDcContainers(resources: Set<AuroraResource>, envVars: Li
 
 private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { it.key }, prefix: String = "") =
     properties.map { propertyName ->
-        val envVarName = "$prefix${propertyName}".toUpperCase()
+        val envVarName = "$prefix$propertyName".toUpperCase()
         val secretName = this.metadata.name
         newEnvVar {
             name = envVarName
@@ -106,4 +106,3 @@ fun S3ProvisioningResult.createS3Secret(nsName: String, s3SecretName: String) = 
         "objectPrefix" to objectPrefix
     ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
 }
-
