@@ -32,7 +32,6 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.mockk
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.headerHandlers
@@ -53,6 +52,8 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
+import kotlin.reflect.KClass
 
 /*
   Abstract class to test a single feature
@@ -77,6 +78,8 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     val cluster = "utv"
     val affiliation = "paas"
     val appName = "simple"
+    val environment = "utv"
+    val aid = ApplicationDeploymentRef(environment, appName)
 
     val openShiftClient: OpenShiftClient = mockk()
 
@@ -88,7 +91,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         AuroraResource(newImageStream {
             metadata {
                 name = appName
-                namespace = "paas-utv"
+                namespace = "paas-${environment}"
             }
             spec {
                 dockerImageRepository = "docker.registry/org_test/simple"
@@ -98,7 +101,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createEmptyService() = AuroraResource(newService {
         metadata {
             name = "simple"
-            namespace = "paas-utv"
+            namespace = "paas-${environment}"
         }
 
         spec {
@@ -122,7 +125,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         newBuildConfig {
             metadata {
                 name = "simple"
-                namespace = "paas-utv"
+                namespace = "paas-${environment}"
             }
 
             spec {
@@ -165,7 +168,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             spec = ApplicationDeploymentSpec(),
             _metadata = newObjectMeta {
                 name = "simple"
-                namespace = "paas-utv"
+                namespace = "paas-${environment}"
             }
         ), createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
@@ -175,7 +178,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
             metadata {
                 name = "simple"
-                namespace = "paas-utv"
+                namespace = "paas-${environment}"
             }
             spec {
                 strategy {
@@ -220,11 +223,10 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
     val config = mutableMapOf(
         "about.json" to FEATURE_ABOUT,
-        "utv/about.json" to """{ }""",
-        "simple.json" to """{ }""",
-        "utv/simple.json" to """{ }"""
+        "$environment/about.json" to """{ }""",
+        "$appName.json" to """{ }""",
+        "$environment/$appName.json" to """{ }"""
     )
-    val aid = ApplicationDeploymentRef("utv", "simple")
 
     @BeforeEach
     fun setup() {
@@ -258,7 +260,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     ): AuroraDeploymentContext {
         val service = AuroraDeploymentContextService(features = listOf(feature))
         val auroraConfig =
-            createAuroraConfig(config.addIfNotNull("utv/simple.json" to app), files)
+            createAuroraConfig(config.addIfNotNull("${environment}/simple.json" to app), files)
 
         val deployCommand = AuroraContextCommand(
             auroraConfig = auroraConfig,
@@ -396,3 +398,11 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         }
     }
 }
+
+inline fun <reified T : HasMetadata> List<AuroraResource>.findResourceByType(): T = this.findResourceByType(T::class)
+
+fun <T : HasMetadata> List<AuroraResource>.findResourceByType(kclass: KClass<T>): T =
+    find { it.resource::class == kclass }
+        ?.let { @Suppress("UNCHECKED_CAST") it.resource as T }
+        ?: throw Exception("No resource of specified type found")
+

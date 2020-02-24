@@ -101,6 +101,7 @@ fun S3ProvisioningResult.createS3Secret(nsName: String, s3SecretName: String) = 
         "serviceEndpoint" to serviceEndpoint,
         "accessKey" to accessKey,
         "secretKey" to secretKey,
+        "bucketRegion" to bucketRegion,
         "bucketName" to bucketName,
         "objectPrefix" to objectPrefix
     ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }

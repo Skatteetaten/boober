@@ -167,10 +167,8 @@ class Configuration {
     @ConditionalOnProperty("integrations.skap.url")
     fun skapRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
         @Value("\${spring.application.name}") applicationName: String,
-        @Value("\${integrations.skap.url}") skapUrl: String,
+        @Value("\${integrations.skap.url}") rootUri: String,
         sharedSecretReader: SharedSecretReader,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
@@ -179,7 +177,7 @@ class Configuration {
 
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
-            .rootUri(skapUrl)
+            .rootUri(rootUri)
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
                     set(HttpHeaders.AUTHORIZATION, "aurora-token ${sharedSecretReader.secret}")
@@ -208,10 +206,11 @@ class Configuration {
             .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
-                    set(HttpHeaders.AUTHORIZATION, "Bearer aurora-token ${sharedSecretReader.secret}")
+                    set(HttpHeaders.AUTHORIZATION, "aurora-token ${sharedSecretReader.secret}")
                     set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
                     set(clientIdHeaderName, applicationName)
+                    set("Meldingsid", UUID.randomUUID().toString())
                 }
 
                 execution.execute(request, body)
