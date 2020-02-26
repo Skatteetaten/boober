@@ -10,7 +10,7 @@
     "namespace": "paas-utv"
   },
   "spec" : {
-    "host" : "1d5da0b933ade4bfd6773579b9fb5cc2afb57378.test.foo",
+    "host" : "paas.paas-utv.simple.test.no",
     "to" : {
       "kind" : "Service",
       "name" : "simple"

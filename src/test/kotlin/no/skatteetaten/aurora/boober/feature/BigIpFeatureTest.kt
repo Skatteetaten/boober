@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
@@ -10,7 +11,7 @@ import org.junit.jupiter.api.Test
 
 class BigIpFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = BigIpFeature(".test.foo")
+        get() = BigIpFeature(".test.no")
 
     @Test
     fun `should get error if bigip without servicename`() {
@@ -30,7 +31,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate big ip crd and route`() {
 
-        val (routeResource, bigIpResource) = generateResources(
+        val (routeResource: AuroraResource, bigIpResource: AuroraResource) = generateResources(
             """{
             "bigip" : {
               "service" : "simple",
@@ -40,6 +41,11 @@ class BigIpFeatureTest : AbstractFeatureTest() {
             }
         }""", createdResources = 2
         )
+
+        // hvordan er disse forskjellige?
+        println(routeResource.resource)
+        println(bigIpResource.resource)
+
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route.json")
