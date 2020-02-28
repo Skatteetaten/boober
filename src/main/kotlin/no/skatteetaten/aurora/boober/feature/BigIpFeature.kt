@@ -49,7 +49,7 @@ class BigIpFeature(
 
         val auroraRoute = Route(
             objectName = routeName,
-            host = "${adc.affiliation}.${adc.namespace}.${adc.name}",
+            host = "$routeName.${adc.affiliation}.${adc.envName}",
             annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 

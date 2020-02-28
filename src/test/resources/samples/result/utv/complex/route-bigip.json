@@ -26,7 +26,7 @@
     ]
   },
   "spec": {
-    "host": "paas.paas-utv.komplex.external",
+    "host": "komplex-bigip.paas.utv.external",
     "to": {
       "kind": "Service",
       "name": "komplex"

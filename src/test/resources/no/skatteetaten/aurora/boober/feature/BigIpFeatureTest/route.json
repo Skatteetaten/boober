@@ -10,7 +10,7 @@
     "namespace": "paas-utv"
   },
   "spec" : {
-    "host" : "paas.paas-utv.simple.external",
+    "host" : "simple-bigip.paas.utv.external",
     "to" : {
       "kind" : "Service",
       "name" : "simple"
