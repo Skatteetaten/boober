@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
