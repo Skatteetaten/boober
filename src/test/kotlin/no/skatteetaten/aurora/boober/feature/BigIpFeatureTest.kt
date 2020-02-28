@@ -31,7 +31,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate big ip crd and route`() {
 
-        val (routeResource: AuroraResource, bigIpResource: AuroraResource) = generateResources(
+        val (routeResource, bigIpResource) = generateResources(
             """{
             "bigip" : {
               "service" : "simple",
