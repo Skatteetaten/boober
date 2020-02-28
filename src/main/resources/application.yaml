@@ -47,6 +47,8 @@ boober:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
     route:
         suffix: ".${openshift.cluster}.paas.skead.no"
+        bigIp:
+            suffix: ".external"
 
 aurora:
     token:

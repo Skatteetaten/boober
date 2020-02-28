@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 
 class BigIpFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = BigIpFeature(".test.no")
+        get() = BigIpFeature(".external")
 
     @Test
     fun `should get error if bigip without servicename`() {
@@ -41,11 +41,6 @@ class BigIpFeatureTest : AbstractFeatureTest() {
             }
         }""", createdResources = 2
         )
-
-        // hvordan er disse forskjellige?
-        println(routeResource.resource)
-        println(bigIpResource.resource)
-
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route.json")

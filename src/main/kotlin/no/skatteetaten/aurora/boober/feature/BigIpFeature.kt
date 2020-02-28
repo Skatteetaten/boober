@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class BigIpFeature(
-    @Value("\${boober.route.suffix}") val routeSuffix: String
+    @Value("\${boober.route.bigIp.suffix}") val routeSuffix: String
 ) : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -49,7 +49,7 @@ class BigIpFeature(
 
         val auroraRoute = Route(
             objectName = routeName,
-            host = adc.applicationDeploymentId,
+            host = "${adc.affiliation}.${adc.namespace}.${adc.name}",
             annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 
