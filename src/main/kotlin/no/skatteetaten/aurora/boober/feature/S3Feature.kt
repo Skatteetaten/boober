@@ -7,6 +7,7 @@ import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -17,21 +18,25 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.boolean
 import org.apache.commons.codec.binary.Base64
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 
-/*
-TODO: Implement handler for clusters where s3 is not available
+private val logger = KotlinLogging.logger {}
 
-@ConditionalOnPropertyMissingOrEmpty("integrations.s3.url")
+@ConditionalOnMissingBean(S3Provisioner::class)
 @Service
 class S3DisabledFeature : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return emptySet()
+    @PostConstruct
+    fun init() {
+        logger.info("S3 feature is disabled since no ${S3Provisioner::class.simpleName} is available")
     }
-}
-*/
 
-// @ConditionalOnPropertyMissingOrEmpty("integrations.s3.url")
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand) = emptySet<AuroraConfigFieldHandler>()
+}
+
+@ConditionalOnBean(S3Provisioner::class)
 @Service
 class S3Feature(val s3Provisioner: S3Provisioner) : Feature {
 

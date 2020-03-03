@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
@@ -40,6 +41,7 @@ private data class FionaCreateUserResponse(
 )
 
 @Service
+@ConditionalOnProperty("integrations.fiona.url")
 class S3Provisioner(
     @TargetService(ServiceTypes.AURORA)
     val restTemplate: RestTemplate,
