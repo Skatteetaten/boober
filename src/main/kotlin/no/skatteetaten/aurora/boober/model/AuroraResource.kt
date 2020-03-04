@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 
 private val logger = KotlinLogging.logger {}
+
 /*
   An dataclass to hold a HasMetadata resource that will be mutated in the generation process
 
@@ -37,13 +38,10 @@ fun Set<AuroraResource>.addEnvVar(
     envVars: List<EnvVar>,
     clazz: Class<out Feature>
 ) {
-    this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
-        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars"))
-        val dc: DeploymentConfig = it.resource as DeploymentConfig
-        dc.allNonSideCarContainers.forEach { container ->
-            container.env.addAll(envVars)
-        }
-    }
+    this.filter { it.resource is DeploymentConfig }
+        .onEach { it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars")) }
+        .flatMap { (it.resource as DeploymentConfig).allNonSideCarContainers }
+        .forEach { container -> container.env.addAll(envVars) }
 }
 
 fun Set<AuroraResource>.addVolumesAndMounts(
