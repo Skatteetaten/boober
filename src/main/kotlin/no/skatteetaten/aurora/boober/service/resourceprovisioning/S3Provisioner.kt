@@ -58,7 +58,7 @@ class S3Provisioner(
                 FionaCreateUserResponse::class.java
             )
         } catch (e: Exception) {
-            throw ProvisioningException("Error while provisioning S3 storage", e)
+            throw ProvisioningException("Error while provisioning S3 storage; ${e.message}", e)
         } ?: throw ProvisioningException("Fiona unexpectedly returned an empty response")
         return S3ProvisioningResult(
             request,
