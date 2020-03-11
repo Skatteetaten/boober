@@ -45,4 +45,3 @@ class OpenShiftResourceClientTest {
         assertThat(request.first()?.path).isNotNull().isEqualTo("/apis/user.openshift.io/v1/users/username")
     }
 }
-

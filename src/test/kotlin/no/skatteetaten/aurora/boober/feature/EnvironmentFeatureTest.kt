@@ -41,7 +41,6 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError("User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]")
     }
 
-
     @Disabled
     @Test
     fun `should fail validation if specified admin groups are empty`() {
@@ -140,7 +139,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 createdResources = 3
             )
 
-       // assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
+        // assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
         assertThat(namespaceResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("namespace.json")
         assertThat(rolebindingResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("rolebinding.json")

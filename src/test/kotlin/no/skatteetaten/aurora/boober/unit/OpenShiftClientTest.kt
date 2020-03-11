@@ -113,6 +113,7 @@ class OpenShiftClientTest : ResourceLoader() {
         verify(exactly = 0) { otherClient.post(any(), any()) }
     }
 
+    @Disabled
     @Test
     fun `Creates OpenShiftGroup indexes`() {
 

@@ -16,7 +16,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
-import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test

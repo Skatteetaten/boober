@@ -58,7 +58,7 @@ aurora:
 logging:
     level:
         no.skatteetaten: INFO
-        no.skatteetaten.aurora.boober: INFO
+        no.skatteetaten.aurora.boober: DEBUG
         org:
             jboss: WARN
             hibernate: WARN
@@ -79,7 +79,7 @@ server:
     port: 8080
 
 openshift:
-    cluster: eks
+    cluster: eks04
 
 integrations:
     dbh:
@@ -96,7 +96,7 @@ integrations:
         registry: "container-registry-internal-private-pull.skatteetaten.io:443"
 boober:
     openshift:
-        tokenLocation: /tmp/boober-token
+        tokenLocation: /tmp/eks-token
 
 vault:
     operations:

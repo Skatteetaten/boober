@@ -159,7 +159,7 @@ class OpenShiftClient(
             eksGroup.groups.map {
                 it to eksGroup.userarn
             }
-        }.groupBy({ it.first}) {
+        }.groupBy({ it.first }) {
             it.second
         }
 

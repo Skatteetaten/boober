@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
+import java.nio.charset.Charset
+import java.util.regex.Pattern
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
@@ -17,9 +17,6 @@ import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.getForObject
 import org.springframework.web.util.UriUtils
-import java.net.URI
-import java.nio.charset.Charset
-import java.util.regex.Pattern
 
 private val logger = KotlinLogging.logger {}
 
@@ -53,21 +50,19 @@ class BearerAuthenticationManager(
             .apply { isAuthenticated = false }
     }
 
-    private fun getGrantedAuthoritiesForUser(username:String): List<SimpleGrantedAuthority> {
+    private fun getGrantedAuthoritiesForUser(username: String): List<SimpleGrantedAuthority> {
         return openShiftClient.getGroups().getGroupsForUser(username)
             .map { SimpleGrantedAuthority(it) }
     }
 
     // TODO: error handling
-    fun getUser(token: String): String{
+    fun getUser(token: String): String {
         val fixedToken = token.removePrefix("k8s-aws-v1.")
 
-        val request=UriUtils.decode(fixedToken.base64UrlDecode(), Charset.defaultCharset())
+        val request = UriUtils.decode(fixedToken.base64UrlDecode(), Charset.defaultCharset())
 
         val result: JsonNode = restTemplate.getForObject(request)
 
         return result.at("/GetCallerIdentityResponse/GetCallerIdentityResult/Arn").textValue()
-
-
     }
 }

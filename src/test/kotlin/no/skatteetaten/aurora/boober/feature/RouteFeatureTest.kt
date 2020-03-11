@@ -12,7 +12,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.Ignore
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
@@ -149,7 +148,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
         assertThat(resources.size).isEqualTo(0)
     }
-
 
     @Test
     fun `should generate simple route`() {

@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.KubernetesGroups
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.TestingAuthenticationToken
@@ -27,7 +27,7 @@ class BearerAuthenticationManagerTest {
 
         val objectMapper = ObjectMapper()
         val openShiftClient = mockk<OpenShiftClient>()
-        val restTemplate=mockk<RestTemplate>()
+        val restTemplate = mockk<RestTemplate>()
 
         every {
             openShiftClient.getGroups()

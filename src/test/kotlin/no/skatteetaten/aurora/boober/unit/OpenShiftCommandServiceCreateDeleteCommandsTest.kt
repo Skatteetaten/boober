@@ -19,7 +19,6 @@ import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
@@ -45,7 +44,6 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         } returns HttpHeaders()
         Instants.determineNow = { Instant.EPOCH }
     }
-
 
     @Test
     fun `Should create delete command for all resources with given deployId`() {
