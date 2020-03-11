@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import javax.servlet.http.HttpServletRequest
 import mu.KotlinLogging
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
@@ -8,10 +7,10 @@ import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
 import org.springframework.security.web.util.matcher.RequestMatcher
+import javax.servlet.http.HttpServletRequest
 
 private val logger = KotlinLogging.logger {}
 
@@ -40,16 +39,11 @@ class WebSecurityConfig(
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
         setPreAuthenticatedUserDetailsService {
 
-            val username: String = "aurora"
-            val fullName: String? = "aurora"
+            val username = it.principal as String
+            val fullName = username.substringAfterLast(":user/").replace("eks.", "")
 
-            val authorities = listOf(
-                SimpleGrantedAuthority("system:masters"),
-                SimpleGrantedAuthority("APP_PaaS_utv"),
-                SimpleGrantedAuthority("UTV_Utvikler"),
-                SimpleGrantedAuthority("APP_PaaS_drift"))
-            MDC.put("user", username)
-            User(username, it.credentials as String, fullName, authorities).also {
+            MDC.put("user", fullName)
+            User(username, it.credentials as String, fullName, it.authorities).also {
                 logger.info("Logged in user username=$username, name='$fullName' tokenSnippet=${it.tokenSnippet} groups=${it.groupNames}")
             }
         }

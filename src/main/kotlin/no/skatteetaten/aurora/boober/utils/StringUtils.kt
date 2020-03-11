@@ -41,7 +41,7 @@ const val base64Prefix = "data:application/json;base64,"
 
 fun String.toBase64() = "$base64Prefix${Base64Utils.encodeToString(this.toByteArray())}"
 
-fun String.base64Decode() = String(Base64Utils.decodeFromString(this))
+fun String.base64UrlDecode() = String(Base64Utils.decodeFromUrlSafeString(this))
 
 fun String.base64ToJsonNode() =
     if (this.startsWith(base64Prefix)) {

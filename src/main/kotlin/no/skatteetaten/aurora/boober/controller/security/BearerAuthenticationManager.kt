@@ -1,25 +1,32 @@
 package no.skatteetaten.aurora.boober.controller.security
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonValue
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.TextNode
-import java.util.regex.Pattern
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.ServiceTypes
+import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.openshiftName
+import no.skatteetaten.aurora.boober.utils.base64UrlDecode
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
-import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Component
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.client.getForObject
+import org.springframework.web.util.UriUtils
+import java.net.URI
+import java.nio.charset.Charset
+import java.util.regex.Pattern
 
 private val logger = KotlinLogging.logger {}
 
 @Component
 class BearerAuthenticationManager(
-    val openShiftClient: OpenShiftClient
+    val openShiftClient: OpenShiftClient,
+    @TargetService(ServiceTypes.EKS) val restTemplate: RestTemplate
 ) : AuthenticationManager {
 
     companion object {
@@ -38,33 +45,29 @@ class BearerAuthenticationManager(
     override fun authenticate(authentication: Authentication?): Authentication {
 
         val token = getBearerTokenFromAuthentication(authentication)
-        // TODO: sjekk at denne token kan koble mot master api.
 
-        /*
-        we turn this off for now on kubernetes. All users are named kubernetes and are i
-        val openShiftUser = getOpenShiftUser(token)
-        val grantedAuthorities = getGrantedAuthoritiesForUser(openShiftUser)
-         */
+        val user = getUser(token)
+        val grantedAuthority = getGrantedAuthoritiesForUser(user)
 
-        // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
-        // (don't end the authentication chain).
-        return PreAuthenticatedAuthenticationToken(TextNode("kubernetes"), token, emptyList())
+        return PreAuthenticatedAuthenticationToken(user, token, grantedAuthority)
             .apply { isAuthenticated = false }
     }
 
-    private fun getGrantedAuthoritiesForUser(openShiftUser: JsonNode?): List<SimpleGrantedAuthority> {
-        val username: String = openShiftUser?.openshiftName
-            ?: throw IllegalArgumentException("Unable to determine username from response")
-
+    private fun getGrantedAuthoritiesForUser(username:String): List<SimpleGrantedAuthority> {
         return openShiftClient.getGroups().getGroupsForUser(username)
             .map { SimpleGrantedAuthority(it) }
     }
 
-    private fun getOpenShiftUser(token: String): JsonNode {
-        return try {
-            openShiftClient.findCurrentUser(token)
-        } catch (e: OpenShiftException) {
-            throw CredentialsExpiredException("An unexpected error occurred while getting OpenShift user", e)
-        } ?: throw BadCredentialsException("No user information found for the current token")
+    // TODO: error handling
+    fun getUser(token: String): String{
+        val fixedToken = token.removePrefix("k8s-aws-v1.")
+
+        val request=UriUtils.decode(fixedToken.base64UrlDecode(), Charset.defaultCharset())
+
+        val result: JsonNode = restTemplate.getForObject(request)
+
+        return result.at("/GetCallerIdentityResponse/GetCallerIdentityResult/Arn").textValue()
+
+
     }
 }

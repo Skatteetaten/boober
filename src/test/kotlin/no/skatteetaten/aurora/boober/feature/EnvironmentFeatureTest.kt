@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
+import no.skatteetaten.aurora.boober.service.openshift.KubernetesGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -27,7 +27,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should fail validation if current user is not in admin group`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+        every { openShiftClient.getGroups() } returns KubernetesGroups(
             mapOf(
                 "APP_PaaS_utv" to listOf("luke"),
                 "APP_PaaS_drift" to listOf("luke")
@@ -46,7 +46,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should fail validation if specified admin groups are empty`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+        every { openShiftClient.getGroups() } returns KubernetesGroups(
             mapOf(
                 "APP_PaaS_utv" to emptyList(),
                 "APP_PaaS_drift" to emptyList()
@@ -66,7 +66,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should fail validation if admin group is empty`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+        every { openShiftClient.getGroups() } returns KubernetesGroups(
             mapOf(
                 "APP_PaaS_utv" to listOf("luke")
             )
@@ -93,7 +93,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should fail validation if admin group does not exist`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+        every { openShiftClient.getGroups() } returns KubernetesGroups(
             mapOf(
                 "APP_PaaS_test" to listOf("luke")
             )
@@ -108,7 +108,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should generate environment resources`() {
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+        every { openShiftClient.getGroups() } returns KubernetesGroups(
             mapOf(
                 "APP_PaaS_utv" to listOf("hero"),
                 "APP_PaaS_test" to listOf(),
@@ -227,7 +227,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @EnumSource(PermissionsTestData::class)
     fun `Permissions supports both space separated string`(permissions: PermissionsTestData) {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
+        every { openShiftClient.getGroups() } returns KubernetesGroups(
             mapOf("APP_PaaS_utv" to listOf("hero"), "APP_PaaS_drift" to listOf())
         )
 

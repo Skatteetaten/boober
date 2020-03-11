@@ -3,18 +3,17 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
+import no.skatteetaten.aurora.boober.service.openshift.KubernetesGroups
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.web.client.RestTemplate
 
 class BearerAuthenticationManagerTest {
     val username = "aurora"
@@ -28,14 +27,11 @@ class BearerAuthenticationManagerTest {
 
         val objectMapper = ObjectMapper()
         val openShiftClient = mockk<OpenShiftClient>()
-
-        every {
-            openShiftClient.findCurrentUser(token)
-        } returns objectMapper.readValue<JsonNode>("""{"kind": "user", "metadata": {"name": "$username"}, "fullName": "Aurora Test User"}""")
+        val restTemplate=mockk<RestTemplate>()
 
         every {
             openShiftClient.getGroups()
-        } returns OpenShiftGroups(
+        } returns KubernetesGroups(
             mapOf(
                 "APP_PaaS_drift" to listOf("aurora"),
                 "APP_PaaS_utv" to listOf("aurora")
@@ -43,7 +39,7 @@ class BearerAuthenticationManagerTest {
         )
 
         val authenticationManager =
-            BearerAuthenticationManager(openShiftClient)
+            BearerAuthenticationManager(openShiftClient, restTemplate)
 
         val authentication = authenticationManager.authenticate(TestingAuthenticationToken("Bearer $token", ""))
 

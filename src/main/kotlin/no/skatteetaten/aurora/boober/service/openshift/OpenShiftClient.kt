@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.service.openshift
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.convertValue
@@ -14,6 +13,7 @@ import no.skatteetaten.aurora.boober.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.TokenSource.SERVICE_ACCOUNT
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
+import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.cache.annotation.Cacheable
@@ -93,7 +93,7 @@ fun List<OpenShiftResponse>.deploymentConfig(): OpenShiftResponse? = this.resour
 fun List<OpenShiftResponse>.imageStream(): OpenShiftResponse? = this.resource("imagestream")
 fun List<OpenShiftResponse>.imageStreamImport(): OpenShiftResponse? = this.resource("imagestreamimport")
 
-data class OpenShiftGroups(val groupUsers: Map<String, List<String>>) {
+data class KubernetesGroups(val groupUsers: Map<String, List<String>>) {
 
     fun getGroupsForUser(user: String): List<String> = groupUsers.filter { it.value.contains(user) }.keys.toList()
 
@@ -147,17 +147,23 @@ class OpenShiftClient(
     }
 
     @Cacheable("groups")
-    fun getGroups(): OpenShiftGroups {
+    fun getGroups(): KubernetesGroups {
+        val url = generateUrl(kind = "configmap", namespace = "kube-system", name = "aws-auth")
 
-        val url = generateUrl(kind = "group")
-        val groupItems = getResponseBodyItems(url)
-        val groups = groupItems
-            .filter { it["users"] is ArrayNode }
-            .associate { users ->
-                val name = users["metadata"]["name"].asText()
-                name to (users["users"] as ArrayNode).map { it.asText() }
+        val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
+        val groupItems = response.body!!["data"]["mapUsers"].textValue()
+
+        val groupsRaw: List<EksGroup> = jacksonYamlObjectMapper().readValue(groupItems)
+
+        val groups = groupsRaw.flatMap { eksGroup ->
+            eksGroup.groups.map {
+                it to eksGroup.userarn
             }
-        return OpenShiftGroups(groups)
+        }.groupBy({ it.first}) {
+            it.second
+        }
+
+        return KubernetesGroups(groups)
     }
 
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
@@ -208,9 +214,10 @@ class OpenShiftClient(
             userClient
         }
     }
-
-    private fun getResponseBodyItems(url: String): ArrayNode {
-        val response: ResponseEntity<JsonNode> = serviceAccountClient.get(url)!!
-        return response.body!!["items"] as ArrayNode
-    }
 }
+
+data class EksGroup(
+    val userarn: String,
+    val username: String,
+    val groups: List<String>
+)

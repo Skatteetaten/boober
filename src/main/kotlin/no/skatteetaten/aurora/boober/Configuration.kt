@@ -134,6 +134,25 @@ class Configuration {
     }
 
     @Bean
+    @TargetService(ServiceTypes.EKS)
+    fun eksRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${openshift.cluster}") cluster: String,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+    ): RestTemplate {
+
+        return restTemplateBuilder
+            .requestFactory { clientHttpRequestFactory }
+            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
+                request.headers.apply {
+                    set("x-k8s-aws-id", "eks04")
+                    set("Accept", "application/json")
+                }
+                execution.execute(request, body)
+            }).build()
+    }
+
+    @Bean
     @TargetService(ServiceTypes.CANTUS)
     fun cantusRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
@@ -259,7 +278,7 @@ class Configuration {
 }
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS
+    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS, EKS
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
