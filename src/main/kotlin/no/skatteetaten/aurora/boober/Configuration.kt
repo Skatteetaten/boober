@@ -145,7 +145,7 @@ class Configuration {
             .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
-                    set("x-k8s-aws-id", "eks04")
+                    set("x-k8s-aws-id", cluster)
                     set("Accept", "application/json")
                 }
                 execution.execute(request, body)
