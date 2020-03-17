@@ -1,198 +1,245 @@
 {
-  "apiVersion" : "apps.openshift.io/v1",
-  "kind" : "DeploymentConfig",
-  "metadata" : {
-    "labels" : {
-      "operationScope" : "aos-4016",
-      "app" : "easy",
-      "updatedBy" : "hero",
-      "updatedAt" : "0",
-      "affiliation" : "paas",
-      "name" : "easy",
-      "deployTag" : "1",
-      "booberDeployId" : "deploy1"
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "easy",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "easy",
+      "deployTag": "1",
+      "booberDeployId": "deploy1"
     },
-    "name" : "easy",
-    "namespace" : "paas-utv",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "easy",
-      "uid" : "123-123"
-    } ]
+    "name": "easy",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "easy",
+        "uid": "123-123"
+      }
+    ]
   },
-  "spec" : {
-    "replicas" : 1,
-    "selector" : {
-      "name" : "easy"
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "easy"
     },
-    "strategy" : {
-      "rollingParams" : {
-        "intervalSeconds" : 1,
-        "maxSurge" : "25%",
-        "maxUnavailable" : 0,
-        "timeoutSeconds" : 180,
-        "updatePeriodSeconds" : 1
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
       },
-      "type" : "Rolling"
+      "type": "Rolling"
     },
-    "template" : {
-      "metadata" : {
-        "annotations" : {
-          "boober.skatteetaten.no/deployTag" : "1"
+    "template": {
+      "metadata": {
+        "annotations": {
+          "boober.skatteetaten.no/deployTag": "1"
         },
-        "labels" : {
-          "app" : "easy",
-          "updatedBy" : "hero",
-          "updatedAt" : "0",
-          "affiliation" : "paas",
-          "name" : "easy",
-          "deployTag" : "1"
+        "labels": {
+          "app": "easy",
+          "updatedBy": "hero",
+          "updatedAt": "0",
+          "affiliation": "paas",
+          "name": "easy",
+          "deployTag": "1"
         }
       },
-      "spec" : {
-        "containers" : [ {
-          "env" : [ {
-            "name" : "POD_NAME",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.name"
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "JOLOKIA_HTTP_PORT",
+                "value": "8778"
+              },
+              {
+                "name": "EXTRA_HTTP_PORT",
+                "value": "8082"
+              },
+              {
+                "name": "EASY_DB",
+                "value": "/u01/secrets/app/easy-db/info"
+              },
+              {
+                "name": "EASY_DB_PROPERTIES",
+                "value": "/u01/secrets/app/easy-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/easy-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/easy-db/db.properties"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "easy"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "easy-paas-utv.test"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "http://easy-paas-utv.test"
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/easy-sts/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/easy-sts/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/easy-sts/descriptor.properties"
+              },
+              {
+                "name": "VOLUME_EASY_STS",
+                "value": "/u01/secrets/app/easy-sts"
+              },
+              {
+                "name": "STS_DISCOVERY_URL",
+                "value": "https://bigbird-utv.org"
               }
-            }
-          }, {
-            "name" : "POD_NAMESPACE",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.namespace"
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "easy-java",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8082,
+                "name": "extra",
+                "protocol": "TCP"
               }
-            }
-          }, {
-            "name" : "HTTP_PORT",
-            "value" : "8080"
-          }, {
-            "name" : "MANAGEMENT_HTTP_PORT",
-            "value" : "8081"
-          }, {
-            "name" : "JOLOKIA_HTTP_PORT",
-            "value" : "8778"
-          }, {
-            "name" : "EASY_DB",
-            "value" : "/u01/secrets/app/easy-db/info"
-          }, {
-            "name" : "EASY_DB_PROPERTIES",
-            "value" : "/u01/secrets/app/easy-db/db.properties"
-          }, {
-            "name" : "DB",
-            "value" : "/u01/secrets/app/easy-db/info"
-          }, {
-            "name" : "DB_PROPERTIES",
-            "value" : "/u01/secrets/app/easy-db/db.properties"
-          }, {
-            "name" : "OPENSHIFT_CLUSTER",
-            "value" : "utv"
-          }, {
-            "name" : "APP_NAME",
-            "value" : "easy"
-          }, {
-            "name" : "ROUTE_NAME",
-            "value" : "easy-paas-utv.test"
-          }, {
-            "name" : "ROUTE_URL",
-            "value" : "http://easy-paas-utv.test"
-          }, {
-            "name" : "STS_CERTIFICATE_URL",
-            "value": "/u01/secrets/app/easy-sts/certificate.crt"
-          }, {
-            "name" : "STS_PRIVATE_KEY_URL",
-            "value": "/u01/secrets/app/easy-sts/privatekey.key"
-          }, {
-            "name" : "STS_KEYSTORE_DESCRIPTOR",
-            "value": "/u01/secrets/app/easy-sts/descriptor.properties"
-          }, {
-            "name" : "VOLUME_EASY_STS",
-            "value": "/u01/secrets/app/easy-sts"
-          }, {
-            "name" : "STS_DISCOVERY_URL",
-            "value" : "https://bigbird-utv.org"
-          } ],
-          "imagePullPolicy" : "IfNotPresent",
-          "name" : "easy-java",
-          "ports" : [ {
-            "containerPort" : 8080,
-            "name" : "http",
-            "protocol" : "TCP"
-          }, {
-            "containerPort" : 8081,
-            "name" : "management",
-            "protocol" : "TCP"
-          }, {
-            "containerPort" : 8778,
-            "name" : "jolokia",
-            "protocol" : "TCP"
-          } ],
-          "readinessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
             },
-            "timeoutSeconds" : 1
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "128Mi"
+              }
+            },
+            "securityContext": {
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              },
+              {
+                "mountPath": "/u01/secrets/app/easy-db",
+                "name": "easy-db"
+              },
+              {
+                "mountPath": "/u01/secrets/app/easy-sts",
+                "name": "easy-sts"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "application-log-volume"
           },
-          "resources" : {
-            "limits" : {
-              "cpu" : "2000m",
-              "memory" : "512Mi"
-            },
-            "requests" : {
-              "cpu" : "10m",
-              "memory" : "128Mi"
+          {
+            "name": "easy-db",
+            "secret": {
+              "secretName": "easy-db"
             }
           },
-          "securityContext" : {
-            "privileged" : false
-          },
-          "terminationMessagePath" : "/dev/termination-log",
-          "volumeMounts" : [ {
-            "mountPath" : "/u01/logs",
-            "name" : "application-log-volume"
-          }, {
-            "mountPath" : "/u01/secrets/app/easy-db",
-            "name" : "easy-db"
-          },
-            {
-              "mountPath": "/u01/secrets/app/easy-sts",
-              "name": "easy-sts"
-            } ]
-        } ],
-        "dnsPolicy" : "ClusterFirst",
-        "restartPolicy" : "Always",
-        "volumes" : [ {
-          "emptyDir" : { },
-          "name" : "application-log-volume"
-        }, {
-          "name" : "easy-db",
-          "secret" : {
-            "secretName" : "easy-db"
+          {
+            "name": "easy-sts",
+            "secret": {
+              "secretName": "easy-sts"
+            }
           }
-        }, {
-          "name" : "easy-sts",
-          "secret" : {
-            "secretName" : "easy-sts"
-          }
-        } ]
+        ]
       }
     },
-    "triggers" : [ {
-      "imageChangeParams" : {
-        "automatic" : true,
-        "containerNames" : [ "easy-java" ],
-        "from" : {
-          "kind" : "ImageStreamTag",
-          "name" : "easy:default"
-        }
-      },
-      "type" : "ImageChange"
-    } ]
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "easy-java"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "easy:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }

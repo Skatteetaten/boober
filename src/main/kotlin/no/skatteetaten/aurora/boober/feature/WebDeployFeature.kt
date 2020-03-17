@@ -24,7 +24,8 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
                 containerArgs = listOf("$binPath/run_node"),
                 containerPorts = mapOf(
                     "http" to PortNumbers.NODE_PORT,
-                    "management" to PortNumbers.INTERNAL_ADMIN_PORT
+                    "management" to PortNumbers.INTERNAL_ADMIN_PORT,
+                    "extra" to PortNumbers.EXTRA_APPLICATION_PORT
                 )
             ),
             createContainer(
