@@ -25,6 +25,9 @@
   "spec": {
     "host": "pathroute.test",
     "path": "/path",
+    "port" : {
+      "targetPort" : "http"
+    },
     "to": {
       "kind": "Service",
       "name": "komplex"

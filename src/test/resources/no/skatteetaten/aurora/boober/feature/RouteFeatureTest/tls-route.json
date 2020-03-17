@@ -7,6 +7,9 @@
   },
   "spec": {
     "host": "simple-paas-utv.test.foo",
+    "port" : {
+      "targetPort" : "http"
+    },
     "tls": {
       "insecureEdgeTerminationPolicy": "None",
       "termination": "edge"

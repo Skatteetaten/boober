@@ -8,6 +8,9 @@
   "spec": {
     "host": "simple-paas-utv.test.foo",
     "path": "/foo",
+    "port" : {
+      "targetPort" : "http"
+    },
     "to": {
       "kind": "Service",
       "name": "simple"

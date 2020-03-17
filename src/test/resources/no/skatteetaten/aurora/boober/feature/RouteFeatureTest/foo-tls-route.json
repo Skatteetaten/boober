@@ -7,6 +7,9 @@
   },
   "spec": {
     "host": "simple-foo.test.foo",
+    "port" : {
+      "targetPort" : "http"
+    },
     "tls": {
       "insecureEdgeTerminationPolicy": "None",
       "termination": "edge"

@@ -24,6 +24,9 @@
   },
   "spec": {
     "host": "web-paas-utv.test",
+    "port" : {
+      "targetPort" : "http"
+    },
     "to": {
       "kind": "Service",
       "name": "web"

@@ -2,9 +2,12 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newRoute
+import com.fkorotkov.openshift.port
 import com.fkorotkov.openshift.spec
+import com.fkorotkov.openshift.targetPort
 import com.fkorotkov.openshift.tls
 import com.fkorotkov.openshift.to
+import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -266,6 +269,9 @@ data class Route(
                         insecureEdgeTerminationPolicy = it.insecurePolicy.name
                         termination = it.termination.name.toLowerCase()
                     }
+                }
+                port {
+                    targetPort = IntOrString("http")
                 }
                 host = "${route.host}$routeSuffix"
                 route.path?.let {

@@ -24,6 +24,9 @@
   },
   "spec": {
     "host": "simple-paas-utv.test",
+    "port" : {
+      "targetPort" : "http"
+    },
     "to": {
       "kind": "Service",
       "name": "simple"
