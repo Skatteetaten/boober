@@ -35,12 +35,6 @@
         "port": 80,
         "protocol": "TCP",
         "targetPort": 8080
-      },
-      {
-        "name": "extra",
-        "port": 8082,
-        "protocol": "TCP",
-        "targetPort": 8082
       }
     ],
     "selector": {
