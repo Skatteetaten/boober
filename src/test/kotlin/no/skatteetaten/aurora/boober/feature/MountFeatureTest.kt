@@ -46,6 +46,17 @@ class MountFeatureTest : AbstractFeatureTest() {
               }  
              }"""
 
+    val disabledMounts = """{
+              "mounts": {
+                "mount": {
+                  "enabled" : false,
+                  "type": "Secret",
+                  "path": "/u01/foo",
+                  "exist" : true
+                }
+              }  
+             }"""
+
     val existingSecretJson = """{
               "mounts": {
                 "mount": {
@@ -139,6 +150,15 @@ class MountFeatureTest : AbstractFeatureTest() {
 
         assertThat(attachmentResource).auroraResourceCreatedByThisFeature()
         assertThat(dcResource).auroraResourceMountsAttachment(attachmentResource.resource)
+    }
+
+    @Test
+    fun `should modify deploymentConfig and ignore disabled mount`() {
+
+        val resource =
+            modifyResources(disabledMounts, createEmptyDeploymentConfig())
+
+        assertThat(resource.size).isEqualTo(1)
     }
 
     @Test
