@@ -6,7 +6,7 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.AuroraMetrics
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.api.errors.EmtpyCommitException
+import org.eclipse.jgit.api.errors.EmptyCommitException
 import org.eclipse.jgit.lib.BranchTrackingStatus
 import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
@@ -37,7 +37,7 @@ open class GitService(
         val lock = locks.computeIfAbsent(repositoryName) { object {} }
         return synchronized(lock) {
             val repoPath = File(File("$checkoutPath/$checkoutFolder").absoluteFile.absolutePath)
-            val git: Git? = repoPath.takeIf(File::exists).let {
+            val git: Git? = repoPath.takeIf(File::exists)?.let {
                 try {
                     updateRepository(repoPath, deleteUnpushedCommits, refName)
                 } catch (e: GitReferenceException) {
@@ -153,7 +153,7 @@ open class GitService(
                 .setCredentialsProvider(cp)
                 .add(ref)
                 .call()
-        } catch (e: EmtpyCommitException) {
+        } catch (e: EmptyCommitException) {
             // Ignore empty commits. It's ok.
         } catch (e: Exception) {
             throw e
