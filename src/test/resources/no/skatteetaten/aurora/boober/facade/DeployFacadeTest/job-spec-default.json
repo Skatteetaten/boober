@@ -202,12 +202,12 @@
         "value" : 3
       } ]
     },
-    "concurrent" : {
+    "concurrentPolicy" : {
       "source" : "default",
-      "value" : false,
+      "value" : "Forbid",
       "sources" : [ {
         "name" : "default",
-        "value" : false
+        "value" : "Forbid"
       } ]
     }
   },

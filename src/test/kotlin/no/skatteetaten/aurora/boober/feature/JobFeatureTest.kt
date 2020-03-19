@@ -10,6 +10,26 @@ class JobFeatureTest : AbstractFeatureTest() {
         get() = JobFeature("docker.registry")
 
     @Test
+    fun `should not allow job with wrong concurrency policy`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "job",
+                "groupId" : "foo.bar",
+                "version" : "1",
+                "job" : {
+                  "schedule" : "0/5 * * * ?",
+                  "concurrentPolicy" : "Foobar"
+                }
+        }"""
+            )
+        }.singleApplicationError(
+            "Must be one of [Allow, Replace, Forbid]"
+        )
+    }
+
+    @Test
     fun `should not allow job with script and command`() {
 
         assertThat {

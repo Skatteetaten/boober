@@ -21,13 +21,15 @@
     } ]
   },
   "spec" : {
-    "concurrencyPolicy" : "false",
+    "concurrencyPolicy" : "Forbid",
     "failedJobsHistoryLimit" : 3,
     "jobTemplate" : {
       "metadata" : {
         "generateName" : "job"
       },
       "spec" : {
+        "completions" : 1,
+        "parallelism" : 1,
         "template" : {
           "metadata" : {
             "generateName" : "job"
@@ -63,6 +65,7 @@
                 }
               } ],
               "image" : "docker.registry:5000/no_skatteetaten_demo/job:1",
+              "imagePullPolicy" : "Always",
               "name" : "job",
               "resources" : {
                 "limits" : { },

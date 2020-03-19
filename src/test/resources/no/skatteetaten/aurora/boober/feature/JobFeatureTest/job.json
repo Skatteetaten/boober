@@ -6,6 +6,8 @@
     "namespace" : "paas-utv"
   },
   "spec" : {
+    "completions" : 1,
+    "parallelism" : 1,
     "template" : {
       "metadata" : {
         "generateName" : "simple"
@@ -15,6 +17,7 @@
           "args" : [ "-vvv", "http://foo" ],
           "command" : [ "curl" ],
           "image" : "docker.registry/foo_bar/simple:1",
+          "imagePullPolicy" : "Always",
           "name" : "simple"
         } ],
         "dnsPolicy" : "ClusterFirst",

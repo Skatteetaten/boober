@@ -24,6 +24,7 @@ import no.skatteetaten.aurora.boober.model.Paths
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.oneOf
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -32,6 +33,10 @@ val AuroraDeploymentSpec.jobCommand: List<String>?
 
 val AuroraDeploymentSpec.jobArguments: List<String>?
     get() = this.getDelimitedStringOrArrayAsSetOrNull("job/arguments")?.toList()
+
+enum class ConcurrencyPolicies {
+    Allow, Replace, Forbid
+}
 
 @Service
 class JobFeature(
@@ -63,10 +68,8 @@ class JobFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        // TODO: Remove after?
         return gavHandlers(header, cmd) +
             defaultHandlersForAllTypes +
-            // TODO: Not sure if all of these are needed
             setOf(
                 AuroraConfigFieldHandler("job/schedule"),
                 AuroraConfigFieldHandler("job/suspend", defaultValue = false, validator = { it.boolean() }),
@@ -75,7 +78,10 @@ class JobFeature(
                 AuroraConfigFieldHandler("job/script"),
                 AuroraConfigFieldHandler("job/failureCount", defaultValue = 3),
                 AuroraConfigFieldHandler("job/successCount", defaultValue = 3),
-                AuroraConfigFieldHandler("job/concurrent", defaultValue = false, validator = { it.boolean() })
+                AuroraConfigFieldHandler("job/concurrentPolicy", defaultValue = ConcurrencyPolicies.Forbid.toString(),
+                    validator = { node ->
+                        node?.oneOf(ConcurrencyPolicies.values().map { it.toString() })
+                    })
             )
     }
 
@@ -99,30 +105,33 @@ class JobFeature(
         }
 
         // TODO: masse flere parametre som kanskje bør settes her.
-        val jobSpec= newJobSpec {
+        val jobSpec = newJobSpec {
+            parallelism = 1
+            completions = 1
             template {
                 metadata {
-                    generateName=adc.name
+                    generateName = adc.name
                 }
                 spec {
                     scriptConfigMap?.let { configMap ->
-                        volumes= listOf(newVolume {
-                            name=configMap.metadata.name
+                        volumes = listOf(newVolume {
+                            name = configMap.metadata.name
                             configMap {
-                                name=configMap.metadata.name
+                                name = configMap.metadata.name
                             }
                         })
                     }
 
                     containers = listOf(newContainer {
                         image = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+                        imagePullPolicy = "Always"
                         name = adc.name
                         scriptConfigMap?.let { configMap ->
-                            val path= "${Paths.configPath}/script"
+                            val path = "${Paths.configPath}/script"
 
-                            volumeMounts= listOf(newVolumeMount {
-                                mountPath=path
-                                name=configMap.metadata.name
+                            volumeMounts = listOf(newVolumeMount {
+                                mountPath = path
+                                name = configMap.metadata.name
                             })
                             command = listOf(
                                 "/bin/sh",
@@ -147,31 +156,30 @@ class JobFeature(
             }
         }
 
-        val job: HasMetadata = if (cronSchedule != null) {
+        val job: HasMetadata = cronSchedule?.let { cron ->
             newCronJob {
                 metadata = meta
                 spec {
-                    schedule = cronSchedule
+                    schedule = cron
+                    // TODO: Should probably validate that these 4 parameters are not valid if schedule is not set, or figure out another way to configure this
+                    // startingDeadlineSeconds should this be here?
                     successfulJobsHistoryLimit = adc["job/successCount"]
                     failedJobsHistoryLimit = adc["job/failureCount"]
-                    concurrencyPolicy = adc["job/concurrent"]
+                    concurrencyPolicy = adc["job/concurrentPolicy"]
                     suspend = adc["job/suspend"]
                     jobTemplate {
                         metadata {
                             generateName = adc.name
                         }
-                        spec= jobSpec
+                        spec = jobSpec
                     }
 
                 }
 
             }
-            // CronJob
-        } else {
-            newJob {
-                metadata = meta
-                spec= jobSpec
-            }
+        } ?: newJob {
+            metadata = meta
+            spec = jobSpec
         }
         return setOf(job.generateAuroraResource()).addIfNotNull(scriptConfigMap?.generateAuroraResource())
     }

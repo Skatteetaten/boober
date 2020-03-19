@@ -6,13 +6,15 @@
     "namespace" : "paas-utv"
   },
   "spec" : {
-    "concurrencyPolicy" : "false",
+    "concurrencyPolicy" : "Forbid",
     "failedJobsHistoryLimit" : 3,
     "jobTemplate" : {
       "metadata" : {
         "generateName" : "simple"
       },
       "spec" : {
+        "completions" : 1,
+        "parallelism" : 1,
         "template" : {
           "metadata" : {
             "generateName" : "simple"
@@ -21,6 +23,7 @@
             "containers" : [ {
               "command" : [ "/bin/sh", "/u01/config/script/script.sh" ],
               "image" : "docker.registry/foo_bar/simple:1",
+              "imagePullPolicy" : "Always",
               "name" : "simple",
               "volumeMounts" : [ {
                 "mountPath" : "/u01/config/script",

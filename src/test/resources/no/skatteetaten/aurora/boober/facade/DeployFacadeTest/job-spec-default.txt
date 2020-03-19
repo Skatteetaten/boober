@@ -25,7 +25,7 @@ utv/about.json | cluster: "utv"
        default |   suspend: false
        default |   failureCount: 3
        default |   successCount: 3
-       default |   concurrent: false
+       default |   concurrentPolicy: "Forbid"
                | secretVaults:
                |   foo:
        default |     name: "foo"
