@@ -1,0 +1,41 @@
+{
+  "apiVersion" : "skatteetaten.no/v1",
+  "kind" : "ApplicationDeployment",
+  "metadata" : {
+    "labels" : {
+      "operationScope" : "aos-4016",
+      "app" : "job",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "affiliation" : "paas",
+      "name" : "job",
+      "id" : "f6e1e04cbcbda4b019253522a41ad1bf9dd13958",
+      "booberDeployId" : "deploy1"
+    },
+    "name" : "job",
+    "namespace" : "paas-utv",
+    "uid" : "123-123"
+  },
+  "spec" : {
+    "updatedAt" : "1970-01-01T00:00:00Z",
+    "selector" : {
+      "name" : "job"
+    },
+    "applicationDeploymentId" : "f6e1e04cbcbda4b019253522a41ad1bf9dd13958",
+    "applicationDeploymentName" : "job",
+    "databases" : [ ],
+    "deployTag" : "1",
+    "command" : {
+      "overrideFiles" : { },
+      "applicationDeploymentRef" : {
+        "environment" : "utv",
+        "application" : "job"
+      },
+      "auroraConfig" : {
+        "name" : "paas",
+        "refName" : "master",
+        "resolvedRef" : "123abb"
+      }
+    }
+  }
+}

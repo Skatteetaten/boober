@@ -56,7 +56,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     fun `get spec for environment utv`() {
 
         val specList = facade.findAuroraDeploymentSpecForEnvironment(auroraConfigRef, "utv")
-        assertThat(specList.size).isEqualTo(5)
+        assertThat(specList.size).isEqualTo(6)
     }
 
     @Test
@@ -129,7 +129,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 auroraConfigRef = auroraConfigRef,
                 mergeWithRemoteConfig = true
             )
-        }.singleApplicationError("Config for application simple in environment utv contains errors. Must be one of [deploy, development, localTemplate, template].")
+        }.singleApplicationError("Config for application simple in environment utv contains errors. Must be one of ")
     }
 
     @Test

@@ -161,6 +161,56 @@
       "value" : false
     } ]
   },
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "job",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "job"
+    } ]
+  },
+  "job" : {
+    "schedule" : {
+      "source" : "job.json",
+      "value" : "0/5 * * * ?",
+      "sources" : [ {
+        "name" : "job.json",
+        "value" : "0/5 * * * ?"
+      } ]
+    },
+    "suspend" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
+    },
+    "failureCount" : {
+      "source" : "default",
+      "value" : 3,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 3
+      } ]
+    },
+    "successCount" : {
+      "source" : "default",
+      "value" : 3,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 3
+      } ]
+    },
+    "concurrent" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
+    }
+  },
   "secretVaults" : {
     "foo" : {
       "name" : {

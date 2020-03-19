@@ -44,18 +44,16 @@ class RedeployServiceTest {
     }
 
     @Test
-    fun `Should throw error if dc is null`() {
+    fun `Should return empty successfull redeploy result if no deployable resource found`() {
 
         every {
             openShiftClient.performOpenShiftCommand("aos-test", any())
         } returns openShiftResponse()
 
-        assertThat {
-            redeployService.triggerRedeploy(listOf(), TemplateType.deploy)
-        }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
-            hasMessage("Missing DeploymentConfig")
-        }
+        val response= redeployService.triggerRedeploy(listOf(), TemplateType.deploy)
+
+        assertThat(response.success).isTrue()
+        assertThat(response.message).isEqualTo("No deployable resource found so no deploy made.")
     }
 
     @Test

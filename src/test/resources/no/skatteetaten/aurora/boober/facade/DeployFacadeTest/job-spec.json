@@ -113,6 +113,24 @@
       "value" : "1"
     } ]
   },
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "job",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "job"
+    } ]
+  },
+  "job" : {
+    "schedule" : {
+      "source" : "job.json",
+      "value" : "0/5 * * * ?",
+      "sources" : [ {
+        "name" : "job.json",
+        "value" : "0/5 * * * ?"
+      } ]
+    }
+  },
   "secretVaults" : {
     "foo" : {
       "keys" : {

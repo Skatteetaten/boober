@@ -1,0 +1,11 @@
+{
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "labels": {
+      "operationScope" : "aos-4016",
+      "affiliation": "paas"
+    },
+    "name": "paas-utv"
+  }
+}

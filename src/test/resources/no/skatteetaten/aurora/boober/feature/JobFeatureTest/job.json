@@ -1,0 +1,25 @@
+{
+  "apiVersion" : "batch/v1",
+  "kind" : "Job",
+  "metadata" : {
+    "name" : "simple",
+    "namespace" : "paas-utv"
+  },
+  "spec" : {
+    "template" : {
+      "metadata" : {
+        "generateName" : "simple"
+      },
+      "spec" : {
+        "containers" : [ {
+          "args" : [ "-vvv", "http://foo" ],
+          "command" : [ "curl" ],
+          "image" : "docker.registry/foo_bar/simple:1",
+          "name" : "simple"
+        } ],
+        "dnsPolicy" : "ClusterFirst",
+        "restartPolicy" : "Never"
+      }
+    }
+  }
+}

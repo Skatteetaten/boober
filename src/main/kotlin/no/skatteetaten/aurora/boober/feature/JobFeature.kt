@@ -4,19 +4,36 @@ import com.fkorotkov.kubernetes.batch.jobTemplate
 import com.fkorotkov.kubernetes.batch.metadata
 import com.fkorotkov.kubernetes.batch.newCronJob
 import com.fkorotkov.kubernetes.batch.newJob
+import com.fkorotkov.kubernetes.batch.newJobSpec
 import com.fkorotkov.kubernetes.batch.spec
 import com.fkorotkov.kubernetes.batch.template
+import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newConfigMap
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newObjectMeta
+import com.fkorotkov.kubernetes.newVolume
+import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.spec
 import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.Paths
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
+val AuroraDeploymentSpec.jobCommand: List<String>?
+    get() = this.getDelimitedStringOrArrayAsSetOrNull("job/command")?.toList()
+
+val AuroraDeploymentSpec.jobArguments: List<String>?
+    get() = this.getDelimitedStringOrArrayAsSetOrNull("job/arguments")?.toList()
+
+@Service
 class JobFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) : Feature {
@@ -32,8 +49,21 @@ class JobFeature(
         return header.type == TemplateType.job
     }
 
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+        val script = adc.getOrNull<String>("job/script")
+        if (script != null && (adc.jobArguments != null || adc.jobCommand != null)) {
+            throw AuroraDeploymentSpecValidationException("Job script and command/arguments are not compatible. Choose either script or command/arguments")
+        }
+        return emptyList()
+    }
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
+        // TODO: Remove after?
         return gavHandlers(header, cmd) +
             defaultHandlersForAllTypes +
             // TODO: Not sure if all of these are needed
@@ -51,10 +81,70 @@ class JobFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
+        val script = adc.getOrNull<String>("job/script")
+        val scriptConfigMap = script?.let { s ->
+            newConfigMap {
+                metadata {
+                    name = "${adc.name}-script"
+                    namespace = adc.namespace
+                }
+                data = mapOf("script.sh" to s)
+            }
+        }
+
         val cronSchedule: String? = adc.getOrNull("job/schedule")
         val meta = newObjectMeta {
             name = adc.name
             namespace = adc.namespace
+        }
+
+        // TODO: masse flere parametre som kanskje bør settes her.
+        val jobSpec= newJobSpec {
+            template {
+                metadata {
+                    generateName=adc.name
+                }
+                spec {
+                    scriptConfigMap?.let { configMap ->
+                        volumes= listOf(newVolume {
+                            name=configMap.metadata.name
+                            configMap {
+                                name=configMap.metadata.name
+                            }
+                        })
+                    }
+
+                    containers = listOf(newContainer {
+                        image = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+                        name = adc.name
+                        scriptConfigMap?.let { configMap ->
+                            val path= "${Paths.configPath}/script"
+
+                            volumeMounts= listOf(newVolumeMount {
+                                mountPath=path
+                                name=configMap.metadata.name
+                            })
+                            command = listOf(
+                                "/bin/sh",
+                                "$path/script.sh"
+                            )
+                        }
+                        adc.jobArguments?.let {
+                            args = it
+                        }
+                        adc.jobCommand?.let {
+                            command = it
+                        }
+                    })
+                    restartPolicy = "Never"
+                    dnsPolicy = "ClusterFirst"
+                    adc.getOrNull<String>("serviceAccount")?.let {
+                        serviceAccount = it
+                    }
+
+                }
+
+            }
         }
 
         val job: HasMetadata = if (cronSchedule != null) {
@@ -65,30 +155,12 @@ class JobFeature(
                     successfulJobsHistoryLimit = adc["job/successCount"]
                     failedJobsHistoryLimit = adc["job/failureCount"]
                     concurrencyPolicy = adc["job/concurrent"]
-                    suspend= adc["job/suspend"]
+                    suspend = adc["job/suspend"]
                     jobTemplate {
                         metadata {
                             generateName = adc.name
                         }
-                        spec {
-                            template {
-                                spec {
-                                    containers = listOf(newContainer {
-                                        image = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
-                                        name = adc.name
-
-                                    })
-                                    restartPolicy = "Never"
-                                    dnsPolicy = "ClusterFirst"
-                                    adc.getOrNull<String>("serviceAccount")?.let {
-                                        serviceAccount = it
-                                    }
-
-                                }
-
-                            }
-
-                        }
+                        spec= jobSpec
                     }
 
                 }
@@ -96,18 +168,11 @@ class JobFeature(
             }
             // CronJob
         } else {
-            // TODO: Not supported yet, work on Cronjob first.
             newJob {
                 metadata = meta
-                // TODO: I cannot find template here, and that is what openshift jobs require as far as i cn see
-                spec {
-                    template {
-
-                    }
-                }
+                spec= jobSpec
             }
-            // Job
         }
-        return setOf(job.generateAuroraResource())
+        return setOf(job.generateAuroraResource()).addIfNotNull(scriptConfigMap?.generateAuroraResource())
     }
 }

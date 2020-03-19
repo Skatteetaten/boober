@@ -1,0 +1,37 @@
+{
+  "apiVersion" : "batch/v1beta1",
+  "kind" : "CronJob",
+  "metadata" : {
+    "name" : "simple",
+    "namespace" : "paas-utv"
+  },
+  "spec" : {
+    "concurrencyPolicy" : "false",
+    "failedJobsHistoryLimit" : 3,
+    "jobTemplate" : {
+      "metadata" : {
+        "generateName" : "simple"
+      },
+      "spec" : {
+        "template" : {
+          "metadata" : {
+            "generateName" : "simple"
+          },
+          "spec" : {
+            "containers" : [ {
+              "args" : [ "-vvv", "http://foo" ],
+              "command" : [ "curl" ],
+              "image" : "docker.registry/foo_bar/simple:1",
+              "name" : "simple"
+            } ],
+            "dnsPolicy" : "ClusterFirst",
+            "restartPolicy" : "Never"
+          }
+        }
+      }
+    },
+    "schedule" : "0/5 * * * ?",
+    "successfulJobsHistoryLimit" : 3,
+    "suspend" : false
+  }
+}

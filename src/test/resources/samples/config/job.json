@@ -5,6 +5,9 @@
   "config": {
     "FOO": "bar"
   },
+  "job" : {
+    "schedule" : "0/5 * * * ?"
+  },
   "secretVaults": {
     "foo": {
       "keys": [

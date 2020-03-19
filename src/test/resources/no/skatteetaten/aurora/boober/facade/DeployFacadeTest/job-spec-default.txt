@@ -19,6 +19,13 @@ utv/about.json | cluster: "utv"
        default | debug: false
       job.json | version: "1"
        default | management: false
+      fileName | artifactId: "job"
+               | job:
+      job.json |   schedule: "0/5 * * * ?"
+       default |   suspend: false
+       default |   failureCount: 3
+       default |   successCount: 3
+       default |   concurrent: false
                | secretVaults:
                |   foo:
        default |     name: "foo"
