@@ -42,6 +42,8 @@ enum class ConcurrencyPolicies {
 class JobFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) : Feature {
+
+    // TODO: need routeDefaults hosts here and probably database defaults aswell. Cause they can be in about file
     val defaultHandlersForAllTypes = setOf(
         AuroraConfigFieldHandler("replicas"),
         AuroraConfigFieldHandler("prometheus/path"),

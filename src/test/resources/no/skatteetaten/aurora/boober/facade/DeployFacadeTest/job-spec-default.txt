@@ -14,6 +14,11 @@ utv/about.json | cluster: "utv"
       job.json | groupId: "no.skatteetaten.demo"
                | config:
       job.json |   FOO: "bar"
+               | databaseDefaults:
+       default |   flavor: "ORACLE_MANAGED"
+       default |   generate: true
+       default |   name: "@name@"
+       default | database: false
        default | alarm: true
        default | pause: false
        default | debug: false
@@ -26,6 +31,13 @@ utv/about.json | cluster: "utv"
        default |   failureCount: 3
        default |   successCount: 3
        default |   concurrentPolicy: "Forbid"
+       default | route: false
+               | routeDefaults:
+       default |   host: "@name@-@affiliation@-@env@"
+               |   tls:
+       default |     enabled: false
+       default |     insecurePolicy: "None"
+       default |     termination: "edge"
                | secretVaults:
                |   foo:
        default |     name: "foo"

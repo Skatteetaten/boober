@@ -121,6 +121,40 @@
       } ]
     }
   },
+  "databaseDefaults" : {
+    "flavor" : {
+      "source" : "default",
+      "value" : "ORACLE_MANAGED",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "ORACLE_MANAGED"
+      } ]
+    },
+    "generate" : {
+      "source" : "default",
+      "value" : true,
+      "sources" : [ {
+        "name" : "default",
+        "value" : true
+      } ]
+    },
+    "name" : {
+      "source" : "default",
+      "value" : "@name@",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "@name@"
+      } ]
+    }
+  },
+  "database" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
   "alarm" : {
     "source" : "default",
     "value" : true,
@@ -209,6 +243,50 @@
         "name" : "default",
         "value" : "Forbid"
       } ]
+    }
+  },
+  "route" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "routeDefaults" : {
+    "host" : {
+      "source" : "default",
+      "value" : "@name@-@affiliation@-@env@",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "@name@-@affiliation@-@env@"
+      } ]
+    },
+    "tls" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : false,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        } ]
+      },
+      "insecurePolicy" : {
+        "source" : "default",
+        "value" : "None",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "None"
+        } ]
+      },
+      "termination" : {
+        "source" : "default",
+        "value" : "edge",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "edge"
+        } ]
+      }
     }
   },
   "secretVaults" : {

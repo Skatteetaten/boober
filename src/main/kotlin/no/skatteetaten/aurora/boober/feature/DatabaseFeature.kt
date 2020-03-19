@@ -52,10 +52,6 @@ class DatabaseDisabledFeature(
     @Value("\${openshift.cluster}") cluster: String
 ) : DatabaseFeatureTemplate(cluster) {
 
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type != TemplateType.job
-    }
-
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
@@ -75,10 +71,6 @@ class DatabaseFeature(
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
     @Value("\${openshift.cluster}") cluster: String
 ) : DatabaseFeatureTemplate(cluster) {
-
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type != TemplateType.job
-    }
 
     override fun validate(
         adc: AuroraDeploymentSpec,
