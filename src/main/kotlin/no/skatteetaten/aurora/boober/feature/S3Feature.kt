@@ -49,7 +49,6 @@ class S3Feature(val s3Provisioner: S3Provisioner) : Feature {
         return header.type != TemplateType.job
     }
 
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(

@@ -39,7 +39,6 @@ class ToxiproxySidecarFeature : Feature {
         return header.type != TemplateType.job
     }
 
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(

@@ -150,9 +150,7 @@ class JobFeature(
                     adc.getOrNull<String>("serviceAccount")?.let {
                         serviceAccount = it
                     }
-
                 }
-
             }
         }
 
@@ -173,9 +171,7 @@ class JobFeature(
                         }
                         spec = jobSpec
                     }
-
                 }
-
             }
         } ?: newJob {
             metadata = meta

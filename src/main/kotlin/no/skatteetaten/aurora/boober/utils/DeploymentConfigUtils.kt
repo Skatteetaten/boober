@@ -15,14 +15,15 @@ fun DeploymentConfig.findImageChangeTriggerTagName(): String? {
         ?.last()
 }
 
-val HasMetadata.allNonSideCarContainers: List<Container> get() {
-   return when (this) {
-       is DeploymentConfig ->  this.allNonSideCarContainers
-       is Job ->  this.spec.template.spec.containers
-       is CronJob ->  this.spec.jobTemplate.spec.template.spec.containers
-       else -> emptyList()
-   }
-}
+val HasMetadata.allNonSideCarContainers: List<Container>
+    get() {
+        return when (this) {
+            is DeploymentConfig -> this.allNonSideCarContainers
+            is Job -> this.spec.template.spec.containers
+            is CronJob -> this.spec.jobTemplate.spec.template.spec.containers
+            else -> emptyList()
+        }
+    }
 
 val DeploymentConfig.allNonSideCarContainers: List<Container>
     get() =

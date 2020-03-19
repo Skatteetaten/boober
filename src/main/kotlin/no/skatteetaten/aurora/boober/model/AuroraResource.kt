@@ -65,7 +65,7 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     this.filter { it.resource.kind == "CronJob" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val job: CronJob = it.resource as CronJob
-        job.spec.jobTemplate.spec.template.spec.volumes=job.spec.jobTemplate.spec.template.spec.volumes.addIfNotNull(volumes)
+        job.spec.jobTemplate.spec.template.spec.volumes = job.spec.jobTemplate.spec.template.spec.volumes.addIfNotNull(volumes)
         job.allNonSideCarContainers.forEach { container ->
             container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
             container.env = container.env.addIfNotNull(envVars)
@@ -74,7 +74,7 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     this.filter { it.resource.kind == "Job" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val job: Job = it.resource as Job
-        job.spec.template.spec.volumes=job.spec.template.spec.volumes.addIfNotNull(volumes)
+        job.spec.template.spec.volumes = job.spec.template.spec.volumes.addIfNotNull(volumes)
         job.allNonSideCarContainers.forEach { container ->
             container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
             container.env = container.env.addIfNotNull(envVars)
