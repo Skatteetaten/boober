@@ -27,6 +27,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
+
+    override fun enable(header: AuroraDeploymentSpec): Boolean {
+        return header.type != TemplateType.job
+    }
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 

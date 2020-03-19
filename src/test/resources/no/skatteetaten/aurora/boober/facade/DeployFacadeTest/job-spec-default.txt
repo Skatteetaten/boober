@@ -1,0 +1,29 @@
+        static | applicationDeploymentRef: "utv/job"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+      job.json | type: "job"
+       default | applicationPlatform: "java"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "job"
+       default | certificate: false
+      job.json | groupId: "no.skatteetaten.demo"
+               | config:
+      job.json |   FOO: "bar"
+       default | alarm: true
+       default | pause: false
+       default | debug: false
+      job.json | version: "1"
+       default | management: false
+               | secretVaults:
+               |   foo:
+       default |     name: "foo"
+       default |     enabled: true
+       default |     file: "latest.properties"
+      job.json |     keys: ["BAR","FOO"]
+      job.json |     keyMappings: {"BAR":"BAZ"}
+       default | sts: false

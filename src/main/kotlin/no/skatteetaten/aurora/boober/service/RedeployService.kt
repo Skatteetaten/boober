@@ -69,7 +69,7 @@ class RedeployService(
         val wasPaused = oldDcResource?.spec?.replicas == 0
 
         val deploymentConfig = dcResource?.responseBody?.let { it.convert<DeploymentConfig>() }
-            ?: throw IllegalArgumentException("Missing DeploymentConfig")
+            ?: return RedeployResult(message="No deployable resource found so no deploy made.")
 
         if (isResource?.command?.operationType == OperationType.CREATE) {
             return RedeployResult(message = "New application version found.")

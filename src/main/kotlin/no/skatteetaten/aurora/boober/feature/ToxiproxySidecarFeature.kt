@@ -35,6 +35,11 @@ val AuroraDeploymentSpec.toxiProxy: String?
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature : Feature {
 
+    override fun enable(header: AuroraDeploymentSpec): Boolean {
+        return header.type != TemplateType.job
+    }
+
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(

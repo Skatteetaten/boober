@@ -26,7 +26,7 @@ fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<St
     val field = this.getOrNull<String>("resources/$resource/$classifier")
 
     return resource to field?.let {
-        QuantityBuilder().withAmount(it).build()
+        Quantity(it)
     }
 }
 
@@ -81,7 +81,6 @@ class DeploymentConfigFeature : Feature {
             )
         }
         return setOf(
-
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("releaseTo"),

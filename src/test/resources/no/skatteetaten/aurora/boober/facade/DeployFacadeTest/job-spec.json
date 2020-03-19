@@ -1,0 +1,140 @@
+{
+  "applicationDeploymentRef" : {
+    "source" : "static",
+    "value" : "utv/job",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "utv/job"
+    } ]
+  },
+  "configVersion" : {
+    "source" : "static",
+    "value" : "master",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "master"
+    } ]
+  },
+  "schemaVersion" : {
+    "source" : "about.json",
+    "value" : "v1",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "v1"
+    } ]
+  },
+  "type" : {
+    "source" : "job.json",
+    "value" : "job",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "deploy"
+    }, {
+      "name" : "job.json",
+      "value" : "job"
+    } ]
+  },
+  "affiliation" : {
+    "source" : "about.json",
+    "value" : "paas",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "paas"
+    } ]
+  },
+  "segment" : {
+    "source" : "about.json",
+    "value" : "aurora",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "aurora"
+    } ]
+  },
+  "cluster" : {
+    "source" : "utv/about.json",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "utv"
+    }, {
+      "name" : "utv/about.json",
+      "value" : "utv"
+    } ]
+  },
+  "permissions" : {
+    "admin" : {
+      "source" : "about.json",
+      "value" : "APP_PaaS_drift APP_PaaS_utv",
+      "sources" : [ {
+        "name" : "about.json",
+        "value" : "APP_PaaS_drift APP_PaaS_utv"
+      } ]
+    }
+  },
+  "envName" : {
+    "source" : "folderName",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "folderName",
+      "value" : "utv"
+    } ]
+  },
+  "name" : {
+    "source" : "fileName",
+    "value" : "job",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "job"
+    } ]
+  },
+  "groupId" : {
+    "source" : "job.json",
+    "value" : "no.skatteetaten.demo",
+    "sources" : [ {
+      "name" : "job.json",
+      "value" : "no.skatteetaten.demo"
+    } ]
+  },
+  "config" : {
+    "FOO" : {
+      "source" : "job.json",
+      "value" : "bar",
+      "sources" : [ {
+        "name" : "job.json",
+        "value" : "bar"
+      } ]
+    }
+  },
+  "version" : {
+    "source" : "job.json",
+    "value" : "1",
+    "sources" : [ {
+      "name" : "job.json",
+      "value" : "1"
+    } ]
+  },
+  "secretVaults" : {
+    "foo" : {
+      "keys" : {
+        "source" : "job.json",
+        "value" : [ "BAR", "FOO" ],
+        "sources" : [ {
+          "name" : "job.json",
+          "value" : [ "BAR", "FOO" ]
+        } ]
+      },
+      "keyMappings" : {
+        "source" : "job.json",
+        "value" : {
+          "BAR" : "BAZ"
+        },
+        "sources" : [ {
+          "name" : "job.json",
+          "value" : {
+            "BAR" : "BAZ"
+          }
+        } ]
+      }
+    }
+  }
+}

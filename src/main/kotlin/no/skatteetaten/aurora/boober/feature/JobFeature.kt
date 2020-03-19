@@ -22,7 +22,6 @@ class JobFeature(
 ) : Feature {
     val defaultHandlersForAllTypes = setOf(
         AuroraConfigFieldHandler("replicas"),
-        AuroraConfigFieldHandler("splunkIndex"),
         AuroraConfigFieldHandler("prometheus/path"),
         AuroraConfigFieldHandler("prometheus/port"),
         AuroraConfigFieldHandler("deployStrategy/type"),

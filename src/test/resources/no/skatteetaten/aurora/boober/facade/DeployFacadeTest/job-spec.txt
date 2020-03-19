@@ -1,0 +1,19 @@
+        static | applicationDeploymentRef: "utv/job"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+      job.json | type: "job"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "job"
+      job.json | groupId: "no.skatteetaten.demo"
+               | config:
+      job.json |   FOO: "bar"
+      job.json | version: "1"
+               | secretVaults:
+               |   foo:
+      job.json |     keys: ["BAR","FOO"]
+      job.json |     keyMappings: {"BAR":"BAZ"}
