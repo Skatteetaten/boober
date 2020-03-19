@@ -33,6 +33,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
 
+    // TODO: Denne er nyere en 3.0, det er viktig at vi kjører denne og ikke 3.0 job formatet er feil i 3.0
     implementation("com.fkorotkov:kubernetes-dsl:2.7.1")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
