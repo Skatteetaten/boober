@@ -138,7 +138,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["simple", "web", "ah", "complex"])
+    @CsvSource(value = ["simple", "web", "ah", "complex", "job"])
     fun `deploy application`(app: String) {
 
         skapMock {

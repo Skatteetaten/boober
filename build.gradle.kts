@@ -33,7 +33,7 @@ dependencies {
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
 
-    implementation("com.fkorotkov:kubernetes-dsl:3.0")
+    implementation("com.fkorotkov:kubernetes-dsl:2.7.1")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-aop")

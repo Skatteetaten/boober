@@ -107,7 +107,7 @@ class DeploymentConfigFeature : Feature {
             } else if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
 
-                modifyResource(it, "Added labels, annotations, shared env vars and request limits")
+                modifyResource(it, "Added labels, annotations")
                 if (dc.spec.template.metadata == null) {
                     dc.spec.template.metadata = ObjectMeta()
                 }
@@ -121,24 +121,26 @@ class DeploymentConfigFeature : Feature {
                 if (adc.pause) {
                     dc.spec.replicas = 0
                 }
-                dc.allNonSideCarContainers.forEach { container ->
-                    container.env.addAll(envVars)
-                    container.resources {
-                        val existingRequest = requests ?: emptyMap()
-                        val existingLimit = limits ?: emptyMap()
-                        requests = existingRequest.addIfNotNull(
-                            mapOf(
-                                adc.quantity("cpu", "min"),
-                                adc.quantity("memory", "min")
-                            ).filterNullValues()
-                        )
-                        limits = existingLimit.addIfNotNull(
-                            mapOf(
-                                adc.quantity("cpu", "max"),
-                                adc.quantity("memory", "max")
-                            ).filterNullValues()
-                        )
-                    }
+            }
+            it.resource.allNonSideCarContainers.forEach { container ->
+
+                modifyResource(it, "Added Shared env vars and request limits")
+                container.env.addAll(envVars)
+                container.resources {
+                    val existingRequest = requests ?: emptyMap()
+                    val existingLimit = limits ?: emptyMap()
+                    requests = existingRequest.addIfNotNull(
+                        mapOf(
+                            adc.quantity("cpu", "min"),
+                            adc.quantity("memory", "min")
+                        ).filterNullValues()
+                    )
+                    limits = existingLimit.addIfNotNull(
+                        mapOf(
+                            adc.quantity("cpu", "max"),
+                            adc.quantity("memory", "max")
+                        ).filterNullValues()
+                    )
                 }
             }
         }

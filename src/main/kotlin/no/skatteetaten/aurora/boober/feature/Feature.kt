@@ -86,6 +86,7 @@ enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: 
 enum class TemplateType(
     val completelyGenerated: Boolean
 ) {
+    job(true),
     deploy(true),
     development(true),
     localTemplate(false),

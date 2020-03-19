@@ -1,0 +1,19 @@
+{
+  "type": "job",
+  "version": "1",
+  "groupId": "no.skatteetaten.demo",
+  "config": {
+    "FOO": "bar"
+  },
+  "secretVaults": {
+    "foo": {
+      "keys": [
+        "BAR",
+        "FOO"
+      ],
+      "keyMappings": {
+        "BAR": "BAZ"
+      }
+    }
+  }
+}
