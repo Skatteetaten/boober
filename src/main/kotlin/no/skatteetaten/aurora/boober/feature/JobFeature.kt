@@ -21,10 +21,13 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -33,6 +36,10 @@ val AuroraDeploymentSpec.jobCommand: List<String>?
 
 val AuroraDeploymentSpec.jobArguments: List<String>?
     get() = this.getDelimitedStringOrArrayAsSetOrNull("job/arguments")?.toList()
+
+val AuroraDeploymentSpec.jobSchedule: String? get() = this.getOrNull("job/schedule")
+
+val AuroraDeploymentSpec.jobType: String get() = this.jobSchedule?.let { "CronJob" } ?: "Job"
 
 enum class ConcurrencyPolicies {
     Allow, Replace, Forbid
@@ -100,7 +107,6 @@ class JobFeature(
             }
         }
 
-        val cronSchedule: String? = adc.getOrNull("job/schedule")
         val meta = newObjectMeta {
             name = adc.name
             namespace = adc.namespace
@@ -156,7 +162,7 @@ class JobFeature(
             }
         }
 
-        val job: HasMetadata = cronSchedule?.let { cron ->
+        val job: HasMetadata = adc.jobSchedule?.let { cron ->
             newCronJob {
                 metadata = meta
                 spec {
@@ -180,5 +186,21 @@ class JobFeature(
             spec = jobSpec
         }
         return setOf(job.generateAuroraResource()).addIfNotNull(scriptConfigMap?.generateAuroraResource())
+    }
+
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+        val name = adc.artifactId
+        val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
+        resources.forEach {
+            if (it.resource.kind == "ApplicationDeployment") {
+                val labels = mapOf("applicationId" to id).normalizeLabels()
+                modifyResource(it, "Added application name and id")
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
+                ad.spec.runnableType = adc.jobType
+                ad.spec.applicationName = name
+                ad.spec.applicationId = id
+                ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
+            }
+        }
     }
 }

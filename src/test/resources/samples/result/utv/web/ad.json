@@ -25,6 +25,7 @@
     },
     "applicationDeploymentId": "1379fcff48d53f89f9b0979d3977afbf8151fed4",
     "applicationName": "web",
+    "runnableType" : "DeploymentConfig",
     "applicationDeploymentName": "web",
     "databases": [],
     "managementPath": ":8081/actuator",

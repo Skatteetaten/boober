@@ -51,6 +51,7 @@ data class ApplicationDeploymentSpec(
     var selector: Map<String, String> = emptyMap(),
     var applicationDeploymentId: String = "",
     var applicationName: String? = null,
+    var runnableType: String = "",
     var applicationDeploymentName: String = "",
     var databases: List<String> = emptyList(),
     var splunkIndex: String? = null,

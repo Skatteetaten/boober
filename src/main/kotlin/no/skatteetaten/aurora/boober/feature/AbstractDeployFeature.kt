@@ -227,6 +227,7 @@ abstract class AbstractDeployFeature(
                 val labels = mapOf("applicationId" to id).normalizeLabels()
                 modifyResource(it, "Added application name and id")
                 val ad: ApplicationDeployment = it.resource as ApplicationDeployment
+                ad.spec.runnableType = "DeploymentConfig" // TODO: This might need to change?
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id
                 ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
