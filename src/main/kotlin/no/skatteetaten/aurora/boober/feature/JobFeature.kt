@@ -188,7 +188,7 @@ class JobFeature(
             }
         } ?: newJob {
             metadata = newObjectMeta {
-                generateName = adc.name
+                generateName = "${adc.name}-"
                 namespace = adc.namespace
             }
             spec = jobSpec

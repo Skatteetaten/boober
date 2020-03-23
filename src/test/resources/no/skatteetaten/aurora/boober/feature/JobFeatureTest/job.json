@@ -2,7 +2,7 @@
   "apiVersion" : "batch/v1",
   "kind" : "Job",
   "metadata" : {
-    "generateName" : "simple",
+    "generateName" : "simple-",
     "namespace" : "paas-utv"
   },
   "spec" : {
