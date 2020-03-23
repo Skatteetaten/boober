@@ -22,7 +22,7 @@
   },
   "spec" : {
     "concurrencyPolicy" : "Forbid",
-    "failedJobsHistoryLimit" : 3,
+    "failedJobsHistoryLimit" : 1,
     "jobTemplate" : {
       "metadata" : {
         "generateName" : "job"
@@ -78,7 +78,8 @@
         }
       }
     },
-    "schedule" : "0/5 * * * ?",
+    "schedule" : "0/5 * * * *",
+    "startingDeadlineSeconds" : 60,
     "successfulJobsHistoryLimit" : 3,
     "suspend" : false
   }

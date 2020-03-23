@@ -25,8 +25,10 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.int
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
+import no.skatteetaten.aurora.boober.utils.validUnixCron
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -80,13 +82,14 @@ class JobFeature(
         return gavHandlers(header, cmd) +
             defaultHandlersForAllTypes +
             setOf(
-                AuroraConfigFieldHandler("job/schedule"),
+                AuroraConfigFieldHandler("job/schedule", validator = { it.validUnixCron() }),
                 AuroraConfigFieldHandler("job/suspend", defaultValue = false, validator = { it.boolean() }),
                 AuroraConfigFieldHandler("job/command"),
                 AuroraConfigFieldHandler("job/arguments"),
                 AuroraConfigFieldHandler("job/script"),
-                AuroraConfigFieldHandler("job/failureCount", defaultValue = 3),
-                AuroraConfigFieldHandler("job/successCount", defaultValue = 3),
+                AuroraConfigFieldHandler("job/failureCount", defaultValue = 1, validator = { it.int() }),
+                AuroraConfigFieldHandler("job/startingDeadline", defaultValue = 60, validator = { it.int() }),
+                AuroraConfigFieldHandler("job/successCount", defaultValue = 3, validator = { it.int() }),
                 AuroraConfigFieldHandler("job/concurrentPolicy", defaultValue = ConcurrencyPolicies.Forbid.toString(),
                     validator = { node ->
                         node?.oneOf(ConcurrencyPolicies.values().map { it.toString() })
@@ -105,11 +108,6 @@ class JobFeature(
                 }
                 data = mapOf("script.sh" to s)
             }
-        }
-
-        val meta = newObjectMeta {
-            name = adc.name
-            namespace = adc.namespace
         }
 
         // TODO: masse flere parametre som kanskje bør settes her.
@@ -163,8 +161,14 @@ class JobFeature(
         }
 
         val job: HasMetadata = adc.jobSchedule?.let { cron ->
+            // Please read and understand this before chaning anything here
+            // https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/
+            // https://medium.com/@hengfeng/what-does-kubernetes-cronjobs-startingdeadlineseconds-exactly-mean-cc2117f9795f
             newCronJob {
-                metadata = meta
+                metadata = newObjectMeta {
+                    name = adc.name
+                    namespace = adc.namespace
+                }
                 spec {
                     schedule = cron
                     // TODO: Should probably validate that these 4 parameters are not valid if schedule is not set, or figure out another way to configure this
@@ -172,6 +176,7 @@ class JobFeature(
                     successfulJobsHistoryLimit = adc["job/successCount"]
                     failedJobsHistoryLimit = adc["job/failureCount"]
                     concurrencyPolicy = adc["job/concurrentPolicy"]
+                    startingDeadlineSeconds = adc["job/startingDeadline"]
                     suspend = adc["job/suspend"]
                     jobTemplate {
                         metadata {
@@ -182,7 +187,10 @@ class JobFeature(
                 }
             }
         } ?: newJob {
-            metadata = meta
+            metadata = newObjectMeta {
+                generateName = adc.name
+                namespace = adc.namespace
+            }
             spec = jobSpec
         }
         return setOf(job.generateAuroraResource()).addIfNotNull(scriptConfigMap?.generateAuroraResource())
@@ -192,6 +200,8 @@ class JobFeature(
         val name = adc.artifactId
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
         resources.forEach {
+
+            // TODO: Should we add something to ApplicationDeployment to allow linking jobs and a service/route together?
             if (it.resource.kind == "ApplicationDeployment") {
                 val labels = mapOf("applicationId" to id).normalizeLabels()
                 modifyResource(it, "Added application name and id")

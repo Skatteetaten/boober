@@ -10,6 +10,44 @@ class JobFeatureTest : AbstractFeatureTest() {
         get() = JobFeature("docker.registry")
 
     @Test
+    fun `should not allow job with non numeric successCount`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "job",
+                "groupId" : "foo.bar",
+                "version" : "1",
+                "job" : {
+                  "successCount" : "foobar"
+                }
+        }"""
+            )
+        }.singleApplicationError(
+            "Not a valid int value."
+        )
+    }
+
+    @Test
+    fun `should not allow job with invalid schedule`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "job",
+                "groupId" : "foo.bar",
+                "version" : "1",
+                "job" : {
+                  "schedule" : "0/5 * * *"
+                }
+        }"""
+            )
+        }.singleApplicationError(
+            "Cron expression contains 4 parts but we expect one of [5]."
+        )
+    }
+
+    @Test
     fun `should not allow job with wrong concurrency policy`() {
 
         assertThat {
@@ -19,7 +57,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "groupId" : "foo.bar",
                 "version" : "1",
                 "job" : {
-                  "schedule" : "0/5 * * * ?",
+                  "schedule" : "0/5 * * * *",
                   "concurrentPolicy" : "Foobar"
                 }
         }"""
@@ -39,7 +77,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "groupId" : "foo.bar",
                 "version" : "1",
                 "job" : {
-                  "schedule" : "0/5 * * * ?",
+                  "schedule" : "0/5 * * * *",
                   "command" : "curl",
                   "arguments" : ["-vvv", "http://foo"],
                   "script" : "curl -vvv http://foo"
@@ -78,7 +116,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "groupId" : "foo.bar",
                 "version" : "1",
                 "job" : {
-                  "schedule" : "0/5 * * * ?",
+                  "schedule" : "0/5 * * * *",
                   "command" : "curl",
                   "arguments" : ["-vvv", "http://foo"]
                 }
@@ -98,7 +136,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "version" : "1",
                 "job" : {
                   "script" : "curl -vvv http://localhost",
-                  "schedule" : "0/5 * * * ?"
+                  "schedule" : "0/5 * * * *"
                 }
         }"""
         )

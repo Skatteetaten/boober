@@ -124,10 +124,10 @@
   "job" : {
     "schedule" : {
       "source" : "job.json",
-      "value" : "0/5 * * * ?",
+      "value" : "0/5 * * * *",
       "sources" : [ {
         "name" : "job.json",
-        "value" : "0/5 * * * ?"
+        "value" : "0/5 * * * *"
       } ]
     }
   },

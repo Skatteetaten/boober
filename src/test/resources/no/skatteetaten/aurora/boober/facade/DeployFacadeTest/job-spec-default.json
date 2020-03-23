@@ -206,10 +206,10 @@
   "job" : {
     "schedule" : {
       "source" : "job.json",
-      "value" : "0/5 * * * ?",
+      "value" : "0/5 * * * *",
       "sources" : [ {
         "name" : "job.json",
-        "value" : "0/5 * * * ?"
+        "value" : "0/5 * * * *"
       } ]
     },
     "suspend" : {
@@ -222,10 +222,18 @@
     },
     "failureCount" : {
       "source" : "default",
-      "value" : 3,
+      "value" : 1,
       "sources" : [ {
         "name" : "default",
-        "value" : 3
+        "value" : 1
+      } ]
+    },
+    "startingDeadline" : {
+      "source" : "default",
+      "value" : 60,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 60
       } ]
     },
     "successCount" : {

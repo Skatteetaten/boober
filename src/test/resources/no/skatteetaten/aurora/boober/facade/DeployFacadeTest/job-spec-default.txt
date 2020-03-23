@@ -26,9 +26,10 @@ utv/about.json | cluster: "utv"
        default | management: false
       fileName | artifactId: "job"
                | job:
-      job.json |   schedule: "0/5 * * * ?"
+      job.json |   schedule: "0/5 * * * *"
        default |   suspend: false
-       default |   failureCount: 3
+       default |   failureCount: 1
+       default |   startingDeadline: 60
        default |   successCount: 3
        default |   concurrentPolicy: "Forbid"
        default | route: false

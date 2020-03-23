@@ -15,7 +15,7 @@ utv/about.json | cluster: "utv"
       job.json | version: "1"
       fileName | artifactId: "job"
                | job:
-      job.json |   schedule: "0/5 * * * ?"
+      job.json |   schedule: "0/5 * * * *"
                | secretVaults:
                |   foo:
       job.json |     keys: ["BAR","FOO"]

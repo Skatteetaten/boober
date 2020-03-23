@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.utils
 
+import com.cronutils.model.CronType
+import com.cronutils.model.definition.CronDefinitionBuilder
+import com.cronutils.parser.CronParser
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -98,6 +101,7 @@ val JsonNode.openshiftName: String
         "deploymentrequest" -> this.get("name")?.asText()
             ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
         else -> this.get("metadata")?.get("name")?.asText()
+            ?: this.get("metadata")?.get("generateName")?.asText()
             ?: throw IllegalArgumentException("name not specified for resource kind=${this.openshiftKind}")
     }
 
@@ -170,6 +174,31 @@ fun JsonNode?.durationString(): Exception? {
     }
 
     DurationStyle.SIMPLE.parse(this.textValue())
+    return null
+}
+
+fun JsonNode?.validUnixCron(): Exception? {
+    if (this == null) return null
+    val parser = CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX))
+    return try {
+        parser.parse(this.textValue())
+        null
+    } catch (e: Exception) {
+        e
+    }
+}
+
+fun JsonNode?.int(required: Boolean = false): Exception? {
+    if (this == null) {
+        return if (required) {
+            IllegalArgumentException("Required boolean value is not set.")
+        } else {
+            null
+        }
+    }
+    if (!this.isInt) {
+        return IllegalArgumentException("Not a valid int value")
+    }
     return null
 }
 
