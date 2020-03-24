@@ -25,7 +25,15 @@
     "failedJobsHistoryLimit" : 1,
     "jobTemplate" : {
       "metadata" : {
-        "generateName" : "job"
+        "generateName" : "job",
+        "labels" : {
+          "operationScope" : "aos-4016",
+          "app" : "job",
+          "updatedBy" : "hero",
+          "updatedAt" : "0",
+          "affiliation" : "paas",
+          "name" : "job"
+        }
       },
       "spec" : {
         "completions" : 1,

@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.model
 
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.kubernetes.api.model.apps.Deployment
@@ -36,6 +37,46 @@ data class AuroraResourceSource(
     val comment: String? = "",
     val time: Instant = Instants.now
 )
+
+fun Set<AuroraResource>.addLabels(
+    commonLabels: Map<String, String>,
+    comment: String,
+    clazz: Class<out Feature>,
+    applyToHeaderResources: Boolean = false
+) {
+
+    this.forEach {
+        if (applyToHeaderResources || (it.resource.metadata.namespace != null && !it.header)) {
+            it.resource.metadata.labels = commonLabels.addIfNotNull(it.resource.metadata?.labels)
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to metadata"))
+        }
+        if (it.resource.kind == "DeploymentConfig") {
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to podTemplate"))
+            val dc: DeploymentConfig = it.resource as DeploymentConfig
+            if (dc.spec.template.metadata == null) {
+                dc.spec.template.metadata = ObjectMeta()
+            }
+            dc.spec.template.metadata.labels = commonLabels.addIfNotNull(dc.spec.template.metadata?.labels)
+        }
+
+        if (it.resource.kind == "Deployment") {
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to podTemplate"))
+            val deployment: Deployment = it.resource as Deployment
+            if (deployment.spec.template.metadata == null) {
+                deployment.spec.template.metadata = ObjectMeta()
+            }
+            deployment.spec.template.metadata.labels = commonLabels.addIfNotNull(deployment.spec.template.metadata?.labels)
+        }
+        if (it.resource.kind == "CronJob") {
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to to jobTemplate"))
+            val cronJob: CronJob = it.resource as CronJob
+            if (cronJob.spec.jobTemplate.metadata == null) {
+                cronJob.spec.jobTemplate.metadata = ObjectMeta()
+            }
+            cronJob.spec.jobTemplate.metadata.labels = commonLabels.addIfNotNull(cronJob.spec.jobTemplate.metadata?.labels)
+        }
+    }
+}
 
 fun Set<AuroraResource>.addEnvVar(
     envVars: List<EnvVar>,

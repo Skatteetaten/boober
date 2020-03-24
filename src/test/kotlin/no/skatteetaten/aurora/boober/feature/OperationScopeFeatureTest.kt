@@ -37,12 +37,12 @@ class OperationScopeFeatureTest {
         val label = mapOf("operationScope" to "my-config-value")
 
         resources.forEach {
-            assertThat(it.sources.first().comment).isEqualTo("Added operationScope")
+            assertThat(it.sources.first().comment).isEqualTo("Added operationScope label to metadata")
             assertThat(it.resource.metadata.labels).isEqualTo(label)
         }
 
         val dcResource = resources.last()
-        assertThat(dcResource.sources.last().comment).isEqualTo("Added operationScope")
+        assertThat(dcResource.sources.last().comment).isEqualTo("Added operationScope label to podTemplate")
     }
 
     @Test

@@ -2,9 +2,6 @@
   "apiVersion" : "authorization.openshift.io/v1",
   "kind" : "RoleBinding",
   "metadata" : {
-    "labels" : {
-      "operationScope" : "aos-4016"
-    },
     "name" : "admin",
     "namespace" : "paas-utv"
   },

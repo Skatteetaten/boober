@@ -1,15 +1,12 @@
 package no.skatteetaten.aurora.boober.feature
 
-import io.fabric8.kubernetes.api.model.ObjectMeta
-import io.fabric8.kubernetes.api.model.apps.Deployment
-import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.addLabels
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.Instants
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
 
@@ -35,31 +32,6 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val commonLabels = createCommonLabels(adc)
-
-        resources.forEach {
-            if (it.resource.metadata.namespace != null && !it.header) {
-
-                it.resource.metadata.labels = commonLabels.addIfNotNull(it.resource.metadata?.labels)
-
-                modifyResource(it, "Added common labels to metadata")
-            }
-            if (it.resource.kind == "DeploymentConfig") {
-                modifyResource(it, "Added common labels to podSpec")
-                val dc: DeploymentConfig = it.resource as DeploymentConfig
-                if (dc.spec.template.metadata == null) {
-                    dc.spec.template.metadata = ObjectMeta()
-                }
-                dc.spec.template.metadata.labels = commonLabels.addIfNotNull(dc.spec.template.metadata?.labels)
-            }
-
-            if (it.resource.kind == "Deployment") {
-                modifyResource(it, "Added common labels to podSpec")
-                val dc: Deployment = it.resource as Deployment
-                if (dc.spec.template.metadata == null) {
-                    dc.spec.template.metadata = ObjectMeta()
-                }
-                dc.spec.template.metadata.labels = commonLabels.addIfNotNull(dc.spec.template.metadata?.labels)
-            }
-        }
+        resources.addLabels(commonLabels, "Added commonLabels", this::class.java)
     }
 }

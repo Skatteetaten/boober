@@ -31,7 +31,7 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
             "name" to "simple"
         )
         resources.forEach {
-            assertThat(it).auroraResourceModifiedByThisFeatureWithComment("Added common labels to metadata")
+            assertThat(it).auroraResourceModifiedByThisFeatureWithComment("Added commonLabels to metadata")
             assertThat(it.resource.metadata.labels).isEqualTo(labels)
         }
 
@@ -39,7 +39,7 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
 
         val dc = dcResource.resource as DeploymentConfig
 
-        assertThat(dcResource.sources.last().comment).isEqualTo("Added common labels to podSpec")
+        assertThat(dcResource.sources.last().comment).isEqualTo("Added commonLabels to podTemplate")
 
         assertThat(dc.spec.template.metadata.labels).isEqualTo(labels)
     }
