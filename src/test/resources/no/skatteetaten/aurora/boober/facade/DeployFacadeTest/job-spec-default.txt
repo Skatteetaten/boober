@@ -2,6 +2,7 @@
         static | configVersion: "master"
     about.json | schemaVersion: "v1"
       job.json | type: "job"
+       default | deployState: "deploymentConfig"
        default | applicationPlatform: "java"
     about.json | affiliation: "paas"
     about.json | segment: "aurora"

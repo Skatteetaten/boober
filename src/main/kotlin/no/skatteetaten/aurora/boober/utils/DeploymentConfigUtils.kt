@@ -2,9 +2,9 @@ package no.skatteetaten.aurora.boober.utils
 
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.batch.CronJob
 import io.fabric8.kubernetes.api.model.batch.Job
-import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 
 fun DeploymentConfig.findImageChangeTriggerTagName(): String? {
@@ -26,7 +26,6 @@ val HasMetadata.allNonSideCarContainers: List<Container>
             else -> emptyList()
         }
     }
-
 
 val Deployment.allNonSideCarContainers: List<Container>
     get() =

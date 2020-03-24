@@ -3,6 +3,7 @@
   "kind" : "ApplicationDeployment",
   "metadata" : {
     "labels" : {
+      "operationScope" : "aos-4016",
       "app" : "whoami",
       "updatedBy" : "hero",
       "updatedAt" : "0",
@@ -24,6 +25,7 @@
     },
     "applicationDeploymentId" : "0a5b9f33defce603dae3b3ce5c4babc19ee75086",
     "applicationName" : "whoami",
+    "runnableType" : "Deployment",
     "applicationDeploymentName" : "whoami",
     "databases" : [ "fd59dba9-7d67-4ea2-bb98-081a5df8c387" ],
     "managementPath" : ":8081/actuator",

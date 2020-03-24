@@ -17,10 +17,10 @@ interface Feature {
     fun HasMetadata.generateAuroraResource(header: Boolean = false) = generateResource(this, header)
 
     fun generateResource(content: HasMetadata, header: Boolean = false) =
-            AuroraResource(content, AuroraResourceSource(this::class.java), header = header)
+        AuroraResource(content, AuroraResourceSource(this::class.java), header = header)
 
     fun modifyResource(resource: AuroraResource, comment: String) =
-            resource.sources.add(AuroraResourceSource(this::class.java, comment = comment))
+        resource.sources.add(AuroraResourceSource(this::class.java, comment = comment))
 
     /*
       Should this feature run or not.
@@ -75,7 +75,7 @@ interface Feature {
     If this method throws it will be handled as a single error or multiple errors if ExceptionList
     */
     fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> =
-            emptyList()
+        emptyList()
 }
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {
@@ -93,7 +93,7 @@ enum class TemplateType(
     template(false)
 }
 
-enum class DeploymentState{
+enum class DeploymentState {
     deploymentConfig,
     deployment
 }
@@ -107,59 +107,61 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
 
         val envNamePattern = "^[a-z0-9\\-]{0,52}$"
         val envNameMessage =
-                "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
+            "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
 
         return setOf(
-                AuroraConfigFieldHandler(
-                        "schemaVersion",
-                        validator = { it.oneOf(validSchemaVersions) }),
-                AuroraConfigFieldHandler(
-                        "type",
-                        validator = { node -> node.oneOf(TemplateType.values().map { it.toString() }) }),
-                 AuroraConfigFieldHandler(
+            AuroraConfigFieldHandler(
+                "schemaVersion",
+                validator = { it.oneOf(validSchemaVersions) }),
+            AuroraConfigFieldHandler(
+                "type",
+                validator = { node -> node.oneOf(TemplateType.values().map { it.toString() }) }),
+
+            // TODO: What should this be for jobs?
+            AuroraConfigFieldHandler(
                 "deployState",
-                     defaultValue = "deploymentConfig",
-                     validator = { node -> node.oneOf(DeploymentState.values().map { it.toString() }) }),
-                AuroraConfigFieldHandler(
-                        "applicationPlatform",
-                        defaultValue = "java",
-                        validator = { node -> node.oneOf(ApplicationPlatform.values().map { it.toString() }) }),
-                AuroraConfigFieldHandler("affiliation", validator = {
+                defaultValue = "deploymentConfig",
+                validator = { node -> node.oneOf(DeploymentState.values().map { it.toString() }) }),
+            AuroraConfigFieldHandler(
+                "applicationPlatform",
+                defaultValue = "java",
+                validator = { node -> node.oneOf(ApplicationPlatform.values().map { it.toString() }) }),
+            AuroraConfigFieldHandler("affiliation", validator = {
+                it.pattern(
+                    "^[a-z]{1,10}$",
+                    "Affiliation can only contain letters and must be no longer than 10 characters"
+                )
+            }),
+            AuroraConfigFieldHandler("segment"),
+            AuroraConfigFieldHandler(
+                "cluster",
+                validator = { it.notBlank("Cluster must be set") }),
+            AuroraConfigFieldHandler("permissions/admin"),
+            AuroraConfigFieldHandler("permissions/view"),
+            AuroraConfigFieldHandler("permissions/adminServiceAccount"),
+            // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
+            AuroraConfigFieldHandler(
+                "envName", validator = { it.pattern(envNamePattern, envNameMessage) },
+                defaultSource = "folderName",
+                defaultValue = this.environment
+            ),
+            AuroraConfigFieldHandler("name",
+                defaultValue = this.application,
+                defaultSource = "fileName",
+                validator = {
                     it.pattern(
-                            "^[a-z]{1,10}$",
-                            "Affiliation can only contain letters and must be no longer than 10 characters"
+                        "^[a-z][-a-z0-9]{0,38}[a-z0-9]$",
+                        "Name must be alphanumeric and no more than 40 characters",
+                        false
                     )
                 }),
-                AuroraConfigFieldHandler("segment"),
-                AuroraConfigFieldHandler(
-                        "cluster",
-                        validator = { it.notBlank("Cluster must be set") }),
-                AuroraConfigFieldHandler("permissions/admin"),
-                AuroraConfigFieldHandler("permissions/view"),
-                AuroraConfigFieldHandler("permissions/adminServiceAccount"),
-                // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
-                AuroraConfigFieldHandler(
-                        "envName", validator = { it.pattern(envNamePattern, envNameMessage) },
-                        defaultSource = "folderName",
-                        defaultValue = this.environment
-                ),
-                AuroraConfigFieldHandler("name",
-                        defaultValue = this.application,
-                        defaultSource = "fileName",
-                        validator = {
-                            it.pattern(
-                                    "^[a-z][-a-z0-9]{0,38}[a-z0-9]$",
-                                    "Name must be alphanumeric and no more than 40 characters",
-                                    false
-                            )
-                        }),
-                AuroraConfigFieldHandler(
-                        "env/name",
-                        validator = { it.pattern(envNamePattern, envNameMessage, false) }),
-                AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
-                AuroraConfigFieldHandler("baseFile"),
-                AuroraConfigFieldHandler("envFile"),
-                AuroraConfigFieldHandler("includeEnvFile")
+            AuroraConfigFieldHandler(
+                "env/name",
+                validator = { it.pattern(envNamePattern, envNameMessage, false) }),
+            AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
+            AuroraConfigFieldHandler("baseFile"),
+            AuroraConfigFieldHandler("envFile"),
+            AuroraConfigFieldHandler("includeEnvFile")
 
         )
     }

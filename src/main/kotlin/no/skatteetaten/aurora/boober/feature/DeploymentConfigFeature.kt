@@ -5,7 +5,6 @@ import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.api.model.QuantityBuilder
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -122,45 +121,27 @@ class DeploymentConfigFeature : Feature {
                 if (adc.pause) {
                     dc.spec.replicas = 0
                 }
-                dc.allNonSideCarContainers.forEach { container ->
-                    container.env.addAll(envVars)
-                    container.resources {
-                        val existingRequest = requests ?: emptyMap()
-                        val existingLimit = limits ?: emptyMap()
-                        requests = existingRequest.addIfNotNull(
-                            mapOf(
-                                adc.quantity("cpu", "min"),
-                                adc.quantity("memory", "min")
-                            ).filterNullValues()
-                        )
-                        limits = existingLimit.addIfNotNull(
-                            mapOf(
-                                adc.quantity("cpu", "max"),
-                                adc.quantity("memory", "max")
-                            ).filterNullValues()
-                        )
-                    }
-                }
             } else if (it.resource.kind == "Deployment") {
-                //TODO: Join with above
-                val dc: Deployment = it.resource as Deployment
+                // TODO: Join with above
+                val deployment: Deployment = it.resource as Deployment
 
-                //TODO: generate with pause
-                modifyResource(it, "Added labels, annotations, shared env vars and request limits")
-                if (dc.spec.template.metadata == null) {
-                    dc.spec.template.metadata = ObjectMeta()
+                // TODO: generate with pause
+                modifyResource(it, "Added labels, annotations")
+                if (deployment.spec.template.metadata == null) {
+                    deployment.spec.template.metadata = ObjectMeta()
                 }
 
-                dc.spec.template.metadata.labels = dc.spec.template.metadata.labels.addIfNotNull(dcLabels) ?: dcLabels
-                dc.spec.template.metadata.annotations = mapOf(
+                deployment.spec.template.metadata.labels = deployment.spec.template.metadata.labels.addIfNotNull(dcLabels) ?: dcLabels
+                deployment.spec.template.metadata.annotations = mapOf(
                     ANNOTATION_BOOBER_DEPLOYTAG to adc.dockerTag
                 )
-                dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
+                deployment.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
 
                 if (adc.pause) {
-                    dc.spec.replicas = 0
+                    deployment.spec.replicas = 0
                 }
             }
+
             it.resource.allNonSideCarContainers.forEach { container ->
 
                 modifyResource(it, "Added Shared env vars and request limits")

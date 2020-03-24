@@ -3,6 +3,7 @@
   "kind" : "Deployment",
   "metadata" : {
     "labels" : {
+      "operationScope" : "aos-4016",
       "app" : "whoami",
       "updatedBy" : "hero",
       "updatedAt" : "0",

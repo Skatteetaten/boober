@@ -58,7 +58,7 @@ class RedeployService(
         if (type == TemplateType.development) {
             return RedeployResult(message = "No deploy made since type=$type, deploy via oc start-build.")
         }
-        if(deployState== DeploymentState.deployment) {
+        if (deployState == DeploymentState.deployment) {
             return RedeployResult(message = "Kubernetes Deployment applied.")
         }
 
