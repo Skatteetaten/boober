@@ -1,10 +1,10 @@
 {
   "applicationDeploymentRef" : {
     "source" : "static",
-    "value" : "utv/simple",
+    "value" : "utv/whoami",
     "sources" : [ {
       "name" : "static",
-      "value" : "utv/simple"
+      "value" : "utv/whoami"
     } ]
   },
   "configVersion" : {
@@ -24,19 +24,25 @@
     } ]
   },
   "type" : {
-    "source" : "about.json",
+    "source" : "whoami.json",
     "value" : "deploy",
     "sources" : [ {
       "name" : "about.json",
       "value" : "deploy"
+    }, {
+      "name" : "whoami.json",
+      "value" : "deploy"
     } ]
   },
   "deployState" : {
-    "source" : "default",
-    "value" : "deploymentConfig",
+    "source" : "whoami.json",
+    "value" : "deployment",
     "sources" : [ {
       "name" : "default",
       "value" : "deploymentConfig"
+    }, {
+      "name" : "whoami.json",
+      "value" : "deployment"
     } ]
   },
   "applicationPlatform" : {
@@ -94,10 +100,10 @@
   },
   "name" : {
     "source" : "fileName",
-    "value" : "simple",
+    "value" : "whoami",
     "sources" : [ {
       "name" : "fileName",
-      "value" : "simple"
+      "value" : "whoami"
     } ]
   },
   "certificate" : {
@@ -109,10 +115,10 @@
     } ]
   },
   "groupId" : {
-    "source" : "simple.json",
+    "source" : "whoami.json",
     "value" : "org.test",
     "sources" : [ {
-      "name" : "simple.json",
+      "name" : "whoami.json",
       "value" : "org.test"
     } ]
   },
@@ -143,13 +149,13 @@
     }
   },
   "database" : {
-    "source" : "simple.json",
+    "source" : "whoami.json",
     "value" : true,
     "sources" : [ {
       "name" : "default",
       "value" : false
     }, {
-      "name" : "simple.json",
+      "name" : "whoami.json",
       "value" : true
     } ]
   },
@@ -202,10 +208,10 @@
     } ]
   },
   "version" : {
-    "source" : "simple.json",
+    "source" : "whoami.json",
     "value" : "1",
     "sources" : [ {
-      "name" : "simple.json",
+      "name" : "whoami.json",
       "value" : "1"
     } ]
   },
@@ -249,10 +255,10 @@
   },
   "artifactId" : {
     "source" : "fileName",
-    "value" : "simple",
+    "value" : "whoami",
     "sources" : [ {
       "name" : "fileName",
-      "value" : "simple"
+      "value" : "whoami"
     } ]
   },
   "deployStrategy" : {
@@ -346,14 +352,11 @@
     } ]
   },
   "route" : {
-    "source" : "simple.json",
-    "value" : true,
+    "source" : "default",
+    "value" : false,
     "sources" : [ {
       "name" : "default",
       "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
     } ]
   },
   "routeDefaults" : {
@@ -393,14 +396,11 @@
     }
   },
   "sts" : {
-    "source" : "simple.json",
-    "value" : true,
+    "source" : "default",
+    "value" : false,
     "sources" : [ {
       "name" : "default",
       "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
     } ]
   },
   "toxiproxy" : {

@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.batch.CronJob
 import io.fabric8.kubernetes.api.model.batch.Job
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 
 fun DeploymentConfig.findImageChangeTriggerTagName(): String? {
@@ -18,12 +19,18 @@ fun DeploymentConfig.findImageChangeTriggerTagName(): String? {
 val HasMetadata.allNonSideCarContainers: List<Container>
     get() {
         return when (this) {
+            is Deployment -> this.allNonSideCarContainers
             is DeploymentConfig -> this.allNonSideCarContainers
             is Job -> this.spec.template.spec.containers
             is CronJob -> this.spec.jobTemplate.spec.template.spec.containers
             else -> emptyList()
         }
     }
+
+
+val Deployment.allNonSideCarContainers: List<Container>
+    get() =
+        this.spec.template.spec.containers.filter { !it.name.endsWith("sidecar") }
 
 val DeploymentConfig.allNonSideCarContainers: List<Container>
     get() =

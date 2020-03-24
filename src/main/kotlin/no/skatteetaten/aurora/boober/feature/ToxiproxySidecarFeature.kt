@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Service
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -81,6 +82,13 @@ class ToxiproxySidecarFeature : Feature {
             if (it.resource.kind == "DeploymentConfig") {
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
+                val podSpec = dc.spec.template.spec
+                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
+                podSpec.containers = podSpec.containers.addIfNotNull(container)
+            } else if (it.resource.kind == "Deployment") {
+                //TODO: refactor
+                modifyResource(it, "Added toxiproxy volume and sidecar container")
+                val dc: Deployment = it.resource as Deployment
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 podSpec.containers = podSpec.containers.addIfNotNull(container)

@@ -1,5 +1,11 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fkorotkov.kubernetes.apps.metadata
+import com.fkorotkov.kubernetes.apps.newDeployment
+import com.fkorotkov.kubernetes.apps.rollingUpdate
+import com.fkorotkov.kubernetes.apps.spec
+import com.fkorotkov.kubernetes.apps.strategy
+import com.fkorotkov.kubernetes.apps.template
 import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.fieldRef
 import com.fkorotkov.kubernetes.httpGet
@@ -7,6 +13,7 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newLabelSelector
 import com.fkorotkov.kubernetes.newProbe
 import com.fkorotkov.kubernetes.newService
 import com.fkorotkov.kubernetes.newServicePort
@@ -35,6 +42,7 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.IntOrStringBuilder
 import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.kubernetes.api.model.Service
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
@@ -60,6 +68,7 @@ val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: t
 val AuroraDeploymentSpec.name get(): String = this["name"]
 val AuroraDeploymentSpec.affiliation get(): String = this["affiliation"]
 val AuroraDeploymentSpec.type get(): TemplateType = this["type"]
+val AuroraDeploymentSpec.deployState get(): DeploymentState = this["deployState"]
 
 val AuroraDeploymentSpec.applicationDeploymentId: String get() = DigestUtils.sha1Hex("${this.namespace}/${this.name}")
 val AuroraDeploymentSpec.namespace
@@ -210,13 +219,21 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1)
         )
 
-    // this is java
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        return setOf(
-            generateResource(create(adc, createContainers(adc))),
-            generateResource(createService(adc)),
-            generateResource(createImageStream(adc, dockerRegistry))
-        )
+
+
+        return if (adc.deployState == DeploymentState.deployment) {
+            setOf(
+                generateResource(createDeployment(adc, createContainers(adc))),
+                generateResource(createService(adc))
+            )
+        } else {
+            setOf(
+                generateResource(createDeploymentConfig(adc, createContainers(adc))),
+                generateResource(createService(adc)),
+                generateResource(createImageStream(adc, dockerRegistry))
+            )
+        }
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -307,6 +324,8 @@ abstract class AbstractDeployFeature(
         containerArgs: List<String> = emptyList()
     ): Container {
 
+        val dockerImage = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+
         return newContainer {
 
             terminationMessagePath = "/dev/termination-log"
@@ -339,6 +358,9 @@ abstract class AbstractDeployFeature(
                     }
                 }
             )
+            if(adc.deployState== DeploymentState.deployment) {
+               image = dockerImage
+            }
             name = containerName
             ports = containerPorts.map {
                 newContainerPort {
@@ -364,7 +386,7 @@ abstract class AbstractDeployFeature(
         }
     }
 
-    fun create(
+    fun createDeploymentConfig(
         adc: AuroraDeploymentSpec,
         container: List<Container>
     ): DeploymentConfig {
@@ -410,6 +432,54 @@ abstract class AbstractDeployFeature(
                 )
                 replicas = adc["replicas"]
                 selector = mapOf("name" to adc.name)
+                template {
+                    spec {
+                        volumes = volumes + newVolume {
+                            name = "application-log-volume"
+                            emptyDir()
+                        }
+                        containers = container
+                        restartPolicy = "Always"
+                        dnsPolicy = "ClusterFirst"
+                        adc.getOrNull<String>("serviceAccount")?.let {
+                            serviceAccount = it
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun createDeployment(
+        adc: AuroraDeploymentSpec,
+        container: List<Container>
+    ): Deployment {
+
+        //https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+        return newDeployment {
+            metadata {
+                name = adc.name
+                namespace = adc.namespace
+            }
+            spec {
+
+                progressDeadlineSeconds = adc["deployStrategy/timeout"]
+                strategy {
+                    val deployType: String = adc["deployStrategy/type"]
+                    if (deployType == "rolling") {
+                        type = "RollingUpdate"
+                        rollingUpdate {
+                            maxSurge = IntOrString("25%")
+                            maxUnavailable = IntOrString(0)
+                        }
+                    } else {
+                        type= "Recreate"
+                    }
+                }
+                replicas = adc["replicas"]
+                selector = newLabelSelector {
+                    matchLabels = mapOf("name" to adc.name)
+                }
                 template {
                     spec {
                         volumes = volumes + newVolume {

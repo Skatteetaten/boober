@@ -1,37 +1,28 @@
-        static | applicationDeploymentRef: "utv/web"
+        static | applicationDeploymentRef: "utv/whoami"
         static | configVersion: "master"
     about.json | schemaVersion: "v1"
-      web.json | type: "development"
-       default | deployState: "deploymentConfig"
-      web.json | applicationPlatform: "web"
+   whoami.json | type: "deploy"
+   whoami.json | deployState: "deployment"
+       default | applicationPlatform: "java"
     about.json | affiliation: "paas"
     about.json | segment: "aurora"
 utv/about.json | cluster: "utv"
                | permissions:
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
-      fileName | name: "web"
-      fileName | artifactId: "web"
-      web.json | groupId: "org.test"
-      web.json | version: "develop-SNAPSHOT"
-               | builder:
-       default |   name: "architect"
-       default |   version: "1"
-               | baseImage:
-       default |   name: "wrench8"
-       default |   version: 1
+      fileName | name: "whoami"
        default | certificate: false
-               | config:
-      web.json |   foo2: "baz"
+   whoami.json | groupId: "org.test"
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
        default |   name: "@name@"
-       default | database: false
+   whoami.json | database: true
        default | management: true
        default | alarm: true
        default | pause: false
        default | debug: false
+   whoami.json | version: "1"
                | resources:
                |   cpu:
        default |     min: "10m"
@@ -39,15 +30,7 @@ utv/about.json | cluster: "utv"
                |   memory:
        default |     min: "128Mi"
        default |     max: "512Mi"
-      web.json | route: true
-               | routeDefaults:
-       default |   host: "@name@-@affiliation@-@env@"
-               |   tls:
-       default |     enabled: false
-       default |     insecurePolicy: "Redirect"
-       default |     termination: "edge"
-       default | sts: false
-      web.json | toxiproxy: true
+      fileName | artifactId: "whoami"
                | deployStrategy:
        default |   type: "rolling"
        default |   timeout: 180
@@ -55,5 +38,13 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
-               | webseal:
-      web.json |   strict: false
+       default | route: false
+               | routeDefaults:
+       default |   host: "@name@-@affiliation@-@env@"
+               |   tls:
+       default |     enabled: false
+       default |     insecurePolicy: "None"
+       default |     termination: "edge"
+       default | sts: false
+       default | toxiproxy: false
+       default | webseal: false

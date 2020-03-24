@@ -47,6 +47,7 @@ class EnvironmentFeature(
     val openShiftClient: OpenShiftClient,
     val userDetailsProvider: UserDetailsProvider
 ) : Feature {
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf()
     }

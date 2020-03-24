@@ -1,0 +1,157 @@
+{
+  "apiVersion" : "apps/v1",
+  "kind" : "Deployment",
+  "metadata" : {
+    "labels" : {
+      "app" : "whoami",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "affiliation" : "paas",
+      "name" : "whoami",
+      "deployTag" : "1",
+      "booberDeployId" : "deploy1"
+    },
+    "name" : "whoami",
+    "namespace" : "paas-utv",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "whoami",
+      "uid" : "123-123"
+    } ]
+  },
+  "spec" : {
+    "progressDeadlineSeconds" : 180,
+    "replicas" : 1,
+    "selector" : {
+      "matchLabels" : {
+        "name" : "whoami"
+      }
+    },
+    "strategy" : {
+      "rollingUpdate" : {
+        "maxSurge" : "25%",
+        "maxUnavailable" : 0
+      },
+      "type" : "RollingUpdate"
+    },
+    "template" : {
+      "metadata" : {
+        "annotations" : {
+          "boober.skatteetaten.no/deployTag" : "1"
+        },
+        "labels" : {
+          "app" : "whoami",
+          "updatedBy" : "hero",
+          "updatedAt" : "0",
+          "affiliation" : "paas",
+          "name" : "whoami",
+          "deployTag" : "1"
+        }
+      },
+      "spec" : {
+        "containers" : [ {
+          "env" : [ {
+            "name" : "POD_NAME",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.name"
+              }
+            }
+          }, {
+            "name" : "POD_NAMESPACE",
+            "valueFrom" : {
+              "fieldRef" : {
+                "apiVersion" : "v1",
+                "fieldPath" : "metadata.namespace"
+              }
+            }
+          }, {
+            "name" : "HTTP_PORT",
+            "value" : "8080"
+          }, {
+            "name" : "MANAGEMENT_HTTP_PORT",
+            "value" : "8081"
+          }, {
+            "name" : "JOLOKIA_HTTP_PORT",
+            "value" : "8778"
+          }, {
+            "name" : "WHOAMI_DB",
+            "value" : "/u01/secrets/app/whoami-db/info"
+          }, {
+            "name" : "WHOAMI_DB_PROPERTIES",
+            "value" : "/u01/secrets/app/whoami-db/db.properties"
+          }, {
+            "name" : "DB",
+            "value" : "/u01/secrets/app/whoami-db/info"
+          }, {
+            "name" : "DB_PROPERTIES",
+            "value" : "/u01/secrets/app/whoami-db/db.properties"
+          }, {
+            "name" : "OPENSHIFT_CLUSTER",
+            "value" : "utv"
+          }, {
+            "name" : "APP_NAME",
+            "value" : "whoami"
+          } ],
+          "image" : "docker.registry:5000/org_test/whoami:1",
+          "imagePullPolicy" : "IfNotPresent",
+          "name" : "whoami-java",
+          "ports" : [ {
+            "containerPort" : 8080,
+            "name" : "http",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8081,
+            "name" : "management",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8778,
+            "name" : "jolokia",
+            "protocol" : "TCP"
+          } ],
+          "readinessProbe" : {
+            "initialDelaySeconds" : 10,
+            "tcpSocket" : {
+              "port" : 8080
+            },
+            "timeoutSeconds" : 1
+          },
+          "resources" : {
+            "limits" : {
+              "cpu" : "2000m",
+              "memory" : "512Mi"
+            },
+            "requests" : {
+              "cpu" : "10m",
+              "memory" : "128Mi"
+            }
+          },
+          "securityContext" : {
+            "privileged" : false
+          },
+          "terminationMessagePath" : "/dev/termination-log",
+          "volumeMounts" : [ {
+            "mountPath" : "/u01/logs",
+            "name" : "application-log-volume"
+          }, {
+            "mountPath" : "/u01/secrets/app/whoami-db",
+            "name" : "whoami-db"
+          } ]
+        } ],
+        "dnsPolicy" : "ClusterFirst",
+        "restartPolicy" : "Always",
+        "volumes" : [ {
+          "emptyDir" : { },
+          "name" : "application-log-volume"
+        }, {
+          "name" : "whoami-db",
+          "secret" : {
+            "secretName" : "whoami-db"
+          }
+        } ]
+      }
+    }
+  }
+}

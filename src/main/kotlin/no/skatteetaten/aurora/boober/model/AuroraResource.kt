@@ -6,6 +6,7 @@ import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import io.fabric8.kubernetes.api.model.batch.CronJob
 import io.fabric8.kubernetes.api.model.batch.Job
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import java.time.Instant
 import mu.KotlinLogging
@@ -40,6 +41,7 @@ fun Set<AuroraResource>.addEnvVar(
     envVars: List<EnvVar>,
     clazz: Class<out Feature>
 ) {
+    // TODO: add deployment
     this.filter { it.resource.kind in listOf("DeploymentConfig", "Job", "CronJob") }
         .onEach { it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars")) }
         .flatMap { it.resource.allNonSideCarContainers }
@@ -55,6 +57,15 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     this.filter { it.resource.kind == "DeploymentConfig" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val dc: DeploymentConfig = it.resource as DeploymentConfig
+        dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
+        dc.allNonSideCarContainers.forEach { container ->
+            container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
+            container.env = container.env.addIfNotNull(envVars)
+        }
+    }
+    this.filter { it.resource.kind == "Deployment" }.forEach {
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
+        val dc: Deployment = it.resource as Deployment
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
         dc.allNonSideCarContainers.forEach { container ->
             container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)

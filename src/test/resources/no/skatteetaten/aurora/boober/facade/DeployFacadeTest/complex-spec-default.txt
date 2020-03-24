@@ -4,6 +4,7 @@
             complex.json | ttl: "1d"
               about.json | schemaVersion: "v1"
             complex.json | type: "development"
+                 default | deployState: "deploymentConfig"
                  default | applicationPlatform: "java"
               about.json | affiliation: "paas"
               about.json | segment: "aurora"
