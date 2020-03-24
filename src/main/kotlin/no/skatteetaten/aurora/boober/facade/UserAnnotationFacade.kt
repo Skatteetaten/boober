@@ -57,7 +57,7 @@ class UserAnnotationFacade(
             return emptyMap()
         }
 
-        val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations)
+        val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations) ?: emptyMap()
         return entries.mapValues { it.value.base64ToJsonNode() }
     }
 }
