@@ -203,7 +203,8 @@ class JobFeature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val name = adc.artifactId
+        // TODO: Should this be artifactId or name?
+        val name = adc.name
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
         resources.forEach {
 
