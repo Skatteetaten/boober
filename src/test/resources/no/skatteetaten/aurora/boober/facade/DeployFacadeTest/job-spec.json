@@ -25,13 +25,13 @@
   },
   "type" : {
     "source" : "job.json",
-    "value" : "job",
+    "value" : "cronjob",
     "sources" : [ {
       "name" : "about.json",
       "value" : "deploy"
     }, {
       "name" : "job.json",
-      "value" : "job"
+      "value" : "cronjob"
     } ]
   },
   "affiliation" : {
@@ -91,6 +91,9 @@
     "source" : "job.json",
     "value" : "no.skatteetaten.demo",
     "sources" : [ {
+      "name" : "default",
+      "value" : "aurora"
+    }, {
       "name" : "job.json",
       "value" : "no.skatteetaten.demo"
     } ]
@@ -109,27 +112,20 @@
     "source" : "job.json",
     "value" : "1",
     "sources" : [ {
+      "name" : "default",
+      "value" : "0"
+    }, {
       "name" : "job.json",
       "value" : "1"
     } ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "job",
+  "schedule" : {
+    "source" : "job.json",
+    "value" : "0/5 * * * *",
     "sources" : [ {
-      "name" : "fileName",
-      "value" : "job"
+      "name" : "job.json",
+      "value" : "0/5 * * * *"
     } ]
-  },
-  "job" : {
-    "schedule" : {
-      "source" : "job.json",
-      "value" : "0/5 * * * *",
-      "sources" : [ {
-        "name" : "job.json",
-        "value" : "0/5 * * * *"
-      } ]
-    }
   },
   "secretVaults" : {
     "foo" : {

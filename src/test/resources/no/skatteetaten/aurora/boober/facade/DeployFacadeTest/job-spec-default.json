@@ -25,13 +25,13 @@
   },
   "type" : {
     "source" : "job.json",
-    "value" : "job",
+    "value" : "cronjob",
     "sources" : [ {
       "name" : "about.json",
       "value" : "deploy"
     }, {
       "name" : "job.json",
-      "value" : "job"
+      "value" : "cronjob"
     } ]
   },
   "deployState" : {
@@ -115,6 +115,9 @@
     "source" : "job.json",
     "value" : "no.skatteetaten.demo",
     "sources" : [ {
+      "name" : "default",
+      "value" : "aurora"
+    }, {
       "name" : "job.json",
       "value" : "no.skatteetaten.demo"
     } ]
@@ -191,6 +194,9 @@
     "source" : "job.json",
     "value" : "1",
     "sources" : [ {
+      "name" : "default",
+      "value" : "0"
+    }, {
       "name" : "job.json",
       "value" : "1"
     } ]
@@ -204,62 +210,60 @@
     } ]
   },
   "artifactId" : {
-    "source" : "fileName",
-    "value" : "job",
+    "source" : "default",
+    "value" : "turbo",
     "sources" : [ {
-      "name" : "fileName",
-      "value" : "job"
+      "name" : "default",
+      "value" : "turbo"
     } ]
   },
-  "job" : {
-    "schedule" : {
-      "source" : "job.json",
-      "value" : "0/5 * * * *",
-      "sources" : [ {
-        "name" : "job.json",
-        "value" : "0/5 * * * *"
-      } ]
-    },
-    "suspend" : {
-      "source" : "default",
-      "value" : false,
-      "sources" : [ {
-        "name" : "default",
-        "value" : false
-      } ]
-    },
-    "failureCount" : {
-      "source" : "default",
-      "value" : 1,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 1
-      } ]
-    },
-    "startingDeadline" : {
-      "source" : "default",
-      "value" : 60,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 60
-      } ]
-    },
-    "successCount" : {
-      "source" : "default",
-      "value" : 3,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 3
-      } ]
-    },
-    "concurrentPolicy" : {
-      "source" : "default",
-      "value" : "Forbid",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "Forbid"
-      } ]
-    }
+  "schedule" : {
+    "source" : "job.json",
+    "value" : "0/5 * * * *",
+    "sources" : [ {
+      "name" : "job.json",
+      "value" : "0/5 * * * *"
+    } ]
+  },
+  "suspend" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "failureCount" : {
+    "source" : "default",
+    "value" : 1,
+    "sources" : [ {
+      "name" : "default",
+      "value" : 1
+    } ]
+  },
+  "startingDeadline" : {
+    "source" : "default",
+    "value" : 60,
+    "sources" : [ {
+      "name" : "default",
+      "value" : 60
+    } ]
+  },
+  "successCount" : {
+    "source" : "default",
+    "value" : 3,
+    "sources" : [ {
+      "name" : "default",
+      "value" : 3
+    } ]
+  },
+  "concurrentPolicy" : {
+    "source" : "default",
+    "value" : "Forbid",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "Forbid"
+    } ]
   },
   "route" : {
     "source" : "default",
@@ -354,6 +358,22 @@
     }
   },
   "sts" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "toxiproxy" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "webseal" : {
     "source" : "default",
     "value" : false,
     "sources" : [ {

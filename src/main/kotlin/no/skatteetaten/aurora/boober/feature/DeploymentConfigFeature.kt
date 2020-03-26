@@ -52,7 +52,7 @@ class DeploymentConfigFeature : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        val templateSpecificHeaders = if (header.type.completelyGenerated) {
+        val templateSpecificHeaders = if (header.type.auroraGeneratedDeployment) {
             setOf(
                 header.versionHandler,
                 AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
@@ -63,9 +63,7 @@ class DeploymentConfigFeature : Feature {
                     "management",
                     defaultValue = true,
                     canBeSimplifiedConfig = true,
-                    validator = { it.boolean() }),
-                AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-                AuroraConfigFieldHandler("management/port", defaultValue = "8081")
+                    validator = { it.boolean() })
             )
         } else {
             setOf(
@@ -82,6 +80,7 @@ class DeploymentConfigFeature : Feature {
             )
         }
         return setOf(
+            // TODO: some of these should not be there for type=job
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("releaseTo"),

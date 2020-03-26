@@ -178,7 +178,7 @@ fun JsonNode?.durationString(): Exception? {
 }
 
 fun JsonNode?.validUnixCron(): Exception? {
-    if (this == null) return null
+    if (this == null) return IllegalArgumentException("Cron schedule is required")
     val parser = CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.UNIX))
     return try {
         parser.parse(this.textValue())

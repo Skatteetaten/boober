@@ -10,17 +10,27 @@ class JobFeatureTest : AbstractFeatureTest() {
         get() = JobFeature("docker.registry")
 
     @Test
+    fun `should not allow cronjob without scheduel`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "cronjob"
+        }"""
+            )
+        }.singleApplicationError(
+            "Cron schedule is required."
+        )
+    }
+    @Test
     fun `should not allow job with non numeric successCount`() {
 
         assertThat {
             createAuroraDeploymentContext(
                 """{
-                "type" : "job",
-                "groupId" : "foo.bar",
-                "version" : "1",
-                "job" : {
-                  "successCount" : "foobar"
-                }
+                "type" : "cronjob",
+                "schedule" : "0/5 * * * *",
+                "successCount" : "foobar"
         }"""
             )
         }.singleApplicationError(
@@ -34,12 +44,8 @@ class JobFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
-                "type" : "job",
-                "groupId" : "foo.bar",
-                "version" : "1",
-                "job" : {
-                  "schedule" : "0/5 * * *"
-                }
+                "type" : "cronjob",
+                "schedule" : "0/5 * * *"
         }"""
             )
         }.singleApplicationError(
@@ -53,13 +59,9 @@ class JobFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
-                "type" : "job",
-                "groupId" : "foo.bar",
-                "version" : "1",
-                "job" : {
-                  "schedule" : "0/5 * * * *",
-                  "concurrentPolicy" : "Foobar"
-                }
+                "type" : "cronjob",
+                "schedule" : "0/5 * * * *",
+                "concurrentPolicy" : "Foobar"
         }"""
             )
         }.singleApplicationError(
@@ -74,14 +76,9 @@ class JobFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 """{
                 "type" : "job",
-                "groupId" : "foo.bar",
-                "version" : "1",
-                "job" : {
-                  "schedule" : "0/5 * * * *",
-                  "command" : "curl",
-                  "arguments" : ["-vvv", "http://foo"],
-                  "script" : "curl -vvv http://foo"
-                }
+                "command" : "curl",
+                "arguments" : ["-vvv", "http://foo"],
+                "script" : "curl -vvv http://foo"
         }"""
             )
         }.singleApplicationError(
@@ -95,12 +92,8 @@ class JobFeatureTest : AbstractFeatureTest() {
         val (jobResource) = generateResources(
             """{
                 "type" : "job",
-                "groupId" : "foo.bar",
-                "version" : "1",
-                "job" : {
-                  "command" : "curl",
-                  "arguments" : ["-vvv", "http://foo"]
-                }
+                "command" : "curl",
+                "arguments" : ["-vvv", "http://foo"]
         }"""
         )
 
@@ -112,14 +105,10 @@ class JobFeatureTest : AbstractFeatureTest() {
 
         val (jobResource) = generateResources(
             """{
-                "type" : "job",
-                "groupId" : "foo.bar",
-                "version" : "1",
-                "job" : {
-                  "schedule" : "0/5 * * * *",
-                  "command" : "curl",
-                  "arguments" : ["-vvv", "http://foo"]
-                }
+                "type" : "cronjob",
+                "schedule" : "0/5 * * * *",
+                "command" : "curl",
+                "arguments" : ["-vvv", "http://foo"]
         }"""
         )
 
@@ -131,13 +120,9 @@ class JobFeatureTest : AbstractFeatureTest() {
 
         val (jobResource, configMapResource) = generateResources(
             """{
-                "type" : "job",
-                "groupId" : "foo.bar",
-                "version" : "1",
-                "job" : {
-                  "script" : "curl -vvv http://localhost",
-                  "schedule" : "0/5 * * * *"
-                }
+                "type" : "cronjob",
+                "script" : "curl -vvv http://localhost",
+                "schedule" : "0/5 * * * *"
         }"""
         )
 

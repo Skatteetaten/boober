@@ -84,13 +84,29 @@ enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: 
 }
 
 enum class TemplateType(
-    val completelyGenerated: Boolean
+    val versionAndGroupRequired: Boolean = true,
+    val auroraGeneratedDeployment: Boolean = true,
+    val defaultGroupId: String? = null,
+    val defaultArtifactId: String? = null,
+    val defaultVersion: String? = null
 ) {
-    job(false),
-    deploy(true),
-    development(true),
-    localTemplate(false),
-    template(false)
+
+    cronjob(
+        auroraGeneratedDeployment = false,
+        defaultGroupId = "aurora",
+        defaultArtifactId = "turbo",
+        defaultVersion = "0"
+    ),
+    job(
+        auroraGeneratedDeployment = false,
+        defaultGroupId = "aurora",
+        defaultArtifactId = "turbo",
+        defaultVersion = "0"
+    ),
+    deploy,
+    development,
+    localTemplate(false, false),
+    template(false, false)
 }
 
 enum class DeploymentState {

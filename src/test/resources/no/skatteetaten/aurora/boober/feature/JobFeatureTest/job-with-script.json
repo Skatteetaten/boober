@@ -22,7 +22,7 @@
           "spec" : {
             "containers" : [ {
               "command" : [ "/bin/sh", "/u01/config/script/script.sh" ],
-              "image" : "docker.registry/foo_bar/simple:1",
+              "image" : "docker.registry/aurora/turbo:0",
               "imagePullPolicy" : "Always",
               "name" : "simple",
               "volumeMounts" : [ {

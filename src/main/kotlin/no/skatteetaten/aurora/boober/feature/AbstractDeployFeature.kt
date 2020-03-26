@@ -52,6 +52,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraVersion
 import no.skatteetaten.aurora.boober.model.Paths
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.model.Validator
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
@@ -129,35 +130,53 @@ fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
 
 val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
     get() =
-        AuroraConfigFieldHandler("version", validator = {
-            it.pattern(
-                "^[\\w][\\w.-]{0,127}$",
-                "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-                this.type.completelyGenerated
-            )
-        })
+        AuroraConfigFieldHandler("version",
+            defaultValue = this.type.defaultVersion,
+            validator = {
+                it.pattern(
+                    "^[\\w][\\w.-]{0,127}$",
+                    "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
+                    this.type.versionAndGroupRequired
+                )
+            })
 
 val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
     get() = AuroraConfigFieldHandler(
         "groupId",
+        defaultValue = this.type.defaultGroupId,
         validator = {
             it.length(
                 200,
                 "GroupId must be set and be shorter then 200 characters",
-                this.type.completelyGenerated
+                this.type.versionAndGroupRequired
             )
         })
 
-fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
-    setOf(
-        AuroraConfigFieldHandler("artifactId",
+fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+
+    val artifactValidator: Validator =
+        { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }
+
+    val artifactHandler = if (spec.type.defaultArtifactId != null) {
+        AuroraConfigFieldHandler(
+            "artifactId",
+            defaultValue = spec.type.defaultArtifactId,
+            validator = artifactValidator
+        )
+    } else {
+        AuroraConfigFieldHandler(
+            "artifactId",
             defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension(),
             defaultSource = "fileName",
-            validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
-
+            validator = artifactValidator
+        )
+    }
+    return setOf(
+        artifactHandler,
         spec.groupIdHandler,
         spec.versionHandler
     )
+}
 
 abstract class AbstractDeployFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String

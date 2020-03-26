@@ -34,14 +34,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 val AuroraDeploymentSpec.jobCommand: List<String>?
-    get() = this.getDelimitedStringOrArrayAsSetOrNull("job/command")?.toList()
+    get() = this.getDelimitedStringOrArrayAsSetOrNull("command")?.toList()
 
 val AuroraDeploymentSpec.jobArguments: List<String>?
-    get() = this.getDelimitedStringOrArrayAsSetOrNull("job/arguments")?.toList()
+    get() = this.getDelimitedStringOrArrayAsSetOrNull("arguments")?.toList()
 
-val AuroraDeploymentSpec.jobSchedule: String? get() = this.getOrNull("job/schedule")
-
-val AuroraDeploymentSpec.jobType: String get() = this.jobSchedule?.let { "CronJob" } ?: "Job"
+val AuroraDeploymentSpec.jobSchedule: String? get() = this.getOrNull("schedule")
 
 enum class ConcurrencyPolicies {
     Allow, Replace, Forbid
@@ -62,7 +60,7 @@ class JobFeature(
     )
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type == TemplateType.job
+        return header.type in listOf(TemplateType.cronjob, TemplateType.job)
     }
 
     override fun validate(
@@ -70,7 +68,7 @@ class JobFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        val script = adc.getOrNull<String>("job/script")
+        val script = adc.getOrNull<String>("script")
         if (script != null && (adc.jobArguments != null || adc.jobCommand != null)) {
             throw AuroraDeploymentSpecValidationException("Job script and command/arguments are not compatible. Choose either script or command/arguments")
         }
@@ -79,27 +77,35 @@ class JobFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        return gavHandlers(header, cmd) +
+        val handlers = gavHandlers(header, cmd) +
             defaultHandlersForAllTypes +
             setOf(
-                AuroraConfigFieldHandler("job/schedule", validator = { it.validUnixCron() }),
-                AuroraConfigFieldHandler("job/suspend", defaultValue = false, validator = { it.boolean() }),
-                AuroraConfigFieldHandler("job/command"),
-                AuroraConfigFieldHandler("job/arguments"),
-                AuroraConfigFieldHandler("job/script"),
-                AuroraConfigFieldHandler("job/failureCount", defaultValue = 1, validator = { it.int() }),
-                AuroraConfigFieldHandler("job/startingDeadline", defaultValue = 60, validator = { it.int() }),
-                AuroraConfigFieldHandler("job/successCount", defaultValue = 3, validator = { it.int() }),
-                AuroraConfigFieldHandler("job/concurrentPolicy", defaultValue = ConcurrencyPolicies.Forbid.toString(),
+                AuroraConfigFieldHandler("command"),
+                AuroraConfigFieldHandler("arguments"),
+                AuroraConfigFieldHandler("script")
+            )
+
+        val cronJobHandlers = if (header.type == TemplateType.cronjob) {
+            setOf(
+                AuroraConfigFieldHandler("schedule", validator = { it.validUnixCron() }),
+                AuroraConfigFieldHandler("suspend", defaultValue = false, validator = { it.boolean() }),
+                AuroraConfigFieldHandler("failureCount", defaultValue = 1, validator = { it.int() }),
+                AuroraConfigFieldHandler("startingDeadline", defaultValue = 60, validator = { it.int() }),
+                AuroraConfigFieldHandler("successCount", defaultValue = 3, validator = { it.int() }),
+                AuroraConfigFieldHandler("concurrentPolicy", defaultValue = ConcurrencyPolicies.Forbid.toString(),
                     validator = { node ->
                         node?.oneOf(ConcurrencyPolicies.values().map { it.toString() })
                     })
             )
+        } else {
+            null
+        }
+        return handlers.addIfNotNull(cronJobHandlers)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
-        val script = adc.getOrNull<String>("job/script")
+        val script = adc.getOrNull<String>("script")
         val scriptConfigMap = script?.let { s ->
             newConfigMap {
                 metadata {
@@ -110,7 +116,6 @@ class JobFeature(
             }
         }
 
-        // TODO: masse flere parametre som kanskje bør settes her.
         val jobSpec = newJobSpec {
             parallelism = 1
             completions = 1
@@ -160,7 +165,7 @@ class JobFeature(
             }
         }
 
-        val job: HasMetadata = adc.jobSchedule?.let { cron ->
+        val job: HasMetadata = if (adc.type == TemplateType.cronjob) {
             // Please read and understand this before chaning anything here
             // https://kubernetes.io/docs/tasks/job/automated-tasks-with-cron-jobs/
             // https://medium.com/@hengfeng/what-does-kubernetes-cronjobs-startingdeadlineseconds-exactly-mean-cc2117f9795f
@@ -170,14 +175,13 @@ class JobFeature(
                     namespace = adc.namespace
                 }
                 spec {
-                    schedule = cron
-                    // TODO: Should probably validate that these 4 parameters are not valid if schedule is not set, or figure out another way to configure this
+                    schedule = adc.jobSchedule
                     // startingDeadlineSeconds should this be here?
-                    successfulJobsHistoryLimit = adc["job/successCount"]
-                    failedJobsHistoryLimit = adc["job/failureCount"]
-                    concurrencyPolicy = adc["job/concurrentPolicy"]
-                    startingDeadlineSeconds = adc["job/startingDeadline"]
-                    suspend = adc["job/suspend"]
+                    successfulJobsHistoryLimit = adc["successCount"]
+                    failedJobsHistoryLimit = adc["failureCount"]
+                    concurrencyPolicy = adc["concurrentPolicy"]
+                    startingDeadlineSeconds = adc["startingDeadline"]
+                    suspend = adc["suspend"]
                     jobTemplate {
                         metadata {
                             generateName = adc.name
@@ -186,12 +190,14 @@ class JobFeature(
                     }
                 }
             }
-        } ?: newJob {
-            metadata = newObjectMeta {
-                generateName = "${adc.name}-"
-                namespace = adc.namespace
+        } else {
+            newJob {
+                metadata = newObjectMeta {
+                    generateName = "${adc.name}-"
+                    namespace = adc.namespace
+                }
+                spec = jobSpec
             }
-            spec = jobSpec
         }
         return setOf(job.generateAuroraResource()).addIfNotNull(scriptConfigMap?.generateAuroraResource())
     }
@@ -206,7 +212,7 @@ class JobFeature(
                 val labels = mapOf("applicationId" to id).normalizeLabels()
                 modifyResource(it, "Added application name and id")
                 val ad: ApplicationDeployment = it.resource as ApplicationDeployment
-                ad.spec.runnableType = adc.jobType
+                ad.spec.runnableType = if (adc.type == TemplateType.cronjob) "CronJob" else "Job"
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id
                 ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels

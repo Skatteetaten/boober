@@ -16,7 +16,7 @@
         "containers" : [ {
           "args" : [ "-vvv", "http://foo" ],
           "command" : [ "curl" ],
-          "image" : "docker.registry/foo_bar/simple:1",
+          "image" : "docker.registry/aurora/turbo:0",
           "imagePullPolicy" : "Always",
           "name" : "simple"
         } ],

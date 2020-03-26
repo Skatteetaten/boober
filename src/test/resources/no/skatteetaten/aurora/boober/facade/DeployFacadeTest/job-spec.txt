@@ -1,7 +1,7 @@
         static | applicationDeploymentRef: "utv/job"
         static | configVersion: "master"
     about.json | schemaVersion: "v1"
-      job.json | type: "job"
+      job.json | type: "cronjob"
     about.json | affiliation: "paas"
     about.json | segment: "aurora"
 utv/about.json | cluster: "utv"
@@ -13,9 +13,7 @@ utv/about.json | cluster: "utv"
                | config:
       job.json |   FOO: "bar"
       job.json | version: "1"
-      fileName | artifactId: "job"
-               | job:
-      job.json |   schedule: "0/5 * * * *"
+      job.json | schedule: "0/5 * * * *"
                | secretVaults:
                |   foo:
       job.json |     keys: ["BAR","FOO"]
