@@ -41,6 +41,10 @@ class MountFeature(
         return mountKeys.flatMap { mountName ->
             listOf(
                 AuroraConfigFieldHandler(
+                    "mounts/$mountName/enabled",
+                    defaultValue = true,
+                    validator = { it.boolean() }),
+                AuroraConfigFieldHandler(
                     "mounts/$mountName/path",
                     validator = { it.required("Path is required for mount") }),
                 AuroraConfigFieldHandler(
@@ -191,7 +195,9 @@ class MountFeature(
             name
         }.toSet()
 
-        return mountNames.map { mount ->
+        return mountNames.filter {
+            auroraDeploymentSpec["mounts/$it/enabled"]
+        }.map { mount ->
             val type: MountType = auroraDeploymentSpec["mounts/$mount/type"]
 
             val secretVaultName = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/secretVault")
