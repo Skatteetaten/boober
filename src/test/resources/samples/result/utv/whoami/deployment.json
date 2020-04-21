@@ -79,6 +79,9 @@
             "name" : "JOLOKIA_HTTP_PORT",
             "value" : "8778"
           }, {
+            "name" : "EXTRA_HTTP_PORT",
+            "value" : "8082"
+          }, {
             "name" : "WHOAMI_DB",
             "value" : "/u01/secrets/app/whoami-db/info"
           }, {
@@ -111,6 +114,10 @@
           }, {
             "containerPort" : 8778,
             "name" : "jolokia",
+            "protocol" : "TCP"
+          }, {
+            "containerPort" : 8082,
+            "name" : "extra",
             "protocol" : "TCP"
           } ],
           "readinessProbe" : {
