@@ -11,7 +11,7 @@
       "sprocket.sits.no/service.webseal-roles": "admin dev komplex"
     },
     "labels": {
-      "operationScope" : "aos-4016",
+      "operationScope": "aos-4016",
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
@@ -34,10 +34,15 @@
     "ports": [
       {
         "name": "http",
-        "nodePort": 0,
         "port": 80,
         "protocol": "TCP",
         "targetPort": 8080
+      },
+      {
+        "name": "extra",
+        "port": 8082,
+        "protocol": "TCP",
+        "targetPort": 8082
       }
     ],
     "selector": {

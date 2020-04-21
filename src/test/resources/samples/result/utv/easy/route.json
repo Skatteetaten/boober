@@ -24,6 +24,9 @@
   },
   "spec": {
     "host": "easy-paas-utv.test",
+    "port" : {
+      "targetPort" : "http"
+    },
     "to": {
       "kind": "Service",
       "name": "easy"

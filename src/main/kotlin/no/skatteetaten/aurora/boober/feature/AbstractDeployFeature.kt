@@ -263,7 +263,12 @@ abstract class AbstractDeployFeature(
                         protocol = "TCP"
                         port = PortNumbers.HTTP_PORT
                         targetPort = IntOrString(PortNumbers.INTERNAL_HTTP_PORT)
-                        nodePort = 0
+                    },
+                    newServicePort {
+                        name = "extra"
+                        protocol = "TCP"
+                        port = PortNumbers.EXTRA_APPLICATION_PORT
+                        targetPort = IntOrString(PortNumbers.EXTRA_APPLICATION_PORT)
                     }
                 )
 
