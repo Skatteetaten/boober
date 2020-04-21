@@ -18,7 +18,7 @@ import org.springframework.test.annotation.DirtiesContext
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class DeploymentFacadeTest : AbstractSpringBootTest() {
+class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: DeploymentFacade

@@ -27,6 +27,9 @@
   },
   "spec": {
     "host": "foobar.test",
+    "port" : {
+      "targetPort" : "http"
+    },
     "to": {
       "kind": "Service",
       "name": "komplex"

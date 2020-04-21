@@ -17,7 +17,8 @@ class JavaDeployFeature(@Value("\${integrations.docker.registry}") val registry:
                 adc, "${adc.name}-java", mapOf(
                     "http" to PortNumbers.INTERNAL_HTTP_PORT,
                     "management" to PortNumbers.INTERNAL_ADMIN_PORT,
-                    "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT
+                    "jolokia" to PortNumbers.JOLOKIA_HTTP_PORT,
+                    "extra" to PortNumbers.EXTRA_APPLICATION_PORT
                 )
             )
         )

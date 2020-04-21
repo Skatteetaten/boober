@@ -24,6 +24,9 @@
   },
   "spec": {
     "host": "komplex-paas-utv.test",
+    "port" : {
+      "targetPort" : "http"
+    },
     "tls": {
       "insecureEdgeTerminationPolicy": "Allow",
       "termination": "edge"

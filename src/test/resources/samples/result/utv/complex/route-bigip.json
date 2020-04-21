@@ -27,6 +27,9 @@
   },
   "spec": {
     "host": "74a691b9358d168e305df7a1ae175a5eefda6754.test",
+    "port" : {
+      "targetPort" : "http"
+    },
     "to": {
       "kind": "Service",
       "name": "komplex"

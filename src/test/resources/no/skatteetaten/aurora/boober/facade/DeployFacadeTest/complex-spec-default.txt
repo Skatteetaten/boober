@@ -66,12 +66,14 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json | liveness: true
                          | mounts:
                          |   aurora-token:
+                 default |     enabled: true
             complex.json |     path: "/u01/secrets/app/aurora-token"
             complex.json |     type: "Secret"
                  default |     mountName: "aurora-token"
                  default |     volumeName: "aurora-token"
             complex.json |     exist: true
                          |   secret-mount:
+                 default |     enabled: true
             complex.json |     path: "/u01/foo"
             complex.json |     type: "Secret"
                  default |     mountName: "secret-mount"
@@ -79,6 +81,7 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     exist: false
             complex.json |     secretVault: "foo"
                          |   pvc:
+                 default |     enabled: true
             complex.json |     path: "/foo"
             complex.json |     type: "PVC"
                  default |     mountName: "pvc"

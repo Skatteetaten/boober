@@ -529,6 +529,14 @@
   },
   "mounts" : {
     "aurora-token" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
+      },
       "path" : {
         "source" : "complex.json",
         "value" : "/u01/secrets/app/aurora-token",
@@ -574,6 +582,14 @@
       }
     },
     "secret-mount" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
+      },
       "path" : {
         "source" : "complex.json",
         "value" : "/u01/foo",
@@ -624,6 +640,14 @@
       }
     },
     "pvc" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
+      },
       "path" : {
         "source" : "complex.json",
         "value" : "/foo",

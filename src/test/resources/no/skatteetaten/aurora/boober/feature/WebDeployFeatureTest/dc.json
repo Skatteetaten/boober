@@ -1,141 +1,182 @@
 {
-  "apiVersion" : "apps.openshift.io/v1",
-  "kind" : "DeploymentConfig",
-  "metadata" : {
-    "name" : "simple",
-    "namespace" : "paas-utv"
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
   },
-  "spec" : {
-    "replicas" : 1,
-    "selector" : {
-      "name" : "simple"
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
     },
-    "strategy" : {
-      "rollingParams" : {
-        "intervalSeconds" : 1,
-        "maxSurge" : "25%",
-        "maxUnavailable" : 0,
-        "timeoutSeconds" : 180,
-        "updatePeriodSeconds" : 1
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
       },
-      "type" : "Rolling"
+      "type": "Rolling"
     },
-    "template" : {
-      "spec" : {
-        "containers" : [ {
-          "args" : [ "/u01/bin/run_node" ],
-          "env" : [ {
-            "name" : "POD_NAME",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.name"
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "args": [
+              "/u01/bin/run_node"
+            ],
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "9090"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "EXTRA_HTTP_PORT",
+                "value": "8082"
               }
-            }
-          }, {
-            "name" : "POD_NAMESPACE",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.namespace"
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "simple-node",
+            "ports": [
+              {
+                "containerPort": 9090,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8082,
+                "name": "extra",
+                "protocol": "TCP"
               }
-            }
-          }, {
-            "name" : "HTTP_PORT",
-            "value" : "9090"
-          }, {
-            "name" : "MANAGEMENT_HTTP_PORT",
-            "value" : "8081"
-          } ],
-          "imagePullPolicy" : "IfNotPresent",
-          "name" : "simple-node",
-          "ports" : [ {
-            "containerPort" : 9090,
-            "name" : "http",
-            "protocol" : "TCP"
-          }, {
-            "containerPort" : 8081,
-            "name" : "management",
-            "protocol" : "TCP"
-          } ],
-          "readinessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
             },
-            "timeoutSeconds" : 1
-          },
-          "securityContext" : {
-            "privileged" : false
-          },
-          "terminationMessagePath" : "/dev/termination-log",
-          "volumeMounts" : [ {
-            "mountPath" : "/u01/logs",
-            "name" : "application-log-volume"
-          } ]
-        }, {
-          "args" : [ "/u01/bin/run_nginx" ],
-          "env" : [ {
-            "name" : "POD_NAME",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.name"
-              }
-            }
-          }, {
-            "name" : "POD_NAMESPACE",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.namespace"
-              }
-            }
-          }, {
-            "name" : "HTTP_PORT",
-            "value" : "8080"
-          } ],
-          "imagePullPolicy" : "IfNotPresent",
-          "name" : "simple-nginx",
-          "ports" : [ {
-            "containerPort" : 8080,
-            "name" : "http",
-            "protocol" : "TCP"
-          } ],
-          "readinessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            "securityContext": {
+              "privileged": false
             },
-            "timeoutSeconds" : 1
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ]
           },
-          "securityContext" : {
-            "privileged" : false
-          },
-          "terminationMessagePath" : "/dev/termination-log",
-          "volumeMounts" : [ {
-            "mountPath" : "/u01/logs",
-            "name" : "application-log-volume"
-          } ]
-        } ],
-        "dnsPolicy" : "ClusterFirst",
-        "restartPolicy" : "Always",
-        "volumes" : [ {
-          "emptyDir" : { },
-          "name" : "application-log-volume"
-        } ]
+          {
+            "args": [
+              "/u01/bin/run_nginx"
+            ],
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              }
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "simple-nginx",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
+            },
+            "securityContext": {
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "application-log-volume"
+          }
+        ]
       }
     },
-    "triggers" : [ {
-      "imageChangeParams" : {
-        "automatic" : true,
-        "containerNames" : [ "simple-node", "simple-nginx" ],
-        "from" : {
-          "kind" : "ImageStreamTag",
-          "name" : "simple:default"
-        }
-      },
-      "type" : "ImageChange"
-    } ]
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple-node",
+            "simple-nginx"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }
