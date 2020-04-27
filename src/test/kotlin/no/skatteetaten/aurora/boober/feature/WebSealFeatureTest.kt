@@ -32,7 +32,6 @@ class WebSealFeatureTest : AbstractFeatureTest() {
 
         assertThat(route).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route.json")
-
     }
 
     @Test

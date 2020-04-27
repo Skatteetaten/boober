@@ -49,15 +49,14 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
         val previous = loadJsonResource("webseal-route.json")
         val payload = loadJsonResource("webseal-route-generated.json")
 
-        val cmd=OpenshiftCommand(operationType = OperationType.UPDATE, previous = previous, payload = payload, generated = payload, url="")
+        val cmd = OpenshiftCommand(operationType = OperationType.UPDATE, previous = previous, payload = payload, generated = payload, url = "")
 
         assertThat(cmd.rolesEqualAndProcessingDone()).isTrue()
 
-        val newCommand= cmd.setWebsealDone()
+        val newCommand = cmd.setWebsealDone()
 
         assertThat(newCommand.payload.annotation(WEBSEAL_DONE_ANNOTATION)).isNotNull()
     }
-
 
     @Test
     fun `Should include accept successful command`() {

@@ -19,7 +19,6 @@ import io.fabric8.openshift.api.model.ImageStreamImport
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.feature.WEBSEAL_DONE_ANNOTATION
-import no.skatteetaten.aurora.boober.feature.WEBSEAL_ROLES_ANNOTATION
 import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -198,7 +197,6 @@ class OpenShiftCommandService(
                 }
             }
     }
-
 
     private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode?): Boolean {
         if (previousRoute == null) {

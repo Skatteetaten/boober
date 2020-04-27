@@ -1,0 +1,39 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "annotations": {
+      "marjory.sits.no/isOpen": "false",
+      "marjory.sits.no/route.roles": "Foo,Bar"
+    },
+    "creationTimestamp": "2019-02-14T08:29:50Z",
+    "labels": {
+      "affiliation": "paas",
+      "app": "ref",
+      "booberDeployId": "bee6c47",
+      "updatedBy": "m89870"
+    },
+    "name": "ref4",
+    "namespace": "paas-bjarte-dev",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "ref",
+        "uid": "b95463b4-302c-11e9-a70b-005056833ec1"
+      }
+    ],
+    "resourceVersion": "502259548",
+    "selfLink": "/apis/route.openshift.io/v1/namespaces/paas-bjarte-dev/routes/ref4",
+    "uid": "b2391b03-3032-11e9-8fd1-00505683244e"
+  },
+  "spec": {
+    "host": "foobar.paas-bjarte-dev.utv.paas.skead.no",
+    "to": {
+      "kind": "Service",
+      "name": "ref",
+      "weight": 100
+    },
+    "wildcardPolicy": "None"
+  }
+}

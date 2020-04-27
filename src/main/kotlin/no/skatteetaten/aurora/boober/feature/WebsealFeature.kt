@@ -8,8 +8,8 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-val WEBSEAL_ROLES_ANNOTATION:String="marjory.sits.no/route.roles"
-val WEBSEAL_DONE_ANNOTATION:String="marjory.sits.no-routes-config.done"
+val WEBSEAL_ROLES_ANNOTATION: String = "marjory.sits.no/route.roles"
+val WEBSEAL_DONE_ANNOTATION: String = "marjory.sits.no-routes-config.done"
 
 @Service
 class WebsealFeature(
@@ -35,20 +35,20 @@ class WebsealFeature(
                 .takeIf { it.isNotEmpty() }?.joinToString(",") ?: ""
             val host = adc.getOrNull<String>("$field/host") ?: "${adc.name}-${adc.namespace}"
             val annotations = mapOf(
-                "marjory.sits.no/isOpen" to  "false",
-                WEBSEAL_ROLES_ANNOTATION to  roles)
+                "marjory.sits.no/isOpen" to "false",
+                WEBSEAL_ROLES_ANNOTATION to roles
+            )
             val routeName = "${adc.name}-webseal"
 
             val auroraRoute = Route(
                 objectName = routeName,
                 host = host,
-                annotations = annotations)
+                annotations = annotations
+            )
 
-             setOf(auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, webSealSuffix).generateAuroraResource())
-
-        }  ?: emptySet()
+            setOf(auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, webSealSuffix).generateAuroraResource())
+        } ?: emptySet()
     }
-
 
     fun willCreateResource(adc: AuroraDeploymentSpec): Boolean {
         return adc.featureEnabled("webseal") {
