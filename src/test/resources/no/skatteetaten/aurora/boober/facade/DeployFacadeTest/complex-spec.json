@@ -567,10 +567,10 @@
     },
     "roles" : {
       "source" : "complex.json",
-      "value" : "admin dev @name@",
+      "value" : "admin,dev,@name@",
       "sources" : [ {
         "name" : "complex.json",
-        "value" : "admin dev @name@"
+        "value" : "admin,dev,@name@"
       } ]
     }
   }

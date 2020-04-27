@@ -1,14 +1,13 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
-import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
 class WebSealFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = WebsealFeature()
+        get() = WebsealFeature(".test.skead.no")
 
     @Test
     fun `should not allow misspelled false for boolean webseal|strict flag`() {
@@ -24,34 +23,30 @@ class WebSealFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should annotate service with webseal labels`() {
+    fun `should create webseal route`() {
 
-        val resources = modifyResources(
+        val (route) = modifyResources(
             """{
              "webseal" : true 
-           }""", createEmptyService()
-        )
+           }""")
 
-        val resource = resources.first()
-        assertThat(resource).auroraResourceModifiedByThisFeatureWithComment("Set webseal annotations")
-        assertThat(resource.resource.metadata.annotations["sprocket.sits.no/service.webseal"]).isEqualTo("simple-paas-utv")
+        assertThat(route).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
     }
 
     @Test
-    fun `should annotate service with webseal labels and roles`() {
+    fun `should create webseal route with roles and custom host`() {
 
-        val resources = modifyResources(
+        val (route) = modifyResources(
             """{
              "webseal" : {
                "host" : "simple2-paas-utv",
                "roles" : "foo,bar,baz"
              }
-           }""", createEmptyService()
-        )
+           }""")
 
-        val resource = resources.first()
-        assertThat(resource).auroraResourceModifiedByThisFeatureWithComment("Set webseal annotations")
-        assertThat(resource.resource.metadata.annotations["sprocket.sits.no/service.webseal"]).isEqualTo("simple2-paas-utv")
-        assertThat(resource.resource.metadata.annotations["sprocket.sits.no/service.webseal-roles"]).isEqualTo("foo,bar,baz")
+        assertThat(route).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-custom.json")
     }
 }

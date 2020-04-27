@@ -4,13 +4,17 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.filterNullValues
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
+val WEBSEAL_ROLES_ANNOTATION:String="marjory.sits.no/route.roles"
+val WEBSEAL_DONE_ANNOTATION:String="marjory.sits.no-routes-config.done"
+
 @Service
-class WebsealFeature : Feature {
+class WebsealFeature(
+    @Value("\${boober.webseal.suffix}") val webSealSuffix: String
+) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
@@ -25,25 +29,26 @@ class WebsealFeature : Feature {
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        adc.featureEnabled("webseal") { field ->
+    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+        return adc.featureEnabled("webseal") { field ->
             val roles = adc.getDelimitedStringOrArrayAsSet("$field/roles", ",")
-                .takeIf { it.isNotEmpty() }?.joinToString(",")
+                .takeIf { it.isNotEmpty() }?.joinToString(",") ?: ""
             val host = adc.getOrNull<String>("$field/host") ?: "${adc.name}-${adc.namespace}"
             val annotations = mapOf(
-                "sprocket.sits.no/service.webseal" to host,
-                "sprocket.sits.no/service.webseal-roles" to roles
-            ).filterNullValues()
+                "marjory.sits.no/isOpen" to  "false",
+                WEBSEAL_ROLES_ANNOTATION to  roles)
+            val routeName = "${adc.name}-webseal"
 
-            resources.forEach {
-                if (it.resource.kind == "Service") {
-                    modifyResource(it, "Set webseal annotations")
-                    val allAnnotations = it.resource.metadata.annotations?.addIfNotNull(annotations) ?: annotations
-                    it.resource.metadata.annotations = allAnnotations
-                }
-            }
-        }
+            val auroraRoute = Route(
+                objectName = routeName,
+                host = host,
+                annotations = annotations)
+
+             setOf(auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, webSealSuffix).generateAuroraResource())
+
+        }  ?: emptySet()
     }
+
 
     fun willCreateResource(adc: AuroraDeploymentSpec): Boolean {
         return adc.featureEnabled("webseal") {

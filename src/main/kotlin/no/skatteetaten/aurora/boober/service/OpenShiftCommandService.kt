@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.openshift.from
@@ -16,6 +18,8 @@ import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
 import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.feature.TemplateType
+import no.skatteetaten.aurora.boober.feature.WEBSEAL_DONE_ANNOTATION
+import no.skatteetaten.aurora.boober.feature.WEBSEAL_ROLES_ANNOTATION
 import no.skatteetaten.aurora.boober.model.openshift.findErrorMessage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -26,6 +30,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType.DELETE
 import no.skatteetaten.aurora.boober.service.openshift.OperationType.UPDATE
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.annotation
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.deploymentConfig
 import no.skatteetaten.aurora.boober.utils.findDockerImageUrl
@@ -194,6 +199,7 @@ class OpenShiftCommandService(
             }
     }
 
+
     private fun mustRecreateRoute(newRoute: JsonNode, previousRoute: JsonNode?): Boolean {
         if (previousRoute == null) {
             return false
@@ -225,6 +231,14 @@ class OpenShiftCommandService(
                     payload = command.generated!!
                 )
                 listOf(deleteCommand, createCommand)
+            } else if (command.isType(UPDATE, "route") && command.rolesEqualAndProcessingDone()) {
+                val newPayload = command.payload
+                val annotations = newPayload.get("metadata").get("annotations") as ObjectNode
+                annotations.replace(
+                    WEBSEAL_DONE_ANNOTATION,
+                    TextNode(command.previous?.annotation(WEBSEAL_DONE_ANNOTATION))
+                )
+                listOf(command.copy(payload = newPayload))
             } else {
                 listOf(command)
             }
