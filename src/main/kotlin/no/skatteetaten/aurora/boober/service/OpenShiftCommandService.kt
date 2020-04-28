@@ -230,13 +230,7 @@ class OpenShiftCommandService(
                 )
                 listOf(deleteCommand, createCommand)
             } else if (command.isType(UPDATE, "route") && command.rolesEqualAndProcessingDone()) {
-                val newPayload = command.payload
-                val annotations = newPayload.get("metadata").get("annotations") as ObjectNode
-                annotations.replace(
-                    WEBSEAL_DONE_ANNOTATION,
-                    TextNode(command.previous?.annotation(WEBSEAL_DONE_ANNOTATION))
-                )
-                listOf(command.copy(payload = newPayload))
+                listOf(command.setWebsealDone())
             } else {
                 listOf(command)
             }
