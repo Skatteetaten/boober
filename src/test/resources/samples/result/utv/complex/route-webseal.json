@@ -1,0 +1,37 @@
+{
+  "apiVersion" : "route.openshift.io/v1",
+  "kind" : "Route",
+  "metadata" : {
+    "annotations" : {
+      "marjory.sits.no/isOpen" : "false",
+      "marjory.sits.no/route.roles" : "admin,dev,komplex"
+    },
+    "labels" : {
+      "operationScope" : "aos-4016",
+      "app" : "komplex",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "affiliation" : "paas",
+      "name" : "komplex",
+      "booberDeployId" : "deploy1"
+    },
+    "name" : "komplex-webseal",
+    "namespace" : "paas-utv",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "komplex",
+      "uid" : "123-123"
+    } ]
+  },
+  "spec" : {
+    "host" : "test.test.webseal",
+    "port" : {
+      "targetPort" : "http"
+    },
+    "to" : {
+      "kind" : "Service",
+      "name" : "komplex"
+    }
+  }
+}

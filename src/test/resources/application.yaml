@@ -62,6 +62,8 @@ boober:
         tokenLocation: /tmp/boober-token
     route:
         suffix: ".test"
+    webseal:
+        suffix: ".test.webseal"
 
 vault:
     operations:

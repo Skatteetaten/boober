@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -12,8 +13,11 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ClientType
 import no.skatteetaten.aurora.boober.TokenSource.API_USER
 import no.skatteetaten.aurora.boober.TokenSource.SERVICE_ACCOUNT
+import no.skatteetaten.aurora.boober.feature.WEBSEAL_DONE_ANNOTATION
+import no.skatteetaten.aurora.boober.feature.WEBSEAL_ROLES_ANNOTATION
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.Companion.generateUrl
+import no.skatteetaten.aurora.boober.utils.annotation
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.cache.annotation.Cacheable
@@ -38,6 +42,22 @@ data class OpenshiftCommand(
         if (payload.openshiftKind != kind) return false
         if (operationType != operationType) return false
         return true
+    }
+
+    fun rolesEqualAndProcessingDone(): Boolean {
+        if (previous == null) {
+            return false
+        }
+
+        previous.annotation(WEBSEAL_DONE_ANNOTATION) ?: return false
+
+        return payload.annotation(WEBSEAL_ROLES_ANNOTATION) == previous.annotation(WEBSEAL_ROLES_ANNOTATION)
+    }
+
+    fun setWebsealDone(): OpenshiftCommand {
+        val annotations = payload.get("metadata").get("annotations") as ObjectNode
+        annotations.replace(WEBSEAL_DONE_ANNOTATION, TextNode(previous?.annotation(WEBSEAL_DONE_ANNOTATION)))
+        return this.copy(payload = payload)
     }
 }
 
