@@ -6,9 +6,7 @@
       "prometheus.io/scheme": "http",
       "prometheus.io/scrape": "true",
       "prometheus.io/path": "/prometheus",
-      "prometheus.io/port": "8082",
-      "sprocket.sits.no/service.webseal": "test",
-      "sprocket.sits.no/service.webseal-roles": "admin dev komplex"
+      "prometheus.io/port": "8082"
     },
     "labels": {
       "operationScope": "aos-4016",

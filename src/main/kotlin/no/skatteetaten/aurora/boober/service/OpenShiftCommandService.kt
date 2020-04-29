@@ -228,6 +228,8 @@ class OpenShiftCommandService(
                     payload = command.generated!!
                 )
                 listOf(deleteCommand, createCommand)
+            } else if (command.isType(UPDATE, "route") && command.rolesEqualAndProcessingDone()) {
+                listOf(command.setWebsealDone())
             } else {
                 listOf(command)
             }

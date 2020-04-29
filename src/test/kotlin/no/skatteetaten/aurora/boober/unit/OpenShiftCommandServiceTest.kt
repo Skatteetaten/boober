@@ -3,18 +3,21 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isNotNull
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
 import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import no.skatteetaten.aurora.boober.feature.WEBSEAL_DONE_ANNOTATION
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import no.skatteetaten.aurora.boober.utils.annotation
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
@@ -39,6 +42,30 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
             responseBody = json
         )
         assertThat(service.findErrorMessage(response)).isEqualTo("route ref3 already exposes foobar.paas-bjarte-dev.utv.paas.skead.no and is older")
+    }
+
+    @Test
+    fun `Should keep done annotation if roles the same and previous success`() {
+        val previous = loadJsonResource("webseal-route.json")
+        val payload = loadJsonResource("webseal-route-generated.json")
+
+        val cmd = OpenshiftCommand(operationType = OperationType.UPDATE, previous = previous, payload = payload, generated = payload, url = "")
+
+        assertThat(cmd.rolesEqualAndProcessingDone()).isTrue()
+
+        val newCommand = cmd.setWebsealDone()
+
+        assertThat(newCommand.payload.annotation(WEBSEAL_DONE_ANNOTATION)).isNotNull()
+    }
+
+    @Test
+    fun `Should include accept successful command`() {
+        val json = loadJsonResource("dc.json")
+        createOpenShiftClientMock(json)
+        val resultList = service.createAndApplyObjects(namespace, json, false)
+
+        assertThat(resultList.size).isEqualTo(1)
+        assertThat(resultList.first().success).isTrue()
     }
 
     @Test

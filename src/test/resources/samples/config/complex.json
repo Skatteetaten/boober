@@ -42,7 +42,7 @@
   },
   "webseal": {
     "host": "test",
-    "roles": "admin dev @name@"
+    "roles": "admin,dev,@name@"
   },
   "config": {
     "FOO": "BAR"

@@ -7,12 +7,14 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.BooleanNode
+import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.fasterxml.jackson.module.kotlin.treeToValue
 import org.springframework.boot.convert.DurationStyle
 
 inline fun <reified T : Any> JsonNode.convert(): T = jacksonObjectMapper().convertValue(this)
@@ -67,6 +69,16 @@ fun JsonNode.atNullable(path: String): JsonNode? {
 
 fun List<JsonNode>.deploymentConfig(): JsonNode? = this.find { it.openshiftKind == "deploymentconfig" }
 fun List<JsonNode>.imageStream(): JsonNode? = this.find { it.openshiftKind == "imagestream" }
+
+fun JsonNode.annotation(name: String): String? {
+    val annotations = this.at("/metadata/annotations") ?: return null
+    if (annotations is MissingNode) {
+        return null
+    }
+
+    val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations) ?: return null
+    return entries[name]
+}
 
 val JsonNode.namespace: String
     get() = this.get("metadata").get("namespace").asText()

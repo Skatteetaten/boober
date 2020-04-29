@@ -47,6 +47,8 @@ boober:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
     route:
         suffix: ".${openshift.cluster}.paas.skead.no"
+    webseal:
+        suffix: ".amutv.skead.no"
 
 aurora:
     token:
