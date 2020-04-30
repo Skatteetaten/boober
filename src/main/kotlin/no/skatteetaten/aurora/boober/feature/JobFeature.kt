@@ -52,6 +52,7 @@ class JobFeature(
 
     // TODO: need routeDefaults hosts here and probably database defaults aswell. Cause they can be in about file
     val defaultHandlersForAllTypes = setOf(
+        AuroraConfigFieldHandler("serviceAccount"),
         AuroraConfigFieldHandler("replicas"),
         AuroraConfigFieldHandler("prometheus/path"),
         AuroraConfigFieldHandler("prometheus/port"),

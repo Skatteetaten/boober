@@ -71,17 +71,20 @@
                     "optional" : false
                   }
                 }
-              } ],
-              "image" : "docker.registry:5000/no_skatteetaten_demo/turbo:1",
-              "imagePullPolicy" : "Always",
-              "name" : "job",
-              "resources" : {
-                "limits" : { },
-                "requests" : { }
               }
-            } ],
-            "dnsPolicy" : "ClusterFirst",
-            "restartPolicy" : "Never"
+              ],
+              "image": "docker.registry:5000/no_skatteetaten_demo/turbo:1",
+              "imagePullPolicy": "Always",
+              "name": "job",
+              "resources": {
+                "limits": {},
+                "requests": {}
+              }
+            }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Never",
+            "serviceAccount": "foo"
           }
         }
       }

@@ -26,6 +26,7 @@ utv/about.json | cluster: "utv"
       job.json | version: "1"
        default | management: false
        default | artifactId: "turbo"
+      job.json | serviceAccount: "foo"
       job.json | schedule: "0/5 * * * *"
        default | suspend: false
        default | failureCount: 1

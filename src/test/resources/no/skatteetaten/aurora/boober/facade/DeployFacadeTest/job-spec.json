@@ -109,26 +109,41 @@
     }
   },
   "version" : {
-    "source" : "job.json",
-    "value" : "1",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "0"
-    }, {
-      "name" : "job.json",
-      "value" : "1"
-    } ]
+    "source": "job.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "default",
+        "value": "0"
+      },
+      {
+        "name": "job.json",
+        "value": "1"
+      }
+    ]
   },
-  "schedule" : {
-    "source" : "job.json",
-    "value" : "0/5 * * * *",
-    "sources" : [ {
-      "name" : "job.json",
-      "value" : "0/5 * * * *"
-    } ]
+  "serviceAccount": {
+    "source": "job.json",
+    "value": "foo",
+    "sources": [
+      {
+        "name": "job.json",
+        "value": "foo"
+      }
+    ]
   },
-  "secretVaults" : {
-    "foo" : {
+  "schedule": {
+    "source": "job.json",
+    "value": "0/5 * * * *",
+    "sources": [
+      {
+        "name": "job.json",
+        "value": "0/5 * * * *"
+      }
+    ]
+  },
+  "secretVaults": {
+    "foo": {
       "keys" : {
         "source" : "job.json",
         "value" : [ "BAR", "FOO" ],

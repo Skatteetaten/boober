@@ -207,26 +207,41 @@
     "sources" : [ {
       "name" : "default",
       "value" : false
-    } ]
+    }
+    ]
   },
-  "artifactId" : {
-    "source" : "default",
-    "value" : "turbo",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "turbo"
-    } ]
+  "artifactId": {
+    "source": "default",
+    "value": "turbo",
+    "sources": [
+      {
+        "name": "default",
+        "value": "turbo"
+      }
+    ]
   },
-  "schedule" : {
-    "source" : "job.json",
-    "value" : "0/5 * * * *",
-    "sources" : [ {
-      "name" : "job.json",
-      "value" : "0/5 * * * *"
-    } ]
+  "serviceAccount": {
+    "source": "job.json",
+    "value": "foo",
+    "sources": [
+      {
+        "name": "job.json",
+        "value": "foo"
+      }
+    ]
   },
-  "suspend" : {
-    "source" : "default",
+  "schedule": {
+    "source": "job.json",
+    "value": "0/5 * * * *",
+    "sources": [
+      {
+        "name": "job.json",
+        "value": "0/5 * * * *"
+      }
+    ]
+  },
+  "suspend": {
+    "source": "default",
     "value" : false,
     "sources" : [ {
       "name" : "default",
