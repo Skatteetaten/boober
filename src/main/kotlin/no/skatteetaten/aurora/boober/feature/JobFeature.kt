@@ -64,27 +64,10 @@ class JobFeature(
         return header.type in listOf(TemplateType.cronjob, TemplateType.job)
     }
 
-    override fun validate(
-        adc: AuroraDeploymentSpec,
-        fullValidation: Boolean,
-        cmd: AuroraContextCommand
-    ): List<Exception> {
-        val script = adc.getOrNull<String>("script")
-        if (script != null && (adc.jobArguments != null || adc.jobCommand != null)) {
-            throw AuroraDeploymentSpecValidationException("Job script and command/arguments are not compatible. Choose either script or command/arguments")
-        }
-        return emptyList()
-    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        val handlers = gavHandlers(header, cmd) +
-            defaultHandlersForAllTypes +
-            setOf(
-                AuroraConfigFieldHandler("command"),
-                AuroraConfigFieldHandler("arguments"),
-                AuroraConfigFieldHandler("script")
-            )
+        val handlers = gavHandlers(header, cmd) + defaultHandlersForAllTypes
 
         val cronJobHandlers = if (header.type == TemplateType.cronjob) {
             setOf(
@@ -106,17 +89,6 @@ class JobFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
-        val script = adc.getOrNull<String>("script")
-        val scriptConfigMap = script?.let { s ->
-            newConfigMap {
-                metadata {
-                    name = "${adc.name}-script"
-                    namespace = adc.namespace
-                }
-                data = mapOf("script.sh" to s)
-            }
-        }
-
         val jobSpec = newJobSpec {
             parallelism = 1
             completions = 1
@@ -125,37 +97,11 @@ class JobFeature(
                     generateName = adc.name
                 }
                 spec {
-                    scriptConfigMap?.let { configMap ->
-                        volumes = listOf(newVolume {
-                            name = configMap.metadata.name
-                            configMap {
-                                name = configMap.metadata.name
-                            }
-                        })
-                    }
 
                     containers = listOf(newContainer {
                         image = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
                         imagePullPolicy = "Always"
                         name = adc.name
-                        scriptConfigMap?.let { configMap ->
-                            val path = "${Paths.configPath}/script"
-
-                            volumeMounts = listOf(newVolumeMount {
-                                mountPath = path
-                                name = configMap.metadata.name
-                            })
-                            command = listOf(
-                                "/bin/sh",
-                                "$path/script.sh"
-                            )
-                        }
-                        adc.jobArguments?.let {
-                            args = it
-                        }
-                        adc.jobCommand?.let {
-                            command = it
-                        }
                     })
                     restartPolicy = "Never"
                     dnsPolicy = "ClusterFirst"
@@ -200,7 +146,7 @@ class JobFeature(
                 spec = jobSpec
             }
         }
-        return setOf(job.generateAuroraResource()).addIfNotNull(scriptConfigMap?.generateAuroraResource())
+        return setOf(job.generateAuroraResource())
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {

@@ -131,24 +131,22 @@ fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
 val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
     get() =
         AuroraConfigFieldHandler("version",
-            defaultValue = this.type.defaultVersion,
             validator = {
                 it.pattern(
-                    "^[\\w][\\w.-]{0,127}$",
-                    "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-                    this.type.versionAndGroupRequired
+                    pattern = "^[\\w][\\w.-]{0,127}$",
+                    message = "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
+                    required = this.type.versionAndGroupRequired
                 )
             })
 
 val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
     get() = AuroraConfigFieldHandler(
         "groupId",
-        defaultValue = this.type.defaultGroupId,
         validator = {
             it.length(
-                200,
-                "GroupId must be set and be shorter then 200 characters",
-                this.type.versionAndGroupRequired
+                length = 200,
+                message = "GroupId must be set and be shorter then 200 characters",
+                required = this.type.versionAndGroupRequired
             )
         })
 
@@ -157,20 +155,12 @@ fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<Auro
     val artifactValidator: Validator =
         { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }
 
-    val artifactHandler = if (spec.type.defaultArtifactId != null) {
-        AuroraConfigFieldHandler(
-            "artifactId",
-            defaultValue = spec.type.defaultArtifactId,
-            validator = artifactValidator
-        )
-    } else {
-        AuroraConfigFieldHandler(
-            "artifactId",
-            defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension(),
-            defaultSource = "fileName",
-            validator = artifactValidator
-        )
-    }
+    val artifactHandler = AuroraConfigFieldHandler(
+        "artifactId",
+        defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension(),
+        defaultSource = "fileName",
+        validator = artifactValidator
+    )
     return setOf(
         artifactHandler,
         spec.groupIdHandler,

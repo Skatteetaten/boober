@@ -14,8 +14,6 @@
       },
       "spec" : {
         "containers" : [ {
-          "args" : [ "-vvv", "http://foo" ],
-          "command" : [ "curl" ],
           "image" : "docker.registry/aurora/turbo:0",
           "imagePullPolicy" : "Always",
           "name" : "simple"

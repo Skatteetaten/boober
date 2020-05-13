@@ -10,7 +10,7 @@ class JobFeatureTest : AbstractFeatureTest() {
         get() = JobFeature("docker.registry")
 
     @Test
-    fun `should not allow cronjob without scheduel`() {
+    fun `should not allow cronjob without schedule`() {
 
         assertThat {
             createAuroraDeploymentContext(
@@ -70,30 +70,14 @@ class JobFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should not allow job with script and command`() {
-
-        assertThat {
-            createAuroraDeploymentContext(
-                """{
-                "type" : "job",
-                "command" : "curl",
-                "arguments" : ["-vvv", "http://foo"],
-                "script" : "curl -vvv http://foo"
-        }"""
-            )
-        }.singleApplicationError(
-            "Job script and command/arguments are not compatible. Choose either script or command/arguments"
-        )
-    }
-
-    @Test
     fun `should generate job`() {
 
         val (jobResource) = generateResources(
             """{
                 "type" : "job",
-                "command" : "curl",
-                "arguments" : ["-vvv", "http://foo"]
+                "artifactId" : "turbo", 
+                "groupId": "aurora",
+                "version": "0"
         }"""
         )
 
@@ -107,26 +91,13 @@ class JobFeatureTest : AbstractFeatureTest() {
             """{
                 "type" : "cronjob",
                 "schedule" : "0/5 * * * *",
-                "command" : "curl",
-                "arguments" : ["-vvv", "http://foo"]
+                "artifactId" : "turbo", 
+                "groupId": "aurora",
+                "version": "0"
         }"""
         )
 
         assertThat(jobResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("cronjob.json")
     }
 
-    @Test
-    fun `should generate cronjob with script`() {
-
-        val (jobResource, configMapResource) = generateResources(
-            """{
-                "type" : "cronjob",
-                "script" : "curl -vvv http://localhost",
-                "schedule" : "0/5 * * * *"
-        }"""
-        )
-
-        assertThat(jobResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("job-with-script.json")
-        assertThat(configMapResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("configmap-script.json")
-    }
 }
