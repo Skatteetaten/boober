@@ -115,9 +115,6 @@
     "source" : "job.json",
     "value" : "no.skatteetaten.demo",
     "sources" : [ {
-      "name" : "default",
-      "value" : "aurora"
-    }, {
       "name" : "job.json",
       "value" : "no.skatteetaten.demo"
     } ]
@@ -194,29 +191,28 @@
     "source" : "job.json",
     "value" : "1",
     "sources" : [ {
-      "name" : "default",
-      "value" : "0"
-    }, {
       "name" : "job.json",
       "value" : "1"
-    } ]
-  },
-  "management" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
     }
     ]
   },
-  "artifactId": {
+  "management": {
     "source": "default",
-    "value": "turbo",
+    "value": false,
     "sources": [
       {
         "name": "default",
-        "value": "turbo"
+        "value": false
+      }
+    ]
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "job",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "job"
       }
     ]
   },
@@ -242,16 +238,19 @@
   },
   "suspend": {
     "source": "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   },
-  "failureCount" : {
-    "source" : "default",
-    "value" : 1,
-    "sources" : [ {
+  "failureCount": {
+    "source": "default",
+    "value": 1,
+    "sources": [
+      {
       "name" : "default",
       "value" : 1
     } ]

@@ -91,34 +91,39 @@
     "source" : "job.json",
     "value" : "no.skatteetaten.demo",
     "sources" : [ {
-      "name" : "default",
-      "value" : "aurora"
-    }, {
       "name" : "job.json",
       "value" : "no.skatteetaten.demo"
     } ]
   },
   "config" : {
-    "FOO" : {
-      "source" : "job.json",
-      "value" : "bar",
-      "sources" : [ {
-        "name" : "job.json",
-        "value" : "bar"
-      } ]
+    "FOO": {
+      "source": "job.json",
+      "value": "bar",
+      "sources": [
+        {
+          "name": "job.json",
+          "value": "bar"
+        }
+      ]
     }
   },
-  "version" : {
+  "version": {
     "source": "job.json",
     "value": "1",
     "sources": [
       {
-        "name": "default",
-        "value": "0"
-      },
-      {
         "name": "job.json",
         "value": "1"
+      }
+    ]
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "job",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "job"
       }
     ]
   },
@@ -144,16 +149,24 @@
   },
   "secretVaults": {
     "foo": {
-      "keys" : {
-        "source" : "job.json",
-        "value" : [ "BAR", "FOO" ],
-        "sources" : [ {
-          "name" : "job.json",
-          "value" : [ "BAR", "FOO" ]
-        } ]
+      "keys": {
+        "source": "job.json",
+        "value": [
+          "BAR",
+          "FOO"
+        ],
+        "sources": [
+          {
+            "name": "job.json",
+            "value": [
+              "BAR",
+              "FOO"
+            ]
+          }
+        ]
       },
-      "keyMappings" : {
-        "source" : "job.json",
+      "keyMappings": {
+        "source": "job.json",
         "value" : {
           "BAR" : "BAZ"
         },

@@ -13,6 +13,7 @@ utv/about.json | cluster: "utv"
                | config:
       job.json |   FOO: "bar"
       job.json | version: "1"
+      fileName | artifactId: "job"
       job.json | serviceAccount: "foo"
       job.json | schedule: "0/5 * * * *"
                | secretVaults:

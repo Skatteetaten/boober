@@ -62,18 +62,19 @@
                     "optional" : false
                   }
                 }
-              }, {
-                "name" : "BAZ",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "BAZ",
-                    "name" : "job-foo-vault",
-                    "optional" : false
+              },
+                {
+                  "name": "BAZ",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "BAZ",
+                      "name": "job-foo-vault",
+                      "optional": false
+                    }
                   }
                 }
-              }
               ],
-              "image": "docker.registry:5000/no_skatteetaten_demo/turbo:1",
+              "image": "docker.registry:5000/no_skatteetaten_demo/job:1",
               "imagePullPolicy": "Always",
               "name": "job",
               "resources": {
