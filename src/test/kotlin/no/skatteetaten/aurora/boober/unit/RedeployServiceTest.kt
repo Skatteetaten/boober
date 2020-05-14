@@ -1,7 +1,11 @@
 package no.skatteetaten.aurora.boober.unit
 
+import assertk.all
 import assertk.assertThat
+import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.NullNode
@@ -40,16 +44,18 @@ class RedeployServiceTest {
     }
 
     @Test
-    fun `Should return empty successfull redeploy result if no deployable resource found`() {
+    fun `Should throw error if dc is null`() {
 
         every {
             openShiftClient.performOpenShiftCommand("aos-test", any())
         } returns openShiftResponse()
 
-        val response = redeployService.triggerRedeploy(listOf(), TemplateType.deploy)
-
-        assertThat(response.success).isTrue()
-        assertThat(response.message).isEqualTo("No deployable resource found so no deploy made.")
+        assertThat {
+            redeployService.triggerRedeploy(listOf(), TemplateType.deploy)
+        }.isFailure().all {
+            isInstanceOf(IllegalArgumentException::class)
+            hasMessage("Missing DeploymentConfig")
+        }
     }
 
     @Test
