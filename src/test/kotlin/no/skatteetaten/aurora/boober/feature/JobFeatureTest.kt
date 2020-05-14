@@ -99,5 +99,4 @@ class JobFeatureTest : AbstractFeatureTest() {
 
         assertThat(jobResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("cronjob.json")
     }
-
 }

@@ -7,22 +7,16 @@ import com.fkorotkov.kubernetes.batch.newJob
 import com.fkorotkov.kubernetes.batch.newJobSpec
 import com.fkorotkov.kubernetes.batch.spec
 import com.fkorotkov.kubernetes.batch.template
-import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.newConfigMap
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newObjectMeta
-import com.fkorotkov.kubernetes.newVolume
-import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.spec
 import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.Paths
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.int
@@ -63,7 +57,6 @@ class JobFeature(
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type in listOf(TemplateType.cronjob, TemplateType.job)
     }
-
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
