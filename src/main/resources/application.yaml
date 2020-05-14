@@ -79,7 +79,7 @@ spring:
 management.server.port : 9091
 
 server:
-    port: 9090
+    port: 8080
 
 openshift:
     cluster: utv
