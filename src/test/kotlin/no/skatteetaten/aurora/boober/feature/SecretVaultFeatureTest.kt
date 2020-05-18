@@ -217,6 +217,56 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should modify deploymentConfig and add auroraVaultSecret with key with placeholder`() {
+
+        every { vaultProvider.findVaultKeys("paas", "simple", "latest.properties") } returns setOf("simple", "FOO")
+        mockVault("simple", contents = "simple=secret\nFOO=bar\n")
+        val resource = generateResources(
+            """{
+              "secretVaults" : {
+                "simple": {
+                  "keys" : ["@name@"]
+                }
+              }
+             }""", createEmptyDeploymentConfig()
+        )
+        assertThat(resource.size).isEqualTo(2)
+        val dcResource = resource.first()
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
+        val dc = dcResource.resource as DeploymentConfig
+        val env = dc.spec.template.spec.containers.first().env
+        assertThat(env.size).isEqualTo(1)
+        val foo = env.first()
+
+        val attachmentResource = resource.last()
+        assertEnvVarMounted(attachmentResource, "simple", foo)
+    }
+    @Test
+    fun `should modify deploymentConfig and add auroraVaultSecret with mapped key`() {
+
+        mockVault("simple", contents = "simple=secretValue\n")
+        val resource = generateResources(
+            """{
+              "secretVaults" : {
+                "simple": {
+                  "keyMappings" : { "@name@" : "SIMPLE_2" }
+                }
+              }
+             }""", createEmptyDeploymentConfig()
+        )
+        assertThat(resource.size).isEqualTo(2)
+        val dcResource = resource.first()
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
+        val dc = dcResource.resource as DeploymentConfig
+        val env = dc.spec.template.spec.containers.first().env
+        assertThat(env.size).isEqualTo(1)
+        val foo = env.first()
+
+        val attachmentResource = resource.last()
+        assertEnvVarMounted(attachmentResource, "SIMPLE_2", foo)
+    }
+
+    @Test
     fun `should modify deploymentConfig and add auroraVaultSecret from custom file`() {
 
         mockVault("foo", "foo.properties")
