@@ -9,8 +9,10 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isTrue
+import assertk.assertions.messageContains
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
@@ -46,6 +48,33 @@ class AuroraConfigTest : ResourceLoader() {
             .first()
 
         assertThat(version).isEqualTo("4")
+    }
+
+    @Test
+    fun `Should fail when duplicate field`() {
+
+        val auroraConfig = createAuroraConfig(aid)
+        val updates =
+            """
+            { 
+                "version": "2",
+                "certificate": false,
+                "version": "5"
+            }
+            """.trimIndent()
+
+        val updateFileResponse = auroraConfig.updateFile("booberdev/console.json", updates)
+        val updatedAuroraConfig = updateFileResponse.second
+
+        assertThat {
+            updatedAuroraConfig.files
+                .filter { it.configName == "booberdev/console.json" }
+                .map { it.asJsonNode }
+                .first()
+        }.isFailure().all {
+            isInstanceOf(AuroraConfigException::class)
+            messageContains("not valid errorMessage=Duplicate field 'version'")
+        }
     }
 
     @Test

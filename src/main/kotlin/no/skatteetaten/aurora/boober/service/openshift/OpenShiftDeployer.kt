@@ -23,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.RedeployService
 import no.skatteetaten.aurora.boober.service.TagCommand
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
 import org.springframework.beans.factory.annotation.Value
@@ -239,7 +240,13 @@ class OpenShiftDeployer(
             mergeWithExistingResource
         )
 
+        val shouldSleepBeforeDc = objects.last().openshiftKind == "deploymentconfig"
         val openShiftApplicationResponses: List<OpenShiftResponse> = objects.flatMap {
+
+            if (it.openshiftKind == "deploymentconfig" && shouldSleepBeforeDc) {
+                Thread.sleep(500)
+            }
+
             openShiftCommandBuilder.createAndApplyObjects(namespace, it, mergeWithExistingResource)
         }
 

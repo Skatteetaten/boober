@@ -261,8 +261,10 @@ class SecretVaultFeature(
         val secret = getSecretVault(adc)?.let {
             AuroraSecret(
                 secretVaultName = it,
-                keyMappings = adc.getKeyMappings(secretVaultKeyMappingHandlers(cmd)),
-                secretVaultKeys = getSecretVaultKeys(adc),
+                keyMappings = adc.getKeyMappings(secretVaultKeyMappingHandlers(cmd))?.let { keyMappings ->
+                    keyMappings.mapKeys { keyMapping -> adc.replacer.replace(keyMapping.key) }
+                },
+                secretVaultKeys = getSecretVaultKeys(adc).map { k -> adc.replacer.replace(k) },
                 file = "latest.properties",
                 name = adc.name
             )
@@ -275,8 +277,13 @@ class SecretVaultFeature(
                 null
             } else {
                 AuroraSecret(
-                    secretVaultKeys = adc.getOrNull("secretVaults/$it/keys") ?: listOf(),
-                    keyMappings = adc.getOrNull("secretVaults/$it/keyMappings"),
+                    secretVaultKeys = adc.getOrNull<List<String>>("secretVaults/$it/keys")
+                        ?.map { k -> adc.replacer.replace(k) }
+                        ?: listOf(),
+                    keyMappings = adc.getOrNull<Map<String, String>>("secretVaults/$it/keyMappings")
+                        ?.let { keyMappings ->
+                            keyMappings.mapKeys { keyMapping -> adc.replacer.replace(keyMapping.key) }
+                        },
                     file = adc["secretVaults/$it/file"],
                     name = adc.replacer.replace(it).ensureStartWith(adc.name, "-").normalizeKubernetesName(),
                     secretVaultName = adc["secretVaults/$it/name"]
