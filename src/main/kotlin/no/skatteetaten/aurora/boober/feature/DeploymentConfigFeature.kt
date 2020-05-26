@@ -121,10 +121,8 @@ class DeploymentConfigFeature : Feature {
                     dc.spec.replicas = 0
                 }
             } else if (it.resource.kind == "Deployment") {
-                // TODO: Join with above
                 val deployment: Deployment = it.resource as Deployment
 
-                // TODO: generate with pause
                 modifyResource(it, "Added labels, annotations")
                 if (deployment.spec.template.metadata == null) {
                     deployment.spec.template.metadata = ObjectMeta()

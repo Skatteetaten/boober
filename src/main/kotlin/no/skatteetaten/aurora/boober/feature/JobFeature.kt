@@ -44,7 +44,6 @@ class JobFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) : Feature {
 
-    // TODO: need routeDefaults hosts here and probably database defaults aswell. Cause they can be in about file
     val defaultHandlersForAllTypes = setOf(
         AuroraConfigFieldHandler("serviceAccount"),
         AuroraConfigFieldHandler("replicas"),
@@ -55,7 +54,7 @@ class JobFeature(
     )
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type in listOf(TemplateType.cronjob, TemplateType.job)
+        return header.isJob
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -143,12 +142,9 @@ class JobFeature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        // TODO: Should this be artifactId or name?
         val name = adc.name
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
         resources.forEach {
-
-            // TODO: Should we add something to ApplicationDeployment to allow linking jobs and a service/route together?
             if (it.resource.kind == "ApplicationDeployment") {
                 val labels = mapOf("applicationId" to id).normalizeLabels()
                 modifyResource(it, "Added application name and id")

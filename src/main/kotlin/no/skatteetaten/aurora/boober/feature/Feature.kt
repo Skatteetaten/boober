@@ -119,7 +119,7 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
                 "type",
                 validator = { node -> node.oneOf(TemplateType.values().map { it.toString() }) }),
 
-            // TODO: What should this be for jobs?
+            // The value for jobs here will be wrong, but we do not use deployState for jobs.
             AuroraConfigFieldHandler(
                 "deployState",
                 defaultValue = "deploymentConfig",

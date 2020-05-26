@@ -11,7 +11,6 @@ import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
-import java.time.Duration
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -24,6 +23,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.boot.convert.DurationStyle
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 val AuroraDeploymentSpec.envTTL: Duration?
     get() = this.getOrNull<String>("env/ttl")?.let {
@@ -47,7 +47,6 @@ class EnvironmentFeature(
     val openShiftClient: OpenShiftClient,
     val userDetailsProvider: UserDetailsProvider
 ) : Feature {
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf()
     }

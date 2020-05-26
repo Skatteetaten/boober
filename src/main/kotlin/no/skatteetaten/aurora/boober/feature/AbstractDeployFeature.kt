@@ -71,6 +71,8 @@ val AuroraDeploymentSpec.affiliation get(): String = this["affiliation"]
 val AuroraDeploymentSpec.type get(): TemplateType = this["type"]
 val AuroraDeploymentSpec.deployState get(): DeploymentState = this["deployState"]
 
+val AuroraDeploymentSpec.isJob get(): Boolean = this.type in listOf(TemplateType.job, TemplateType.cronjob)
+
 val AuroraDeploymentSpec.applicationDeploymentId: String get() = DigestUtils.sha1Hex("${this.namespace}/${this.name}")
 val AuroraDeploymentSpec.namespace
     get(): String {

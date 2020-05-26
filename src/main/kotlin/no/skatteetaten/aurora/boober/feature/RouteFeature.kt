@@ -177,8 +177,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     ): List<Exception> {
         val routes = getRoute(adc, cmd)
 
-        if (routes.isNotEmpty() && adc.type == TemplateType.job) {
-            throw AuroraDeploymentSpecValidationException("Routes are not supported for jobs")
+        if (routes.isNotEmpty() && adc.isJob) {
+            throw AuroraDeploymentSpecValidationException("Routes are not supported for jobs/cronjobs")
         }
 
         val applicationDeploymentRef = cmd.applicationDeploymentRef

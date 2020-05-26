@@ -19,7 +19,7 @@ class BigIpFeature(
 ) : Feature {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type != TemplateType.job
+        return !header.isJob
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
