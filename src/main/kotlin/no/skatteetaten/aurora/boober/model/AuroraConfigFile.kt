@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -78,6 +79,8 @@ data class AuroraConfigFile(
             } else {
                 null
             }
+
+            mapper?.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
 
             val fixedContent = if ((name.endsWith(".yaml") || name.endsWith(".yml")) && contents.trim() == "---") {
                 "{}"
