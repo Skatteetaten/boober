@@ -5,7 +5,7 @@ import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.api.model.QuantityBuilder
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -26,7 +26,7 @@ fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<St
     val field = this.getOrNull<String>("resources/$resource/$classifier")
 
     return resource to field?.let {
-        QuantityBuilder().withAmount(it).build()
+        Quantity(it)
     }
 }
 
@@ -49,9 +49,10 @@ val AuroraDeploymentSpec.managementPath
 
 @Service
 class DeploymentConfigFeature : Feature {
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        val templateSpecificHeaders = if (header.type.completelyGenerated) {
+        val templateSpecificHeaders = if (header.type.auroraGeneratedDeployment) {
             setOf(
                 header.versionHandler,
                 AuroraConfigFieldHandler("resources/cpu/min", defaultValue = "10m"),
@@ -62,9 +63,7 @@ class DeploymentConfigFeature : Feature {
                     "management",
                     defaultValue = true,
                     canBeSimplifiedConfig = true,
-                    validator = { it.boolean() }),
-                AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
-                AuroraConfigFieldHandler("management/port", defaultValue = "8081")
+                    validator = { it.boolean() })
             )
         } else {
             setOf(
@@ -81,7 +80,7 @@ class DeploymentConfigFeature : Feature {
             )
         }
         return setOf(
-
+            // TODO: some of these should not be there for type=job
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
             AuroraConfigFieldHandler("releaseTo"),
@@ -107,7 +106,7 @@ class DeploymentConfigFeature : Feature {
             } else if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
 
-                modifyResource(it, "Added labels, annotations, shared env vars and request limits")
+                modifyResource(it, "Added labels, annotations")
                 if (dc.spec.template.metadata == null) {
                     dc.spec.template.metadata = ObjectMeta()
                 }
@@ -121,24 +120,44 @@ class DeploymentConfigFeature : Feature {
                 if (adc.pause) {
                     dc.spec.replicas = 0
                 }
-                dc.allNonSideCarContainers.forEach { container ->
-                    container.env.addAll(envVars)
-                    container.resources {
-                        val existingRequest = requests ?: emptyMap()
-                        val existingLimit = limits ?: emptyMap()
-                        requests = existingRequest.addIfNotNull(
-                            mapOf(
-                                adc.quantity("cpu", "min"),
-                                adc.quantity("memory", "min")
-                            ).filterNullValues()
-                        )
-                        limits = existingLimit.addIfNotNull(
-                            mapOf(
-                                adc.quantity("cpu", "max"),
-                                adc.quantity("memory", "max")
-                            ).filterNullValues()
-                        )
-                    }
+            } else if (it.resource.kind == "Deployment") {
+                val deployment: Deployment = it.resource as Deployment
+
+                modifyResource(it, "Added labels, annotations")
+                if (deployment.spec.template.metadata == null) {
+                    deployment.spec.template.metadata = ObjectMeta()
+                }
+
+                deployment.spec.template.metadata.labels = deployment.spec.template.metadata.labels.addIfNotNull(dcLabels) ?: dcLabels
+                deployment.spec.template.metadata.annotations = mapOf(
+                    ANNOTATION_BOOBER_DEPLOYTAG to adc.dockerTag
+                )
+                deployment.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
+
+                if (adc.pause) {
+                    deployment.spec.replicas = 0
+                }
+            }
+
+            it.resource.allNonSideCarContainers.forEach { container ->
+
+                modifyResource(it, "Added Shared env vars and request limits")
+                container.env.addAll(envVars)
+                container.resources {
+                    val existingRequest = requests ?: emptyMap()
+                    val existingLimit = limits ?: emptyMap()
+                    requests = existingRequest.addIfNotNull(
+                        mapOf(
+                            adc.quantity("cpu", "min"),
+                            adc.quantity("memory", "min")
+                        ).filterNullValues()
+                    )
+                    limits = existingLimit.addIfNotNull(
+                        mapOf(
+                            adc.quantity("cpu", "max"),
+                            adc.quantity("memory", "max")
+                        ).filterNullValues()
+                    )
                 }
             }
         }

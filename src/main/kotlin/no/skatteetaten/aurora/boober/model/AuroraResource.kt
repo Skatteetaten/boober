@@ -2,8 +2,12 @@ package no.skatteetaten.aurora.boober.model
 
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
+import io.fabric8.kubernetes.api.model.apps.Deployment
+import io.fabric8.kubernetes.api.model.batch.CronJob
+import io.fabric8.kubernetes.api.model.batch.Job
 import io.fabric8.openshift.api.model.DeploymentConfig
 import java.time.Instant
 import mu.KotlinLogging
@@ -34,13 +38,53 @@ data class AuroraResourceSource(
     val time: Instant = Instants.now
 )
 
+fun Set<AuroraResource>.addLabels(
+    commonLabels: Map<String, String>,
+    comment: String,
+    clazz: Class<out Feature>,
+    applyToHeaderResources: Boolean = false
+) {
+
+    this.forEach {
+        if (applyToHeaderResources || (it.resource.metadata.namespace != null && !it.header)) {
+            it.resource.metadata.labels = commonLabels.addIfNotNull(it.resource.metadata?.labels)
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to metadata"))
+        }
+        if (it.resource.kind == "DeploymentConfig") {
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to podTemplate"))
+            val dc: DeploymentConfig = it.resource as DeploymentConfig
+            if (dc.spec.template.metadata == null) {
+                dc.spec.template.metadata = ObjectMeta()
+            }
+            dc.spec.template.metadata.labels = commonLabels.addIfNotNull(dc.spec.template.metadata?.labels)
+        }
+
+        if (it.resource.kind == "Deployment") {
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to podTemplate"))
+            val deployment: Deployment = it.resource as Deployment
+            if (deployment.spec.template.metadata == null) {
+                deployment.spec.template.metadata = ObjectMeta()
+            }
+            deployment.spec.template.metadata.labels = commonLabels.addIfNotNull(deployment.spec.template.metadata?.labels)
+        }
+        if (it.resource.kind == "CronJob") {
+            it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to to jobTemplate"))
+            val cronJob: CronJob = it.resource as CronJob
+            if (cronJob.spec.jobTemplate.metadata == null) {
+                cronJob.spec.jobTemplate.metadata = ObjectMeta()
+            }
+            cronJob.spec.jobTemplate.metadata.labels = commonLabels.addIfNotNull(cronJob.spec.jobTemplate.metadata?.labels)
+        }
+    }
+}
+
 fun Set<AuroraResource>.addEnvVar(
     envVars: List<EnvVar>,
     clazz: Class<out Feature>
 ) {
-    this.filter { it.resource is DeploymentConfig }
+    this.filter { it.resource.kind in listOf("Deployment", "DeploymentConfig", "Job", "CronJob") }
         .onEach { it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars")) }
-        .flatMap { (it.resource as DeploymentConfig).allNonSideCarContainers }
+        .flatMap { it.resource.allNonSideCarContainers }
         .forEach { container -> container.env.addAll(envVars) }
 }
 
@@ -55,6 +99,34 @@ fun Set<AuroraResource>.addVolumesAndMounts(
         val dc: DeploymentConfig = it.resource as DeploymentConfig
         dc.spec.template.spec.volumes = dc.spec.template.spec.volumes.addIfNotNull(volumes)
         dc.allNonSideCarContainers.forEach { container ->
+            container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
+            container.env = container.env.addIfNotNull(envVars)
+        }
+    }
+    this.filter { it.resource.kind == "Deployment" }.forEach {
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
+        val deployment: Deployment = it.resource as Deployment
+        deployment.spec.template.spec.volumes = deployment.spec.template.spec.volumes.addIfNotNull(volumes)
+        deployment.allNonSideCarContainers.forEach { container ->
+            container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
+            container.env = container.env.addIfNotNull(envVars)
+        }
+    }
+
+    this.filter { it.resource.kind == "CronJob" }.forEach {
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
+        val cronJob: CronJob = it.resource as CronJob
+        cronJob.spec.jobTemplate.spec.template.spec.volumes = cronJob.spec.jobTemplate.spec.template.spec.volumes.addIfNotNull(volumes)
+        cronJob.allNonSideCarContainers.forEach { container ->
+            container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
+            container.env = container.env.addIfNotNull(envVars)
+        }
+    }
+    this.filter { it.resource.kind == "Job" }.forEach {
+        it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
+        val job: Job = it.resource as Job
+        job.spec.template.spec.volumes = job.spec.template.spec.volumes.addIfNotNull(volumes)
+        job.allNonSideCarContainers.forEach { container ->
             container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
             container.env = container.env.addIfNotNull(envVars)
         }

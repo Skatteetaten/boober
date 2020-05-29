@@ -44,6 +44,7 @@
           "boober.skatteetaten.no/deployTag": "develop-SNAPSHOT"
         },
         "labels": {
+          "operationScope" : "aos-4016",
           "app": "web",
           "updatedBy": "hero",
           "updatedAt": "0",

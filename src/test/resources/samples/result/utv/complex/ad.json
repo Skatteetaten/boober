@@ -26,6 +26,7 @@
     },
     "applicationDeploymentId": "74a691b9358d168e305df7a1ae175a5eefda6754",
     "applicationName": "complex",
+    "runnableType" : "DeploymentConfig",
     "applicationDeploymentName": "komplex",
     "databases": [
       "fd59dba9-7d67-4ea2-bb98-081a5df8c387",

@@ -50,6 +50,14 @@
       "value" : "development"
     } ]
   },
+  "deployState" : {
+    "source" : "default",
+    "value" : "deploymentConfig",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "deploymentConfig"
+    } ]
+  },
   "applicationPlatform" : {
     "source" : "default",
     "value" : "java",

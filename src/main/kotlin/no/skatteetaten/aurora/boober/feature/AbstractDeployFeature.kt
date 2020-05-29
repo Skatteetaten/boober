@@ -1,5 +1,11 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fkorotkov.kubernetes.apps.metadata
+import com.fkorotkov.kubernetes.apps.newDeployment
+import com.fkorotkov.kubernetes.apps.rollingUpdate
+import com.fkorotkov.kubernetes.apps.spec
+import com.fkorotkov.kubernetes.apps.strategy
+import com.fkorotkov.kubernetes.apps.template
 import com.fkorotkov.kubernetes.emptyDir
 import com.fkorotkov.kubernetes.fieldRef
 import com.fkorotkov.kubernetes.httpGet
@@ -7,6 +13,7 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newLabelSelector
 import com.fkorotkov.kubernetes.newProbe
 import com.fkorotkov.kubernetes.newService
 import com.fkorotkov.kubernetes.newServicePort
@@ -35,6 +42,7 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.IntOrStringBuilder
 import io.fabric8.kubernetes.api.model.Probe
 import io.fabric8.kubernetes.api.model.Service
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
@@ -44,6 +52,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraVersion
 import no.skatteetaten.aurora.boober.model.Paths
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.model.Validator
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
@@ -60,6 +69,9 @@ val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: t
 val AuroraDeploymentSpec.name get(): String = this["name"]
 val AuroraDeploymentSpec.affiliation get(): String = this["affiliation"]
 val AuroraDeploymentSpec.type get(): TemplateType = this["type"]
+val AuroraDeploymentSpec.deployState get(): DeploymentState = this["deployState"]
+
+val AuroraDeploymentSpec.isJob get(): Boolean = this.type in listOf(TemplateType.job, TemplateType.cronjob)
 
 val AuroraDeploymentSpec.applicationDeploymentId: String get() = DigestUtils.sha1Hex("${this.namespace}/${this.name}")
 val AuroraDeploymentSpec.namespace
@@ -120,35 +132,43 @@ fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
 
 val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
     get() =
-        AuroraConfigFieldHandler("version", validator = {
-            it.pattern(
-                "^[\\w][\\w.-]{0,127}$",
-                "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-                this.type.completelyGenerated
-            )
-        })
+        AuroraConfigFieldHandler("version",
+            validator = {
+                it.pattern(
+                    pattern = "^[\\w][\\w.-]{0,127}$",
+                    message = "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
+                    required = this.type.versionAndGroupRequired
+                )
+            })
 
 val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
     get() = AuroraConfigFieldHandler(
         "groupId",
         validator = {
             it.length(
-                200,
-                "GroupId must be set and be shorter then 200 characters",
-                this.type.completelyGenerated
+                length = 200,
+                message = "GroupId must be set and be shorter then 200 characters",
+                required = this.type.versionAndGroupRequired
             )
         })
 
-fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
-    setOf(
-        AuroraConfigFieldHandler("artifactId",
-            defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension(),
-            defaultSource = "fileName",
-            validator = { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }),
+fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
+    val artifactValidator: Validator =
+        { it.length(50, "ArtifactId must be set and be shorter then 50 characters", false) }
+
+    val artifactHandler = AuroraConfigFieldHandler(
+        "artifactId",
+        defaultValue = cmd.applicationFiles.find { it.type == AuroraConfigFileType.BASE }?.name?.removeExtension(),
+        defaultSource = "fileName",
+        validator = artifactValidator
+    )
+    return setOf(
+        artifactHandler,
         spec.groupIdHandler,
         spec.versionHandler
     )
+}
 
 abstract class AbstractDeployFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
@@ -210,13 +230,20 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1)
         )
 
-    // this is java
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        return setOf(
-            generateResource(create(adc, createContainers(adc))),
-            generateResource(createService(adc)),
-            generateResource(createImageStream(adc, dockerRegistry))
-        )
+
+        return if (adc.deployState == DeploymentState.deployment) {
+            setOf(
+                generateResource(createDeployment(adc, createContainers(adc))),
+                generateResource(createService(adc))
+            )
+        } else {
+            setOf(
+                generateResource(createDeploymentConfig(adc, createContainers(adc))),
+                generateResource(createService(adc)),
+                generateResource(createImageStream(adc, dockerRegistry))
+            )
+        }
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -227,6 +254,12 @@ abstract class AbstractDeployFeature(
                 val labels = mapOf("applicationId" to id).normalizeLabels()
                 modifyResource(it, "Added application name and id")
                 val ad: ApplicationDeployment = it.resource as ApplicationDeployment
+
+                if (adc.deployState == DeploymentState.deployment) {
+                    ad.spec.runnableType = "Deployment"
+                } else {
+                    ad.spec.runnableType = "DeploymentConfig"
+                }
                 ad.spec.applicationName = name
                 ad.spec.applicationId = id
                 ad.metadata.labels = ad.metadata.labels?.addIfNotNull(labels) ?: labels
@@ -311,6 +344,8 @@ abstract class AbstractDeployFeature(
         containerArgs: List<String> = emptyList()
     ): Container {
 
+        val dockerImage = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+
         return newContainer {
 
             terminationMessagePath = "/dev/termination-log"
@@ -343,6 +378,9 @@ abstract class AbstractDeployFeature(
                     }
                 }
             )
+            if (adc.deployState == DeploymentState.deployment) {
+                image = dockerImage
+            }
             name = containerName
             ports = containerPorts.map {
                 newContainerPort {
@@ -368,7 +406,7 @@ abstract class AbstractDeployFeature(
         }
     }
 
-    fun create(
+    fun createDeploymentConfig(
         adc: AuroraDeploymentSpec,
         container: List<Container>
     ): DeploymentConfig {
@@ -414,6 +452,54 @@ abstract class AbstractDeployFeature(
                 )
                 replicas = adc["replicas"]
                 selector = mapOf("name" to adc.name)
+                template {
+                    spec {
+                        volumes = volumes + newVolume {
+                            name = "application-log-volume"
+                            emptyDir()
+                        }
+                        containers = container
+                        restartPolicy = "Always"
+                        dnsPolicy = "ClusterFirst"
+                        adc.getOrNull<String>("serviceAccount")?.let {
+                            serviceAccount = it
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    fun createDeployment(
+        adc: AuroraDeploymentSpec,
+        container: List<Container>
+    ): Deployment {
+
+        // https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+        return newDeployment {
+            metadata {
+                name = adc.name
+                namespace = adc.namespace
+            }
+            spec {
+
+                progressDeadlineSeconds = adc["deployStrategy/timeout"]
+                strategy {
+                    val deployType: String = adc["deployStrategy/type"]
+                    if (deployType == "rolling") {
+                        type = "RollingUpdate"
+                        rollingUpdate {
+                            maxSurge = IntOrString("25%")
+                            maxUnavailable = IntOrString(0)
+                        }
+                    } else {
+                        type = "Recreate"
+                    }
+                }
+                replicas = adc["replicas"]
+                selector = newLabelSelector {
+                    matchLabels = mapOf("name" to adc.name)
+                }
                 template {
                     spec {
                         volumes = volumes + newVolume {

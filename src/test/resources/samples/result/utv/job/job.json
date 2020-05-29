@@ -1,0 +1,98 @@
+{
+  "apiVersion" : "batch/v1beta1",
+  "kind" : "CronJob",
+  "metadata" : {
+    "labels" : {
+      "operationScope" : "aos-4016",
+      "app" : "job",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "affiliation" : "paas",
+      "name" : "job",
+      "booberDeployId" : "deploy1"
+    },
+    "name" : "job",
+    "namespace" : "paas-utv",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "job",
+      "uid" : "123-123"
+    } ]
+  },
+  "spec" : {
+    "concurrencyPolicy" : "Forbid",
+    "failedJobsHistoryLimit" : 1,
+    "jobTemplate" : {
+      "metadata" : {
+        "generateName" : "job",
+        "labels" : {
+          "operationScope" : "aos-4016",
+          "app" : "job",
+          "updatedBy" : "hero",
+          "updatedAt" : "0",
+          "affiliation" : "paas",
+          "name" : "job"
+        }
+      },
+      "spec" : {
+        "completions" : 1,
+        "parallelism" : 1,
+        "template" : {
+          "metadata" : {
+            "generateName" : "job"
+          },
+          "spec" : {
+            "containers" : [ {
+              "env" : [ {
+                "name" : "FOO",
+                "value" : "bar"
+              }, {
+                "name" : "OPENSHIFT_CLUSTER",
+                "value" : "utv"
+              }, {
+                "name" : "APP_NAME",
+                "value" : "job"
+              }, {
+                "name" : "FOO",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "FOO",
+                    "name" : "job-foo-vault",
+                    "optional" : false
+                  }
+                }
+              },
+                {
+                  "name": "BAZ",
+                  "valueFrom": {
+                    "secretKeyRef": {
+                      "key": "BAZ",
+                      "name": "job-foo-vault",
+                      "optional": false
+                    }
+                  }
+                }
+              ],
+              "image": "docker.registry:5000/no_skatteetaten_demo/job:1",
+              "imagePullPolicy": "Always",
+              "name": "job",
+              "resources": {
+                "limits": {},
+                "requests": {}
+              }
+            }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Never",
+            "serviceAccount": "foo"
+          }
+        }
+      }
+    },
+    "schedule" : "0/5 * * * *",
+    "startingDeadlineSeconds" : 60,
+    "successfulJobsHistoryLimit" : 3,
+    "suspend" : false
+  }
+}

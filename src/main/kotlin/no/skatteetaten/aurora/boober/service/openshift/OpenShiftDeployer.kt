@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
+import no.skatteetaten.aurora.boober.feature.deployState
 import no.skatteetaten.aurora.boober.feature.dockerImagePath
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
@@ -193,7 +194,7 @@ class OpenShiftDeployer(
             return result.copy(reason = "Deployment is paused and will be/remain scaled down.")
         }
 
-        val redeployResult = redeployService.triggerRedeploy(openShiftResponses, context.spec.type)
+        val redeployResult = redeployService.triggerRedeploy(openShiftResponses, context.spec.type, context.spec.deployState)
 
         if (!redeployResult.success) {
             return result.copy(

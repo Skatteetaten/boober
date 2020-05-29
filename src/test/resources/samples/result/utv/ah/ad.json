@@ -25,6 +25,7 @@
     },
     "applicationDeploymentId": "9075ef78da24c339d27b573d5a472f183b9c1363",
     "applicationName": "aurora-atomhopper",
+    "runnableType" : "DeploymentConfig",
     "applicationDeploymentName": "ah",
     "databases": [
       "fd59dba9-7d67-4ea2-bb98-081a5df8c387"

@@ -1,0 +1,50 @@
+        static | applicationDeploymentRef: "utv/whoami"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+   whoami.json | type: "deploy"
+   whoami.json | deployState: "deployment"
+       default | applicationPlatform: "java"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "whoami"
+       default | certificate: false
+   whoami.json | groupId: "org.test"
+               | databaseDefaults:
+       default |   flavor: "ORACLE_MANAGED"
+       default |   generate: true
+       default |   name: "@name@"
+   whoami.json | database: true
+       default | management: true
+       default | alarm: true
+       default | pause: false
+       default | debug: false
+   whoami.json | version: "1"
+               | resources:
+               |   cpu:
+       default |     min: "10m"
+       default |     max: "2000m"
+               |   memory:
+       default |     min: "128Mi"
+       default |     max: "512Mi"
+      fileName | artifactId: "whoami"
+               | deployStrategy:
+       default |   type: "rolling"
+       default |   timeout: 180
+       default | replicas: 1
+       default | prometheus: true
+       default | readiness: true
+       default | liveness: false
+       default | route: false
+               | routeDefaults:
+       default |   host: "@name@-@affiliation@-@env@"
+               |   tls:
+       default |     enabled: false
+       default |     insecurePolicy: "None"
+       default |     termination: "edge"
+       default | sts: false
+       default | toxiproxy: false
+       default | webseal: false

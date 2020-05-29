@@ -1,0 +1,50 @@
+        static | applicationDeploymentRef: "utv/job"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+      job.json | type: "cronjob"
+       default | deployState: "deploymentConfig"
+       default | applicationPlatform: "java"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "job"
+       default | certificate: false
+      job.json | groupId: "no.skatteetaten.demo"
+               | config:
+      job.json |   FOO: "bar"
+               | databaseDefaults:
+       default |   flavor: "ORACLE_MANAGED"
+       default |   generate: true
+       default |   name: "@name@"
+       default | database: false
+       default | alarm: true
+       default | pause: false
+       default | debug: false
+      job.json | version: "1"
+       default | management: false
+      fileName | artifactId: "job"
+      job.json | serviceAccount: "foo"
+      job.json | schedule: "0/5 * * * *"
+       default | suspend: false
+       default | failureCount: 1
+       default | startingDeadline: 60
+       default | successCount: 3
+       default | concurrentPolicy: "Forbid"
+       default | route: false
+               | routeDefaults:
+       default |   host: "@name@-@affiliation@-@env@"
+               |   tls:
+       default |     enabled: false
+       default |     insecurePolicy: "None"
+       default |     termination: "edge"
+               | secretVaults:
+               |   foo:
+       default |     name: "foo"
+       default |     enabled: true
+       default |     file: "latest.properties"
+      job.json |     keys: ["BAR","FOO"]
+      job.json |     keyMappings: {"BAR":"BAZ"}
+       default | sts: false

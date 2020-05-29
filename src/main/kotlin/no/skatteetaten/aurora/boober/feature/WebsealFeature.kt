@@ -15,6 +15,10 @@ val WEBSEAL_DONE_ANNOTATION: String = "marjory.sits.no-routes-config.done"
 class WebsealFeature(
     @Value("\${boober.webseal.suffix}") val webSealSuffix: String
 ) : Feature {
+
+    override fun enable(header: AuroraDeploymentSpec): Boolean {
+        return !header.isJob
+    }
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(

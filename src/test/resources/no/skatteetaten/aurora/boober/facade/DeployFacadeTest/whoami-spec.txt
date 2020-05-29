@@ -1,0 +1,16 @@
+        static | applicationDeploymentRef: "utv/whoami"
+        static | configVersion: "master"
+    about.json | schemaVersion: "v1"
+   whoami.json | type: "deploy"
+   whoami.json | deployState: "deployment"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+      fileName | name: "whoami"
+   whoami.json | groupId: "org.test"
+   whoami.json | database: true
+   whoami.json | version: "1"
+      fileName | artifactId: "whoami"

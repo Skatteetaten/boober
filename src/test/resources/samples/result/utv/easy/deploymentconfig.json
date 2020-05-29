@@ -44,6 +44,7 @@
           "boober.skatteetaten.no/deployTag": "1"
         },
         "labels": {
+          "operationScope" : "aos-4016",
           "app": "easy",
           "updatedBy": "hero",
           "updatedAt": "0",
@@ -123,21 +124,18 @@
                 "value": "http://easy-paas-utv.test"
               },
               {
-                "name": "STS_CERTIFICATE_URL",
-                "value": "/u01/secrets/app/easy-sts/certificate.crt"
-              },
+            "name" : "STS_CERTIFICATE_URL",
+            "value" : "/u01/secrets/app/easy-sts/certificate.crt"},
               {
-                "name": "STS_PRIVATE_KEY_URL",
-                "value": "/u01/secrets/app/easy-sts/privatekey.key"
-              },
-              {
-                "name": "STS_KEYSTORE_DESCRIPTOR",
-                "value": "/u01/secrets/app/easy-sts/descriptor.properties"
-              },
-              {
-                "name": "VOLUME_EASY_STS",
-                "value": "/u01/secrets/app/easy-sts"
-              },
+            "name" : "STS_PRIVATE_KEY_URL",
+            "value" : "/u01/secrets/app/easy-sts/privatekey.key"
+          },
+              {"name" : "STS_KEYSTORE_DESCRIPTOR",
+            "value" : "/u01/secrets/app/easy-sts/descriptor.properties"
+          },
+              {"name" : "VOLUME_EASY_STS",
+            "value" : "/u01/secrets/app/easy-sts"
+          },
               {
                 "name": "STS_DISCOVERY_URL",
                 "value": "https://bigbird-utv.org"
@@ -193,14 +191,12 @@
                 "mountPath": "/u01/logs",
                 "name": "application-log-volume"
               },
-              {
-                "mountPath": "/u01/secrets/app/easy-db",
-                "name": "easy-db"
-              },
-              {
-                "mountPath": "/u01/secrets/app/easy-sts",
-                "name": "easy-sts"
-              }
+              {"mountPath" : "/u01/secrets/app/easy-db",
+            "name" : "easy-db"
+          }, {
+              "mountPath" : "/u01/secrets/app/easy-sts",
+            "name" : "easy-sts"
+          }
             ]
           }
         ],

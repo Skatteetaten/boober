@@ -1,0 +1,21 @@
+{
+  "type": "cronjob",
+  "version": "1",
+  "groupId": "no.skatteetaten.demo",
+  "config": {
+    "FOO": "bar"
+  },
+  "serviceAccount": "foo",
+  "schedule": "0/5 * * * *",
+  "secretVaults": {
+    "foo": {
+      "keys": [
+        "BAR",
+        "FOO"
+      ],
+      "keyMappings": {
+        "BAR": "BAZ"
+      }
+    }
+  }
+}

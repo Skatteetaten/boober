@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import io.fabric8.openshift.api.model.ImageStreamImport
+import no.skatteetaten.aurora.boober.feature.DeploymentState
 import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.model.openshift.isDifferentImage
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -50,25 +51,32 @@ class RedeployService(
 
     fun triggerRedeploy(
         openShiftResponses: List<OpenShiftResponse>,
-        type: TemplateType
+        type: TemplateType,
+        deployState: DeploymentState = DeploymentState.deploymentConfig
     ): RedeployResult {
 
         if (type == TemplateType.development) {
             return RedeployResult(message = "No deploy made since type=$type, deploy via oc start-build.")
         }
-
-        val isResource = openShiftResponses.imageStream()
-        val imageStream: ImageStream? = isResource?.responseBody?.let { it.convert() }
-
-        val isiResource: ImageStreamImport? = openShiftResponses.imageStreamImport()?.let { isi ->
-            isi.responseBody?.let { it.convert() }
+        if (deployState == DeploymentState.deployment) {
+            return RedeployResult(message = "Kubernetes Deployment applied.")
         }
 
+        if (type == TemplateType.cronjob) {
+            return RedeployResult(message = "CronJob applied. Will run according to schedule.")
+        }
+        if (type == TemplateType.job) {
+            return RedeployResult(message = "Job was started.")
+        }
+
+        val isResource = openShiftResponses.imageStream()
+        val imageStream: ImageStream? = isResource?.responseBody?.convert()
+        val isiResource: ImageStreamImport? = openShiftResponses.imageStreamImport()?.responseBody?.convert()
         val dcResource = openShiftResponses.deploymentConfig()
-        val oldDcResource: DeploymentConfig? = dcResource?.command?.previous?.let { it.convert() }
+        val oldDcResource: DeploymentConfig? = dcResource?.command?.previous?.convert()
         val wasPaused = oldDcResource?.spec?.replicas == 0
 
-        val deploymentConfig = dcResource?.responseBody?.let { it.convert<DeploymentConfig>() }
+        val deploymentConfig = dcResource?.responseBody?.convert<DeploymentConfig>()
             ?: throw IllegalArgumentException("Missing DeploymentConfig")
 
         if (isResource?.command?.operationType == OperationType.CREATE) {
@@ -79,9 +87,8 @@ class RedeployService(
             return triggerRedeploy(deploymentConfig)
         }
 
-        val isNewVersion = isiResource?.let {
-            it.isDifferentImage(imageStream.findCurrentImageHash(imageChangeTriggerTagName))
-        } ?: false
+        val isNewVersion =
+            isiResource?.isDifferentImage(imageStream.findCurrentImageHash(imageChangeTriggerTagName)) ?: false
 
         val versionMessage = if (isNewVersion) {
             "New application version found."

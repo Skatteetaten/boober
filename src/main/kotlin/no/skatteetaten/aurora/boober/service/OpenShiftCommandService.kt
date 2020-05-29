@@ -217,6 +217,7 @@ class OpenShiftCommandService(
         val command = createOpenShiftCommand(namespace, it, mergeWithExistingResource)
 
         val commands: List<OpenshiftCommand> =
+
             if (command.isType(UPDATE, "route") && mustRecreateRoute(command.payload, command.previous)) {
                 val deleteCommand = command.copy(operationType = DELETE)
                 val createCommand = command.copy(

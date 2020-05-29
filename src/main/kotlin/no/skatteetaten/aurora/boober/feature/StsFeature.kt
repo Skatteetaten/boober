@@ -35,6 +35,7 @@ private val logger = KotlinLogging.logger { }
 @ConditionalOnPropertyMissingOrEmpty("integrations.skap.url")
 @Service
 class StsDisabledFeature : Feature {
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(

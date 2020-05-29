@@ -113,7 +113,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added information from deployment")
-        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations, shared env vars and request limits")
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations")
 
         val ad = adResource.resource as ApplicationDeployment
         assertThat(ad.spec.deployTag).isEqualTo("1")
@@ -142,7 +142,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added information from deployment")
-        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations, shared env vars and request limits")
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations")
 
         val ad = adResource.resource as ApplicationDeployment
         assertThat(ad.spec.deployTag).isEqualTo("test")
