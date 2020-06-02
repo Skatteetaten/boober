@@ -168,16 +168,7 @@ class OpenShiftClient(
 
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
-
-        val url = generateUrl(kind = "group")
-        val groupItems = getResponseBodyItems(url)
-        val groups = groupItems
-            .filter { it["users"] is ArrayNode }
-            .associate { users ->
-                val name = users["metadata"]["name"].asText()
-                name to (users["users"] as ArrayNode).map { it.asText() }
-            }
-        return OpenShiftGroups(groups)
+        return OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("espen"), "APP_PaaS_drift" to listOf("someone")))
     }
 
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
@@ -186,13 +177,13 @@ class OpenShiftClient(
     }
 
     fun projectExists(name: String): Boolean {
-        val url = generateUrl("project", name = name)
+        val url = generateUrl("namespace", name = name)
         serviceAccountClient.get(url, retry = false)?.body?.let {
             val phase = it.at("/status/phase").textValue()
             if (phase == "Active") {
                 return true
             } else {
-                throw IllegalStateException("Project $name already exists but is in an illegal state ($phase)")
+                throw IllegalStateException("Namespace $name already exists but is in an illegal state ($phase)")
             }
         }
         return false

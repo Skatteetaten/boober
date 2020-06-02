@@ -37,12 +37,11 @@ class BearerAuthenticationManager(
     override fun authenticate(authentication: Authentication?): Authentication {
 
         val token = getBearerTokenFromAuthentication(authentication)
-        val openShiftUser = getOpenShiftUser(token)
-        val grantedAuthorities = getGrantedAuthoritiesForUser(openShiftUser)
+        val grantedAuthorities = SimpleGrantedAuthority("APP_PaaS_utv")
 
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
         // (don't end the authentication chain).
-        return PreAuthenticatedAuthenticationToken(openShiftUser, token, grantedAuthorities)
+        return PreAuthenticatedAuthenticationToken("espen", token, listOf(grantedAuthorities))
             .apply { isAuthenticated = false }
     }
 

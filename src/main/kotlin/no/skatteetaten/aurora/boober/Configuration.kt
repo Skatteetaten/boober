@@ -231,7 +231,7 @@ class Configuration {
     @Bean
     fun closeableHttpClient(trustStore: KeyStore?): CloseableHttpClient {
         val sslContext = SSLContexts.custom()
-            .loadTrustMaterial(trustStore) { _: Array<X509Certificate>, _: String -> false }
+            .loadTrustMaterial(trustStore) { _: Array<X509Certificate>, _: String -> true }
             .build()
         val build = HttpClients.custom()
             .setSSLSocketFactory(SSLConnectionSocketFactory(sslContext))

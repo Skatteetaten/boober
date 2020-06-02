@@ -1,9 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import com.fasterxml.jackson.databind.JsonNode
 import javax.servlet.http.HttpServletRequest
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
@@ -41,10 +39,8 @@ class WebSecurityConfig(
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
         setPreAuthenticatedUserDetailsService {
 
-            val principal: JsonNode? = it.principal as JsonNode?
-            val username: String = principal?.openshiftName
-                ?: throw IllegalArgumentException("Unable to determine username from response")
-            val fullName: String? = principal.get("fullName")?.asText()
+            val username = it.principal as String
+            val fullName = username.substringAfterLast("@").replace(".", " ")
 
             MDC.put("user", username)
             User(username, it.credentials as String, fullName, it.authorities).also {
