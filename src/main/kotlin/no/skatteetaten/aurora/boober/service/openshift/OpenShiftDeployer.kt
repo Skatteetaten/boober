@@ -75,8 +75,8 @@ class OpenShiftDeployer(
         val projectExist = openShiftClient.projectExists(namespace)
         val projectResponse = projectExist.whenFalse {
             openShiftCommandBuilder.createOpenShiftCommand(
-                newResource = resources.find { it.resource.kind == "ProjectRequest" }?.resource
-                    ?: throw Exception("Could not find project request"),
+                newResource = resources.find { it.resource.kind == "Namespace" }?.resource
+                    ?: throw Exception("Could not find namespace"),
                 mergeWithExistingResource = false,
                 retryGetResourceOnFailure = false
             ).let {
@@ -84,7 +84,7 @@ class OpenShiftDeployer(
                     .also { Thread.sleep(2000) }
             }
         }
-        val otherEnvResources = resources.filter { it.resource.kind != "ProjectRequest" }.map {
+        val otherEnvResources = resources.filter { it.resource.kind != "Namespace" }.map {
             openShiftCommandBuilder.createOpenShiftCommand(
                 namespace = it.resource.metadata.namespace,
                 newResource = it.resource,
