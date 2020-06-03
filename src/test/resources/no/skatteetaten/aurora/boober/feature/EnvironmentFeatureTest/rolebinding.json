@@ -1,15 +1,12 @@
 {
-  "apiVersion" : "authorization.openshift.io/v1",
+  "apiVersion" : "rbac.authorization.k8s.io/v1",
   "kind" : "RoleBinding",
   "metadata" : {
     "name" : "admin",
     "namespace" : "paas-utv"
   },
-  "groupNames": [
-    "APP_PaaS_drift",
-    "APP_PaaS_utv"
-  ],
   "roleRef" : {
+    "kind" : "ClusterRole",
     "name" : "admin"
   },
   "subjects" : [ {
@@ -23,8 +20,5 @@
     {
     "kind" : "Group",
     "name" : "APP_PaaS_utv"
-  } ],
-  "userNames": [
-    "foo:bar:baz"
-  ]
+  } ]
 }

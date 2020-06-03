@@ -118,7 +118,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             )
         )
 
-        val (projectResource, namespaceResource, rolebindingResource, viewRolebindingResource) =
+        val (namespaceResource, rolebindingResource, viewRolebindingResource) =
             generateResources(
                 files = listOf(
                     AuroraConfigFile(
@@ -133,10 +133,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             }"""
                     )
                 ),
-                createdResources = 4
+                createdResources = 3
             )
 
-        assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
         assertThat(namespaceResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("namespace.json")
         assertThat(rolebindingResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("rolebinding.json")

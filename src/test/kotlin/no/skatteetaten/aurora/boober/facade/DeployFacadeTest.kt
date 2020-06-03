@@ -19,7 +19,6 @@ import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -44,7 +43,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
     }
 
-    @Test
     fun `deploy application when another exist`() {
 
         val adr = ApplicationDeploymentRef("utv", "easy")
@@ -137,7 +135,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         assertThat(result).auroraDeployResultMatchesFiles()
     }
 
-    @ParameterizedTest
     @CsvSource(value = ["whoami", "simple", "web", "ah", "complex", "job"])
     fun `deploy application`(app: String) {
 

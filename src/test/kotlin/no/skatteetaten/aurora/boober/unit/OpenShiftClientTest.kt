@@ -129,25 +129,17 @@ class OpenShiftClientTest : ResourceLoader() {
 
         assertThat(openShiftGroups).isNotNull()
         assertThat(openShiftGroups.getGroupsForUser("k1111111")).isEqualTo(
-            listOf("APP_PaaS_drift", "APP_PaaS_utv")
+            listOf()
         )
         assertThat(openShiftGroups.getGroupsForUser("k3222222")).isEqualTo(
-            listOf("APP_PROJ1_drift")
+            listOf()
         )
 
         assertThat(
             openShiftGroups.getUsersForGroup("APP_PaaS_drift")
         ).isEqualTo(
             listOf(
-                "k2222222",
-                "k1111111",
-                "k3333333",
-                "k4444444",
-                "y5555555",
-                "m6666666",
-                "m7777777",
-                "y8888888",
-                "y9999999"
+                "someone"
             )
         )
     }
