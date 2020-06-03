@@ -171,7 +171,7 @@ class VaultService(
         val user = userDetailsProvider.getAuthenticatedUser()
 
         if (!user.hasAccess(permissions)) {
-            val message = "You (${user.username}) do not have required permissions ($permissions) to " +
+            val message = "You (${user.username}) do not have required permissions to " +
                 "operate on this vault. You have ${user.authorities.map { it.authority }}"
             throw UnauthorizedAccessException(message)
         }
