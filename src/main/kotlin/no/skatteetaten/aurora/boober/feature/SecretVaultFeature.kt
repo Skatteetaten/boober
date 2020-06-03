@@ -89,7 +89,7 @@ class SecretVaultFeature(
             .addIfNotNull(validatePublicVaults(adc.affiliation))
     }
 
-    fun validatePublicVaults(vaultCollection: String) : List<AuroraDeploymentSpecValidationException> {
+    fun validatePublicVaults(vaultCollection: String): List<AuroraDeploymentSpecValidationException> {
         return vaultProvider.findPublicVaults(vaultCollection).map {
             AuroraDeploymentSpecValidationException("Vault=$it in VaultCollection=$vaultCollection is public. Please add atleast one group to limit access.")
         }
