@@ -48,6 +48,12 @@ class VaultService(
         return vault.getFile(fileName)
     }
 
+    fun findAllPublicVaults(vaultCollectionName: String): List<String> {
+        return findAllVaultsInVaultCollection(vaultCollectionName).filter {
+            it.publicVault
+        }.map { it.name }
+    }
+
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()

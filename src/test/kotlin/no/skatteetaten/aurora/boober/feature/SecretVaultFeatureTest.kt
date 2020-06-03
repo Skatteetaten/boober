@@ -25,6 +25,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `validate secretNames`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         val tooLongName = "this-secret-name-is-really-way-way-way-too-long-long-long-long"
         mockVault(tooLongName)
         assertThat {
@@ -43,6 +44,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `validate key mappings should exist in keys`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         mockVault("foo")
         every { vaultProvider.findVaultKeys("paas", "foo", "latest.properties") } returns setOf("FOO")
         assertThat {
@@ -64,6 +66,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should get error if user does not have access to vault`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         every { vaultProvider.vaultExists("paas", "simple") } returns true
 
         every {
@@ -88,6 +91,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should get error if secrets have duplicate names`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         every { vaultProvider.vaultExists("paas", "simple") } returns true
 
         assertThat {
@@ -130,9 +134,28 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should get error if vault is public`() {
+
+        every { vaultProvider.vaultExists("paas", "foo") } returns true
+        every { vaultProvider.findPublicVaults(any())} returns listOf("foo")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+              "secretVault" : "foo" 
+             }"""
+            )
+        }.applicationErrors(
+            "File with name=latest.properties is not present in vault=foo in collection=paas",
+            "Vault=foo in VaultCollection=paas is public"
+        )
+    }
+
+    @Test
     fun `should get error if vault does not exist`() {
 
         every { vaultProvider.vaultExists("paas", "foo") } returns false
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
 
         assertThat {
             createAuroraDeploymentContext(
@@ -149,6 +172,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecret`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         mockVault("foo")
         val resource = generateResources(
             """{
@@ -170,6 +194,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecret normalize _ and uppercase letters`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         mockVault("Foo_Bar")
         val resource = generateResources(
             """{
@@ -193,6 +218,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecret and ignore key`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         every { vaultProvider.findVaultKeys("paas", "foo", "latest.properties") } returns setOf("FOO", "BAR")
 
         mockVault("foo", contents = "FOO=secretValue\nBAR=value\n")
@@ -219,6 +245,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecret with key with placeholder`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         every { vaultProvider.findVaultKeys("paas", "simple", "latest.properties") } returns setOf("simple", "FOO")
         mockVault("simple", contents = "simple=secret\nFOO=bar\n")
         val resource = generateResources(
@@ -244,6 +271,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecret with mapped key`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         mockVault("simple", contents = "simple=secretValue\n")
         val resource = generateResources(
             """{
@@ -270,6 +298,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     fun `should modify deploymentConfig and add auroraVaultSecret from custom file`() {
 
         mockVault("foo", "foo.properties")
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
+
         val resource = generateResources(
             """{
               "secretVaults" : {
@@ -294,6 +324,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should skip disabled mount`() {
 
+
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         val resource = generateResources(
             """{
               "secretVaults" : {
@@ -309,6 +341,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecrets`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         mockVault("foo")
         mockVault("bar")
 
@@ -338,6 +371,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecrets from simple and expanded syntax`() {
 
+        every { vaultProvider.findPublicVaults(any())} returns emptyList()
         mockVault("foo")
         mockVault("bar")
 

@@ -78,7 +78,7 @@ class SecretVaultFeature(
 
         val secrets = getSecretVaults(adc, cmd)
         val shallowValidation = validateSecretNames(secrets)
-        if (!fullValidation) return emptyList()
+        if (!fullValidation) return shallowValidation
 
         return shallowValidation
             .addIfNotNull(validateVaultExistence(secrets, adc.affiliation))
@@ -86,6 +86,13 @@ class SecretVaultFeature(
             .addIfNotNull(validateSecretVaultKeys(secrets, adc.affiliation))
             .addIfNotNull(validateSecretVaultFiles(secrets, adc.affiliation))
             .addIfNotNull(validateDuplicateSecretEnvNames(secrets))
+            .addIfNotNull(validatePublicVaults(adc.affiliation))
+    }
+
+    fun validatePublicVaults(vaultCollection: String) : List<AuroraDeploymentSpecValidationException> {
+        return vaultProvider.findPublicVaults(vaultCollection).map {
+            AuroraDeploymentSpecValidationException("Vault=$it in VaultCollection=$vaultCollection is public. Please add atleast one group to limit access.")
+        }
     }
 
     fun validateVaultExistence(
