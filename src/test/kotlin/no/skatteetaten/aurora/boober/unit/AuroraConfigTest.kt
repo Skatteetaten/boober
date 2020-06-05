@@ -238,9 +238,8 @@ class AuroraConfigTest : ResourceLoader() {
               certificate: false""".trimMargin()
         )
 
-        assertThat{ auroraConfigFile.asJsonNode}.isFailure().messageContains("First line in file does not contains space after ':'")
+        assertThat { auroraConfigFile.asJsonNode }.isFailure().messageContains("First line in file does not contains space after ':'")
     }
-
 
     fun createMockFiles(vararg files: String): List<AuroraConfigFile> {
         return files.map {
