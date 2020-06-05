@@ -227,6 +227,21 @@ class AuroraConfigTest : ResourceLoader() {
         assertThat(auroraConfig).isEqualTo(merged)
     }
 
+    @Test
+    fun `should be able to parse yaml`() {
+
+        val auroraConfigFile = AuroraConfigFile(
+            name = "foo.yaml",
+            contents = """
+              replicas:3
+              type: "deploy"
+              certificate: false""".trimMargin()
+        )
+
+        assertThat{ auroraConfigFile.asJsonNode}.isFailure().messageContains("First line in file does not contains space after ':'")
+    }
+
+
     fun createMockFiles(vararg files: String): List<AuroraConfigFile> {
         return files.map {
             AuroraConfigFile(it, "{}", false, false)
