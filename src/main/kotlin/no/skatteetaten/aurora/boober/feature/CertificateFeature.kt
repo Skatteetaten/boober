@@ -196,10 +196,16 @@ object StsSecretGenerator {
         stsProvisionResults: StsProvisioningResult,
         labels: Map<String, String>,
         ownerReference: OwnerReference,
-        namespace: String
+        namespace: String,
+        suffix: String
     ): Secret {
 
-        val secret = create(appName, stsProvisionResults, namespace)
+        val secret = create(
+            appName = appName,
+            stsProvisionResults = stsProvisionResults,
+            secretNamespace = namespace,
+            certSuffix = suffix
+        )
         secret.metadata.labels = labels.addIfNotNull(secret.metadata?.labels).normalizeLabels()
         secret.metadata.ownerReferences = listOf(ownerReference)
         return secret
