@@ -130,11 +130,11 @@ class VaultService(
 
         assertSecretKeysAreValid(secrets)
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
-            vaultCollection.createVault(vaultName).let { vault ->
-                if (vault.name == vaultName) {
-                    throw IllegalArgumentException("vault $vaultName already exists")
-                }
+            if (vaultCollection.vaults.any { it.name == vaultName }) {
+                throw IllegalArgumentException("vault $vaultName already exists")
+            }
 
+            vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
                 secrets.forEach { (name, contents) -> vault.updateFile(name, contents) }
                 vault.permissions = permissions
