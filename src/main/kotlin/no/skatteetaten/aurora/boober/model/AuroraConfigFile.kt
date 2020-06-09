@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP_OVERRIDE
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
@@ -77,16 +78,20 @@ data class AuroraConfigFile(
             } else if (name.endsWith(".yaml") || name.endsWith(".yml")) {
                 jacksonYamlObjectMapper()
             } else {
-                null
+                throw IllegalArgumentException("Could not parse file with name=$name we only support json/yaml files.")
             }
 
-            mapper?.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
+            mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
 
             val fixedContent = if ((name.endsWith(".yaml") || name.endsWith(".yml")) && contents.trim() == "---") {
                 "{}"
             } else contents
 
-            mapper?.readValue(fixedContent, JsonNode::class.java) ?: TextNode(contents)
+            val node: JsonNode = mapper.readValue(fixedContent)
+            if (node is TextNode) {
+                throw IllegalArgumentException("First line in file does not contains space after ':'")
+            }
+            node
         } catch (e: Exception) {
             val message = "AuroraConfigFile=$name is not valid errorMessage=${e.message}"
             throw AuroraConfigException(

@@ -2,6 +2,7 @@
         static | configVersion: "master"
     about.json | schemaVersion: "v1"
       web.json | type: "development"
+       default | deployState: "deploymentConfig"
       web.json | applicationPlatform: "web"
     about.json | affiliation: "paas"
     about.json | segment: "aurora"

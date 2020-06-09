@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.model.addEnvVar
 import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
+
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
 
@@ -174,6 +176,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         cmd: AuroraContextCommand
     ): List<Exception> {
         val routes = getRoute(adc, cmd)
+
+        if (routes.isNotEmpty() && adc.isJob) {
+            throw AuroraDeploymentSpecValidationException("Routes are not supported for jobs/cronjobs")
+        }
 
         val applicationDeploymentRef = cmd.applicationDeploymentRef
         val tlsErrors = routes.mapNotNull {

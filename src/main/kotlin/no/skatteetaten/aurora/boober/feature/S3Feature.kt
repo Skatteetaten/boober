@@ -28,6 +28,7 @@ private val logger = KotlinLogging.logger {}
 @ConditionalOnMissingBean(S3Provisioner::class)
 @Service
 class S3DisabledFeature : Feature {
+
     @PostConstruct
     fun init() {
         logger.info("S3 feature is disabled since no ${S3Provisioner::class.simpleName} is available")
@@ -39,6 +40,10 @@ class S3DisabledFeature : Feature {
 @ConditionalOnBean(S3Provisioner::class)
 @Service
 class S3Feature(val s3Provisioner: S3Provisioner) : Feature {
+
+    override fun enable(header: AuroraDeploymentSpec): Boolean {
+        return !header.isJob
+    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(

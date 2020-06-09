@@ -15,6 +15,7 @@
       "name": "simple"
     },
     "applicationDeploymentId": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
+    "runnableType" : "",
     "applicationDeploymentName": "simple",
     "databases": [],
     "command": {

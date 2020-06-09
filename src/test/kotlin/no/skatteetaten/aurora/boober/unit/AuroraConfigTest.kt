@@ -227,6 +227,36 @@ class AuroraConfigTest : ResourceLoader() {
         assertThat(auroraConfig).isEqualTo(merged)
     }
 
+    @Test
+    fun `should get error when parsing unkonwn file type`() {
+
+        val auroraConfigFile = AuroraConfigFile(
+            name = "foo.yoda",
+            contents = """
+              replicas:3
+              type: "deploy"
+              certificate: false""".trimMargin()
+        )
+
+        assertThat { auroraConfigFile.asJsonNode }.isFailure()
+            .messageContains("Could not parse file with name=foo.yoda")
+    }
+
+    @Test
+    fun `should get error when parsing yaml file with wrong first line`() {
+
+        val auroraConfigFile = AuroraConfigFile(
+            name = "foo.yaml",
+            contents = """
+              replicas:3
+              type: "deploy"
+              certificate: false""".trimMargin()
+        )
+
+        assertThat { auroraConfigFile.asJsonNode }.isFailure()
+            .messageContains("First line in file does not contains space after ':'")
+    }
+
     fun createMockFiles(vararg files: String): List<AuroraConfigFile> {
         return files.map {
             AuroraConfigFile(it, "{}", false, false)

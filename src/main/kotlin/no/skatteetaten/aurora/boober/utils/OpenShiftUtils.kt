@@ -6,7 +6,7 @@ val kubernetesNonApiGroupResources = setOf(
 )
 
 val nonGettableResources = setOf(
-    "processedtemplate", "deploymentrequest", "imagestreamimport"
+    "processedtemplate", "deploymentrequest", "imagestreamimport", "job"
 )
 
 val kindsWithoutNamespace = listOf(

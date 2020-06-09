@@ -25,6 +25,7 @@
     },
     "applicationDeploymentId": "d46f5a91b3a53d000bb0ae94c4bb51756804e1c2",
     "applicationName": "simple",
+    "runnableType" : "DeploymentConfig",
     "applicationDeploymentName": "easy",
     "databases": [
       "fd59dba9-7d67-4ea2-bb98-081a5df8c387"

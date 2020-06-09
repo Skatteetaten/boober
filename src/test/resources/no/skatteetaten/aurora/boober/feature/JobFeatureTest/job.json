@@ -1,0 +1,26 @@
+{
+  "apiVersion" : "batch/v1",
+  "kind" : "Job",
+  "metadata" : {
+    "generateName" : "simple-",
+    "namespace" : "paas-utv"
+  },
+  "spec" : {
+    "completions" : 1,
+    "parallelism" : 1,
+    "template" : {
+      "metadata" : {
+        "generateName" : "simple"
+      },
+      "spec" : {
+        "containers" : [ {
+          "image" : "docker.registry/aurora/turbo:0",
+          "imagePullPolicy" : "Always",
+          "name" : "simple"
+        } ],
+        "dnsPolicy" : "ClusterFirst",
+        "restartPolicy" : "Never"
+      }
+    }
+  }
+}
