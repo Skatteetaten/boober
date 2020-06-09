@@ -38,10 +38,23 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: DeployFacade
+    private val vaultName = "foo"
 
     @BeforeEach
     fun beforeDeploy() {
-        preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
+        preprateTestVault(vaultName, mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
+    }
+
+    @Test
+    fun `throw exception when duplicate vault names`() {
+        assertThat {
+            vaultService.import(
+                vaultCollectionName = "paas",
+                vaultName = vaultName,
+                secrets = mapOf("latest.properties" to "".toByteArray()),
+                permissions = listOf("APP_PaaS_utv")
+            )
+        }.isFailure().messageContains(vaultName)
     }
 
     @Test
