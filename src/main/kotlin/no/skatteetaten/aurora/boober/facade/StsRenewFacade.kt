@@ -45,7 +45,8 @@ class StsRenewFacade(
             stsProvisionResults = stsResult,
             labels = labels,
             ownerReference = request.ownerReference,
-            namespace = request.namespace
+            namespace = request.namespace,
+            suffix = request.suffix
         )
         val json = jacksonObjectMapper()
             .convertValue<JsonNode>(secret)
@@ -65,5 +66,6 @@ data class RenewRequest(
     val namespace: String,
     val affiliation: String,
     val commonName: String,
-    val ownerReference: OwnerReference
+    val ownerReference: OwnerReference,
+    val suffix: String = "cert"
 )
