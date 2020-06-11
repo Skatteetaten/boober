@@ -243,7 +243,7 @@ class VaultServiceTest {
             vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, listOf("admin"))
         }.isFailure().all {
             isInstanceOf(UnauthorizedAccessException::class)
-            hasMessage("You (aurora) do not have required permissions ([admin]) to operate on this vault. You have [UTV]")
+            hasMessage("You (aurora) do not have required permissions to operate on this vault. You have [UTV]")
         }
     }
 

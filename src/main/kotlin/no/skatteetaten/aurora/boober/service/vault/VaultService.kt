@@ -48,6 +48,12 @@ class VaultService(
         return vault.getFile(fileName)
     }
 
+    fun findAllPublicVaults(vaultCollectionName: String): List<String> {
+        return findAllVaultsInVaultCollection(vaultCollectionName).filter {
+            it.publicVault
+        }.map { it.name }
+    }
+
     fun findAllVaultsWithUserAccessInVaultCollection(vaultCollectionName: String): List<VaultWithAccess> {
 
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
@@ -130,6 +136,10 @@ class VaultService(
 
         assertSecretKeysAreValid(secrets)
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
+            if (vaultCollection.vaults.any { it.name == vaultName }) {
+                throw IllegalArgumentException("vault $vaultName already exists")
+            }
+
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
                 secrets.forEach { (name, contents) -> vault.updateFile(name, contents) }
@@ -165,7 +175,7 @@ class VaultService(
         val user = userDetailsProvider.getAuthenticatedUser()
 
         if (!user.hasAccess(permissions)) {
-            val message = "You (${user.username}) do not have required permissions ($permissions) to " +
+            val message = "You (${user.username}) do not have required permissions to " +
                 "operate on this vault. You have ${user.authorities.map { it.authority }}"
             throw UnauthorizedAccessException(message)
         }

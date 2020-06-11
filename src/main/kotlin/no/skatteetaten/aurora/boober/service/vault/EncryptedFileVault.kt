@@ -81,6 +81,8 @@ class EncryptedFileVault private constructor(
     val name: String
         get() = vaultFolder.name
 
+    val publicVault: Boolean get() = permissions.isEmpty()
+
     var permissions: List<String>
         get() {
             val permissions: AuroraPermissions? = files

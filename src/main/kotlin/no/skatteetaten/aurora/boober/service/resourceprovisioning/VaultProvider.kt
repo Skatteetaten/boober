@@ -38,6 +38,10 @@ class VaultProvider(private val vaultService: VaultService) {
         return vaultService.vaultExists(vaultCollectionName, vaultName)
     }
 
+    fun findPublicVaults(vaultCollectionName: String): List<String> {
+        return vaultService.findAllPublicVaults(vaultCollectionName)
+    }
+
     fun findVaultKeys(vaultCollectionName: String, vaultName: String, fileName: String): Set<String> {
         return vaultService.findVaultKeys(vaultCollectionName, vaultName, fileName)
     }
