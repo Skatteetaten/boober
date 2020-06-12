@@ -136,9 +136,7 @@ class VaultService(
 
         assertSecretKeysAreValid(secrets)
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
-            if (vaultCollection.vaults.any { it.name == vaultName }) {
-                throw IllegalArgumentException("vault $vaultName already exists")
-            }
+            findVaultByNameIfAllowed(vaultCollection, vaultName)
 
             vaultCollection.createVault(vaultName).let { vault ->
                 vault.clear()
