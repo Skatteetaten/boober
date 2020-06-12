@@ -46,15 +46,15 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @Test
-    fun `throw exception when duplicate vault names`() {
+    fun `throw exception when user does not have permission`() {
         assertThat {
             vaultService.import(
                 vaultCollectionName = "paas",
                 vaultName = vaultName,
                 secrets = mapOf("latest.properties" to "".toByteArray()),
-                permissions = listOf("APP_PaaS_utv")
+                permissions = listOf("NON_EXISTING_PERMISSION")
             )
-        }.isFailure().messageContains(vaultName)
+        }.isFailure().messageContains("do not have required permissions")
     }
 
     @Test
