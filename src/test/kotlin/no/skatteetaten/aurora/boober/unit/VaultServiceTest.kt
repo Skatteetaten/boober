@@ -111,7 +111,7 @@ class VaultServiceTest {
             vaultService.import(
                 vaultCollectionName = COLLECTION_NAME,
                 vaultName = VAULT_NAME,
-                permissions = listOf(),
+                permissions = listOf("UTV"),
                 secrets = contents
             )
         }.isFailure().all {

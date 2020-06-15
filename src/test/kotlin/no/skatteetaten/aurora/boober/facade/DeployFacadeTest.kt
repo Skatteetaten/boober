@@ -58,6 +58,18 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @Test
+    fun `throw exception when called with empty permissions`() {
+        assertThat {
+            vaultService.import(
+                vaultCollectionName = "paas",
+                vaultName = vaultName,
+                secrets = mapOf("latest.properties" to "".toByteArray()),
+                permissions = emptyList()
+            )
+        }.isFailure().messageContains("Public vaults are not allowed")
+    }
+
+    @Test
     fun `deploy application when another exist`() {
 
         val adr = ApplicationDeploymentRef("utv", "easy")

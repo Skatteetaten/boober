@@ -132,6 +132,11 @@ class VaultService(
         secrets: Map<String, ByteArray>
     ): EncryptedFileVault {
 
+
+        if(permissions.isEmpty()) {
+            throw IllegalArgumentException("Public vaults are not allowed. Please specify atleast one permsssion group.")
+        }
+
         assertCurrentUserHasAccess(permissions)
 
         assertSecretKeysAreValid(secrets)
