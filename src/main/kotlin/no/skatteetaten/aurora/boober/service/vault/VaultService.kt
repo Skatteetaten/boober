@@ -133,7 +133,7 @@ class VaultService(
     ): EncryptedFileVault {
 
         if (permissions.isEmpty()) {
-            throw IllegalArgumentException("Public vaults are not allowed. Please specify atleast one permsssion group.")
+            throw IllegalArgumentException("Public vaults are not allowed. Please specify atleast one permisssion group.")
         }
 
         assertCurrentUserHasAccess(permissions)
