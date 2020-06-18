@@ -251,7 +251,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             val value: String = adc.getOrNull("$key/id") ?: ""
 
             val instanceName = instance?.name ?: defaultDb.instance.name
-            val instanceFallback = instance?.fallback ?: defaultDb.instance.fallback
+            val instanceFallback = instance?.fallback ?: flavor.defaultFallback
             val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
                 .addIfNotNull(instance?.labels)
 
