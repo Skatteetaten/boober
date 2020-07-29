@@ -47,8 +47,9 @@ class BitbucketService(
         } ?: emptyList()
     }
 
-    fun getFile(project: String, repo: String, fileName: String): String? {
-        val url = "/projects/$project/repos/$repo/raw/$fileName"
+    fun getFile(project: String, repo: String, fileName: String, ref: String = "master"): String? {
+        val url = "/projects/$project/repos/$repo/raw/$fileName?at=$ref"
+        logger.debug("getting bitbucket file for Path=$url")
         return restTemplateWrapper.get(String::class, url).body
     }
 

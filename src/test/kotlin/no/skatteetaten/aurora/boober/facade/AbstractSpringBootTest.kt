@@ -13,8 +13,9 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.bodyAsString
-import okhttp3.mockwebserver.Dispatcher
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okhttp3.mockwebserver.RecordedRequest
@@ -68,86 +69,6 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             .setResponseCode(200)
             .setBody(jacksonObjectMapper().writeValueAsString(ad))
             .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-    }
-
-    data class MockRules(
-        val check: MockFlag,
-        val fn: MockRule
-    )
-
-    class HttpMock {
-
-        val mockRules: MutableList<MockRules> = mutableListOf()
-
-        fun start(port: Int): MockWebServer {
-
-            return MockWebServer().apply {
-                dispatcher = object : Dispatcher() {
-                    override fun dispatch(request: RecordedRequest): MockResponse {
-                        val matchingRule = mockRules.asSequence().mapNotNull {
-                            if (it.check(request) == true) {
-                                it.fn(request)
-                            } else null
-                        }.firstOrNull()
-
-                        if (matchingRule == null) {
-                            logger.debug("No matching rules matches request=;request")
-                            throw IllegalArgumentException("No function matches request=$request")
-                        }
-
-                        return matchingRule
-                    }
-                }
-                start(port)
-            }
-        }
-
-        fun rule(r: MockRules): HttpMock {
-            mockRules.add(r)
-            return this
-        }
-
-        /*
-        Add a rule to this mock. If fn returns null the rule will be ignored
-         */
-        fun rule(fn: MockRule): HttpMock {
-            mockRules.add(MockRules({ true }, fn))
-            return this
-        }
-
-        /*
-                  Record a rule in the mock. Add an optional check as the first parameter
-
-                  If the body of the rule returns null it will be ignored.
-
-                  The ordering of the rules matter, the first one that matches will be returned
-                 */
-        fun rule(check: MockFlag = { true }, fn: MockRule): HttpMock {
-            mockRules.add(MockRules(check, fn))
-            return this
-        }
-
-        companion object {
-            var httpMocks: MutableList<MockWebServer> = mutableListOf()
-
-            fun clearAllHttpMocks() {
-                httpMocks.forEach {
-                    it.shutdown()
-                }
-                httpMocks = mutableListOf()
-            }
-        }
-    }
-
-    fun httpMockServer(port: String, block: HttpMock.() -> Unit = {}): MockWebServer =
-        httpMockServer(port.toInt(), block)
-
-    fun httpMockServer(port: Int, block: HttpMock.() -> Unit = {}): MockWebServer {
-        val instance = HttpMock()
-        instance.block()
-        val server = instance.start(port)
-        HttpMock.httpMocks.add(server)
-        return server
     }
 
     fun openShiftMock(block: HttpMock.() -> Unit = {}): MockWebServer {

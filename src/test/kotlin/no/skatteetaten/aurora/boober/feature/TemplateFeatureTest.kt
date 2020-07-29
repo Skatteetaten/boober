@@ -4,14 +4,19 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
+import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
 class TemplateFeatureTest : AbstractFeatureTest() {
+
+    val templateService: AuroraTemplateService = mockk()
+
     override val feature: Feature
-        get() = TemplateFeature(openShiftClient, "utv")
+        get() = TemplateFeature(templateService, "utv")
 
     val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()
 
@@ -30,7 +35,7 @@ class TemplateFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should get error if parameters is missing`() {
 
-        every { openShiftClient.getTemplate("atomhopper") } returns jacksonObjectMapper().readTree(template)
+        every { templateService.findTemplate("atomhopper") } returns jacksonObjectMapper().readTree(template)
 
         assertThat {
             createAuroraDeploymentContext(
@@ -45,7 +50,7 @@ class TemplateFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should get error if template file is not present in openshift`() {
 
-        every { openShiftClient.getTemplate("atomhopper") } throws IllegalArgumentException("Could not find template")
+        every { templateService.findTemplate("atomhopper") } throws IllegalArgumentException("Could not find template=atomhopper")
 
         assertThat {
             createAuroraDeploymentContext(
@@ -60,7 +65,7 @@ class TemplateFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate resources from template`() {
 
-        every { openShiftClient.getTemplate("atomhopper") } returns jacksonObjectMapper().readTree(template)
+        every { templateService.findTemplate("atomhopper") } returns jacksonObjectMapper().readTree(template)
 
         val (adResource, imageStream, service, route, deploymentConfig) = generateResources(
             """{

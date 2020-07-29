@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.MockRules
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
