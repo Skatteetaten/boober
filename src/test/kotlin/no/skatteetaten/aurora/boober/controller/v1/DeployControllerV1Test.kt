@@ -46,6 +46,8 @@ class DeployControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items[0].deployId").equalsValue("123")
             responseJsonPath("$.items[0].auroraConfigRef.resolvedRef").equalsValue("123")
+            responseJsonPath("$.items[0].auroraConfigRef.resolvedRef").equalsValue("123")
+            responseJsonPath("$.items[0].applicationDeploymentId").equalsValue("1d5da0b933ade4bfd6773579b9fb5cc2afb57378")
         }
     }
 

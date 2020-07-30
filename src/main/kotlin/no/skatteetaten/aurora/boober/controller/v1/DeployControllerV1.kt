@@ -43,9 +43,7 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
                 tagResponse = it.tagResponse,
                 projectExist = it.projectExist,
                 openShiftResponses = it.openShiftResponses,
-                deploymentSpec = it.auroraDeploymentSpecInternal.let { internalSpec ->
-                    renderSpecAsJson(internalSpec, true)
-                },
+                deploymentSpec = renderSpecAsJson(it.auroraDeploymentSpecInternal, true),
                 warnings = it.warnings,
                 applicationDeploymentId = it.auroraDeploymentSpecInternal.applicationDeploymentId
             )
