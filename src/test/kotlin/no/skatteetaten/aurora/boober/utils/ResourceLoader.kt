@@ -181,7 +181,7 @@ fun stubAuroraDeploymentSpec(): AuroraDeploymentSpec {
             "envName" to AuroraConfigField(
                 sources = setOf(
                     AuroraConfigFieldSource(
-                        AuroraConfigFile("about.json", "{}"),
+                        AuroraConfigFile("utv/about.json", "{}"),
                         TextNode("utv")
                     )
                 )
@@ -189,7 +189,7 @@ fun stubAuroraDeploymentSpec(): AuroraDeploymentSpec {
             "name" to AuroraConfigField(
                 sources = setOf(
                     AuroraConfigFieldSource(
-                        AuroraConfigFile("about.json", "{}"),
+                        AuroraConfigFile("utv/simple.json", "{}"),
                         TextNode("simple")
                     )
                 )

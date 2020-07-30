@@ -82,7 +82,10 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items.length()").equalsValue(1)
-            responseJsonPath("$.items[0]").equalsValue("""about.json | cluster: "utv"""")
+            responseJsonPath("$.items[0]").equalsValue("""     about.json | cluster: "utv"
+     about.json | affiliation: "paas"
+ utv/about.json | envName: "utv"
+utv/simple.json | name: "simple"""")
         }
     }
 }
