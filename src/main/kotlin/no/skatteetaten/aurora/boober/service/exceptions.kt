@@ -45,6 +45,7 @@ class ProvisioningException(message: String, cause: Throwable? = null) :
     ServiceException(message, cause)
 
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
+class AuroraVaultServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class GitReferenceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
