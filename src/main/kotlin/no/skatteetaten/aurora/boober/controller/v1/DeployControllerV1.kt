@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.facade.DeployFacade
+import no.skatteetaten.aurora.boober.feature.applicationDeploymentId
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
@@ -42,10 +43,9 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
                 tagResponse = it.tagResponse,
                 projectExist = it.projectExist,
                 openShiftResponses = it.openShiftResponses,
-                deploymentSpec = it.auroraDeploymentSpecInternal.let { internalSpec ->
-                    renderSpecAsJson(internalSpec, true)
-                },
-                warnings = it.warnings
+                deploymentSpec = renderSpecAsJson(it.auroraDeploymentSpecInternal, true),
+                warnings = it.warnings,
+                applicationDeploymentId = it.auroraDeploymentSpecInternal.applicationDeploymentId
             )
         }
 
@@ -57,6 +57,7 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
 
 data class DeployResponse(
     val auroraConfigRef: AuroraConfigRef,
+    val applicationDeploymentId: String,
     val deploymentSpec: Map<String, Any>?,
     val deployId: String,
     val openShiftResponses: List<OpenShiftResponse>,

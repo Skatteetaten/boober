@@ -8,9 +8,6 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import java.io.File
-import java.net.URL
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -28,6 +25,9 @@ import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
 import org.apache.commons.text.StringSubstitutor
 import org.springframework.util.ResourceUtils
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
 
 open class ResourceLoader {
 
@@ -44,7 +44,7 @@ open class ResourceLoader {
     }
 
     inline fun <reified T> load(resourceName: String, folder: String = this.javaClass.simpleName): T =
-            jacksonObjectMapper().readValue(loadResource(resourceName, folder))
+        jacksonObjectMapper().readValue(loadResource(resourceName, folder))
 
     fun loadJsonResource(resourceName: String, folder: String = this.javaClass.simpleName): JsonNode =
         jacksonObjectMapper().readValue(loadResource(resourceName, folder))
@@ -167,6 +167,30 @@ fun stubAuroraDeploymentSpec(): AuroraDeploymentSpec {
                     AuroraConfigFieldSource(
                         AuroraConfigFile("about.json", "{}"),
                         TextNode("utv")
+                    )
+                )
+            ),
+            "affiliation" to AuroraConfigField(
+                sources = setOf(
+                    AuroraConfigFieldSource(
+                        AuroraConfigFile("about.json", "{}"),
+                        TextNode("paas")
+                    )
+                )
+            ),
+            "envName" to AuroraConfigField(
+                sources = setOf(
+                    AuroraConfigFieldSource(
+                        AuroraConfigFile("utv/about.json", "{}"),
+                        TextNode("utv")
+                    )
+                )
+            ),
+            "name" to AuroraConfigField(
+                sources = setOf(
+                    AuroraConfigFieldSource(
+                        AuroraConfigFile("utv/simple.json", "{}"),
+                        TextNode("simple")
                     )
                 )
             )
