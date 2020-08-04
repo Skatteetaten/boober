@@ -99,7 +99,11 @@ class AuroraConfigService(
         val repo = Git.open(checkoutDir)
 
         val gitRef = gitService.findRef(repo, ref.refName)
-        gitService.commitAndPushChanges(repo, gitRef.name)
+        try {
+            gitService.commitAndPushChanges(repo, gitRef.name)
+        } catch (e: Exception) {
+            throw AuroraConfigServiceException("Could not save changes in AuroraConfig underlying message=${e.localizedMessage}", e)
+        }
         repo.close()
         watch.stop()
 

@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.vault
 import no.skatteetaten.aurora.boober.Domain.VAULT
 import no.skatteetaten.aurora.boober.TargetDomain
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.service.AuroraVaultServiceException
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
@@ -194,7 +195,11 @@ class VaultService(
             val folder = repo.repository.directory.parentFile
             val vaultCollection =
                 VaultCollection.fromFolder(folder, encryptionService::encrypt, encryptionService::decrypt)
-            val response = function(vaultCollection, repo)
+            val response = try {
+                function(vaultCollection, repo)
+            } catch (e: Exception) {
+                throw AuroraVaultServiceException("Could not update auroraVault underlying message=${e.localizedMessage}", e)
+            }
             repo.close()
             response
         }
