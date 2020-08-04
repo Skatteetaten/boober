@@ -20,6 +20,7 @@ import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.annotation
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import org.springframework.http.ResponseEntity
 
 class OpenShiftCommandServiceTest : ResourceLoader() {
 
@@ -45,17 +46,42 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
     }
 
     @Test
-    fun `Should keep done annotation if roles the same and previous success`() {
+    fun `Should delete old route and create new if path is different`() {
+        val previous = loadJsonResource("route.json")
+        val payload = loadJsonResource("route-with-new-path.json")
+
+        createOpenShiftClientMock(payload)
+        every { openshiftClient.get(any(), any(), any()) } returns ResponseEntity.ok(previous)
+
+        val resultList = service.createAndApplyObjects(namespace, payload, true)
+
+        assertThat(resultList.size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Should delete old route and create new if host is different`() {
+        val previous = loadJsonResource("route.json")
+        val payload = loadJsonResource("route-with-new-host.json")
+
+        createOpenShiftClientMock(payload)
+        every { openshiftClient.get(any(), any(), any()) } returns ResponseEntity.ok(previous)
+
+        val resultList = service.createAndApplyObjects(namespace, payload, true)
+
+        assertThat(resultList.size).isEqualTo(2)
+    }
+
+    @Test
+    fun `Should apply route and keep webseal done`() {
         val previous = loadJsonResource("webseal-route.json")
         val payload = loadJsonResource("webseal-route-generated.json")
 
-        val cmd = OpenshiftCommand(operationType = OperationType.UPDATE, previous = previous, payload = payload, generated = payload, url = "")
+        createOpenShiftClientMock(payload)
+        every { openshiftClient.get(any(), any(), any()) } returns ResponseEntity.ok(previous)
 
-        assertThat(cmd.rolesEqualAndProcessingDone()).isTrue()
+        val resultList = service.createAndApplyObjects(namespace, payload, true)
 
-        val newCommand = cmd.setWebsealDone()
-
-        assertThat(newCommand.payload.annotation(WEBSEAL_DONE_ANNOTATION)).isNotNull()
+        assertThat(resultList.first().command.payload.annotation(WEBSEAL_DONE_ANNOTATION)).isNotNull()
     }
 
     @Test
