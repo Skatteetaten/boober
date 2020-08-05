@@ -37,11 +37,11 @@ class BearerAuthenticationManager(
     override fun authenticate(authentication: Authentication?): Authentication {
 
         val token = getBearerTokenFromAuthentication(authentication)
-        val grantedAuthorities = SimpleGrantedAuthority("APP_PaaS_utv")
+        val grantedAuthorities = listOf(SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("8007f31c-c04f-4184-946c-220bae98c592"))
 
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
         // (don't end the authentication chain).
-        return PreAuthenticatedAuthenticationToken("espen", token, listOf(grantedAuthorities))
+        return PreAuthenticatedAuthenticationToken("espen", token, grantedAuthorities)
             .apply { isAuthenticated = false }
     }
 
@@ -53,6 +53,7 @@ class BearerAuthenticationManager(
             .map { SimpleGrantedAuthority(it) }
     }
 
+    // TODO: Implement TokenReview as we do in mokey.
     private fun getOpenShiftUser(token: String): JsonNode {
         return try {
             openShiftClient.findCurrentUser(token)

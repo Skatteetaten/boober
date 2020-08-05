@@ -17,7 +17,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class BearerAuthenticationManagerTest {
     val username = "aurora"
-    val groups = listOf("APP_PaaS_utv")
+    val groups = listOf("APP_PaaS_utv", "8007f31c-c04f-4184-946c-220bae98c592")
     val token = "some_token"
     val authorityGroups = groups.map { SimpleGrantedAuthority(it) }
 
@@ -36,7 +36,8 @@ class BearerAuthenticationManagerTest {
         } returns OpenShiftGroups(
             mapOf(
                 "APP_PaaS_drift" to listOf("aurora"),
-                "APP_PaaS_utv" to listOf("aurora")
+                "APP_PaaS_utv" to listOf("aurora"),
+                "8007f31c-c04f-4184-946c-220bae98c592" to listOf("aurora")
             )
         )
 
