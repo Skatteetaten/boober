@@ -5,6 +5,7 @@ import java.util.regex.Pattern
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
@@ -43,7 +44,7 @@ class BearerAuthenticationManager(
         val grantedAuthorities = user.groups.filter { it.isNotBlank() }.map {
             // TODO: These groups are now just UUIDs need to lookup in group cache to convert them to name.
             SimpleGrantedAuthority(it)
-        }
+        }.addIfNotNull(SimpleGrantedAuthority("APP_PaaS_utv")) // TODO: Remove this when we have fetched groups correctly
 
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
         // (don't end the authentication chain).

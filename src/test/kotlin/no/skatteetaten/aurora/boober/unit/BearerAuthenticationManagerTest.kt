@@ -15,7 +15,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class BearerAuthenticationManagerTest {
     val username = "aurora"
-    val groups = listOf("group1", "group2")
+    val groups = listOf("group1", "group2", "APP_PaaS_utv")
     val token = "some_token"
     val authorityGroups = groups.map { SimpleGrantedAuthority(it) }
 
