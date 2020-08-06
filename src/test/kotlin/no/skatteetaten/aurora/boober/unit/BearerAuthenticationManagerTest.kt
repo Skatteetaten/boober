@@ -31,7 +31,8 @@ class BearerAuthenticationManagerTest {
             {
             "groups": [
                 "group1",
-                "group2"
+                "group2",
+                ""
             ],
             "username": "$username"
             }""".trimIndent())

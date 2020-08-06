@@ -56,7 +56,7 @@
                 "value": "8082"
               }
             ],
-            "imagePullPolicy": "IfNotPresent",
+            "imagePullPolicy": "Always",
             "livenessProbe": {
               "initialDelaySeconds": 10,
               "tcpSocket": {

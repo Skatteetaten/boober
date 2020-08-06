@@ -59,7 +59,7 @@
                 "value": "8082"
               }
             ],
-            "imagePullPolicy": "IfNotPresent",
+            "imagePullPolicy" : "Always",
             "name": "simple-node",
             "ports": [
               {
@@ -124,7 +124,7 @@
                 "value": "8080"
               }
             ],
-            "imagePullPolicy": "IfNotPresent",
+            "imagePullPolicy": "Always",
             "name": "simple-nginx",
             "ports": [
               {

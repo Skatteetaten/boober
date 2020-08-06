@@ -39,7 +39,8 @@ class BearerAuthenticationManager(
         val user = getOpenShiftUser(token)
 
         val username = user.username.substringBeforeLast("@") // This username is only the ident on ocp, if we need real name we have to lookup in a cache
-        val grantedAuthorities = user.groups.map {
+        logger.debug("user={} groups={}", username, user.groups)
+        val grantedAuthorities = user.groups.filter { it.isNotBlank() }.map {
             // TODO: These groups are now just UUIDs need to lookup in group cache to convert them to name.
             SimpleGrantedAuthority(it)
         }

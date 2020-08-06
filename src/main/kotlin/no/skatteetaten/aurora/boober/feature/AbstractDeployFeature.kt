@@ -349,7 +349,7 @@ abstract class AbstractDeployFeature(
         return newContainer {
 
             terminationMessagePath = "/dev/termination-log"
-            imagePullPolicy = "IfNotPresent"
+            imagePullPolicy = "Always"
             securityContext {
                 privileged = false
             }
@@ -389,7 +389,6 @@ abstract class AbstractDeployFeature(
                     protocol = "TCP"
                 }
             }
-
             args = containerArgs
 
             val portEnv = containerPorts.map {

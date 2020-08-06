@@ -60,7 +60,7 @@
                 "value": "8082"
               }
             ],
-            "imagePullPolicy": "IfNotPresent",
+            "imagePullPolicy": "Always",
             "name": "simple-java",
             "ports": [
               {
