@@ -8,6 +8,7 @@ import com.fkorotkov.kubernetes.rbac.newSubject
 import com.fkorotkov.kubernetes.rbac.roleRef
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.rbac.RoleBinding
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -21,6 +22,8 @@ import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.boot.convert.DurationStyle
 import org.springframework.stereotype.Service
 import java.time.Duration
+
+private val logger = KotlinLogging.logger { }
 
 val AuroraDeploymentSpec.envTTL: Duration?
     get() = this.getOrNull<String>("env/ttl")?.let {
@@ -139,6 +142,7 @@ class EnvironmentFeature(
         }
 
         val openShiftGroups = openShiftClient.getGroups()
+        logger.debug("Group users are={}", openShiftGroups)
 
         val nonExistantDeclaredGroups = adminGroups.filter { !openShiftGroups.groupExist(it) }
         if (nonExistantDeclaredGroups.isNotEmpty()) {
