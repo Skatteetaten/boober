@@ -181,7 +181,16 @@ class OpenShiftClient(
 
     @Cacheable("groups")
     fun getGroups(): OpenShiftGroups {
-        return OpenShiftGroups(mapOf("APP_PaaS_utv" to listOf("espen"), "APP_PaaS_drift" to listOf("someone")))
+        return OpenShiftGroups(
+            mapOf(
+                "8007f31c-c04f-4184-946c-220bae98c592" to listOf(
+                    "Bjarte.Karlsen", "Espen.Stromland"
+                ),
+                "81904981-d663-4442-ae47-f49c9e965951" to listOf("Eivind.Greibrokk"),
+                "APP_PaaS_utv" to listOf("Espen.Stromland", "Bjarte.Karlsen"),
+                "APP_PaaS_drift" to listOf("Eivind.Greibrokk")
+            )
+        )
     }
 
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {

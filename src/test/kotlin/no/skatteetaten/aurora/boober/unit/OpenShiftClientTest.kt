@@ -139,7 +139,7 @@ class OpenShiftClientTest : ResourceLoader() {
             openShiftGroups.getUsersForGroup("APP_PaaS_drift")
         ).isEqualTo(
             listOf(
-                "someone"
+                "Eivind.Greibrokk"
             )
         )
     }
