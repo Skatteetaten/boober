@@ -9,6 +9,10 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.fkorotkov.kubernetes.authentication.newTokenReview
+import com.fkorotkov.kubernetes.authentication.spec
+import io.fabric8.kubernetes.api.model.authentication.TokenReview
+import io.fabric8.kubernetes.api.model.authentication.UserInfo
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ClientType
 import no.skatteetaten.aurora.boober.TokenSource.API_USER
@@ -21,7 +25,6 @@ import no.skatteetaten.aurora.boober.utils.annotation
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.cache.annotation.Cacheable
-import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
@@ -149,13 +152,23 @@ class OpenShiftClient(
         }
     }
 
-    fun findCurrentUser(token: String): JsonNode? {
+    fun findCurrentUser(userToken: String): UserInfo? {
 
-        val url = generateUrl(kind = "user", name = "~")
-        val headers: HttpHeaders = userClient.createHeaders(token)
+        val url = generateUrl(kind = "tokenreview")
 
-        val currentUser = userClient.get(url, headers)
-        return currentUser?.body
+        val tokenReview = newTokenReview {
+            spec {
+                token = userToken
+            }
+        }
+        return serviceAccountClient.post(url, mapper.convertValue(tokenReview)).body?.let {
+            val review: TokenReview = mapper.convertValue(it)
+            if (!review.status.authenticated) {
+                null
+            } else {
+                review.status.user
+            }
+        }
     }
 
     @Cacheable("templates")

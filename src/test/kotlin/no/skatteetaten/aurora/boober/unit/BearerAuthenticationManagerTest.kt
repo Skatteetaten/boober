@@ -3,21 +3,19 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.TestingAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class BearerAuthenticationManagerTest {
     val username = "aurora"
-    val groups = listOf("APP_PaaS_utv", "8007f31c-c04f-4184-946c-220bae98c592")
+    val groups = listOf("group1", "group2")
     val token = "some_token"
     val authorityGroups = groups.map { SimpleGrantedAuthority(it) }
 
@@ -29,17 +27,14 @@ class BearerAuthenticationManagerTest {
 
         every {
             openShiftClient.findCurrentUser(token)
-        } returns objectMapper.readValue<JsonNode>("""{"kind": "user", "metadata": {"name": "$username"}, "fullName": "Aurora Test User"}""")
-
-        every {
-            openShiftClient.getGroups()
-        } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_drift" to listOf("aurora"),
-                "APP_PaaS_utv" to listOf("aurora"),
-                "8007f31c-c04f-4184-946c-220bae98c592" to listOf("aurora")
-            )
-        )
+        } returns objectMapper.readValue("""
+            {
+            "groups": [
+                "group1",
+                "group2"
+            ],
+            "username": "$username"
+            }""".trimIndent())
 
         val authenticationManager =
             BearerAuthenticationManager(openShiftClient)

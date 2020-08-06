@@ -15,7 +15,8 @@ val kindsWithoutNamespace = listOf(
     "projectrequest",
     "deploymentrequest",
     "users",
-    "groups"
+    "groups",
+    "tokenreviews"
 )
 
 fun findOpenShiftApiPrefix(apiVersion: String, kind: String) =
@@ -45,6 +46,7 @@ val apiGroups: Map<String, List<String>> =
         "template.openshift.io/v1" to listOf("template"),
         "image.openshift.io/v1" to listOf("imagestream", "imagestreamtag", "imagestreamimport"),
         "authorization.openshift.io/v1" to listOf("rolebinding"),
-        "build.openshift.io/v1" to listOf("buildconfig")
+        "build.openshift.io/v1" to listOf("buildconfig"),
+        "authentication.k8s.io/v1" to listOf("tokenreview")
 
     )

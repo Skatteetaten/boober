@@ -1,11 +1,10 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import com.fasterxml.jackson.databind.JsonNode
+import io.fabric8.kubernetes.api.model.authentication.UserInfo
 import java.util.regex.Pattern
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
@@ -37,24 +36,21 @@ class BearerAuthenticationManager(
     override fun authenticate(authentication: Authentication?): Authentication {
 
         val token = getBearerTokenFromAuthentication(authentication)
-        val grantedAuthorities = listOf(SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("8007f31c-c04f-4184-946c-220bae98c592"))
+        val user = getOpenShiftUser(token)
+
+        val username = user.username.substringBeforeLast("@") // This username is only the ident on ocp, if we need real name we have to lookup in a cache
+        val grantedAuthorities = user.groups.map {
+            // TODO: These groups are now just UUIDs need to lookup in group cache to convert them to name.
+            SimpleGrantedAuthority(it)
+        }
 
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
         // (don't end the authentication chain).
-        return PreAuthenticatedAuthenticationToken("espen", token, grantedAuthorities)
+        return PreAuthenticatedAuthenticationToken(username, token, grantedAuthorities)
             .apply { isAuthenticated = false }
     }
 
-    private fun getGrantedAuthoritiesForUser(openShiftUser: JsonNode?): List<SimpleGrantedAuthority> {
-        val username: String = openShiftUser?.openshiftName
-            ?: throw IllegalArgumentException("Unable to determine username from response")
-
-        return openShiftClient.getGroups().getGroupsForUser(username)
-            .map { SimpleGrantedAuthority(it) }
-    }
-
-    // TODO: Implement TokenReview as we do in mokey.
-    private fun getOpenShiftUser(token: String): JsonNode {
+    private fun getOpenShiftUser(token: String): UserInfo {
         return try {
             openShiftClient.findCurrentUser(token)
         } catch (e: OpenShiftException) {
