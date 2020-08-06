@@ -37,6 +37,9 @@ dependencies {
     // TODO: 2.7.1 er nyere en 3.0, det er viktig at vi kjører denne og ikke 3.0 job formatet er feil i 3.0
     implementation("com.fkorotkov:kubernetes-dsl:2.7.1")
 
+    implementation("com.microsoft.graph:microsoft-graph:1.9.0")
+    implementation("com.microsoft.graph:microsoft-graph-auth:0.2.0")
+
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-aop")
     implementation("org.springframework.boot:spring-boot-starter-cache")

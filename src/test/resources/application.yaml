@@ -9,6 +9,7 @@ aurora:
         value: token
 
 integrations:
+
     operations:
         scope: "aos-4016"
     bitbucket:
