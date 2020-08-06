@@ -22,10 +22,14 @@ class UserAnnotationFacade(
     @ClientType(SERVICE_ACCOUNT) private val serviceAccountClient: OpenShiftResourceClient
 ) {
 
+    // TODO: we do not have user object in kubernetes.
     fun getAnnotations(): Map<String, JsonNode> {
+        return emptyMap()
+        /*
         val name = userDetailsProvider.getAuthenticatedUser().username
         val response = serviceAccountClient.get("user", name = name)
         return getResponseAnnotations(response)
+         */
     }
 
     fun updateAnnotations(key: String, entries: JsonNode): Map<String, JsonNode> {

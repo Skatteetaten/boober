@@ -15,9 +15,11 @@ import no.skatteetaten.aurora.boober.utils.base64Prefix
 import no.skatteetaten.aurora.boober.utils.toBase64
 import no.skatteetaten.aurora.boober.utils.toJson
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.springframework.http.ResponseEntity
 
+@Disabled
 class UserAnnotationFacadeTest {
 
     private val userDetailsProvider = mockk<UserDetailsProvider>().apply {
