@@ -2,10 +2,12 @@ package no.skatteetaten.aurora.boober.controller.security
 
 import io.fabric8.kubernetes.api.model.authentication.UserInfo
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.service.AzureAdServiceException
 import no.skatteetaten.aurora.boober.service.AzureService
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.springframework.security.authentication.AuthenticationManager
+import org.springframework.security.authentication.AuthenticationServiceException
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
 import org.springframework.security.core.Authentication
@@ -47,7 +49,11 @@ class BearerAuthenticationManager(
             if (it.startsWith("system:")) {
                 SimpleGrantedAuthority(it)
             } else {
-                SimpleGrantedAuthority(azureSerivce.resolveGroupName(it))
+                try {
+                    SimpleGrantedAuthority(azureSerivce.resolveGroupName(it))
+                } catch (e: AzureAdServiceException) {
+                    throw AuthenticationServiceException(e.localizedMessage, e)
+                }
             }
         }
 

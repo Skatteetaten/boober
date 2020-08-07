@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraVersioningException
 import no.skatteetaten.aurora.boober.model.ErrorDetail
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import no.skatteetaten.aurora.boober.service.AuroraConfigServiceException
+import no.skatteetaten.aurora.boober.service.AzureAdServiceException
 import no.skatteetaten.aurora.boober.service.DeployLogServiceException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.OpenShiftException
@@ -31,6 +32,10 @@ class ErrorHandler : ResponseEntityExceptionHandler() {
 
     @ExceptionHandler(ServiceException::class)
     fun handleValidationErrors(ex: ServiceException, req: WebRequest) = handleException(ex, req, BAD_REQUEST)
+
+    @ExceptionHandler(AzureAdServiceException::class)
+    fun handleAzureAdServiceException(ex: ServiceException, req: WebRequest) =
+        handleException(ex, req, INTERNAL_SERVER_ERROR)
 
     @ExceptionHandler(AuroraConfigServiceException::class)
     fun handleAuroraConfigServiceErrors(ex: ServiceException, req: WebRequest) =
