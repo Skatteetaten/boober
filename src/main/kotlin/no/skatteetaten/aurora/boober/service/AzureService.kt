@@ -19,17 +19,21 @@ class AzureService(val graphClient: IGraphServiceClient) {
     }
 
     fun fetchGroupInfo(name: String): GroupInfo? {
-        val groups = graphClient
-            .groups()
-            .buildRequest(listOf(QueryOption("\$filter", "displayName eq '$name'")))
-            .expand("members")
-            .get()
+        try {
+            val groups = graphClient
+                .groups()
+                .buildRequest(listOf(QueryOption("\$filter", "displayName eq '$name'")))
+                .expand("members")
+                .get()
 
-        if (groups.currentPage.isNullOrEmpty()) {
-            return null
+            if (groups.currentPage.isNullOrEmpty()) {
+                return null
+            }
+            val group = groups.currentPage.first()
+
+            return GroupInfo(group.id, !group.members.currentPage.isNullOrEmpty())
+        } catch (e: Exception) {
+            throw AzureAdServiceException("Could not fetch group info for ad group=$name", e)
         }
-        val group = groups.currentPage.first()
-
-        return GroupInfo(group.id, !group.members.currentPage.isNullOrEmpty())
     }
 }
