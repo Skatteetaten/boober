@@ -180,7 +180,7 @@ class EnvironmentFeature(
             val groupRefeerences = permission.groups?.map {
                 newSubject {
                     kind = "Group"
-                    name = it
+                    name = azureService.fetchGroupInfo(it)?.id
                 }
             }
 
