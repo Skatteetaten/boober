@@ -1,11 +1,10 @@
 package no.skatteetaten.aurora.boober.controller.security
 
 import io.fabric8.kubernetes.api.model.authentication.UserInfo
-import java.util.regex.Pattern
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.service.AzureService
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
@@ -13,12 +12,14 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Component
+import java.util.regex.Pattern
 
 private val logger = KotlinLogging.logger {}
 
 @Component
 class BearerAuthenticationManager(
-    val openShiftClient: OpenShiftClient
+    val openShiftClient: OpenShiftClient,
+    val azureSerivce: AzureService
 ) : AuthenticationManager {
 
     companion object {
@@ -39,12 +40,12 @@ class BearerAuthenticationManager(
         val token = getBearerTokenFromAuthentication(authentication)
         val user = getOpenShiftUser(token)
 
-        val username = user.username.substringBeforeLast("@") // This username is only the ident on ocp, if we need real name we have to lookup in a cache
+        val username =
+            user.username.substringBeforeLast("@") // This username is only the ident on ocp, if we need real name we have to lookup in a cache
         logger.debug("user={} groups={}", username, user.groups)
         val grantedAuthorities = user.groups.filter { it.isNotBlank() }.map {
-            // TODO: These groups are now just UUIDs need to lookup in group cache to convert them to name.
-            SimpleGrantedAuthority(it)
-        }.addIfNotNull(SimpleGrantedAuthority("APP_PaaS_utv")) // TODO: Remove this when we have fetched groups correctly
+            SimpleGrantedAuthority(azureSerivce.resolveGroupName(it))
+        }
 
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
         // (don't end the authentication chain).

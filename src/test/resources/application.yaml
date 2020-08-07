@@ -10,6 +10,10 @@ aurora:
 
 integrations:
 
+    azure:
+        clientId: "test"
+        secretKey: "test"
+        tenantId: "test"
     operations:
         scope: "aos-4016"
     bitbucket:

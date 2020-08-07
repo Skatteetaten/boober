@@ -5,10 +5,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.AzureService
+import no.skatteetaten.aurora.boober.service.GroupInfo
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.utils.Instants
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import java.time.Instant
 
 typealias MockRule = RecordedRequest.() -> MockResponse?
 typealias MockFlag = RecordedRequest.() -> Boolean?
@@ -176,6 +178,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @MockkBean
     lateinit var serviceAccountTokenProvider: ServiceAccountTokenProvider
 
+    @MockkBean
+    lateinit var azureService: AzureService
+
     @AfterEach
     fun after() {
         HttpMock.clearAllHttpMocks()
@@ -195,6 +200,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
                 SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("APP_PaaS_drift")
             )
         )
+        every { azureService.fetchGroupInfo(any()) } answers {
+            GroupInfo(firstArg(), true)
+        }
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
     }
 }

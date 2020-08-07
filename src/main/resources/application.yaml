@@ -85,7 +85,7 @@ openshift:
     cluster: utv
 
 integrations:
-   dbh:
+    dbh:
         url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no

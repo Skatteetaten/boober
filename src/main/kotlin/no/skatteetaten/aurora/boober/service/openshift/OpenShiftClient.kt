@@ -179,20 +179,6 @@ class OpenShiftClient(
             ?: throw IllegalArgumentException("Could not find template for url=$url")
     }
 
-    @Cacheable("groups")
-    fun getGroups(): OpenShiftGroups {
-        return OpenShiftGroups(
-            mapOf(
-                "8007f31c-c04f-4184-946c-220bae98c592" to listOf(
-                    "Bjarte.Karlsen", "Espen.Stromland"
-                ),
-                "81904981-d663-4442-ae47-f49c9e965951" to listOf("Eivind.Greibrokk"),
-                "APP_PaaS_utv" to listOf("Espen.Stromland", "Bjarte.Karlsen"),
-                "APP_PaaS_drift" to listOf("Eivind.Greibrokk")
-            )
-        )
-    }
-
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
         val response = getClientForKind(kind).get(kind, namespace, name, false)
         return response?.statusCode?.is2xxSuccessful ?: false

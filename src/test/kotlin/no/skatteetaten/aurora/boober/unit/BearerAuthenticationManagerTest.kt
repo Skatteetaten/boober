@@ -8,6 +8,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
+import no.skatteetaten.aurora.boober.service.AzureService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import org.junit.jupiter.api.Test
 import org.springframework.security.authentication.TestingAuthenticationToken
@@ -15,7 +16,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class BearerAuthenticationManagerTest {
     val username = "aurora"
-    val groups = listOf("group1", "group2", "APP_PaaS_utv")
+    val groups = listOf("group1-resolved", "group2-resolved")
     val token = "some_token"
     val authorityGroups = groups.map { SimpleGrantedAuthority(it) }
 
@@ -24,10 +25,12 @@ class BearerAuthenticationManagerTest {
 
         val objectMapper = ObjectMapper()
         val openShiftClient = mockk<OpenShiftClient>()
+        val azureService = mockk<AzureService>()
 
         every {
             openShiftClient.findCurrentUser(token)
-        } returns objectMapper.readValue("""
+        } returns objectMapper.readValue(
+            """
             {
             "groups": [
                 "group1",
@@ -35,10 +38,18 @@ class BearerAuthenticationManagerTest {
                 ""
             ],
             "username": "$username"
-            }""".trimIndent())
+            }""".trimIndent()
+        )
+
+        every {
+            azureService.resolveGroupName(any())
+        } answers {
+            val arg = firstArg<String>()
+            "$arg-resolved"
+        }
 
         val authenticationManager =
-            BearerAuthenticationManager(openShiftClient)
+            BearerAuthenticationManager(openShiftClient, azureService)
 
         val authentication = authenticationManager.authenticate(TestingAuthenticationToken("Bearer $token", ""))
 

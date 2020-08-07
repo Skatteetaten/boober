@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.unit
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
-import assertk.assertions.isNotNull
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -11,7 +10,6 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -27,6 +25,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
+import java.nio.charset.Charset
 
 private val userClient = mockk<OpenShiftResourceClient>()
 private val serviceAccountClient = mockk<OpenShiftResourceClient>()
@@ -110,38 +109,6 @@ class OpenShiftClientTest : ResourceLoader() {
 
         verify(exactly = 1) { client.data.client.post(any(), any()) }
         verify(exactly = 0) { otherClient.post(any(), any()) }
-    }
-
-    @Test
-    fun `Creates OpenShiftGroup indexes`() {
-
-        val response = loadJsonResource("response_groups.json")
-        val userResponse = loadJsonResource("response_users.json")
-        every {
-            serviceAccountClient.get("/apis/user.openshift.io/v1/groups")
-        } returns ResponseEntity(response, OK)
-
-        every {
-            serviceAccountClient.get("/apis/user.openshift.io/v1/users")
-        } returns ResponseEntity(userResponse, OK)
-
-        val openShiftGroups = openShiftClient.getGroups()
-
-        assertThat(openShiftGroups).isNotNull()
-        assertThat(openShiftGroups.getGroupsForUser("k1111111")).isEqualTo(
-            listOf()
-        )
-        assertThat(openShiftGroups.getGroupsForUser("k3222222")).isEqualTo(
-            listOf()
-        )
-
-        assertThat(
-            openShiftGroups.getUsersForGroup("APP_PaaS_drift")
-        ).isEqualTo(
-            listOf(
-                "Eivind.Greibrokk"
-            )
-        )
     }
 
     @Test

@@ -7,8 +7,9 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.AzureService
+import no.skatteetaten.aurora.boober.service.GroupInfo
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -19,21 +20,22 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class EnvironmentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = EnvironmentFeature(openShiftClient, userDetailsProvider)
+        get() = EnvironmentFeature(azureService = azureService, userDetailsProvider = userDetailsProvider)
 
+    val azureService: AzureService = mockk()
     val userDetailsProvider: UserDetailsProvider = mockk()
 
     @Test
     fun `should fail validation if current user is not in admin group`() {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to listOf("luke"),
-                "APP_PaaS_drift" to listOf("luke")
-            )
-        )
+        every { azureService.fetchGroupInfo(any()) } answers {
+            GroupInfo(firstArg(), true)
+        }
 
-        every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
+        every { userDetailsProvider.getAuthenticatedUser() } returns User(
+            "hero", "token", "Jayne Cobb"
+
+        )
 
         assertThat {
             createAuroraDeploymentContext()
@@ -42,13 +44,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should fail validation if specified admin groups are empty`() {
-
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to emptyList(),
-                "APP_PaaS_drift" to emptyList()
-            )
-        )
+        every { azureService.fetchGroupInfo(any()) } answers {
+            GroupInfo(firstArg(), false)
+        }
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
@@ -62,13 +60,6 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should fail validation if admin group is empty`() {
-
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to listOf("luke")
-            )
-        )
-
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
         assertThat {
@@ -88,12 +79,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should fail validation if admin group does not exist`() {
-
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_test" to listOf("luke")
-            )
-        )
+        every { azureService.fetchGroupInfo(any()) } answers {
+            null
+        }
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User("hero", "token", "Jayne Cobb")
 
@@ -104,13 +92,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should generate environment resources`() {
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to listOf("hero"),
-                "APP_PaaS_test" to listOf(),
-                "APP_PaaS_drift" to listOf()
-            )
-        )
+        every { azureService.fetchGroupInfo(any()) } answers {
+            GroupInfo(firstArg(), true)
+        }
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
             "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
@@ -222,10 +206,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     @EnumSource(PermissionsTestData::class)
     fun `Permissions supports both space separated string`(permissions: PermissionsTestData) {
 
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf("APP_PaaS_utv" to listOf("hero"), "APP_PaaS_drift" to listOf())
-        )
-
+        every { azureService.fetchGroupInfo(any()) } answers {
+            GroupInfo(firstArg(), true)
+        }
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
             "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
                 SimpleGrantedAuthority("APP_PaaS_utv")

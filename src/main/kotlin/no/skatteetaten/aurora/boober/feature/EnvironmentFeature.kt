@@ -14,8 +14,8 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.AzureService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
@@ -44,8 +44,8 @@ data class Permission(
 
 @Service
 class EnvironmentFeature(
-    val openShiftClient: OpenShiftClient,
-    val userDetailsProvider: UserDetailsProvider
+    val userDetailsProvider: UserDetailsProvider,
+    val azureService: AzureService
 ) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf()
@@ -141,19 +141,20 @@ class EnvironmentFeature(
             throw AuroraDeploymentSpecValidationException("permissions.admin cannot be empty")
         }
 
-        val openShiftGroups = openShiftClient.getGroups()
-        logger.debug("Group users are={}", openShiftGroups)
+        val groupInfo = adminGroups.associateWith {
+            azureService.fetchGroupInfo(it)
+        }
 
-        val nonExistantDeclaredGroups = adminGroups.filter { !openShiftGroups.groupExist(it) }
+        val nonExistantDeclaredGroups = adminGroups.filter { groupInfo[it] == null }
         if (nonExistantDeclaredGroups.isNotEmpty()) {
             throw AuroraDeploymentSpecValidationException("$nonExistantDeclaredGroups are not valid groupNames")
         }
 
-        val sumMembers = adminGroups.sumBy {
-            openShiftGroups.groupUsers[it]?.size ?: 0
+        val adminGroupsAreNotEmpty = groupInfo.values.filterNotNull().any {
+            it.hasMembers
         }
 
-        if (0 == sumMembers) {
+        if (!adminGroupsAreNotEmpty) {
             throw AuroraDeploymentSpecValidationException("All groups=[${adminGroups.joinToString(", ")}] are empty")
         }
     }
