@@ -44,7 +44,11 @@ class BearerAuthenticationManager(
             user.username.substringBeforeLast("@") // This username is only the ident on ocp, if we need real name we have to lookup in a cache
         logger.debug("user={} groups={}", username, user.groups)
         val grantedAuthorities = user.groups.filter { it.isNotBlank() }.map {
-            SimpleGrantedAuthority(azureSerivce.resolveGroupName(it))
+            if (it.startsWith("system:")) {
+                SimpleGrantedAuthority(it)
+            } else {
+                SimpleGrantedAuthority(azureSerivce.resolveGroupName(it))
+            }
         }
 
         // We need to set isAuthenticated to false to ensure that the http authenticationProvider is also called
