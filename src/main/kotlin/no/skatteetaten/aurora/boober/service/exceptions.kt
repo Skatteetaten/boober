@@ -46,6 +46,8 @@ class ProvisioningException(message: String, cause: Throwable? = null) :
 
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
+class AzureAdServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
+
 class GitReferenceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class DeployLogServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)

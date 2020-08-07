@@ -12,7 +12,11 @@ data class GroupInfo(val id: String, val hasMembers: Boolean)
 @Service
 class AzureService(val graphClient: IGraphServiceClient) {
 
-    fun resolveGroupName(id: String) = graphClient.groups(id).buildRequest().get().displayName
+    fun resolveGroupName(id: String) = try {
+        graphClient.groups(id).buildRequest().get().displayName
+    } catch (e: Exception) {
+        throw AzureAdServiceException("Could not resolve groupName with id=$id", e)
+    }
 
     fun fetchGroupInfo(name: String): GroupInfo? {
         val groups = graphClient

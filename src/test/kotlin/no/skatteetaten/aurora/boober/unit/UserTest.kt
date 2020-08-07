@@ -6,7 +6,6 @@ import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.controller.security.User
 import org.junit.jupiter.api.Test
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class UserTest {
 
@@ -21,14 +20,6 @@ class UserTest {
                 )
             )
         ).isTrue()
-    }
-
-    @Test
-    fun `should normalize ad names`() {
-        val user = User("linus", "asfd111111123", "Jenkins ", grantedAuthorities = listOf(
-            SimpleGrantedAuthority("[Azure PoC] APP_foobar_utv")
-        ))
-        assertThat(user.hasAccess(listOf("APP_foobar_utv", "linus"))).isTrue()
     }
 
     @Test
