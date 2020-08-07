@@ -24,7 +24,8 @@ class User(
 
         if (roles?.isEmpty() != false) return true
 
-        return authorities.any { roles.contains(it.authority) }
+        // TODO: Remove replace
+        return authorities.any { roles.contains(it.authority.replace("[Azure PoC] ", "")) }
     }
 
     val tokenSnippet: String
