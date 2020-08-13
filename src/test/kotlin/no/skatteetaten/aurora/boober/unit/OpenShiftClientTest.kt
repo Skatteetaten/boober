@@ -53,7 +53,7 @@ class OpenShiftClientTest : ResourceLoader() {
         ROLEBINDING(
             ResourceClientData(
                 "rolebinding",
-                userClient
+                serviceAccountClient
             )
         ),
         ROUTE(
