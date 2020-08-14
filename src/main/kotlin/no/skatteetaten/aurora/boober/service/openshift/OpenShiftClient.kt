@@ -163,10 +163,10 @@ class OpenShiftClient(
         }
         return serviceAccountClient.post(url, mapper.convertValue(tokenReview)).body?.let {
             val review: TokenReview = mapper.convertValue(it)
-            if (!review.status.authenticated) {
-                null
-            } else {
+            if (review.status?.authenticated == true) {
                 review.status.user
+            } else {
+                null
             }
         }
     }
