@@ -42,7 +42,9 @@ class WebsealFeature(
             val roles = adc.getDelimitedStringOrArrayAsSet("$field/roles", ",")
                 .takeIf { it.isNotEmpty() }?.joinToString(",") ?: ""
             val host = adc.getOrNull<String>("$field/host") ?: "${adc.name}-${adc.namespace}"
-            val timeout = adc.getOrNull<String>("$field/clusterTimeout")
+            val timeout = adc.getOrNull<String>("$field/clusterTimeout")?.let {
+                it.toIntOrNull()?.let { n -> "${n}s" } ?: it
+            }
 
             val annotations = mapOf(
                 "marjory.sits.no/isOpen" to "false",
