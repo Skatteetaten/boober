@@ -4,6 +4,8 @@ import assertk.assertThat
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 
 class WebSealFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -78,15 +80,16 @@ class WebSealFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("route-timeout.json")
     }
 
-    @Test
-    fun `should create webseal route with roles and custom host and timeout as number`() {
+    @ParameterizedTest
+    @ValueSource(strings = ["10", "10s" ])
+    fun `should create webseal route with roles and custom host and timeout`(timeout: String) {
 
         val (route) = modifyResources(
             """{
              "webseal" : {
                "host" : "simple2-paas-utv",
                "roles" : "foo,bar,baz",
-               "clusterTimeout" : "10"
+               "clusterTimeout" : "$timeout"
              }
            }""")
 
