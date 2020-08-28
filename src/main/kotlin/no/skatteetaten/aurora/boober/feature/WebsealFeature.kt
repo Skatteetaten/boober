@@ -7,6 +7,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.durationString
+import no.skatteetaten.aurora.boober.utils.filterNullValues
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
@@ -40,10 +42,16 @@ class WebsealFeature(
             val roles = adc.getDelimitedStringOrArrayAsSet("$field/roles", ",")
                 .takeIf { it.isNotEmpty() }?.joinToString(",") ?: ""
             val host = adc.getOrNull<String>("$field/host") ?: "${adc.name}-${adc.namespace}"
+            val timeout = adc.getOrNull<String>("$field/clusterTimeout")?.let {
+                it.toIntOrNull()?.let { n -> "${n}s" } ?: it
+            }
+
             val annotations = mapOf(
                 "marjory.sits.no/isOpen" to "false",
-                WEBSEAL_ROLES_ANNOTATION to roles
-            )
+                WEBSEAL_ROLES_ANNOTATION to roles,
+                "haproxy.router.openshift.io/timeout" to timeout
+            ).filterNullValues()
+
             val routeName = "${adc.name}-webseal"
 
             val auroraRoute = Route(
@@ -73,6 +81,7 @@ abstract class AbstractWebsealFeature(
                 validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
+            AuroraConfigFieldHandler("webseal/clusterTimeout", validator = { it.durationString() }),
             AuroraConfigFieldHandler("webseal/host"),
             AuroraConfigFieldHandler("webseal/strict", validator = { it.boolean() }),
             AuroraConfigFieldHandler("webseal/roles")
