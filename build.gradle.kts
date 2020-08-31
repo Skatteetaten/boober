@@ -49,7 +49,7 @@ dependencies {
 
     testImplementation("io.mockk:mockk:1.10.0")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.20")
-    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.0.13")
+    testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.0")
     testImplementation("com.ninja-squad:springmockk:2.0.1")
 }
 

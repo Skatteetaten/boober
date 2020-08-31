@@ -24,6 +24,10 @@ integrations:
             project: "ao"
             repo: "auroradeploymenttags"
     aurora:
+        templates:
+            project: "ao"
+            repo: "auroratemplates"
+            ref: "master"
         config:
             git:
                 project: "ac"
