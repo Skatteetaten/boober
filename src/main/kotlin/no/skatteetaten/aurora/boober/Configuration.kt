@@ -204,17 +204,32 @@ class Configuration {
         restTemplateBuilder: RestTemplateBuilder,
         @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
-        headerPrefix: String = "Bearer auro-token"
-    ): RestTemplate {
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+    ): RestTemplate = auroraBaseRestTemplate(
+        restTemplateBuilder,
+        clientHttpRequestFactory,
+        "Bearer aurora-token",
+        sharedSecretReader,
+        applicationName
+    )
 
+    private fun auroraBaseRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+        headerPrefix: String,
+        sharedSecretReader: SharedSecretReader,
+        applicationName: String
+    ): RestTemplate {
         val clientIdHeaderName = "KlientID"
 
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
-                    set(HttpHeaders.AUTHORIZATION, "$headerPrefix ${sharedSecretReader.secret}")
+                    set(
+                        HttpHeaders.AUTHORIZATION,
+                        "${headerPrefix ?: "Bearer aurora-token"} ${sharedSecretReader.secret}"
+                    )
                     set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
                     set(clientIdHeaderName, applicationName)
@@ -233,7 +248,7 @@ class Configuration {
         sharedSecretReader: SharedSecretReader,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ) =
-        auroraRestTemplate(
+        auroraBaseRestTemplate(
             restTemplateBuilder = restTemplateBuilder,
             applicationName = applicationName,
             sharedSecretReader = sharedSecretReader,
