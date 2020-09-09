@@ -231,7 +231,7 @@ class Configuration {
         restTemplateBuilder: RestTemplateBuilder,
         @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ) =
         auroraRestTemplate(
             restTemplateBuilder = restTemplateBuilder,

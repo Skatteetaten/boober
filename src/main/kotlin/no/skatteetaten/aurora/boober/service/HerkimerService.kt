@@ -82,7 +82,7 @@ data class ResourcePayload(
 )
 
 @Component
-class HerkimerRestTemplateWrapper(@TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate) :
+class HerkimerRestTemplateWrapper(@TargetService(ServiceTypes.HERKIMER) restTemplate: RestTemplate) :
     RetryingRestTemplateWrapper(restTemplate)
 
 @Service
