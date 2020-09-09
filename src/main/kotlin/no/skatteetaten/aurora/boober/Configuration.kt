@@ -7,11 +7,6 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
-import java.io.FileInputStream
-import java.security.KeyStore
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
-import java.util.UUID
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
@@ -43,6 +38,11 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestTemplate
+import java.io.FileInputStream
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.util.UUID
 
 @Configuration
 @EnableRetry
@@ -204,7 +204,8 @@ class Configuration {
         restTemplateBuilder: RestTemplateBuilder,
         @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+        headerPrefix: String = "Bearer auro-token"
     ): RestTemplate {
 
         val clientIdHeaderName = "KlientID"
@@ -213,7 +214,7 @@ class Configuration {
             .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
-                    set(HttpHeaders.AUTHORIZATION, "Bearer aurora-token ${sharedSecretReader.secret}")
+                    set(HttpHeaders.AUTHORIZATION, "$headerPrefix ${sharedSecretReader.secret}")
                     set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
                     set(clientIdHeaderName, applicationName)
@@ -223,6 +224,22 @@ class Configuration {
                 execution.execute(request, body)
             }).build()
     }
+
+    @Bean
+    @TargetService(ServiceTypes.HERKIMER)
+    fun herkimerRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${spring.application.name}") applicationName: String,
+        sharedSecretReader: SharedSecretReader,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+    ) =
+        auroraRestTemplate(
+            restTemplateBuilder = restTemplateBuilder,
+            applicationName = applicationName,
+            sharedSecretReader = sharedSecretReader,
+            clientHttpRequestFactory = clientHttpRequestFactory,
+            headerPrefix = "Bearer"
+        )
 
     @Bean
     fun defaultHttpComponentsClientHttpRequestFactory(
@@ -274,7 +291,7 @@ fun ObjectMapper.configureDefaults(): ObjectMapper = this.registerKotlinModule()
     .registerModule(ParameterNamesModule())
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS
+    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS, HERKIMER
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
