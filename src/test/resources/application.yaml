@@ -53,6 +53,9 @@ integrations:
         url: "http://localhost:${integrations.cantus.port}"
         port: 8085
         token: "token"
+    herkimer:
+        url: "http://localhost:${integrations.herkimer.port}"
+        port: 8087
     docker:
         registry: "docker.registry:5000"
         releases: "docker.release.registry:5000"
