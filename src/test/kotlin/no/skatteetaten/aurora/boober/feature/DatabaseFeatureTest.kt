@@ -8,14 +8,21 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
+import no.skatteetaten.aurora.boober.service.HerkimerService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner.DbApiEnvelope
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
@@ -25,30 +32,81 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestD
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.url
+import okhttp3.mockwebserver.MockWebServer
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.web.client.RestTemplate
+import java.time.LocalDateTime
 
 private val logger = KotlinLogging.logger { }
 
 class DatabaseFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = DatabaseFeature(provisioner, "utv")
+        get() = DatabaseFeature(provisioner, herkimerService, "utv")
 
-    val provisioner: DatabaseSchemaProvisioner = mockk()
+    val server = MockWebServer()
+    val userDetailsProvider = mockk<UserDetailsProvider>()
+
+    val provisioner: DatabaseSchemaProvisioner = DatabaseSchemaProvisioner(
+        RestTemplate(),
+        jsonMapper(),
+        userDetailsProvider,
+        server.url
+    )
+    private val herkimerService: HerkimerService = mockk()
+
+    @BeforeEach
+    fun setupMocks() {
+        every {
+            userDetailsProvider.getAuthenticatedUser()
+        } returns User("aurora", "token", "Aurora Test User", listOf(SimpleGrantedAuthority("UTV")))
+    }
 
     @Test
     fun `create database secret`() {
-
-        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
-
-        val (adResource, dcResource, secretResource) = generateResources(
-            """{ 
-               "database" : true
-           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        val dbhResponse = DbApiEnvelope(
+            status = "OK",
+            items = listOf(
+                DbhSchema(
+                    id = "id",
+                    type = "MANAGED",
+                    databaseInstance = DatabaseSchemaInstance(1234, "host"),
+                    jdbcUrl = "jdbcurl:/helo",
+                    labels = mapOf("name" to "app", "affiliation" to "aurora")
+                )
+            )
+        )
+        every { herkimerService.createApplicationDeployment(any()) } returns ApplicationDeploymentHerkimer(
+            id = "0123545",
+            name = appName,
+            environmentName = environment,
+            cluster = cluster,
+            businessGroup = affiliation,
+            applicationName = appName,
+            createdDate = LocalDateTime.now(),
+            modifiedDate = LocalDateTime.now(),
+            createdBy = "aurora",
+            modifiedBy = "aurora"
         )
 
-        assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
-        assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
+        every { herkimerService.getClaimedResources(any(), any()) } returns emptyList()
+        every { herkimerService.createResourceAndClaim(any(), any(), any(), any()) } just Runs
+
+        server.execute(dbhResponse) {
+            val (adResource, dcResource, secretResource) = generateResources(
+                """{ 
+               "database" : true
+           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+            )
+
+            assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
+            assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
+        }
     }
 
     @Test

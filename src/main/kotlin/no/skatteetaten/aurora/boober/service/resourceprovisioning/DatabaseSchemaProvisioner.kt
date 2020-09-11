@@ -177,12 +177,10 @@ class DatabaseSchemaProvisioner(
             "userId" to user.username
         )
 
+        if (!request.generate) throw ProvisioningException("Could not find schema with labels=$labels, generate disabled.")
+
         val (dbhSchema, responseText) = try {
-            val find = findSchemaByLabels(labels, request.details)
-            if (find == null && !request.generate) {
-                throw ProvisioningException("Could not find schema with labels=$labels, generate disabled.")
-            }
-            find ?: createSchema(labels, request.details)
+            createSchema(labels, request.details)
         } catch (e: Exception) {
             val rootCauseMessage = ExceptionUtils.getRootCauseMessage(e)
             val message = "${e.message.orEmpty()} $rootCauseMessage  Schema query: ${toLabelsString(labels)}"
@@ -190,25 +188,6 @@ class DatabaseSchemaProvisioner(
         }
 
         return SchemaProvisionResult(request, dbhSchema, responseText)
-    }
-
-    private fun findSchemaByLabels(
-        labels: Map<String, String>,
-        details: SchemaRequestDetails
-    ): Pair<DbhSchema, String>? {
-
-        val labelsString = toLabelsString(labels)
-        val roleString = details.users.joinToString(",") { it.name }
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.getForEntity(
-                "$dbhUrl/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java,
-                labelsString, roleString, details.engine
-            )
-        } catch (e: Exception) {
-            throw createProvisioningException("Unable to get database schema.", e)
-        }
-
-        return parseResponse(response)
     }
 
     private fun createSchema(
@@ -235,9 +214,8 @@ class DatabaseSchemaProvisioner(
         return parseResponseFailIfEmpty(response)
     }
 
-    private fun parseResponseFailIfEmpty(response: ResponseEntity<JsonNode>): Pair<DbhSchema, String> {
-        return parseResponse(response) ?: throw ProvisioningException("Expected dbh response to contain schema info.")
-    }
+    private fun parseResponseFailIfEmpty(response: ResponseEntity<JsonNode>): Pair<DbhSchema, String> =
+        parseResponse(response) ?: throw ProvisioningException("Expected dbh response to contain schema info.")
 
     private fun parseResponse(response: ResponseEntity<JsonNode>): Pair<DbhSchema, String>? {
 

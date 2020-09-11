@@ -94,7 +94,7 @@ class S3Feature(val s3Provisioner: S3Provisioner, val herkimerService: HerkimerS
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
 
-private fun AuroraDeploymentSpec.createApplicationDeploymentPayload() = ApplicationDeploymentPayload(
+fun AuroraDeploymentSpec.createApplicationDeploymentPayload() = ApplicationDeploymentPayload(
     name = name,
     environmentName = envName,
     cluster = cluster,

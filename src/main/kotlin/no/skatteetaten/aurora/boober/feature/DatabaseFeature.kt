@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
@@ -10,8 +11,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -25,6 +24,8 @@ import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.HerkimerService
+import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -43,6 +44,8 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 private val logger = KotlinLogging.logger { }
 
@@ -69,6 +72,7 @@ class DatabaseDisabledFeature(
 @ConditionalOnProperty("integrations.dbh.url")
 class DatabaseFeature(
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val herkimerService: HerkimerService,
     @Value("\${openshift.cluster}") cluster: String
 ) : DatabaseFeatureTemplate(cluster) {
 
@@ -102,10 +106,26 @@ class DatabaseFeature(
 
         if (databases.isEmpty()) return emptySet()
 
-        val schemaRequests = createSchemaRequest(databases, adc)
-        val schemaProvisionResult = databaseSchemaProvisioner.provisionSchemas(schemaRequests)
+        val databaseFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
+        val resourceKind = databaseFlavor.toResourceKind()
+        val id = herkimerService.createApplicationDeployment(adc.createApplicationDeploymentPayload()).id
+        val resourceWithClaims = herkimerService.getClaimedResources(id, resourceKind).firstOrNull()
 
-        return schemaProvisionResult.results.map {
+        val schemaProvisionResult =
+            if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
+            else {
+                val schemaRequests = createSchemaRequest(databases, adc)
+                databaseSchemaProvisioner.provisionSchemas(schemaRequests).results.also {
+                    herkimerService.createResourceAndClaim(
+                        ownerId = id,
+                        resourceKind = resourceKind,
+                        resourceName = "${adc.name}/${adc.namespace}-$resourceKind",
+                        credentials = it
+                    )
+                }
+            }
+
+        return schemaProvisionResult.map {
             val secretName =
                 "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name, "-")
             DbhSecretGenerator.createDbhSecret(it, secretName, adc.namespace)
@@ -113,6 +133,14 @@ class DatabaseFeature(
             generateResource(it)
         }.toSet()
     }
+
+    fun DatabaseFlavor.toResourceKind(): ResourceKind =
+        if (this.managed) {
+            when (this.engine) {
+                DatabaseEngine.POSTGRES -> ResourceKind.ManagedPostgresDatabase
+                DatabaseEngine.ORACLE -> ResourceKind.ManagedOracleSchema
+            }
+        } else ResourceKind.ExternalSchema
 
     fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
         val mountName = "${this.name}-db".toLowerCase()

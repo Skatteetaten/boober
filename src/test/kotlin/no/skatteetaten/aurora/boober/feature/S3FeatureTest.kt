@@ -136,21 +136,18 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
         )
         assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
     }
-
-    private fun createResourceHerkimer(
-        adId: String,
-        claims: List<ResourceClaimHerkimer>? = null
-    ): ResourceHerkimer {
-        return ResourceHerkimer(
-            id = "0",
-            name = "myResource",
-            kind = ResourceKind.MinioPolicy,
-            ownerId = adId,
-            claims = claims,
-            createdDate = LocalDateTime.now(),
-            modifiedDate = LocalDateTime.now(),
-            createdBy = "aurora",
-            modifiedBy = "aurora"
-        )
-    }
 }
+fun createResourceHerkimer(
+    adId: String,
+    claims: List<ResourceClaimHerkimer>? = null
+): ResourceHerkimer = ResourceHerkimer(
+    id = "0",
+    name = "myResource",
+    kind = ResourceKind.MinioPolicy,
+    ownerId = adId,
+    claims = claims,
+    createdDate = LocalDateTime.now(),
+    modifiedDate = LocalDateTime.now(),
+    createdBy = "aurora",
+    modifiedBy = "aurora"
+)
