@@ -27,7 +27,7 @@ private val logger = KotlinLogging.logger {}
 
 private const val REQUEST_ENTITY = "requestEntity"
 
-open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, val retries: Int = 3, val backoff: Long = 500) {
+open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val retries: Int = 3, val backoff: Long = 500) {
 
     private val retryTemplate = retryTemplate(logger)
 

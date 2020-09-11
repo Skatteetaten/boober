@@ -1,12 +1,16 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.configureDefaults
-import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -75,6 +79,7 @@ data class ResourceClaimHerkimer(
 enum class ResourceKind {
     MinioPolicy, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema
 }
+
 data class ResourcePayload(
     val name: String,
     val kind: ResourceKind,
@@ -82,34 +87,38 @@ data class ResourcePayload(
 )
 
 @Component
-class HerkimerRestTemplateWrapper(@TargetService(ServiceTypes.HERKIMER) restTemplate: RestTemplate) :
-    RetryingRestTemplateWrapper(restTemplate)
+class HerkimerRestTemplateWrapper(@TargetService(ServiceTypes.HERKIMER) restTemplate: RestTemplate, @Value("\${integrations.herkimer.retries:3}")override val retries: Int) :
+    RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries)
 
 @Service
 class HerkimerService(
     val client: HerkimerRestTemplateWrapper,
-    @Value("\${integrations.herkimer.url}") val herkimerUrl: String,
-    private val objectMapper: ObjectMapper
+    objectMapper: ObjectMapper
 ) {
-    private val herkimerObjectmapper = objectMapper.configureDefaults()
+    private val herkimerObjectmapper = objectMapper.configureHerkimerDefaults()
+
     fun createApplicationDeployment(adPayload: ApplicationDeploymentPayload): ApplicationDeploymentHerkimer {
         val response = client.post(
             body = adPayload,
-            url = "$herkimerUrl/applicationDeployment",
+            url = "/applicationDeployment",
             type = HerkimerResponse::class
         )
-        val adHHerkimerJsonNode = response.body?.items?.single() ?: TODO("Find out which exception if no body or return null?")
+        val herkimerResponse = response.body!!
 
-        return herkimerObjectmapper.convertValue(adHHerkimerJsonNode)
+        if (!herkimerResponse.success) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.message}")
+
+        return herkimerObjectmapper.convertValue(herkimerResponse.items.single())
     }
 
     fun getClaimedResources(adId: String, resourceKind: ResourceKind): List<ResourceHerkimer> {
-        val claimedResourcesJsonNode = client.get(
+        val herkimerResponse = client.get(
             HerkimerResponse::class,
-            "$herkimerUrl/resource?claimedBy=$adId"
-        ).body?.items ?: TODO("Find out which exception or return null?")
+            "/resource?claimedBy=$adId"
+        ).body!!
 
-        val claimedResources = herkimerObjectmapper.convertValue<List<ResourceHerkimer>>(claimedResourcesJsonNode)
+        if (!herkimerResponse.success) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.message}")
+
+        val claimedResources = herkimerObjectmapper.convertValue<List<ResourceHerkimer>>(herkimerResponse.items)
 
         return claimedResources.filter { it.kind == resourceKind }
     }
@@ -117,27 +126,36 @@ class HerkimerService(
     fun createResourceAndClaim(ownerId: String, resourceKind: ResourceKind, resourceName: String, credentials: Any) {
         val resourceResponse = client.post(
             type = HerkimerResponse::class,
-            url = "$herkimerUrl/resource",
+            url = "/resource",
             body = ResourcePayload(
                 name = resourceName,
                 kind = resourceKind,
                 ownerId = ownerId
             )
-        ).body ?: TODO("")
+        ).body!!
 
-        require(resourceResponse.success)
+        if (!resourceResponse.success) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.message}")
 
-        val resourceId = herkimerObjectmapper.convertValue<ResourceClaimHerkimer>(resourceResponse.items.single()).id
+        val resourceId = herkimerObjectmapper.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
 
         val claimResponse = client.post(
             type = HerkimerResponse::class,
-            url = "$herkimerUrl/resource/$resourceId/claims",
+            url = "/resource/$resourceId/claims",
             body = ResourceClaimPayload(
                 ownerId,
                 credentials
             )
-        ).body ?: TODO()
+        ).body!!
 
-        require(claimResponse.success)
+        if (!claimResponse.success) throw ProvisioningException("Unable to create claim for resource with id=$resourceId and ownerId=$ownerId. cause=${claimResponse.message}")
     }
 }
+
+internal fun ObjectMapper.configureHerkimerDefaults(): ObjectMapper = this.registerKotlinModule()
+    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+    .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)
+    .enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID)
+    .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE)
+    .registerModule(Jdk8Module())
+    .registerModule(JavaTimeModule())
+    .registerModule(ParameterNamesModule())

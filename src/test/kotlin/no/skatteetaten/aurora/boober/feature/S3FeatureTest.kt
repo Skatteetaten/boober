@@ -21,20 +21,23 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourceByType
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.api.Test
 import java.time.LocalDateTime
 
-class S3FeatureTest : AbstractFeatureTest() {
+class S3FeatureTestClaimExists : S3FeatureTest(ClaimInHerkimer.CLAIM_EXISTS)
+class S3FeatureTestClaimNotExists : S3FeatureTest(ClaimInHerkimer.CLAIM_NOT_EXISTS)
+
+enum class ClaimInHerkimer { CLAIM_EXISTS, CLAIM_NOT_EXISTS }
+
+abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : AbstractFeatureTest() {
     override val feature: Feature
         get() = S3Feature(s3Provisioner, herkimerService)
 
     private val s3Provisioner: S3Provisioner = mockk()
     private val herkimerService: HerkimerService = mockk()
 
-    @ParameterizedTest
-    @ValueSource(strings = ["true", "false"])
-    fun `verify creates secret with value mappings in dc and resource exist and not exists`(claimExistsInHerkimer: Boolean) {
+    @Test
+    fun `verify creates secret with value mappings in dc`() {
 
         val request = S3ProvisioningRequest(affiliation, environment, appName)
         val adPayload = ApplicationDeploymentPayload(
@@ -68,7 +71,7 @@ class S3FeatureTest : AbstractFeatureTest() {
             createdBy = "aurora",
             modifiedBy = "aurora"
         )
-        if (claimExistsInHerkimer) {
+        if (claimExistsInHerkimer == ClaimInHerkimer.CLAIM_EXISTS) {
             val resourceClaimHerkimer = listOf(
                 ResourceClaimHerkimer(
                     "0L",
