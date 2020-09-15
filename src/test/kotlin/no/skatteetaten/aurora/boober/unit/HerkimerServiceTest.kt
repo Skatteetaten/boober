@@ -8,11 +8,13 @@ import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.assertions.isSuccess
+import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import io.mockk.clearAllMocks
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentPayload
+import no.skatteetaten.aurora.boober.service.EmptyBodyException
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.service.HerkimerRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.HerkimerService
@@ -29,6 +31,7 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.http.HttpStatus
 import java.time.LocalDateTime
 
 class HerkimerServiceTest {
@@ -42,6 +45,18 @@ class HerkimerServiceTest {
     fun setup() {
         clearAllMocks()
         TestObjectMapperConfigurer.objectMapper = herkimerObjectMapper
+    }
+
+    @Test
+    fun `test that empty body throws with nice message`() {
+        val response = herkimerObjectMapper.createObjectNode()
+
+        server.execute(HttpStatus.NO_CONTENT.value() to response) {
+            assertThat { service.getClaimedResources("id", ResourceKind.ManagedOracleSchema) }
+                .isFailure()
+                .isInstanceOf(EmptyBodyException::class)
+                .messageContains("empty body from Herkimer")
+        }
     }
 
     @Test
@@ -78,7 +93,8 @@ class HerkimerServiceTest {
         val adPayload = createAdPayload()
         val failedHerkimerResponse = HerkimerResponse<ApplicationDeploymentHerkimer>(
             success = false,
-            message = "Error happen"
+            message = "Error happen",
+            items = emptyList()
         )
 
         server.execute(failedHerkimerResponse) {
@@ -119,7 +135,8 @@ class HerkimerServiceTest {
     fun `Should throw when trying to get claimed resources and returns success=false`() {
         val herkimerResponse = HerkimerResponse<ResourceHerkimer>(
             success = false,
-            message = "Failure"
+            message = "Failure",
+            items = emptyList()
         )
 
         server.execute(herkimerResponse) {
@@ -153,7 +170,7 @@ class HerkimerServiceTest {
     @Test
     fun `Should create resource and claim it`() {
         val createResourceResponse = HerkimerResponse(items = listOf(createResourceHerkimer()))
-        val claimResourceResponse = HerkimerResponse<ResourceClaimHerkimer>()
+        val claimResourceResponse = HerkimerResponse<ResourceClaimHerkimer>(items = emptyList())
 
         server.execute(createResourceResponse, claimResourceResponse) {
             assertThat {
@@ -171,7 +188,7 @@ class HerkimerServiceTest {
     fun `Should throw when trying to claim resource and claiming fails with success=false`() {
         val createResourceResponse = HerkimerResponse(items = listOf(createResourceHerkimer()))
         val failedClaimResource =
-            HerkimerResponse<ResourceClaimHerkimer>(success = false, message = "Could not claim resource")
+            HerkimerResponse<ResourceClaimHerkimer>(success = false, message = "Could not claim resource", items = emptyList())
 
         server.execute(createResourceResponse, failedClaimResource) {
             assertThat {
@@ -195,7 +212,7 @@ class HerkimerServiceTest {
     @Test
     fun `Should throw when trying to create resource and it fails with success=false`() {
         val failedCreationOfResource =
-            HerkimerResponse<ResourceHerkimer>(success = false, message = "Unable to create resource")
+            HerkimerResponse<ResourceHerkimer>(success = false, message = "Unable to create resource", items = emptyList())
 
         server.execute(failedCreationOfResource) {
             assertThat {

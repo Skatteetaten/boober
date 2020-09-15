@@ -8,16 +8,19 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import java.time.LocalDateTime
+
+private val logger = KotlinLogging.logger {}
 
 data class HerkimerResponse<T : Any>(
     val success: Boolean = true,
@@ -88,8 +91,10 @@ data class ResourcePayload(
 )
 
 @Component
-class HerkimerRestTemplateWrapper(@TargetService(ServiceTypes.HERKIMER) restTemplate: RestTemplate, @Value("\${integrations.herkimer.retries:3}")override val retries: Int) :
-    RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries)
+class HerkimerRestTemplateWrapper(
+    @TargetService(ServiceTypes.HERKIMER) restTemplate: RestTemplate,
+    @Value("\${integrations.herkimer.retries:3}") override val retries: Int
+) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries)
 
 @Service
 class HerkimerService(
@@ -101,7 +106,7 @@ class HerkimerService(
             url = "/applicationDeployment",
             type = HerkimerResponse::class
         )
-        val herkimerResponse = response.body!!
+        val herkimerResponse = response.getBodyOrThrow()
 
         if (!herkimerResponse.success) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.message}")
 
@@ -112,7 +117,7 @@ class HerkimerService(
         val herkimerResponse = client.get(
             HerkimerResponse::class,
             "/resource?claimedBy=$adId"
-        ).body!!
+        ).getBodyOrThrow()
 
         if (!herkimerResponse.success) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.message}")
 
@@ -130,7 +135,7 @@ class HerkimerService(
                 kind = resourceKind,
                 ownerId = ownerId
             )
-        ).body!!
+        ).getBodyOrThrow()
 
         if (!resourceResponse.success) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.message}")
 
@@ -143,11 +148,16 @@ class HerkimerService(
                 ownerId,
                 credentials
             )
-        ).body!!
+        ).getBodyOrThrow()
 
         if (!claimResponse.success) throw ProvisioningException("Unable to create claim for resource with id=$resourceId and ownerId=$ownerId. cause=${claimResponse.message}")
     }
 }
+
+private fun <T> ResponseEntity<T>.getBodyOrThrow() =
+    this.body ?: throw EmptyBodyException("Fatal error happened. Received empty body from Herkimer").also {
+        logger.error(it) { "Null body happened in caller method=${it.stackTrace[2]} statusCode=${this.statusCode}" }
+    }
 
 internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
