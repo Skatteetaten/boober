@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import no.skatteetaten.aurora.boober.ServiceTypes
@@ -92,11 +93,8 @@ class HerkimerRestTemplateWrapper(@TargetService(ServiceTypes.HERKIMER) restTemp
 
 @Service
 class HerkimerService(
-    val client: HerkimerRestTemplateWrapper,
-    objectMapper: ObjectMapper
+    val client: HerkimerRestTemplateWrapper
 ) {
-    private val herkimerObjectmapper = objectMapper.configureHerkimerDefaults()
-
     fun createApplicationDeployment(adPayload: ApplicationDeploymentPayload): ApplicationDeploymentHerkimer {
         val response = client.post(
             body = adPayload,
@@ -107,7 +105,7 @@ class HerkimerService(
 
         if (!herkimerResponse.success) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.message}")
 
-        return herkimerObjectmapper.convertValue(herkimerResponse.items.single())
+        return herkimerObjectMapper.convertValue(herkimerResponse.items.single())
     }
 
     fun getClaimedResources(adId: String, resourceKind: ResourceKind): List<ResourceHerkimer> {
@@ -118,7 +116,7 @@ class HerkimerService(
 
         if (!herkimerResponse.success) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.message}")
 
-        val claimedResources = herkimerObjectmapper.convertValue<List<ResourceHerkimer>>(herkimerResponse.items)
+        val claimedResources = herkimerObjectMapper.convertValue<List<ResourceHerkimer>>(herkimerResponse.items)
 
         return claimedResources.filter { it.kind == resourceKind }
     }
@@ -136,7 +134,7 @@ class HerkimerService(
 
         if (!resourceResponse.success) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.message}")
 
-        val resourceId = herkimerObjectmapper.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
+        val resourceId = herkimerObjectMapper.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
 
         val claimResponse = client.post(
             type = HerkimerResponse::class,
@@ -151,7 +149,7 @@ class HerkimerService(
     }
 }
 
-internal fun ObjectMapper.configureHerkimerDefaults(): ObjectMapper = this.registerKotlinModule()
+internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)
     .enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID)

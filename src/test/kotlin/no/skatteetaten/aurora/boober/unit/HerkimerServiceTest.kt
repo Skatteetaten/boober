@@ -20,7 +20,7 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.ResourceClaimHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
-import no.skatteetaten.aurora.boober.service.configureHerkimerDefaults
+import no.skatteetaten.aurora.boober.service.herkimerObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.mockmvc.extensions.TestObjectMapperConfigurer
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
@@ -35,15 +35,13 @@ class HerkimerServiceTest {
 
     private val server = MockWebServer()
     val service = HerkimerService(
-        client = HerkimerRestTemplateWrapper(RestTemplateBuilder().rootUri(server.url).build(), retries = 0),
-        objectMapper = jsonMapper()
+        client = HerkimerRestTemplateWrapper(RestTemplateBuilder().rootUri(server.url).build(), retries = 0)
     )
-    private val mapper = jsonMapper().configureHerkimerDefaults()
 
     @BeforeEach
     fun setup() {
         clearAllMocks()
-        TestObjectMapperConfigurer.objectMapper = mapper
+        TestObjectMapperConfigurer.objectMapper = herkimerObjectMapper
     }
 
     @Test
