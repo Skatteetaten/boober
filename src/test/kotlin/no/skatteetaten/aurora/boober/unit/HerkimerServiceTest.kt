@@ -38,7 +38,7 @@ class HerkimerServiceTest {
 
     private val server = MockWebServer()
     val service = HerkimerService(
-        client = HerkimerRestTemplateWrapper(RestTemplateBuilder().rootUri(server.url).build(), retries = 0)
+        client = HerkimerRestTemplateWrapper(RestTemplateBuilder().rootUri(server.url).build(), retries = 0, baseUrl = "")
     )
 
     @BeforeEach

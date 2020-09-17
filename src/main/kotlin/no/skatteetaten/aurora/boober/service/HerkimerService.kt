@@ -92,9 +92,10 @@ data class ResourcePayload(
 
 @Component
 class HerkimerRestTemplateWrapper(
-    @TargetService(ServiceTypes.HERKIMER) restTemplate: RestTemplate,
+    @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
+    @Value("\${integrations.herkimer.url}") override val baseUrl: String,
     @Value("\${integrations.herkimer.retries:3}") override val retries: Int
-) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries)
+) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries, baseUrl = baseUrl)
 
 @Service
 class HerkimerService(

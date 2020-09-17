@@ -14,9 +14,13 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 import org.springframework.web.util.UriComponentsBuilder
@@ -38,11 +42,17 @@ data class StsProvisioningResult(
     val renewAt: Instant
 )
 
+@Component
+class SkapRestTemplateWrapper(
+    @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
+    @Value("\${integrations.skap.url}") override val baseUrl: String,
+    @Value("\${integrations.skap.retries:3}") override val retries: Int
+) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries, baseUrl = baseUrl)
+
 @Service
 @ConditionalOnProperty("integrations.skap.url")
 class StsProvisioner(
-    @TargetService(ServiceTypes.SKAP)
-    val restTemplate: RestTemplate,
+    val restTemplate: SkapRestTemplateWrapper,
     @Value("\${boober.sts.renewBeforeDays:14}") val renewBeforeDays: Long,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
@@ -55,11 +65,15 @@ class StsProvisioner(
             .queryParam("name", name)
             .queryParam("namespace", envName)
 
+        val headers = HttpHeaders().apply {
+            accept = listOf(MediaType.APPLICATION_OCTET_STREAM)
+        }
+
         return try {
-            val response = restTemplate.getForEntity(
-                builder.build().encode().toUriString(),
-                Resource::class.java,
-                emptyMap<String, String>()
+            val response = restTemplate.get(
+                headers,
+                Resource::class,
+                builder.build().encode().toUriString()
             )
             val keyPassword = response.headers.getFirst("key-password")!!
             val storePassword = response.headers.getFirst("store-password")!!

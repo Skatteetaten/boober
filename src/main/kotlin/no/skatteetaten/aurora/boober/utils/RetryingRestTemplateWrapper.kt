@@ -27,7 +27,7 @@ private val logger = KotlinLogging.logger {}
 
 private const val REQUEST_ENTITY = "requestEntity"
 
-open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val retries: Int = 3, val backoff: Long = 500) {
+open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val retries: Int = 3, val backoff: Long = 500, open val baseUrl: String = "") {
 
     private val retryTemplate = retryTemplate(logger)
 
@@ -68,7 +68,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
             retryTemplate.execute<ResponseEntity<U>, RestClientException> {
                 it.setAttribute(REQUEST_ENTITY, requestEntity)
                 restTemplate.exchange(
-                    requestEntity.url.toString(),
+                    baseUrl + requestEntity.url.toString(),
                     requestEntity.method!!,
                     requestEntity,
                     type.java,
@@ -77,7 +77,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
             }
         } else {
             restTemplate.exchange(
-                requestEntity.url.toString(),
+                baseUrl + requestEntity.url.toString(),
                 requestEntity.method!!,
                 requestEntity,
                 type.java,

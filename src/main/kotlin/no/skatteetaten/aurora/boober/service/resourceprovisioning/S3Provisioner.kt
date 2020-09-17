@@ -43,7 +43,7 @@ private data class FionaCreateUserResponse(
 @Service
 @ConditionalOnProperty("integrations.fiona.url")
 class S3Provisioner(
-    @TargetService(ServiceTypes.AURORA)
+    @TargetService(ServiceTypes.FIONA)
     val restTemplate: RestTemplate,
     @Value("\${integrations.fiona.url}") val fionaBaseUrl: String
 ) {

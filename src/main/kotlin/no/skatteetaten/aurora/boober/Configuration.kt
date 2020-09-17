@@ -19,7 +19,6 @@ import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -163,35 +162,6 @@ class Configuration {
     }
 
     @Bean
-    @TargetService(ServiceTypes.SKAP)
-    @ConditionalOnProperty("integrations.skap.url")
-    fun skapRestTemplate(
-        restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${spring.application.name}") applicationName: String,
-        @Value("\${integrations.skap.url}") rootUri: String,
-        sharedSecretReader: SharedSecretReader,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
-    ): RestTemplate {
-
-        val clientIdHeaderName = "KlientID"
-
-        return restTemplateBuilder
-            .requestFactory { clientHttpRequestFactory }
-            .rootUri(rootUri)
-            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
-                request.headers.apply {
-                    set(HttpHeaders.AUTHORIZATION, "aurora-token ${sharedSecretReader.secret}")
-                    accept = listOf(MediaType.APPLICATION_OCTET_STREAM)
-                    set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                    set(clientIdHeaderName, applicationName)
-                    set("Meldingsid", UUID.randomUUID().toString())
-                }
-
-                execution.execute(request, body)
-            }).build()
-    }
-
-    @Bean
     @TargetService(ServiceTypes.AURORA)
     fun auroraRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
@@ -201,7 +171,7 @@ class Configuration {
     ): RestTemplate = auroraBaseRestTemplate(
         restTemplateBuilder,
         clientHttpRequestFactory,
-        "Bearer aurora-token",
+        "aurora-token",
         sharedSecretReader,
         applicationName
     )
@@ -211,16 +181,12 @@ class Configuration {
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
         headerPrefix: String,
         sharedSecretReader: SharedSecretReader,
-        applicationName: String,
-        baseUrl: String? = null
+        applicationName: String
     ): RestTemplate {
         val clientIdHeaderName = "KlientID"
 
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
-            .let {
-                if (!baseUrl.isNullOrEmpty()) it.rootUri(baseUrl) else it
-            }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
                     set(
@@ -237,22 +203,21 @@ class Configuration {
             }).build()
     }
 
+    // TODO: AOS-4881 remove after authorization prefix has been changed in fiona
     @Bean
-    @TargetService(ServiceTypes.HERKIMER)
+    @TargetService(ServiceTypes.FIONA)
     fun herkimerRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
         @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
-        @Value("\${integrations.herkimer.url}") herkimerUrl: String
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ) =
         auroraBaseRestTemplate(
             restTemplateBuilder = restTemplateBuilder,
             applicationName = applicationName,
             sharedSecretReader = sharedSecretReader,
             clientHttpRequestFactory = clientHttpRequestFactory,
-            headerPrefix = "Bearer",
-            baseUrl = herkimerUrl
+            headerPrefix = "Bearer aurora-token"
         )
 
     @Bean
@@ -296,7 +261,7 @@ class Configuration {
 }
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS, HERKIMER
+    BITBUCKET, GENERAL, AURORA, OPENSHIFT, CANTUS, FIONA
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
