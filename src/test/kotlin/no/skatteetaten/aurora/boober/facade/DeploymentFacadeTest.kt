@@ -31,6 +31,7 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 json("""{ "success" : "true" }""")
             }
         }
+        applicationDeploymentGenerationMock()
 
         val resultList = facade.deploymentExist(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")))
 
@@ -49,6 +50,8 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
 
+        applicationDeploymentGenerationMock()
+
         val resultList = facade.deploymentExist(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")))
 
         assertThat(resultList.size).isEqualTo(1)
@@ -65,6 +68,7 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse().setResponseCode(403)
             }
         }
+        applicationDeploymentGenerationMock()
 
         val resultList = facade.deploymentExist(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")))
 
@@ -82,6 +86,7 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse().setResponseCode(400).setBody("Bad request")
             }
         }
+        applicationDeploymentGenerationMock()
 
         val resultList = facade.deploymentExist(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")))
 

@@ -31,9 +31,8 @@ import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
+import io.mockk.every
 import io.mockk.mockk
-import java.time.Instant
-import kotlin.reflect.KClass
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.headerHandlers
@@ -50,10 +49,13 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
+import no.skatteetaten.aurora.boober.service.IdService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
+import kotlin.reflect.KClass
 
 /*
   Abstract class to test a single feature
@@ -238,7 +240,13 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         adr: ApplicationDeploymentRef,
         vararg file: Pair<String, String>
     ): AuroraDeploymentContext {
-        val service = AuroraDeploymentContextService(features = listOf(feature))
+        val idService = mockk<IdService>()
+
+        every {
+            idService.generateOrFetchId(any())
+        } returns "1234567890"
+
+        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService)
         val auroraConfig = createAuroraConfig(file.toMap())
 
         val deployCommand = AuroraContextCommand(
@@ -258,7 +266,12 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         fullValidation: Boolean = true,
         files: List<AuroraConfigFile> = emptyList()
     ): AuroraDeploymentContext {
-        val service = AuroraDeploymentContextService(features = listOf(feature))
+        val idService = mockk<IdService>()
+
+        every {
+            idService.generateOrFetchId(any())
+        } returns "1234567890"
+        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService)
         val auroraConfig =
             createAuroraConfig(config.addIfNotNull("$environment/simple.json" to app), files)
 

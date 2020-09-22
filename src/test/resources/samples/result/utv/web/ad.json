@@ -9,7 +9,7 @@
       "updatedAt": "0",
       "affiliation": "paas",
       "name": "web",
-      "id": "1379fcff48d53f89f9b0979d3977afbf8151fed4",
+      "id": "1234567890",
       "applicationId": "65b695616e4f3f8b4d7b775284833e6a29d07c51",
       "booberDeployId": "deploy1"
     },
@@ -23,7 +23,7 @@
     "selector": {
       "name": "web"
     },
-    "applicationDeploymentId": "1379fcff48d53f89f9b0979d3977afbf8151fed4",
+    "applicationDeploymentId": "1234567890",
     "applicationName": "web",
     "runnableType" : "DeploymentConfig",
     "applicationDeploymentName": "web",

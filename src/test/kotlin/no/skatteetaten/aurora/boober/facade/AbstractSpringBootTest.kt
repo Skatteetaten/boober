@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.herkimerObjectMapper
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
@@ -24,6 +26,8 @@ import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
+import java.time.Instant
+import java.time.LocalDateTime
 
 typealias MockRule = RecordedRequest.() -> MockResponse?
 typealias MockFlag = RecordedRequest.() -> Boolean?
@@ -57,6 +61,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @Value("\${integrations.bitbucket.port}")
     lateinit var bitbucketPort: String
 
+    @Value("\${integrations.herkimer.port}")
+    lateinit var herkimerPort: String
+
     fun RecordedRequest.replayRequestJsonWithModification(
         rootPath: String,
         key: String,
@@ -89,6 +96,29 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 
     fun dbhMock(block: HttpMock.() -> Unit = {}): MockWebServer {
         return httpMockServer(dbhPort.toInt(), block)
+    }
+
+    fun herkimerMock(block: HttpMock.() -> Unit = {}): MockWebServer =
+        httpMockServer(herkimerPort.toInt(), block)
+
+    fun applicationDeploymentGenerationMock(): MockWebServer {
+        val ad = ApplicationDeploymentHerkimer(
+            "1234567890",
+            "name",
+            "env",
+            "cluster",
+            "aurora",
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            "aurora",
+            "aurora"
+        )
+
+        return herkimerMock {
+            rule {
+                json(HerkimerResponse(items = listOf(ad)))
+            }
+        }
     }
 
     @MockkBean
@@ -127,5 +157,5 @@ fun json(body: String) =
 
 fun json(body: Any) =
     MockResponse().setResponseCode(200)
-        .setBody(jacksonObjectMapper().writeValueAsString(body))
+        .setBody(herkimerObjectMapper.writeValueAsString(body))
         .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)

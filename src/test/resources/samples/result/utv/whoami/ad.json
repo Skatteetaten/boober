@@ -9,7 +9,7 @@
       "updatedAt" : "0",
       "affiliation" : "paas",
       "name" : "whoami",
-      "id" : "0a5b9f33defce603dae3b3ce5c4babc19ee75086",
+      "id" : "1234567890",
       "applicationId" : "6d2152b95c871a1a78dc2fdf7626bde179a441e4",
       "booberDeployId" : "deploy1"
     },
@@ -23,7 +23,7 @@
     "selector" : {
       "name" : "whoami"
     },
-    "applicationDeploymentId" : "0a5b9f33defce603dae3b3ce5c4babc19ee75086",
+    "applicationDeploymentId" : "1234567890",
     "applicationName" : "whoami",
     "runnableType" : "Deployment",
     "applicationDeploymentName" : "whoami",

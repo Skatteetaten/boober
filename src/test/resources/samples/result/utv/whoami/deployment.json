@@ -82,6 +82,9 @@
             "name" : "EXTRA_HTTP_PORT",
             "value" : "8082"
           }, {
+            "name": "APPLICATION_DEPLOYMENT_ID",
+            "value": "1234567890"
+          }, {
             "name" : "WHOAMI_DB",
             "value" : "/u01/secrets/app/whoami-db/info"
           }, {

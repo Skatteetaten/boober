@@ -15,14 +15,17 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
-import no.skatteetaten.aurora.boober.service.ApplicationDeploymentPayload
 import no.skatteetaten.aurora.boober.service.HerkimerService
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.boolean
 import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Service
@@ -45,7 +48,11 @@ class S3DisabledFeature : Feature {
 
 @ConditionalOnBean(S3Provisioner::class)
 @Service
-class S3Feature(val s3Provisioner: S3Provisioner, val herkimerService: HerkimerService) : Feature {
+class S3Feature(
+    val s3Provisioner: S3Provisioner,
+    val herkimerService: HerkimerService,
+    @Value("\${application.deployment.id}") val booberApplicationDeploymentId: String
+) : Feature {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
@@ -74,17 +81,37 @@ class S3Feature(val s3Provisioner: S3Provisioner, val herkimerService: HerkimerS
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         if (!adc.isS3Enabled) return emptySet()
 
-        // TODO: This is only temporary until we can use herkimer as our registry for ApplicationDeployment
-        val id = herkimerService.createApplicationDeployment(adc.createApplicationDeploymentPayload()).id
-        val resourceWithClaims = herkimerService.getClaimedResources(id, ResourceKind.MinioPolicy).firstOrNull()
+        val resourceWithClaims =
+            herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
 
-        val result = if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
-        else {
-            val request = adc.createS3ProvisioningRequest()
-            s3Provisioner.provision(request).also {
-                herkimerService.createResourceAndClaim(id, ResourceKind.MinioPolicy, it.bucketName, it)
+        val bucketName = "${adc.affiliation}_bucket_t_${adc.cluster}_default"
+        val result =
+            if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
+            else {
+                val adminCredentials = herkimerService.getClaimedResources(
+                    claimOwnerId = booberApplicationDeploymentId,
+                    resourceKind = ResourceKind.MinioPolicy,
+                    name = bucketName
+                ).getAdminCredentials()
+                    ?: throw ProvisioningException("Could not get admin credentials from herkimer for bucketName=$bucketName")
+
+                val request = S3ProvisioningRequest(
+                    bucketName = bucketName,
+                    path = adc.applicationDeploymentId,
+                    adminCredentials = adminCredentials,
+                    userName = adc.applicationDeploymentId,
+                    access = S3Access.WRITE
+                )
+
+                s3Provisioner.provision(request).also {
+                    herkimerService.createResourceAndClaim(
+                        adc.applicationDeploymentId,
+                        ResourceKind.MinioPolicy,
+                        it.bucketName,
+                        it
+                    )
+                }
             }
-        }
 
         val s3Secret = result.createS3Secret(adc.namespace, adc.s3SecretName)
 
@@ -94,14 +121,8 @@ class S3Feature(val s3Provisioner: S3Provisioner, val herkimerService: HerkimerS
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
 
-private fun AuroraDeploymentSpec.createApplicationDeploymentPayload() = ApplicationDeploymentPayload(
-    name = name,
-    environmentName = envName,
-    cluster = cluster,
-    businessGroup = affiliation,
-    applicationName = name
-)
-private fun AuroraDeploymentSpec.createS3ProvisioningRequest() = S3ProvisioningRequest(affiliation, envName, name)
+private fun List<ResourceHerkimer>.getAdminCredentials() = this.singleOrNull()?.claims?.singleOrNull()?.credentials
+
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)
 

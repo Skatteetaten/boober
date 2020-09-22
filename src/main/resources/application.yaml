@@ -64,7 +64,7 @@ aurora:
 logging:
     level:
         no.skatteetaten: INFO
-        no.skatteetaten.aurora.boober: INFO
+        no.skatteetaten.aurora.boober: DEBUG
         org:
             jboss: WARN
             hibernate: WARN
@@ -81,6 +81,7 @@ spring:
 
 
 management.server.port : 9091
+application.deployment.id: 1234567890
 
 server:
     port: 8080

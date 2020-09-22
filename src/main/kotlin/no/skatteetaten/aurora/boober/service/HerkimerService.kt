@@ -36,21 +36,12 @@ data class ResourceClaimPayload(
     val credentials: Any
 )
 
-data class ApplicationDeploymentPayload(
-    val name: String,
-    val environmentName: String,
-    val cluster: String,
-    val businessGroup: String,
-    val applicationName: String
-)
-
 data class ApplicationDeploymentHerkimer(
     val id: String,
     val name: String,
     val environmentName: String,
     val cluster: String,
     val businessGroup: String,
-    val applicationName: String,
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
     val createdBy: String,
@@ -101,7 +92,7 @@ class HerkimerRestTemplateWrapper(
 class HerkimerService(
     val client: HerkimerRestTemplateWrapper
 ) {
-    fun createApplicationDeployment(adPayload: ApplicationDeploymentPayload): ApplicationDeploymentHerkimer {
+    fun createApplicationDeployment(adPayload: ApplicationDeploymentCreateRequest): ApplicationDeploymentHerkimer {
         val response = client.post(
             body = adPayload,
             url = "/applicationDeployment",
@@ -114,17 +105,23 @@ class HerkimerService(
         return herkimerObjectMapper.convertValue(herkimerResponse.items.single())
     }
 
-    fun getClaimedResources(adId: String, resourceKind: ResourceKind): List<ResourceHerkimer> {
+    fun getClaimedResources(
+        claimOwnerId: String,
+        resourceKind: ResourceKind,
+        name: String? = null
+    ): List<ResourceHerkimer> {
+        val url = "/resource?claimedBy=$claimOwnerId&resourceKind=$resourceKind${
+            if (name != null) "&name=$name" else ""
+        }"
+
         val herkimerResponse = client.get(
             HerkimerResponse::class,
-            "/resource?claimedBy=$adId"
+            url
         ).getBodyOrThrow()
 
         if (!herkimerResponse.success) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.message}")
 
-        val claimedResources = herkimerObjectMapper.convertValue<List<ResourceHerkimer>>(herkimerResponse.items)
-
-        return claimedResources.filter { it.kind == resourceKind }
+        return herkimerObjectMapper.convertValue(herkimerResponse.items)
     }
 
     fun createResourceAndClaim(ownerId: String, resourceKind: ResourceKind, resourceName: String, credentials: Any) {

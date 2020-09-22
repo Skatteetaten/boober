@@ -6,6 +6,9 @@ import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.RouteFeature
 import no.skatteetaten.aurora.boober.feature.StsFeature
 import no.skatteetaten.aurora.boober.feature.WebsealFeature
+import no.skatteetaten.aurora.boober.feature.affiliation
+import no.skatteetaten.aurora.boober.feature.cluster
+import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
 import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.feature.name
@@ -25,7 +28,8 @@ private val logger = KotlinLogging.logger {}
 
 @Service
 class AuroraDeploymentContextService(
-    val features: List<Feature>
+    val features: List<Feature>,
+    val idService: IdService
 ) {
 
     fun createValidatedAuroraDeploymentContexts(
@@ -99,7 +103,18 @@ class AuroraDeploymentContextService(
         val allHandlers: Set<AuroraConfigFieldHandler> =
             featureHandlers.flatMap { it.value }.toSet().addIfNotNull(headerHandlers)
 
+        val applicationDeploymentId = headerSpec.run {
+            idService.generateOrFetchId(
+                ApplicationDeploymentCreateRequest(
+                    name = name,
+                    environmentName = envName,
+                    cluster = cluster,
+                    businessGroup = affiliation
+                )
+            )
+        }
         val spec = AuroraDeploymentSpec.create(
+            applicationDeploymentId = applicationDeploymentId,
             handlers = allHandlers,
             files = deployCommand.applicationFiles,
             applicationDeploymentRef = deployCommand.applicationDeploymentRef,
@@ -112,8 +127,9 @@ class AuroraDeploymentContextService(
             fieldHandlers = allHandlers,
             fields = spec.fields
         ).validate()
+
         val featureAdc: Map<Feature, AuroraDeploymentSpec> = featureHandlers.mapValues { (_, handlers) ->
-            val paths = handlers.map { it.name }
+            val paths = handlers.map { it.name } + listOf("applicationDeploymentId")
             val fields = spec.fields.filterKeys {
                 paths.contains(it)
             }

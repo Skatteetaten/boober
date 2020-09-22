@@ -1,5 +1,6 @@
         static | applicationDeploymentRef: "utv/job"
         static | configVersion: "master"
+        static | applicationDeploymentId: "1234567890"
     about.json | schemaVersion: "v1"
       job.json | type: "cronjob"
        default | deployState: "deploymentConfig"

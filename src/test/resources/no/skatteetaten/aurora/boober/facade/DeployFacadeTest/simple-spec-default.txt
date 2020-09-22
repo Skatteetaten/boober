@@ -1,5 +1,6 @@
         static | applicationDeploymentRef: "utv/simple"
         static | configVersion: "master"
+        static | applicationDeploymentId: "1234567890"
     about.json | schemaVersion: "v1"
     about.json | type: "deploy"
        default | deployState: "deploymentConfig"

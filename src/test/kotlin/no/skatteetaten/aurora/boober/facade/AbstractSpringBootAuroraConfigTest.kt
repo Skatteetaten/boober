@@ -103,7 +103,7 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
 
     generatedObjects.forEach {
         val key: String = it.getKey()
-        assertk.assertThat(keys).contains(key)
+        assertThat(keys).contains(key)
         if (it.openshiftKind == "secret") {
             val data = it["data"] as ObjectNode
             data.fields().forEach { (key, _) ->
@@ -115,7 +115,7 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
         }
         compareJson(resultFiles[key]!!, it)
     }
-    assertk.assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
+    assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
 }
 
 fun JsonNode.getKey(): String {

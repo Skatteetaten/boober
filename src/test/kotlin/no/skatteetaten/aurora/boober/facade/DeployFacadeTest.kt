@@ -157,6 +157,8 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
 
+        applicationDeploymentGenerationMock()
+
         val result = facade.executeDeploy(auroraConfigRef, listOf(adr))
 
         assertThat(result).auroraDeployResultMatchesFiles()
@@ -192,6 +194,8 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
+
+        applicationDeploymentGenerationMock()
 
         openShiftMock {
 
@@ -259,6 +263,8 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @Test
     fun `fail deploy of application in different cluster`() {
 
+        applicationDeploymentGenerationMock()
+
         openShiftMock {
 
             rule({ path?.endsWith("/groups") }) {
@@ -286,6 +292,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @Test
     fun `fail deploy of application if unused override file`() {
 
+        applicationDeploymentGenerationMock()
         openShiftMock {
 
             rule({ path?.endsWith("/groups") }) {
@@ -313,6 +320,8 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Test
     fun `fail deploy if there are duplicate resources generated`() {
+
+        applicationDeploymentGenerationMock()
 
         dbhMock {
             rule {
