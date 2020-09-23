@@ -9,26 +9,34 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import java.util.Base64
 
 data class S3ProvisioningRequest(
     val bucketName: String,
     val path: String,
-    val adminCredentials: JsonNode,
+    val minioConnectInfoJsonNode: JsonNode,
     val userName: String,
-    val access: S3Access
+    val access: List<S3Access>
 )
 
 enum class S3Access {
-    READ, WRITE
+    READ, WRITE, DELETE
 }
 
-data class AdminCredentials(
+data class MinioConnectInfo(
+    val host: String,
+    val port: Int,
+    val useSsl: Boolean,
+    val region: String,
     val secretKey: String,
     val accessKey: String
-)
+) {
+    fun toBase64(): String = Base64.getEncoder().encodeToString(jacksonObjectMapper().convertValue(this))
+}
 
 data class S3ProvisioningResult(
     val request: S3ProvisioningRequest,
@@ -40,17 +48,14 @@ data class S3ProvisioningResult(
     val bucketRegion: String
 )
 
-private data class FionaCreateUserRequest(
-    val access: S3Access,
-    val adminCredentials: AdminCredentials
+private data class FionaCreateUserAndPolicyPayload(
+    val userName: String,
+    val access: List<S3Access>
 )
 
-private data class FionaCreateUserResponse(
+private data class FionaCreateUserAndPolicyResponse(
     val accessKey: String,
-    val secretKey: String,
-    val serviceEndpoint: String,
-    val bucket: String,
-    val bucketRegion: String
+    val secretKey: String
 )
 
 @Component
@@ -67,26 +72,33 @@ class S3Provisioner(
     val restTemplate: FionaRestTemplateWrapper
 ) {
     fun provision(request: S3ProvisioningRequest): S3ProvisioningResult {
-        val response = try {
+        val minioConnectInfo = request.minioConnectInfoJsonNode.toMinioConnectInfo()
+
+        val (newAccessKey, newSecretKey) = try {
             request.run {
-                val adminCredentialsParsed = jacksonObjectMapper().convertValue<AdminCredentials>(request.adminCredentials)
                 restTemplate.post(
-                    url = "/bucket/$bucketName/path/$path/userPolicy/$userName",
-                    body = FionaCreateUserRequest(access, adminCredentialsParsed),
-                    type = FionaCreateUserResponse::class
+                    url = "/buckets/$bucketName/paths/$path/userPolicies/",
+                    body = FionaCreateUserAndPolicyPayload(userName, access),
+                    type = FionaCreateUserAndPolicyResponse::class,
+                    headers = HttpHeaders().apply {
+                        set("MINIO_ACCESS", minioConnectInfo.toBase64())
+                    }
                 )
             }.body ?: throw ProvisioningException("Fiona unexpectedly returned an empty response")
         } catch (e: Exception) {
             throw ProvisioningException("Error while provisioning S3 storage; ${e.message}", e)
         }
+
         return S3ProvisioningResult(
             request = request,
-            serviceEndpoint = response.serviceEndpoint,
-            accessKey = response.accessKey,
-            secretKey = response.secretKey,
-            bucketName = response.bucket,
+            serviceEndpoint = minioConnectInfo.host,
+            accessKey = newAccessKey,
+            secretKey = newSecretKey,
+            bucketName = request.bucketName,
             objectPrefix = request.path,
-            bucketRegion = response.bucketRegion
+            bucketRegion = minioConnectInfo.region
         )
     }
+
+    private fun JsonNode.toMinioConnectInfo(): MinioConnectInfo = jacksonObjectMapper().convertValue(this)
 }

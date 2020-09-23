@@ -46,9 +46,9 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
         val request = S3ProvisioningRequest(
             bucketName = bucketName,
             path = adId,
-            adminCredentials = mapper.createObjectNode(),
+            minioConnectInfoJsonNode = mapper.createObjectNode(),
             userName = adId,
-            access = S3Access.WRITE
+            access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
         )
         val adPayload = ApplicationDeploymentCreateRequest(
             name = appName,

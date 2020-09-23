@@ -6,7 +6,7 @@ import assertk.assertions.isFailure
 import assertk.assertions.isNotEmpty
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.AdminCredentials
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.MinioConnectInfo
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
@@ -32,9 +32,9 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
     val request = S3ProvisioningRequest(
         "bucketName",
         "path",
-        jacksonObjectMapper().convertValue(AdminCredentials("adminSecretKey", "adminAccessKey")),
+        jacksonObjectMapper().convertValue(MinioConnectInfo("localhost", 5000, true, "us-west-01", "adminSecretKey", "adminAccessKey")),
         "username",
-        S3Access.WRITE
+        listOf(S3Access.WRITE)
     )
 
     @Test

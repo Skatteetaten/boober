@@ -92,15 +92,15 @@ class S3Feature(
                     claimOwnerId = booberApplicationDeploymentId,
                     resourceKind = ResourceKind.MinioPolicy,
                     name = bucketName
-                ).getAdminCredentials()
+                ).getAdminConnectionInfo()
                     ?: throw ProvisioningException("Could not get admin credentials from herkimer for bucketName=$bucketName")
 
                 val request = S3ProvisioningRequest(
                     bucketName = bucketName,
                     path = adc.applicationDeploymentId,
-                    adminCredentials = adminCredentials,
+                    minioConnectInfoJsonNode = adminCredentials,
                     userName = adc.applicationDeploymentId,
-                    access = S3Access.WRITE
+                    access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
                 )
 
                 s3Provisioner.provision(request).also {
@@ -121,7 +121,7 @@ class S3Feature(
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
 
-private fun List<ResourceHerkimer>.getAdminCredentials() = this.singleOrNull()?.claims?.singleOrNull()?.credentials
+private fun List<ResourceHerkimer>.getAdminConnectionInfo() = this.singleOrNull()?.claims?.singleOrNull()?.credentials
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)
