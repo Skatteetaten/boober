@@ -35,7 +35,7 @@ data class MinioConnectInfo(
     val secretKey: String,
     val accessKey: String
 ) {
-    fun toBase64(): String = Base64.getEncoder().encodeToString(jacksonObjectMapper().convertValue(this))
+    fun toBase64(): String = Base64.getEncoder().encodeToString(jacksonObjectMapper().writeValueAsBytes(this))
 }
 
 data class S3ProvisioningResult(

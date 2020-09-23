@@ -50,14 +50,11 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
     @Test
     fun `smoke test for successful provisioning`() {
         @Language("JSON") val response = """{
-            "serviceEndpoint": "http://minio:9000",
-            "bucket": "default-bucket",
-            "bucketRegion": "us-west-1",
-            "secretKey": "some-key",
-            "accessKey": "accesskey"
+            "accessKey": "accesskey",
+            "secretKey": "some-key"
         }"""
 
-        server.expect(requestTo("$baseUrl/bucket/${request.bucketName}/path/${request.path}/userPolicy/${request.userName}"))
+        server.expect(requestTo("$baseUrl/buckets/${request.bucketName}/paths/${request.path}/userPolicies/"))
             .andRespond(withSuccess(response, MediaType.APPLICATION_JSON))
         val result = provisioner.provision(request)
 
