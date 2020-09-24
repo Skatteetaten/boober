@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
@@ -91,6 +92,7 @@ data class ResourcePayload(
 )
 
 @Component
+@ConditionalOnProperty("integrations.herkimer.url")
 class HerkimerRestTemplateWrapper(
     @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
     @Value("\${integrations.herkimer.url}") override val baseUrl: String,
@@ -98,6 +100,7 @@ class HerkimerRestTemplateWrapper(
 ) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries, baseUrl = baseUrl)
 
 @Service
+@ConditionalOnProperty("integrations.herkimer.url")
 class HerkimerService(
     val client: HerkimerRestTemplateWrapper
 ) {
