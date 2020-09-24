@@ -100,7 +100,7 @@ integrations:
     fiona:
         url: http://fiona-aurora-dev.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: http://localhost:54321
+        url: http://m96405-herkimer-aurora-dev.utv.paas.skead.no/
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}

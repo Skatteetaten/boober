@@ -18,24 +18,12 @@ import java.util.Base64
 data class S3ProvisioningRequest(
     val bucketName: String,
     val path: String,
-    val minioConnectInfoJsonNode: JsonNode,
     val userName: String,
     val access: List<S3Access>
 )
 
 enum class S3Access {
     READ, WRITE, DELETE
-}
-
-data class MinioConnectInfo(
-    val host: String,
-    val port: Int,
-    val useSsl: Boolean,
-    val region: String,
-    val secretKey: String,
-    val accessKey: String
-) {
-    fun toBase64(): String = Base64.getEncoder().encodeToString(jacksonObjectMapper().writeValueAsBytes(this))
 }
 
 data class S3ProvisioningResult(
@@ -55,7 +43,8 @@ private data class FionaCreateUserAndPolicyPayload(
 
 private data class FionaCreateUserAndPolicyResponse(
     val accessKey: String,
-    val secretKey: String
+    val secretKey: String,
+    val host: String
 )
 
 @Component
@@ -72,17 +61,12 @@ class S3Provisioner(
     val restTemplate: FionaRestTemplateWrapper
 ) {
     fun provision(request: S3ProvisioningRequest): S3ProvisioningResult {
-        val minioConnectInfo = request.minioConnectInfoJsonNode.toMinioConnectInfo()
-
-        val (newAccessKey, newSecretKey) = try {
+        val response = try {
             request.run {
                 restTemplate.post(
                     url = "/buckets/$bucketName/paths/$path/userPolicies/",
                     body = FionaCreateUserAndPolicyPayload(userName, access),
-                    type = FionaCreateUserAndPolicyResponse::class,
-                    headers = HttpHeaders().apply {
-                        set("MINIO_ACCESS", minioConnectInfo.toBase64())
-                    }
+                    type = FionaCreateUserAndPolicyResponse::class
                 )
             }.body ?: throw ProvisioningException("Fiona unexpectedly returned an empty response")
         } catch (e: Exception) {
@@ -91,14 +75,12 @@ class S3Provisioner(
 
         return S3ProvisioningResult(
             request = request,
-            serviceEndpoint = minioConnectInfo.host,
-            accessKey = newAccessKey,
-            secretKey = newSecretKey,
+            serviceEndpoint = response.host,
+            accessKey = response.accessKey,
+            secretKey = response.secretKey,
             bucketName = request.bucketName,
             objectPrefix = request.path,
-            bucketRegion = minioConnectInfo.region
+            bucketRegion = ""
         )
     }
-
-    private fun JsonNode.toMinioConnectInfo(): MinioConnectInfo = jacksonObjectMapper().convertValue(this)
 }
