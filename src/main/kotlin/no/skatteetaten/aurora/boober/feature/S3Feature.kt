@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newSecret
@@ -7,13 +9,15 @@ import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
-import javax.annotation.PostConstruct
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.service.ApplicationDeploymentPayload
+import no.skatteetaten.aurora.boober.service.HerkimerService
+import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
@@ -22,6 +26,7 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Service
+import javax.annotation.PostConstruct
 
 private val logger = KotlinLogging.logger {}
 
@@ -34,12 +39,13 @@ class S3DisabledFeature : Feature {
         logger.info("S3 feature is disabled since no ${S3Provisioner::class.simpleName} is available")
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand) = emptySet<AuroraConfigFieldHandler>()
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
+        emptySet<AuroraConfigFieldHandler>()
 }
 
 @ConditionalOnBean(S3Provisioner::class)
 @Service
-class S3Feature(val s3Provisioner: S3Provisioner) : Feature {
+class S3Feature(val s3Provisioner: S3Provisioner, val herkimerService: HerkimerService) : Feature {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
@@ -68,8 +74,18 @@ class S3Feature(val s3Provisioner: S3Provisioner) : Feature {
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         if (!adc.isS3Enabled) return emptySet()
 
-        val request = adc.createS3ProvisioningRequest()
-        val result = s3Provisioner.provision(request)
+        // TODO: This is only temporary until we can use herkimer as our registry for ApplicationDeployment
+        val id = herkimerService.createApplicationDeployment(adc.createApplicationDeploymentPayload()).id
+        val resourceWithClaims = herkimerService.getClaimedResources(id, ResourceKind.MinioPolicy).firstOrNull()
+
+        val result = if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
+        else {
+            val request = adc.createS3ProvisioningRequest()
+            s3Provisioner.provision(request).also {
+                herkimerService.createResourceAndClaim(id, ResourceKind.MinioPolicy, it.bucketName, it)
+            }
+        }
+
         val s3Secret = result.createS3Secret(adc.namespace, adc.s3SecretName)
 
         return setOf(s3Secret.generateAuroraResource())
@@ -78,6 +94,13 @@ class S3Feature(val s3Provisioner: S3Provisioner) : Feature {
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
 
+private fun AuroraDeploymentSpec.createApplicationDeploymentPayload() = ApplicationDeploymentPayload(
+    name = name,
+    environmentName = envName,
+    cluster = cluster,
+    businessGroup = affiliation,
+    applicationName = name
+)
 private fun AuroraDeploymentSpec.createS3ProvisioningRequest() = S3ProvisioningRequest(affiliation, envName, name)
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)

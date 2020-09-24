@@ -1,10 +1,5 @@
 package no.skatteetaten.aurora.boober
 
-import java.io.FileInputStream
-import java.security.KeyStore
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
-import java.util.UUID
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
@@ -24,7 +19,6 @@ import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.web.client.RestTemplateBuilder
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -36,6 +30,11 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestTemplate
+import java.io.FileInputStream
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.util.UUID
 
 @Configuration
 @EnableRetry
@@ -163,50 +162,37 @@ class Configuration {
     }
 
     @Bean
-    @TargetService(ServiceTypes.SKAP)
-    @ConditionalOnProperty("integrations.skap.url")
-    fun skapRestTemplate(
-        restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${spring.application.name}") applicationName: String,
-        @Value("\${integrations.skap.url}") rootUri: String,
-        sharedSecretReader: SharedSecretReader,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
-    ): RestTemplate {
-
-        val clientIdHeaderName = "KlientID"
-
-        return restTemplateBuilder
-            .requestFactory { clientHttpRequestFactory }
-            .rootUri(rootUri)
-            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
-                request.headers.apply {
-                    set(HttpHeaders.AUTHORIZATION, "aurora-token ${sharedSecretReader.secret}")
-                    accept = listOf(MediaType.APPLICATION_OCTET_STREAM)
-                    set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                    set(clientIdHeaderName, applicationName)
-                    set("Meldingsid", UUID.randomUUID().toString())
-                }
-
-                execution.execute(request, body)
-            }).build()
-    }
-
-    @Bean
     @TargetService(ServiceTypes.AURORA)
     fun auroraRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
         @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
-    ): RestTemplate {
+    ): RestTemplate = auroraBaseRestTemplate(
+        restTemplateBuilder,
+        clientHttpRequestFactory,
+        "aurora-token",
+        sharedSecretReader,
+        applicationName
+    )
 
+    private fun auroraBaseRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+        headerPrefix: String,
+        sharedSecretReader: SharedSecretReader,
+        applicationName: String
+    ): RestTemplate {
         val clientIdHeaderName = "KlientID"
 
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
-                    set(HttpHeaders.AUTHORIZATION, "Bearer aurora-token ${sharedSecretReader.secret}")
+                    set(
+                        HttpHeaders.AUTHORIZATION,
+                        "$headerPrefix ${sharedSecretReader.secret}"
+                    )
                     set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
                     set(clientIdHeaderName, applicationName)
@@ -216,6 +202,23 @@ class Configuration {
                 execution.execute(request, body)
             }).build()
     }
+
+    // TODO: AOS-4881 remove after authorization prefix has been changed in fiona
+    @Bean
+    @TargetService(ServiceTypes.FIONA)
+    fun herkimerRestTemplate(
+        restTemplateBuilder: RestTemplateBuilder,
+        @Value("\${spring.application.name}") applicationName: String,
+        sharedSecretReader: SharedSecretReader,
+        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
+    ) =
+        auroraBaseRestTemplate(
+            restTemplateBuilder = restTemplateBuilder,
+            applicationName = applicationName,
+            sharedSecretReader = sharedSecretReader,
+            clientHttpRequestFactory = clientHttpRequestFactory,
+            headerPrefix = "Bearer aurora-token"
+        )
 
     @Bean
     fun defaultHttpComponentsClientHttpRequestFactory(
@@ -258,7 +261,7 @@ class Configuration {
 }
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, SKAP, OPENSHIFT, CANTUS
+    BITBUCKET, GENERAL, AURORA, OPENSHIFT, CANTUS, FIONA
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)

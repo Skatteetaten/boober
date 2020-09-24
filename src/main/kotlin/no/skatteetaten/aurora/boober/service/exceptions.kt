@@ -41,6 +41,7 @@ class MultiApplicationValidationException(
     }
 }
 
+class EmptyBodyException(message: String) : ServiceException(message, null)
 class ProvisioningException(message: String, cause: Throwable? = null) :
     ServiceException(message, cause)
 
