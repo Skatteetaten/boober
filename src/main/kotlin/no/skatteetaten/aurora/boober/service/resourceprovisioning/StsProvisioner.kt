@@ -43,6 +43,7 @@ data class StsProvisioningResult(
 )
 
 @Component
+@ConditionalOnProperty("integrations.skap.url")
 class SkapRestTemplateWrapper(
     @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
     @Value("\${integrations.skap.url}") override val baseUrl: String,
