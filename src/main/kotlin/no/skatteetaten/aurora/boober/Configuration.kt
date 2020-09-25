@@ -230,7 +230,7 @@ class Configuration {
 }
 
 enum class ServiceTypes {
-    BITBUCKET, GENERAL, AURORA, OPENSHIFT, CANTUS, FIONA
+    BITBUCKET, GENERAL, AURORA, OPENSHIFT, CANTUS
 }
 
 @Target(AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.FIELD, AnnotationTarget.VALUE_PARAMETER)
