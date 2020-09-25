@@ -42,7 +42,7 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
     fun `verify creates secret with value mappings in dc`() {
 
         val adId = "1234567890"
-        val bucketName = "${affiliation}_bucket_t_${cluster}_default"
+        val bucketName = "$affiliation-bucket-t-$cluster-default"
         val request = S3ProvisioningRequest(
             bucketName = bucketName,
             path = adId,
