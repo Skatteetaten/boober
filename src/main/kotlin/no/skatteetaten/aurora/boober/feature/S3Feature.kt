@@ -16,8 +16,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
 import no.skatteetaten.aurora.boober.service.HerkimerService
-import no.skatteetaten.aurora.boober.service.ProvisioningException
-import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
@@ -25,7 +23,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.boolean
 import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Service
@@ -50,8 +47,7 @@ class S3DisabledFeature : Feature {
 @Service
 class S3Feature(
     val s3Provisioner: S3Provisioner,
-    val herkimerService: HerkimerService,
-    @Value("\${application.deployment.id}") val booberApplicationDeploymentId: String
+    val herkimerService: HerkimerService
 ) : Feature {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -84,7 +80,6 @@ class S3Feature(
         val resourceWithClaims =
             herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
 
-        val region = "us-east-01"
         val bucketName = "${adc.affiliation}_bucket_t_${adc.cluster}_default"
         val result =
             if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
@@ -113,7 +108,6 @@ class S3Feature(
 }
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
-
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)

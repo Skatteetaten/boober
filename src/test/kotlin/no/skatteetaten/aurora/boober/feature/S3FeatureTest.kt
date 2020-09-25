@@ -33,7 +33,7 @@ enum class ClaimInHerkimer { CLAIM_EXISTS, CLAIM_NOT_EXISTS }
 abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : AbstractFeatureTest() {
     val booberAdId = "0123456789"
     override val feature: Feature
-        get() = S3Feature(s3Provisioner, herkimerService, booberAdId)
+        get() = S3Feature(s3Provisioner, herkimerService)
 
     private val s3Provisioner: S3Provisioner = mockk()
     private val herkimerService: HerkimerService = mockk()
@@ -46,7 +46,6 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
         val request = S3ProvisioningRequest(
             bucketName = bucketName,
             path = adId,
-            minioConnectInfoJsonNode = mapper.createObjectNode(),
             userName = adId,
             access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
         )

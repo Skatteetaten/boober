@@ -4,9 +4,6 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isNotEmpty
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.MinioConnectInfo
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
@@ -27,12 +24,11 @@ import org.springframework.web.client.RestTemplate
 class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer, restTemplate: RestTemplate) {
     val baseUrl = "http://fiona"
     val fionaRestTemplate = FionaRestTemplateWrapper(restTemplate, baseUrl, 0)
-    private var provisioner = S3Provisioner(fionaRestTemplate)
+    private var provisioner = S3Provisioner(fionaRestTemplate, "us-east-1")
 
     val request = S3ProvisioningRequest(
         "bucketName",
         "path",
-        jacksonObjectMapper().convertValue(MinioConnectInfo("localhost", 5000, true, "us-west-01", "adminSecretKey", "adminAccessKey")),
         "username",
         listOf(S3Access.WRITE)
     )
@@ -40,7 +36,7 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
     @Test
     fun `fails with unexpected response`() {
 
-        server.expect(requestTo("$baseUrl/bucket/${request.bucketName}/path/${request.path}/userPolicy/${request.userName}"))
+        server.expect(requestTo("$baseUrl/bucket/${request.bucketName}/path/${request.path}/userpolicies/${request.userName}"))
             .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON))
         assertThat {
             provisioner.provision(request)
@@ -51,10 +47,11 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
     fun `smoke test for successful provisioning`() {
         @Language("JSON") val response = """{
             "accessKey": "accesskey",
-            "secretKey": "some-key"
+            "secretKey": "some-key",
+            "host": "http://fiona"
         }"""
 
-        server.expect(requestTo("$baseUrl/buckets/${request.bucketName}/paths/${request.path}/userPolicies/"))
+        server.expect(requestTo("$baseUrl/buckets/${request.bucketName}/paths/${request.path}/userpolicies/"))
             .andRespond(withSuccess(response, MediaType.APPLICATION_JSON))
         val result = provisioner.provision(request)
 

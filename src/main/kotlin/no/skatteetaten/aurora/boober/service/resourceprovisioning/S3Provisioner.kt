@@ -1,19 +1,14 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.http.HttpHeaders
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
-import java.util.Base64
 
 data class S3ProvisioningRequest(
     val bucketName: String,
@@ -58,13 +53,14 @@ class FionaRestTemplateWrapper(
 @Service
 @ConditionalOnProperty("integrations.fiona.url")
 class S3Provisioner(
-    val restTemplate: FionaRestTemplateWrapper
+    val restTemplate: FionaRestTemplateWrapper,
+    @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String
 ) {
     fun provision(request: S3ProvisioningRequest): S3ProvisioningResult {
         val response = try {
             request.run {
                 restTemplate.post(
-                    url = "/buckets/$bucketName/paths/$path/userPolicies/",
+                    url = "/buckets/$bucketName/paths/$path/userpolicies/",
                     body = FionaCreateUserAndPolicyPayload(userName, access),
                     type = FionaCreateUserAndPolicyResponse::class
                 )
@@ -80,7 +76,7 @@ class S3Provisioner(
             secretKey = response.secretKey,
             bucketName = request.bucketName,
             objectPrefix = request.path,
-            bucketRegion = ""
+            bucketRegion = defaultBucketRegion
         )
     }
 }
