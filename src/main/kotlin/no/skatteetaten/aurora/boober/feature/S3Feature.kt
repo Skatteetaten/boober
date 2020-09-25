@@ -80,7 +80,7 @@ class S3Feature(
         val resourceWithClaims =
             herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
 
-        val bucketName = "${adc.affiliation}_bucket_t_${adc.cluster}_default"
+        val bucketName = "${adc.affiliation}-bucket-t-${adc.cluster}-default"
         val result =
             if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
             else {
