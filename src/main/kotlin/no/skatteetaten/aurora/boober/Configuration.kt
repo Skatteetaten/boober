@@ -168,57 +168,26 @@ class Configuration {
         @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
-    ): RestTemplate = auroraBaseRestTemplate(
-        restTemplateBuilder,
-        clientHttpRequestFactory,
-        "aurora-token",
-        sharedSecretReader,
-        applicationName
-    )
-
-    private fun auroraBaseRestTemplate(
-        restTemplateBuilder: RestTemplateBuilder,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
-        headerPrefix: String,
-        sharedSecretReader: SharedSecretReader,
-        applicationName: String
     ): RestTemplate {
         val clientIdHeaderName = "KlientID"
-
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
             .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
                 request.headers.apply {
                     set(
                         HttpHeaders.AUTHORIZATION,
-                        "$headerPrefix ${sharedSecretReader.secret}"
+                        "aurora-token ${sharedSecretReader.secret}"
                     )
                     set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                    set(clientIdHeaderName, applicationName)
+                    set(clientIdHeaderName, applicationName
+                    )
                     set("Meldingsid", UUID.randomUUID().toString())
                 }
 
                 execution.execute(request, body)
             }).build()
     }
-
-    // TODO: AOS-4881 remove after authorization prefix has been changed in fiona
-    @Bean
-    @TargetService(ServiceTypes.FIONA)
-    fun herkimerRestTemplate(
-        restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${spring.application.name}") applicationName: String,
-        sharedSecretReader: SharedSecretReader,
-        clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
-    ) =
-        auroraBaseRestTemplate(
-            restTemplateBuilder = restTemplateBuilder,
-            applicationName = applicationName,
-            sharedSecretReader = sharedSecretReader,
-            clientHttpRequestFactory = clientHttpRequestFactory,
-            headerPrefix = "Bearer aurora-token"
-        )
 
     @Bean
     fun defaultHttpComponentsClientHttpRequestFactory(
