@@ -21,48 +21,38 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
+import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
 import org.apache.commons.codec.binary.Base64
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 private val logger = KotlinLogging.logger {}
 
-@ConditionalOnMissingBean(S3Provisioner::class)
+@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url")
 @Service
-class S3DisabledFeature : Feature {
-
-    @PostConstruct
-    fun init() {
-        logger.info("S3 feature is disabled since no ${S3Provisioner::class.simpleName} is available")
-    }
-
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand) =
-        emptySet<AuroraConfigFieldHandler>()
+class S3DisabledFeature : S3FeatureTemplate() {
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> =
+        if (adc.isS3Enabled) {
+            listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
+        } else {
+            emptyList()
+        }
 }
 
-@ConditionalOnBean(S3Provisioner::class)
+@ConditionalOnProperty("integrations.fiona.url")
 @Service
 class S3Feature(
     val s3Provisioner: S3Provisioner,
     val herkimerService: HerkimerService
-) : Feature {
+) : S3FeatureTemplate() {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
-    }
-
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
-            AuroraConfigFieldHandler(
-                FEATURE_FIELD_NAME,
-                validator = { it.boolean() },
-                defaultValue = false,
-                canBeSimplifiedConfig = true
-            )
-        )
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -145,4 +135,17 @@ fun S3ProvisioningResult.createS3Secret(nsName: String, s3SecretName: String) = 
         "bucketName" to bucketName,
         "objectPrefix" to objectPrefix
     ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
+}
+
+abstract class S3FeatureTemplate : Feature {
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+        return setOf(
+            AuroraConfigFieldHandler(
+                FEATURE_FIELD_NAME,
+                validator = { it.boolean() },
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            )
+        )
+    }
 }

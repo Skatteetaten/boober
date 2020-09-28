@@ -8,8 +8,6 @@ aurora:
     token:
         value: token
 
-application.deployment.id: 12345678ab
-
 integrations:
     operations:
         scope: "aos-4016"
