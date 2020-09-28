@@ -10,19 +10,22 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
-import no.skatteetaten.aurora.boober.service.ApplicationDeploymentCreateRequest
-import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
+import no.skatteetaten.aurora.boober.facade.json
+import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.HerkimerService
 import no.skatteetaten.aurora.boober.service.ResourceClaimHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourceByType
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 import org.junit.jupiter.api.Test
+import org.springframework.web.client.RestTemplate
 import java.time.LocalDateTime
 
 class S3FeatureTestClaimExists : S3FeatureTest(ClaimInHerkimer.CLAIM_EXISTS)
@@ -31,11 +34,17 @@ class S3FeatureTestClaimNotExists : S3FeatureTest(ClaimInHerkimer.CLAIM_NOT_EXIS
 enum class ClaimInHerkimer { CLAIM_EXISTS, CLAIM_NOT_EXISTS }
 
 abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : AbstractFeatureTest() {
-    val booberAdId = "0123456789"
     override val feature: Feature
         get() = S3Feature(s3Provisioner, herkimerService)
 
-    private val s3Provisioner: S3Provisioner = mockk()
+    private val s3Provisioner = S3Provisioner(
+        FionaRestTemplateWrapper(
+            restTemplate = RestTemplate(),
+            baseUrl = "http://localhost:5000",
+            retries = 0
+        ),
+        "us-east-1"
+    )
     private val herkimerService: HerkimerService = mockk()
 
     @Test
@@ -43,20 +52,26 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
 
         val adId = "1234567890"
         val bucketName = "$affiliation-bucket-t-$cluster-default"
-        val request = S3ProvisioningRequest(
-            bucketName = bucketName,
-            path = adId,
-            userName = adId,
-            access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
-        )
-        val adPayload = ApplicationDeploymentCreateRequest(
-            name = appName,
-            environmentName = environment,
-            cluster = cluster,
-            businessGroup = affiliation
-        )
+
+        httpMockServer(5000) {
+            rule {
+                json("""
+                    {
+                    "host": "http://fiona",
+                    "accessKey": "accessKey",
+                    "secretKey": "secretKey"
+                    }
+                """.trimIndent())
+            }
+        }
+
         val s3ProvisioningResult = S3ProvisioningResult(
-            request,
+            S3ProvisioningRequest(
+                bucketName = bucketName,
+                path = adId,
+                userName = adId,
+                access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
+            ),
             "http://locahost:9000",
             "accessKey",
             "secretKey",
@@ -64,38 +79,7 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
             appName,
             "us-east-1"
         )
-        every { s3Provisioner.provision(request) } returns s3ProvisioningResult
 
-        val booberAdminClaim = listOf(
-            ResourceClaimHerkimer(
-                "0",
-                booberAdId,
-                0L,
-                mapper.createObjectNode(),
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                "aurora",
-                "aurora"
-            )
-        )
-
-        every {
-            herkimerService.getClaimedResources(booberAdId, ResourceKind.MinioPolicy, bucketName)
-        } returns listOf(
-            createResourceHerkimer(booberAdId, booberAdminClaim)
-        )
-
-        every { herkimerService.createApplicationDeployment(adPayload) } returns ApplicationDeploymentHerkimer(
-            id = adId,
-            name = appName,
-            environmentName = environment,
-            cluster = cluster,
-            businessGroup = affiliation,
-            createdDate = LocalDateTime.now(),
-            modifiedDate = LocalDateTime.now(),
-            createdBy = "aurora",
-            modifiedBy = "aurora"
-        )
         if (claimExistsInHerkimer == ClaimInHerkimer.CLAIM_EXISTS) {
             val resourceClaimHerkimer = listOf(
                 ResourceClaimHerkimer(
@@ -109,19 +93,12 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
                     "aurora"
                 )
             )
-            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy) } returns listOf(
+            every { herkimerService.getClaimedResources(any(), any()) } returns listOf(
                 createResourceHerkimer(adId, resourceClaimHerkimer)
             )
         } else {
-            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy) } returns emptyList()
-            every {
-                herkimerService.createResourceAndClaim(
-                    adId,
-                    ResourceKind.MinioPolicy,
-                    s3ProvisioningResult.bucketName,
-                    s3ProvisioningResult
-                )
-            } just Runs
+            every { herkimerService.getClaimedResources(any(), any()) } returns emptyList()
+            every { herkimerService.createResourceAndClaim(any(), any(), any(), any()) } just Runs
         }
 
         val resources = generateResources(
@@ -134,7 +111,11 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
-        val secret: Secret = resources.findResourceByType()
+        resources.verifyS3SecretsAndEnvs()
+    }
+
+    private fun List<AuroraResource>.verifyS3SecretsAndEnvs() {
+        val secret: Secret = this.findResourceByType()
 
         assertThat(secret.data.keys).containsAll(
             "serviceEndpoint",
@@ -145,7 +126,7 @@ abstract class S3FeatureTest(val claimExistsInHerkimer: ClaimInHerkimer) : Abstr
             "objectPrefix"
         )
 
-        val dc = resources.find { it.resource is DeploymentConfig }?.let { it.resource as DeploymentConfig }
+        val dc = this.find { it.resource is DeploymentConfig }?.let { it.resource as DeploymentConfig }
             ?: throw Exception("No dc")
 
         val container = dc.spec.template.spec.containers.first()

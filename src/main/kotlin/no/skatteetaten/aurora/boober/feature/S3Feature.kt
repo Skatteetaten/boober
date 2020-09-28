@@ -61,6 +61,10 @@ class S3Feature(
                 validator = { it.boolean() },
                 defaultValue = false,
                 canBeSimplifiedConfig = true
+            ),
+            AuroraConfigFieldHandler(
+                "$FEATURE_FIELD_NAME_DEFAULTS/bucketName",
+                defaultValue = "${header.affiliation}-bucket-t-${header.cluster}-default"
             )
         )
     }
@@ -80,7 +84,7 @@ class S3Feature(
         val resourceWithClaims =
             herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
 
-        val bucketName = "${adc.affiliation}-bucket-t-${adc.cluster}-default"
+        val bucketName: String = adc["$FEATURE_FIELD_NAME_DEFAULTS/bucketName"]
         val result =
             if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
             else {
@@ -108,6 +112,7 @@ class S3Feature(
 }
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
+private const val FEATURE_FIELD_NAME_DEFAULTS = "beta/s3Defaults"
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)
