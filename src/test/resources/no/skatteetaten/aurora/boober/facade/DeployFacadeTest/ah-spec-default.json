@@ -284,6 +284,18 @@
       }
     }
   },
+  "beta" : {
+    "s3" : {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    }
+  },
   "sts" : {
     "source" : "default",
     "value" : false,

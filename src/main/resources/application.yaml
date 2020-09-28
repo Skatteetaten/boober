@@ -53,6 +53,12 @@ boober:
         suffix: ".${openshift.cluster}.paas.skead.no"
     webseal:
         suffix: ".amutv.skead.no"
+    productionlevel:
+        clusterToLevel:
+            utv: Utvikling
+            qa: Utvikling
+            test: Test
+            prod: Produksjon
 
 aurora:
     token:
@@ -80,7 +86,7 @@ spring:
     profiles: local
 
 
-management.server.port : 9091
+management.server.port: 9091
 application.deployment.id: 1234567890
 
 server:

@@ -8,6 +8,7 @@ aurora:
     token:
         value: token
 
+
 integrations:
     operations:
         scope: "aos-4016"
@@ -71,6 +72,13 @@ boober:
         suffix: ".test"
     webseal:
         suffix: ".test.webseal"
+    applicationdeployment.id: abc4567890
+    productionlevel:
+        clusterToLevel:
+            utv: Utvikling
+            qa: Utvikling
+            test: Test
+            prod: Produksjon
 
 vault:
     operations:

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
@@ -24,7 +25,10 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
 import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
@@ -48,7 +52,9 @@ class S3DisabledFeature : S3FeatureTemplate() {
 @Service
 class S3Feature(
     val s3Provisioner: S3Provisioner,
-    val herkimerService: HerkimerService
+    val herkimerService: HerkimerService,
+    val productionLevels: ProductionLevels,
+    @Value("\${boober.applicationdeployment.id}") val booberApplicationdeploymentId: String
 ) : S3FeatureTemplate() {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -64,13 +70,28 @@ class S3Feature(
         addEnvVarsToDcContainers(resources, envVars)
     }
 
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+        val bucketName = deduceBucketName(adc)
+        getBucketCredentials(bucketName)
+            ?: return listOf(IllegalArgumentException("Could not find credentials for bucket with name=$bucketName, please register the credentials."))
+
+        return emptyList()
+    }
+
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         if (!adc.isS3Enabled) return emptySet()
+
+        val bucketName = deduceBucketName(adc)
+        getBucketCredentials(bucketName)
+            ?: throw IllegalArgumentException("Could not find credentials for bucket with name=$bucketName, please register the credentials.")
 
         val resourceWithClaims =
             herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
 
-        val bucketName = "${adc.affiliation}-bucket-t-${adc.cluster}-default"
         val result =
             if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
             else {
@@ -95,7 +116,25 @@ class S3Feature(
 
         return setOf(s3Secret.generateAuroraResource())
     }
+
+    private fun getBucketCredentials(bucketName: String): JsonNode? =
+        herkimerService.getClaimedResources(
+            claimOwnerId = booberApplicationdeploymentId,
+            resourceKind = ResourceKind.MinioPolicy,
+            name = bucketName
+        ).singleOrNull()
+            ?.claims
+            ?.singleOrNull()
+            ?.credentials
+
+    private fun deduceBucketName(adc: AuroraDeploymentSpec, bucketNameSuffix: String = "default"): String {
+        val productionLevel = productionLevels.findLevelByCluster(adc.cluster)
+        return "${adc.affiliation}-bucket-$productionLevel-$bucketNameSuffix"
+    }
 }
+
+private fun ProductionLevels.findLevelByCluster(cluster: String) =
+    this.clusterToLevel[cluster]?.shortFormat ?: throw Error("")
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
 
@@ -148,4 +187,12 @@ abstract class S3FeatureTemplate : Feature {
             )
         )
     }
+}
+
+@ConfigurationProperties("boober.productionlevel")
+@ConstructorBinding
+data class ProductionLevels(
+    val clusterToLevel: Map<String, ProductionLevel>
+) {
+    enum class ProductionLevel(val shortFormat: String) { Utvikling("u"), Test("t"), Produksjon("p") }
 }

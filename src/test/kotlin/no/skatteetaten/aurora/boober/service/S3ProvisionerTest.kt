@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
 import assertk.assertThat
-import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isNotEmpty
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTemplateWrapper
@@ -56,6 +55,5 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
         val result = provisioner.provision(request)
 
         assertThat(result.objectPrefix).isNotEmpty()
-        assertThat(result.request).isEqualTo(request)
     }
 }
