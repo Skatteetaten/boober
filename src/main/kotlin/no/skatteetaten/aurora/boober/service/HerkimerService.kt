@@ -37,6 +37,13 @@ data class ResourceClaimPayload(
     val credentials: Any
 )
 
+data class ApplicationDeploymentCreateRequest(
+    val name: String,
+    val environmentName: String,
+    val cluster: String,
+    val businessGroup: String
+)
+
 data class ApplicationDeploymentHerkimer(
     val id: String,
     val name: String,
@@ -166,3 +173,4 @@ internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(Jdk8Module())
     .registerModule(JavaTimeModule())
     .registerModule(ParameterNamesModule())
+

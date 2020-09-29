@@ -53,12 +53,7 @@ boober:
         suffix: ".${openshift.cluster}.paas.skead.no"
     webseal:
         suffix: ".amutv.skead.no"
-    productionlevel:
-        clusterToLevel:
-            utv: Utvikling
-            qa: Utvikling
-            test: Test
-            prod: Produksjon
+    productionlevel: "u"
 
 aurora:
     token:
