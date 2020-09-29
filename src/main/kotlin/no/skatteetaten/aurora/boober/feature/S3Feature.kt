@@ -93,23 +93,25 @@ class S3Feature(
             herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
 
         val result =
-            if (resourceWithClaims?.claims != null) jacksonObjectMapper().convertValue(resourceWithClaims.claims.single().credentials)
-            else {
-                val request = S3ProvisioningRequest(
-                    bucketName = bucketName,
-                    path = adc.applicationDeploymentId,
-                    userName = adc.applicationDeploymentId,
-                    access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
-                )
-
-                s3Provisioner.provision(request).also {
-                    herkimerService.createResourceAndClaim(
-                        adc.applicationDeploymentId,
-                        ResourceKind.MinioPolicy,
-                        it.bucketName,
-                        it
+            when (val credentials = resourceWithClaims?.claims?.singleOrNull()) {
+                null -> {
+                    val request = S3ProvisioningRequest(
+                        bucketName = bucketName,
+                        path = adc.applicationDeploymentId,
+                        userName = adc.applicationDeploymentId,
+                        access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
                     )
+
+                    s3Provisioner.provision(request).also {
+                        herkimerService.createResourceAndClaim(
+                            adc.applicationDeploymentId,
+                            ResourceKind.MinioPolicy,
+                            it.bucketName,
+                            it
+                        )
+                    }
                 }
+                else -> jacksonObjectMapper().convertValue(credentials)
             }
 
         val s3Secret = result.createS3Secret(adc.namespace, adc.s3SecretName)
@@ -134,7 +136,8 @@ class S3Feature(
 }
 
 private fun ProductionLevels.findLevelByCluster(cluster: String) =
-    this.clusterToLevel[cluster]?.shortFormat ?: throw Error("")
+    this.clusterToLevel[cluster]?.shortFormat
+        ?: throw IllegalArgumentException("Could not find productionlevel for cluster=$cluster")
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
 
@@ -173,7 +176,7 @@ fun S3ProvisioningResult.createS3Secret(nsName: String, s3SecretName: String) = 
         "bucketRegion" to bucketRegion,
         "bucketName" to bucketName,
         "objectPrefix" to objectPrefix
-    ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
+    ).mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
 }
 
 abstract class S3FeatureTemplate : Feature {

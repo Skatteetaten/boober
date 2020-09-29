@@ -103,15 +103,15 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 
     fun applicationDeploymentGenerationMock(): MockWebServer {
         val ad = ApplicationDeploymentHerkimer(
-            "1234567890",
-            "name",
-            "env",
-            "cluster",
-            "aurora",
-            LocalDateTime.now(),
-            LocalDateTime.now(),
-            "aurora",
-            "aurora"
+            id = "1234567890",
+            name = "name",
+            environmentName = "env",
+            cluster = "cluster",
+            businessGroup = "aurora",
+            createdDate = LocalDateTime.now(),
+            modifiedDate = LocalDateTime.now(),
+            createdBy = "aurora",
+            modifiedBy = "aurora"
         )
 
         return herkimerMock {

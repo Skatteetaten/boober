@@ -113,9 +113,7 @@ class HerkimerService(
         resourceKind: ResourceKind,
         name: String? = null
     ): List<ResourceHerkimer> {
-        val url = "/resource?claimedBy=$claimOwnerId&resourceKind=$resourceKind${
-            if (name != null) "&name=$name" else ""
-        }"
+        val url = "/resource?claimedBy=$claimOwnerId&resourceKind=$resourceKind${ name?.let { "&name=$it" } ?: ""}"
 
         val herkimerResponse = client.get(
             HerkimerResponse::class,

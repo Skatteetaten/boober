@@ -121,13 +121,15 @@ class HerkimerServiceTest {
         )
 
         server.execute(herkimerResponse) {
-            assertThat { service.getClaimedResources(adId, ResourceKind.MinioPolicy) }.isSuccess()
+            assertThat { service.getClaimedResources(adId, ResourceKind.MinioPolicy, name = "bucketname") }.isSuccess()
                 .given { listOfResources ->
                     assertThat(listOfResources.singleOrNull()).isNotNull().given { resource ->
+
                         assertThat(resource.ownerId).isEqualTo(adId)
-                        assertThat(resource.claims?.singleOrNull()).isNotNull().given {
-                            assertThat(it.credentials).isEqualTo(credentials)
-                        }
+
+                        assertThat(resource.claims?.singleOrNull()?.credentials)
+                            .isNotNull()
+                            .isEqualTo(credentials)
                     }
                 }
         }

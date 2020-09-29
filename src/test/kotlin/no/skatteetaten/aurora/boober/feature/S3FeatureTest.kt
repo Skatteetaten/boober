@@ -44,6 +44,7 @@ class S3FeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `verify creates secret with value mappings in dc when claim does not exist in herkimer`() {
+        every { s3Provisioner.provision(any()) } returns s3ProvisioningResult
         mockHerkimer(booberAdId = booberAdId, claimExistsInHerkimer = false)
 
         val resources = generateResources(
@@ -82,7 +83,6 @@ class S3FeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `verify creates secret with value mappings in dc when claim exists in herkimer`() {
-        every { s3Provisioner.provision(any()) } returns s3ProvisioningResult
         mockHerkimer(booberAdId, true)
 
         val resources = generateResources(
