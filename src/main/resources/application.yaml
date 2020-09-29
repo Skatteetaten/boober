@@ -53,6 +53,7 @@ boober:
         suffix: ".${openshift.cluster}.paas.skead.no"
     webseal:
         suffix: ".amutv.skead.no"
+    productionlevel: "u"
 
 aurora:
     token:
@@ -64,7 +65,7 @@ aurora:
 logging:
     level:
         no.skatteetaten: INFO
-        no.skatteetaten.aurora.boober: DEBUG
+        no.skatteetaten.aurora.boober: INFO
         org:
             jboss: WARN
             hibernate: WARN
@@ -80,8 +81,7 @@ spring:
     profiles: local
 
 
-management.server.port : 9091
-application.deployment.id: 1234567890
+management.server.port: 9091
 
 server:
     port: 8080
@@ -98,9 +98,9 @@ integrations:
     skap:
         url: http://localhost:9090
     fiona:
-        url: http://fiona-aurora-dev.${openshift.cluster}.paas.skead.no
+        url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: http://m96405-herkimer-aurora-dev.utv.paas.skead.no/
+        url: http://m96405-herkimer-aurora-dev.${openshift.cluster}.paas.skead.no
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}

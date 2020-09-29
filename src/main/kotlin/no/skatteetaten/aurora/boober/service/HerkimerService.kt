@@ -37,6 +37,13 @@ data class ResourceClaimPayload(
     val credentials: Any
 )
 
+data class ApplicationDeploymentCreateRequest(
+    val name: String,
+    val environmentName: String,
+    val cluster: String,
+    val businessGroup: String
+)
+
 data class ApplicationDeploymentHerkimer(
     val id: String,
     val name: String,
@@ -113,9 +120,7 @@ class HerkimerService(
         resourceKind: ResourceKind,
         name: String? = null
     ): List<ResourceHerkimer> {
-        val url = "/resource?claimedBy=$claimOwnerId&resourceKind=$resourceKind${
-            if (name != null) "&name=$name" else ""
-        }"
+        val url = "/resource?claimedBy=$claimOwnerId&resourceKind=$resourceKind${ name?.let { "&name=$it" } ?: ""}"
 
         val herkimerResponse = client.get(
             HerkimerResponse::class,

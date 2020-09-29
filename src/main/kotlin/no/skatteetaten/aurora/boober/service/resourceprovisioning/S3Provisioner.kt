@@ -22,7 +22,6 @@ enum class S3Access {
 }
 
 data class S3ProvisioningResult(
-    val request: S3ProvisioningRequest,
     val serviceEndpoint: String,
     val accessKey: String,
     val secretKey: String,
@@ -70,7 +69,6 @@ class S3Provisioner(
         }
 
         return S3ProvisioningResult(
-            request = request,
             serviceEndpoint = response.host,
             accessKey = response.accessKey,
             secretKey = response.secretKey,

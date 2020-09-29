@@ -401,8 +401,8 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         }
     }
 
-    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String) = transform { ar ->
-        val actual = ar.sources.first()
+    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String, index: Int = 0) = transform { ar ->
+        val actual = ar.sources.toList()[index]
         val expected = AuroraResourceSource(feature::class.java, comment)
         if (actual == expected) {
             ar

@@ -109,6 +109,8 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     enabled: false
                  default |     insecurePolicy: "None"
                  default |     termination: "edge"
+                         | beta:
+                 default |   s3: false
                          | secretVaults:
                          |   foo:
                  default |     name: "foo"
