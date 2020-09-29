@@ -82,7 +82,6 @@ spring:
 
 
 management.server.port: 9091
-application.deployment.id: 1234567890
 
 server:
     port: 8080
