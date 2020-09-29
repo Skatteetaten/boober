@@ -32,10 +32,11 @@ import java.time.LocalDateTime
 class S3FeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = S3Feature(
-            s3Provisioner,
-            herkimerService,
-            ProductionLevels(mapOf("utv" to ProductionLevels.ProductionLevel.Utvikling)),
-            booberAdId
+            s3Provisioner = s3Provisioner,
+            herkimerService = herkimerService,
+            cluster = "utv",
+            productionLevel = "u",
+            booberApplicationdeploymentId = booberAdId
         )
     val booberAdId = "abc4567890"
 
