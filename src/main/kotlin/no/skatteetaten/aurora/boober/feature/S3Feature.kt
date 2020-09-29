@@ -93,7 +93,7 @@ class S3Feature(
             herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
 
         val result =
-            when (val credentials = resourceWithClaims?.claims?.singleOrNull()) {
+            when (val credentials = resourceWithClaims?.claims?.singleOrNull()?.credentials) {
                 null -> {
                     val request = S3ProvisioningRequest(
                         bucketName = bucketName,

@@ -117,7 +117,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 adId = booberAdId,
                 claims = createResourceClaim(
                     adId = booberAdId,
-                    s3ProvisioningResult = jacksonObjectMapper().createObjectNode()
+                    s3ProvisioningResult = jacksonObjectMapper().convertValue(s3ProvisioningResult)
                 )
             )
         )
