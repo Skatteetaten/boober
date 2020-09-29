@@ -173,4 +173,3 @@ internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(Jdk8Module())
     .registerModule(JavaTimeModule())
     .registerModule(ParameterNamesModule())
-

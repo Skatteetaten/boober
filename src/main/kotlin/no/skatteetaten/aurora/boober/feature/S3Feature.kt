@@ -74,7 +74,7 @@ class S3Feature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        if(fullValidation && adc.cluster == cluster && adc.isS3Enabled ){
+        if (fullValidation && adc.cluster == cluster && adc.isS3Enabled) {
             val bucketName = "${adc.affiliation}-bucket-$productionLevel-default"
 
             getBucketCredentials(bucketName)
@@ -82,7 +82,6 @@ class S3Feature(
         }
 
         return emptyList()
-
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
@@ -130,7 +129,6 @@ class S3Feature(
             ?.singleOrNull()
             ?.credentials
 }
-
 
 private const val FEATURE_FIELD_NAME = "beta/s3"
 
@@ -184,4 +182,3 @@ abstract class S3FeatureTemplate : Feature {
         )
     }
 }
-
