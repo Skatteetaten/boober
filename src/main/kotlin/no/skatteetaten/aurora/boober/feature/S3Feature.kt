@@ -51,7 +51,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
 class S3Feature(
     val s3Provisioner: S3Provisioner,
     val herkimerService: HerkimerService,
-    @Value("\${boober.applicationdeployment.id}") val booberApplicationdeploymentId: String,
+    @Value("\${application.deployment.id}") val booberApplicationdeploymentId: String,
     @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${boober.productionlevel}") val productionLevel: String
 ) : S3FeatureTemplate() {
