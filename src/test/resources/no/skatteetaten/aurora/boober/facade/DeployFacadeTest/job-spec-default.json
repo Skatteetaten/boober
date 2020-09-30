@@ -341,6 +341,18 @@
           "value": false
         }
       ]
+    },
+    "s3Defaults" : {
+      "bucketName": {
+        "source": "default",
+        "value": "default",
+        "sources": [
+          {
+            "name": "default",
+            "value": "default"
+          }
+        ]
+      }
     }
   },
   "secretVaults" : {

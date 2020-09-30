@@ -111,6 +111,8 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     termination: "edge"
                          | beta:
                  default |   s3: false
+                         |   s3Defaults:
+                 default |     bucketName: "default"
                          | secretVaults:
                          |   foo:
                  default |     name: "foo"

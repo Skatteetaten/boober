@@ -39,6 +39,8 @@ utv/about.json | cluster: "utv"
        default |     termination: "edge"
                | beta:
        default |   s3: false
+               |   s3Defaults:
+       default |     bucketName: "default"
        default | sts: false
        default | toxiproxy: false
        default | webseal: false
