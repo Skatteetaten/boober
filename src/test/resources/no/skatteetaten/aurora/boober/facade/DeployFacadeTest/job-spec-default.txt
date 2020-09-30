@@ -41,10 +41,6 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
-               | beta:
-       default |   s3: false
-               |   s3Defaults:
-       default |     bucketName: "default"
                | secretVaults:
                |   foo:
        default |     name: "foo"

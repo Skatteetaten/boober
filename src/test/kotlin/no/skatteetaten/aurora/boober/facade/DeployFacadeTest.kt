@@ -13,6 +13,7 @@ import com.fkorotkov.openshift.status
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
@@ -34,7 +36,7 @@ private val logger = KotlinLogging.logger { }
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
+class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: String) : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: DeployFacade
@@ -43,7 +45,41 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @BeforeEach
     fun beforeDeploy() {
         preprateTestVault(vaultName, mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
-        applicationDeploymentGenerationMock()
+        fionaMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("fionaResponse.json"))
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+        }
+
+        val adId = "1234567890"
+        applicationDeploymentGenerationMock(adId) {
+            rule({
+                path.contains("resource?claimedBy=$booberAdId")
+            }) {
+                MockResponse()
+                    .setBody(loadBufferResource("herkimerResponseBucketAdmin.json"))
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+            rule({
+                path.contains("resource?claimedBy=$adId")
+            }) {
+                json(HerkimerResponse<Any>())
+            }
+            rule({
+                path.endsWith("/resource")
+            }) {
+                MockResponse()
+                    .setBody(loadBufferResource("herkimerResponseCreateResource.json"))
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+            rule({
+                path.endsWith("/resource/1/claims")
+            }) {
+                json(HerkimerResponse<Any>())
+            }
+        }
     }
 
     @Test

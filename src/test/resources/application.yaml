@@ -54,6 +54,9 @@ integrations:
         url: "http://localhost:${integrations.cantus.port}"
         port: 8085
         token: "token"
+    fiona:
+        url: "http://localhost:${integrations.fiona.port}"
+        port: 8088
     herkimer:
         url: "http://localhost:${integrations.herkimer.port}"
         port: 8087
@@ -73,12 +76,7 @@ boober:
         suffix: ".test"
     webseal:
         suffix: ".test.webseal"
-    productionlevel:
-        clusterToLevel:
-            utv: Utvikling
-            qa: Utvikling
-            test: Test
-            prod: Produksjon
+    productionlevel: "u"
 
 vault:
     operations:

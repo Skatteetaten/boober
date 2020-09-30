@@ -26,7 +26,7 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @BeforeEach
     fun beforeEachTest() {
-        applicationDeploymentGenerationMock()
+        applicationDeploymentGenerationMock("1234567890")
     }
 
     @Test

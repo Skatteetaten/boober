@@ -1,0 +1,5 @@
+{
+  "accessKey": "accesskey",
+  "secretKey": "some-key",
+  "host": "http://fiona"
+}

@@ -64,6 +64,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @Value("\${integrations.herkimer.port}")
     lateinit var herkimerPort: String
 
+    @Value("\${integrations.fiona.port}")
+    lateinit var fionaPort: String
+
     fun RecordedRequest.replayRequestJsonWithModification(
         rootPath: String,
         key: String,
@@ -98,12 +101,16 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         return httpMockServer(dbhPort.toInt(), block)
     }
 
+    fun fionaMock(block: HttpMock.() -> Unit = {}): MockWebServer {
+        return httpMockServer(fionaPort.toInt(), block)
+    }
+
     fun herkimerMock(block: HttpMock.() -> Unit = {}): MockWebServer =
         httpMockServer(herkimerPort.toInt(), block)
 
-    fun applicationDeploymentGenerationMock(): MockWebServer {
+    fun applicationDeploymentGenerationMock(adId: String = "1234567890", also: HttpMock.() -> Unit = {}): MockWebServer {
         val ad = ApplicationDeploymentHerkimer(
-            id = "1234567890",
+            id = adId,
             name = "name",
             environmentName = "env",
             cluster = "cluster",
@@ -115,9 +122,12 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         )
 
         return herkimerMock {
-            rule {
+            rule({
+                path.contains("applicationDeployment")
+            }) {
                 json(HerkimerResponse(items = listOf(ad)))
             }
+            also()
         }
     }
 
