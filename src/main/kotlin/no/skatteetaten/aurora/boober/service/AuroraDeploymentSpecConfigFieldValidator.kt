@@ -3,8 +3,6 @@ package no.skatteetaten.aurora.boober.service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -14,13 +12,12 @@ import no.skatteetaten.aurora.boober.utils.findAllPointers
 private val logger = KotlinLogging.logger {}
 
 class AuroraDeploymentSpecConfigFieldValidator(
-    val applicationDeploymentRef: ApplicationDeploymentRef,
     val applicationFiles: List<AuroraConfigFile>,
     val fieldHandlers: Set<AuroraConfigFieldHandler>,
     val fields: Map<String, AuroraConfigField>
 ) {
 
-    fun validate(fullValidation: Boolean = true) {
+    fun validate(fullValidation: Boolean = true): List<ConfigFieldErrorDetail> {
 
         val envPointers = listOf(
             "env/name", "env/ttl", "envName", "affiliation",
@@ -77,13 +74,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
             emptyList()
         }
 
-        (errors + unmappedErrors).takeIf { it.isNotEmpty() }?.let {
-            val aid = applicationDeploymentRef
-            throw AuroraConfigException(
-                "Config for application ${aid.application} in environment ${aid.environment} contains errors",
-                errors = it
-            )
-        }
+        return errors + unmappedErrors
     }
 
     private fun getUnmappedPointers(): Map<String, List<String>> {

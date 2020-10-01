@@ -44,7 +44,8 @@ class AuroraConfigFacade(
     fun findAuroraDeploymentSpecSingle(
         ref: AuroraConfigRef,
         adr: ApplicationDeploymentRef,
-        overrideFiles: List<AuroraConfigFile>
+        overrideFiles: List<AuroraConfigFile>,
+        errorsAsWarnings: Boolean
     ): AuroraDeploymentSpec {
 
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
@@ -52,7 +53,8 @@ class AuroraConfigFacade(
             auroraConfig = auroraConfig,
             applicationDeploymentRef = adr,
             auroraConfigRef = ref,
-            overrides = overrideFiles
+            overrides = overrideFiles,
+            errorsAsWarnings = errorsAsWarnings
         )
         return auroraDeploymentContextService.findApplicationDeploymentSpec(cmd)
     }

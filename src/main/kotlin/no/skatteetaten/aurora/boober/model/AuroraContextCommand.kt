@@ -6,7 +6,8 @@ data class AuroraContextCommand(
     val auroraConfig: AuroraConfig,
     val applicationDeploymentRef: ApplicationDeploymentRef,
     val auroraConfigRef: AuroraConfigRef,
-    val overrides: List<AuroraConfigFile> = emptyList()
+    val overrides: List<AuroraConfigFile> = emptyList(),
+    val errorsAsWarnings: Boolean = false
 ) {
 
     val applicationFiles: List<AuroraConfigFile> by lazy {

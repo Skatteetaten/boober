@@ -24,6 +24,17 @@ open class ErrorDetail(val type: ErrorType = ErrorType.GENERIC, val message: Str
 class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: AuroraConfigFieldError? = null) :
     ErrorDetail(type, message) {
 
+    fun asWarning(): String {
+        val fieldMessage = field?.let {
+            if (it.fileName == null) {
+                "path=${it.path}"
+            } else {
+                "file=${it.fileName} path=${it.path}"
+            }
+        } ?: ""
+        return "ERROR type=$type  $fieldMessage message=$message"
+    }
+
     companion object {
         fun illegal(
             message: String,

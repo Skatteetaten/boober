@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import java.lang.Integer.max
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
