@@ -12,9 +12,11 @@ class IdService(
     val configuration: HerkimerConfiguration
 ) {
     fun generateOrFetchId(request: ApplicationDeploymentCreateRequest): String =
-        configuration.fallback.getOrElse(request.name) {
+        runCatching {
             herkimerService.createApplicationDeployment(request).id
-        }
+        }.recover {
+            configuration.fallback[request.name] ?: throw it
+        }.getOrThrow()
 }
 
 @Service

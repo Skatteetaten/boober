@@ -30,7 +30,7 @@ annotation class ConditionalOnPropertyMissingOrEmpty(vararg val value: String) {
                 }
 
             return properties?.any {
-                it == null
+                it == null || it == "false"
             } ?: true
         }
     }
