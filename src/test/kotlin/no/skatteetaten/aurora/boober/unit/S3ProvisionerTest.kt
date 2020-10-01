@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.isFailure
@@ -27,7 +27,7 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
 
     val request = S3ProvisioningRequest(
         "bucketName",
-        "path",
+"path",
         "username",
         listOf(S3Access.WRITE)
     )
