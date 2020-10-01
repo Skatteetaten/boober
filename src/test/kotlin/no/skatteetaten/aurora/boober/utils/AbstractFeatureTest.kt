@@ -246,7 +246,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             idService.generateOrFetchId(any())
         } returns "1234567890"
 
-        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService)
+        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService, idServiceFallback = null)
         val auroraConfig = createAuroraConfig(file.toMap())
 
         val deployCommand = AuroraContextCommand(
@@ -271,7 +271,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         every {
             idService.generateOrFetchId(any())
         } returns "1234567890"
-        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService)
+        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService, idServiceFallback = null)
         val auroraConfig =
             createAuroraConfig(config.addIfNotNull("$environment/simple.json" to app), files)
 

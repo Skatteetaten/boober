@@ -16,20 +16,22 @@ import org.springframework.core.type.AnnotatedTypeMetadata
 )
 @Retention(RetentionPolicy.RUNTIME)
 @Conditional(ConditionalOnPropertyMissingOrEmpty.OnPropertyNotEmptyCondition::class)
-annotation class ConditionalOnPropertyMissingOrEmpty(val value: String) {
+annotation class ConditionalOnPropertyMissingOrEmpty(vararg val value: String) {
 
     class OnPropertyNotEmptyCondition : Condition {
 
         override fun matches(context: ConditionContext, metadata: AnnotatedTypeMetadata): Boolean {
 
-            val property: String? = metadata.getAnnotationAttributes(ConditionalOnPropertyMissingOrEmpty::class.java.name)
+            val properties: List<String?>? = metadata.getAnnotationAttributes(ConditionalOnPropertyMissingOrEmpty::class.java.name)
                 ?.let {
-                    it["value"] as String?
-                }?.let {
-                    context.environment.getProperty(it)
+                    it["value"] as Array<*>
+                }?.map {
+                    context.environment.getProperty(it as String)
                 }
 
-            return property.isNullOrEmpty()
+            return properties?.any {
+                it == null
+            } ?: true
         }
     }
 }

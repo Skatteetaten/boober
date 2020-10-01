@@ -14,6 +14,7 @@ import io.mockk.clearAllMocks
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentCreateRequest
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
 import no.skatteetaten.aurora.boober.service.EmptyBodyException
+import no.skatteetaten.aurora.boober.service.HerkimerConfiguration
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.service.HerkimerRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.HerkimerService
@@ -39,8 +40,10 @@ class HerkimerServiceTest {
     val service = HerkimerService(
         client = HerkimerRestTemplateWrapper(
             RestTemplateBuilder().rootUri(server.url).build(),
-            retries = 0,
-            baseUrl = ""
+            HerkimerConfiguration(
+                retries = 0,
+                url = ""
+            )
         )
     )
 

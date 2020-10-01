@@ -31,7 +31,7 @@ import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
-@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url")
+@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
 @Service
 class S3DisabledFeature : S3FeatureTemplate() {
     override fun validate(
@@ -46,7 +46,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
         }
 }
 
-@ConditionalOnProperty("integrations.fiona.url")
+@ConditionalOnProperty(value = ["integrations.fiona.url", "integrations.herkimer.url"])
 @Service
 class S3Feature(
     val s3Provisioner: S3Provisioner,

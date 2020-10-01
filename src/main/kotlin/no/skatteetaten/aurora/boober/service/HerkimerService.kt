@@ -13,8 +13,9 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
@@ -89,13 +90,17 @@ data class ResourcePayload(
     val ownerId: String
 )
 
+@ConditionalOnProperty("integrations.herkimer.url")
+@ConfigurationProperties(prefix = "integrations.herkimer")
+@ConstructorBinding
+data class HerkimerConfiguration(val url: String, val fallback: Map<String, String> = emptyMap(), val retries: Int = 3)
+
 @Component
 @ConditionalOnProperty("integrations.herkimer.url")
 class HerkimerRestTemplateWrapper(
     @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
-    @Value("\${integrations.herkimer.url}") override val baseUrl: String,
-    @Value("\${integrations.herkimer.retries:3}") override val retries: Int
-) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries, baseUrl = baseUrl)
+    val configuration: HerkimerConfiguration
+) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = configuration.retries, baseUrl = configuration.url)
 
 @Service
 @ConditionalOnProperty("integrations.herkimer.url")
