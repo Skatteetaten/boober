@@ -87,10 +87,15 @@ class S3Feature(
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         if (!adc.isS3Enabled) return emptySet()
 
-        val resourceWithClaims =
-            herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
-
         val bucketName = adc.deduceBucketName()
+
+        val resourceWithClaims =
+            herkimerService.getClaimedResources(
+                claimOwnerId = adc.applicationDeploymentId,
+                resourceKind = ResourceKind.MinioPolicy,
+                name = bucketName
+            ).firstOrNull()
+
         val result =
             when (val credentials = resourceWithClaims?.claims?.singleOrNull()?.credentials) {
                 null -> {

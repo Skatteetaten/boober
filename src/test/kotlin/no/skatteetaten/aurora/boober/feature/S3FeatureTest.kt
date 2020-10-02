@@ -149,7 +149,7 @@ class S3FeatureTest : AbstractFeatureTest() {
             )
         )
         if (claimExistsInHerkimer) {
-            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy) } returns listOf(
+            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy, any()) } returns listOf(
                 createResourceHerkimer(
                     adId = adId,
                     claims = createResourceClaim(
@@ -168,7 +168,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 )
             )
         } else {
-            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy) } returns emptyList()
+            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy, any()) } returns emptyList()
             every {
                 herkimerService.createResourceAndClaim(any(), any(), any(), any())
             } just Runs
