@@ -2,11 +2,9 @@
   "version": "1",
   "groupId": "org.test",
   "database": true,
-  "beta": {
-    "s3": true,
-    "s3Defaults": {
-      "bucketName": "minYndlingsBucket"
-    }
+  "s3": true,
+  "s3Defaults": {
+    "bucketName": "minYndlingsBucket"
   },
   "sts": true,
   "route": true

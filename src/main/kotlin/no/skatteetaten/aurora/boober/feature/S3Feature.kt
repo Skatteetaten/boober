@@ -133,8 +133,8 @@ class S3Feature(
             ?.credentials
 }
 
-private const val FEATURE_FIELD_NAME = "beta/s3"
-private const val FEATURE_FIELD_NAME_DEFAULTS = "beta/s3Defaults"
+private const val FEATURE_FIELD_NAME = "s3"
+private const val FEATURE_FIELD_NAME_DEFAULTS = "s3Defaults"
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)

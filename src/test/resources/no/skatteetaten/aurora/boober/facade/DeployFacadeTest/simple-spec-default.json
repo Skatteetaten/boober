@@ -1,462 +1,564 @@
 {
-  "applicationDeploymentRef" : {
-    "source" : "static",
-    "value" : "utv/simple",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "utv/simple"
-    } ]
-  },
-  "configVersion" : {
-    "source" : "static",
-    "value" : "master",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "master"
-    } ]
-  },
-  "applicationDeploymentId" : {
-    "source" : "static",
-    "value" : "1234567890",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "1234567890"
-    } ]
-  },
-  "schemaVersion" : {
-    "source" : "about.json",
-    "value" : "v1",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "v1"
-    } ]
-  },
-  "type" : {
-    "source" : "about.json",
-    "value" : "deploy",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "deploy"
-    } ]
-  },
-  "deployState" : {
-    "source" : "default",
-    "value" : "deploymentConfig",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "deploymentConfig"
-    } ]
-  },
-  "applicationPlatform" : {
-    "source" : "default",
-    "value" : "java",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "java"
-    } ]
-  },
-  "affiliation" : {
-    "source" : "about.json",
-    "value" : "paas",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "paas"
-    } ]
-  },
-  "segment" : {
-    "source" : "about.json",
-    "value" : "aurora",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "aurora"
-    } ]
-  },
-  "cluster" : {
-    "source" : "utv/about.json",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "utv"
-    }, {
-      "name" : "utv/about.json",
-      "value" : "utv"
-    } ]
-  },
-  "permissions" : {
-    "admin" : {
-      "source" : "about.json",
-      "value" : "APP_PaaS_drift APP_PaaS_utv",
-      "sources" : [ {
-        "name" : "about.json",
-        "value" : "APP_PaaS_drift APP_PaaS_utv"
-      } ]
-    }
-  },
-  "envName" : {
-    "source" : "folderName",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "folderName",
-      "value" : "utv"
-    } ]
-  },
-  "name" : {
-    "source" : "fileName",
-    "value" : "simple",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "simple"
-    } ]
-  },
-  "certificate" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "groupId" : {
-    "source" : "simple.json",
-    "value" : "org.test",
-    "sources" : [ {
-      "name" : "simple.json",
-      "value" : "org.test"
-    } ]
-  },
-  "databaseDefaults" : {
-    "flavor" : {
-      "source" : "default",
-      "value" : "ORACLE_MANAGED",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "ORACLE_MANAGED"
-      } ]
-    },
-    "generate" : {
-      "source" : "default",
-      "value" : true,
-      "sources" : [ {
-        "name" : "default",
-        "value" : true
-      } ]
-    },
-    "name" : {
-      "source" : "default",
-      "value" : "@name@",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "@name@"
-      } ]
-    }
-  },
-  "database" : {
-    "source" : "simple.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
-    } ]
-  },
-  "management" : {
-    "path" : {
-      "source" : "default",
-      "value" : "actuator",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "actuator"
-      } ]
-    },
-    "port" : {
-      "source" : "default",
-      "value" : "8081",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "8081"
-      } ]
-    },
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ]
-  },
-  "alarm" : {
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ]
-  },
-  "pause" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "debug" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "version" : {
-    "source" : "simple.json",
-    "value" : "1",
-    "sources" : [ {
-      "name" : "simple.json",
-      "value" : "1"
-    } ]
-  },
-  "resources" : {
-    "cpu" : {
-      "min" : {
-        "source" : "default",
-        "value" : "10m",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "10m"
-        } ]
-      },
-      "max" : {
-        "source" : "default",
-        "value" : "2000m",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "2000m"
-        } ]
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/simple",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/simple"
       }
-    },
-    "memory" : {
-      "min" : {
-        "source" : "default",
-        "value" : "128Mi",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "128Mi"
-        } ]
-      },
-      "max" : {
-        "source" : "default",
-        "value" : "512Mi",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "512Mi"
-        } ]
+    ]
+  },
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
       }
-    }
+    ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "simple",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "simple"
-    } ]
-  },
-  "deployStrategy" : {
-    "type" : {
-      "source" : "default",
-      "value" : "rolling",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "rolling"
-      } ]
-    },
-    "timeout" : {
-      "source" : "default",
-      "value" : 180,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 180
-      } ]
-    }
-  },
-  "replicas" : {
-    "source" : "default",
-    "value" : 1,
-    "sources" : [ {
-      "name" : "default",
-      "value" : 1
-    } ]
-  },
-  "prometheus" : {
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ],
-    "path" : {
-      "source" : "default",
-      "value" : "/prometheus",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "/prometheus"
-      } ]
-    },
-    "port" : {
-      "source" : "default",
-      "value" : 8081,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 8081
-      } ]
-    }
-  },
-  "readiness" : {
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ],
-    "port" : {
-      "source" : "default",
-      "value" : 8080,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 8080
-      } ]
-    },
-    "delay" : {
-      "source" : "default",
-      "value" : 10,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 10
-      } ]
-    },
-    "timeout" : {
-      "source" : "default",
-      "value" : 1,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 1
-      } ]
-    }
-  },
-  "liveness" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "route" : {
-    "source" : "simple.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
-    } ]
-  },
-  "routeDefaults" : {
-    "host" : {
-      "source" : "default",
-      "value" : "@name@-@affiliation@-@env@",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "@name@-@affiliation@-@env@"
-      } ]
-    },
-    "tls" : {
-      "enabled" : {
-        "source" : "default",
-        "value" : false,
-        "sources" : [ {
-          "name" : "default",
-          "value" : false
-        } ]
-      },
-      "insecurePolicy" : {
-        "source" : "default",
-        "value" : "None",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "None"
-        } ]
-      },
-      "termination" : {
-        "source" : "default",
-        "value" : "edge",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "edge"
-        } ]
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
       }
+    ]
+  },
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
+  },
+  "type": {
+    "source": "about.json",
+    "value": "deploy",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      }
+    ]
+  },
+  "deployState": {
+    "source": "default",
+    "value": "deploymentConfig",
+    "sources": [
+      {
+        "name": "default",
+        "value": "deploymentConfig"
+      }
+    ]
+  },
+  "applicationPlatform": {
+    "source": "default",
+    "value": "java",
+    "sources": [
+      {
+        "name": "default",
+        "value": "java"
+      }
+    ]
+  },
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
+  },
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
     }
   },
-  "beta" : {
-    "s3" : {
-      "source": "simple.json",
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
+  },
+  "name": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
+  },
+  "certificate": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "groupId": {
+    "source": "simple.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "simple.json",
+        "value": "org.test"
+      }
+    ]
+  },
+  "databaseDefaults": {
+    "flavor": {
+      "source": "default",
+      "value": "ORACLE_MANAGED",
+      "sources": [
+        {
+          "name": "default",
+          "value": "ORACLE_MANAGED"
+        }
+      ]
+    },
+    "generate": {
+      "source": "default",
       "value": true,
       "sources": [
         {
           "name": "default",
-          "value": false
-        },
-        {
-          "name": "simple.json",
           "value": true
         }
       ]
     },
-    "s3Defaults" : {
-      "bucketName": {
-        "source": "simple.json",
-        "value": "minYndlingsBucket",
+    "name": {
+      "source": "default",
+      "value": "@name@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@"
+        }
+      ]
+    }
+  },
+  "database": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
+  },
+  "management": {
+    "path": {
+      "source": "default",
+      "value": "actuator",
+      "sources": [
+        {
+          "name": "default",
+          "value": "actuator"
+        }
+      ]
+    },
+    "port": {
+      "source": "default",
+      "value": "8081",
+      "sources": [
+        {
+          "name": "default",
+          "value": "8081"
+        }
+      ]
+    },
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "alarm": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "pause": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "version": {
+    "source": "simple.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "simple.json",
+        "value": "1"
+      }
+    ]
+  },
+  "resources": {
+    "cpu": {
+      "min": {
+        "source": "default",
+        "value": "10m",
         "sources": [
           {
             "name": "default",
-            "value": "default"
-          },
+            "value": "10m"
+          }
+        ]
+      },
+      "max": {
+        "source": "default",
+        "value": "2000m",
+        "sources": [
           {
-            "name": "simple.json",
-            "value": "minYndlingsBucket"
+            "name": "default",
+            "value": "2000m"
+          }
+        ]
+      }
+    },
+    "memory": {
+      "min": {
+        "source": "default",
+        "value": "128Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "128Mi"
+          }
+        ]
+      },
+      "max": {
+        "source": "default",
+        "value": "512Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "512Mi"
           }
         ]
       }
     }
   },
-  "sts" : {
-    "source" : "simple.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
-    } ]
+  "artifactId": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
   },
-  "toxiproxy" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
+  "deployStrategy": {
+    "type": {
+      "source": "default",
+      "value": "rolling",
+      "sources": [
+        {
+          "name": "default",
+          "value": "rolling"
+        }
+      ]
+    },
+    "timeout": {
+      "source": "default",
+      "value": 180,
+      "sources": [
+        {
+          "name": "default",
+          "value": 180
+        }
+      ]
+    }
   },
-  "webseal" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
+  "replicas": {
+    "source": "default",
+    "value": 1,
+    "sources": [
+      {
+        "name": "default",
+        "value": 1
+      }
+    ]
+  },
+  "prometheus": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "path": {
+      "source": "default",
+      "value": "/prometheus",
+      "sources": [
+        {
+          "name": "default",
+          "value": "/prometheus"
+        }
+      ]
+    },
+    "port": {
+      "source": "default",
+      "value": 8081,
+      "sources": [
+        {
+          "name": "default",
+          "value": 8081
+        }
+      ]
+    }
+  },
+  "readiness": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "port": {
+      "source": "default",
+      "value": 8080,
+      "sources": [
+        {
+          "name": "default",
+          "value": 8080
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": 10,
+      "sources": [
+        {
+          "name": "default",
+          "value": 10
+        }
+      ]
+    },
+    "timeout": {
+      "source": "default",
+      "value": 1,
+      "sources": [
+        {
+          "name": "default",
+          "value": 1
+        }
+      ]
+    }
+  },
+  "liveness": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "route": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
+  },
+  "routeDefaults": {
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@-@affiliation@-@env@"
+        }
+      ]
+    },
+    "tls": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "insecurePolicy": {
+        "source": "default",
+        "value": "None",
+        "sources": [
+          {
+            "name": "default",
+            "value": "None"
+          }
+        ]
+      },
+      "termination": {
+        "source": "default",
+        "value": "edge",
+        "sources": [
+          {
+            "name": "default",
+            "value": "edge"
+          }
+        ]
+      }
+    }
+  },
+  "s3": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
+  },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "simple.json",
+      "value": "minYndlingsBucket",
+      "sources": [
+        {
+          "name": "default",
+          "value": "default"
+        },
+        {
+          "name": "simple.json",
+          "value": "minYndlingsBucket"
+        }
+      ]
+    }
+  },
+  "sts": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
+  },
+  "toxiproxy": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "webseal": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   }
 }

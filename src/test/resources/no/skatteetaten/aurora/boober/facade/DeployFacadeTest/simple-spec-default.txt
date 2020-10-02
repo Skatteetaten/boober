@@ -46,10 +46,9 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
-               | beta:
-   simple.json |   s3: true
-               |   s3Defaults:
-   simple.json |     bucketName: "minYndlingsBucket"
+   simple.json | s3: true
+               | s3Defaults:
+   simple.json |   bucketName: "minYndlingsBucket"
    simple.json | sts: true
        default | toxiproxy: false
        default | webseal: false

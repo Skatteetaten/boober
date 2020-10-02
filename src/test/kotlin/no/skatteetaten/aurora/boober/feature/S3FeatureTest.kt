@@ -71,12 +71,10 @@ class S3FeatureTest : AbstractFeatureTest() {
 
         val resources = generateResources(
             """{ 
-               "beta" : {
-                   "s3": true,
-                   "s3Defaults": {
-                       "bucketName": "minBucket"
-                   }
-               }
+                "s3": true,
+                "s3Defaults": {
+                    "bucketName": "minBucket"
+                }
            }""",
             createdResources = 1,
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
@@ -92,9 +90,7 @@ class S3FeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-               "beta" : {
-                   "s3": true
-               }
+                "s3": true
            }""",
                 createdResources = 0,
                 resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
@@ -113,9 +109,7 @@ class S3FeatureTest : AbstractFeatureTest() {
 
         val resources = generateResources(
             """{ 
-               "beta" : {
-                   "s3": true
-               }
+                "s3": true
            }""",
             createdResources = 1,
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
@@ -127,16 +121,19 @@ class S3FeatureTest : AbstractFeatureTest() {
     private fun mockFiona() {
         httpMockServer(5000) {
             rule {
-                json("""
+                json(
+                    """
                     {
                     "host": "http://fiona",
                     "accessKey": "accessKey",
                     "secretKey": "secretKey"
                     }
-                """.trimIndent())
+                """.trimIndent()
+                )
             }
         }
     }
+
     private fun mockHerkimer(booberAdId: String, claimExistsInHerkimer: Boolean) {
         val adId = "1234567890"
 
