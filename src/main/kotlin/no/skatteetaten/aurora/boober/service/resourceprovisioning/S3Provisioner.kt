@@ -53,7 +53,7 @@ class FionaRestTemplateWrapper(
 @ConditionalOnProperty("integrations.fiona.url")
 class S3Provisioner(
     val restTemplate: FionaRestTemplateWrapper,
-    @Value("\${minio.bucket.region:eu-north-0}") val defaultBucketRegion: String
+    @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String
 ) {
     fun provision(request: S3ProvisioningRequest): S3ProvisioningResult {
         val response = try {
