@@ -1,5 +1,6 @@
         static | applicationDeploymentRef: "utv/whoami"
         static | configVersion: "master"
+        static | applicationDeploymentId: "1234567890"
     about.json | schemaVersion: "v1"
    whoami.json | type: "deploy"
    whoami.json | deployState: "deployment"

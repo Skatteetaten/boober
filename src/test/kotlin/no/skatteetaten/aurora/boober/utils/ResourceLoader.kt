@@ -186,6 +186,14 @@ fun stubAuroraDeploymentSpec(): AuroraDeploymentSpec {
                     )
                 )
             ),
+            "applicationDeploymentId" to AuroraConfigField(
+                sources = setOf(
+                    AuroraConfigFieldSource(
+                        AuroraConfigFile("static", "{}", isDefault = true),
+                        TextNode("1234567890")
+                    )
+                )
+            ),
             "name" to AuroraConfigField(
                 sources = setOf(
                     AuroraConfigFieldSource(

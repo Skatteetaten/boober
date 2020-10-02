@@ -45,6 +45,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @BeforeEach
     fun beforeDeploy() {
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
+        applicationDeploymentGenerationMock()
     }
 
     val adr = ApplicationDeploymentRef("utv", "simple")

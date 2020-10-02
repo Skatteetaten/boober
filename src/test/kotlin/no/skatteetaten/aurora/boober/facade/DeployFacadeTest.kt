@@ -43,6 +43,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @BeforeEach
     fun beforeDeploy() {
         preprateTestVault(vaultName, mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
+        applicationDeploymentGenerationMock()
     }
 
     @Test

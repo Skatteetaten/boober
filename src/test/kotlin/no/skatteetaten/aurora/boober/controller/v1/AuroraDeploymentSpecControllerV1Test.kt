@@ -68,6 +68,7 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.items[0].cluster.value").equalsValue("utv")
         }
     }
+
     @Test
     fun `Return deployment spec for env and app formatted`() {
 
@@ -82,10 +83,13 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items.length()").equalsValue(1)
-            responseJsonPath("$.items[0]").equalsValue("""     about.json | cluster: "utv"
+            responseJsonPath("$.items[0]").equalsValue(
+                """     about.json | cluster: "utv"
      about.json | affiliation: "paas"
  utv/about.json | envName: "utv"
-utv/simple.json | name: "simple"""")
+         static | applicationDeploymentId: "1234567890"
+utv/simple.json | name: "simple""""
+            )
         }
     }
 }

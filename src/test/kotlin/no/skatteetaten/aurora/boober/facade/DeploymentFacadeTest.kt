@@ -6,6 +6,7 @@ import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import okhttp3.mockwebserver.MockResponse
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,6 +24,11 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @Autowired
     lateinit var facade: DeploymentFacade
 
+    @BeforeEach
+    fun beforeEachTest() {
+        applicationDeploymentGenerationMock()
+    }
+
     @Test
     fun `deployment should exist`() {
 
@@ -31,7 +37,6 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 json("""{ "success" : "true" }""")
             }
         }
-
         val resultList = facade.deploymentExist(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")))
 
         assertThat(resultList.size).isEqualTo(1)
@@ -65,7 +70,6 @@ class DeploymentFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse().setResponseCode(403)
             }
         }
-
         val resultList = facade.deploymentExist(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "simple")))
 
         assertThat(resultList.size).isEqualTo(1)

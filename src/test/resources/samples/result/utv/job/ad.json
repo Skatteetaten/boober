@@ -9,7 +9,7 @@
       "updatedAt" : "0",
       "affiliation" : "paas",
       "name" : "job",
-      "id" : "f6e1e04cbcbda4b019253522a41ad1bf9dd13958",
+      "id" : "1234567890",
       "applicationId" : "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
       "booberDeployId" : "deploy1"
     },
@@ -23,7 +23,7 @@
     "selector" : {
       "name" : "job"
     },
-    "applicationDeploymentId" : "f6e1e04cbcbda4b019253522a41ad1bf9dd13958",
+    "applicationDeploymentId" : "1234567890",
     "applicationName" : "job",
     "runnableType" : "CronJob",
     "applicationDeploymentName" : "job",

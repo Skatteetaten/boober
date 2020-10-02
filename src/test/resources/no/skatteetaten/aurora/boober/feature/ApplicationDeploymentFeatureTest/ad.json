@@ -3,7 +3,7 @@
   "kind": "ApplicationDeployment",
   "metadata": {
     "labels": {
-      "id": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
+      "id": "1234567890",
       "removeAfter": "86400"
     },
     "name": "simple",
@@ -14,7 +14,7 @@
     "selector": {
       "name": "simple"
     },
-    "applicationDeploymentId": "1d5da0b933ade4bfd6773579b9fb5cc2afb57378",
+    "applicationDeploymentId": "1234567890",
     "runnableType" : "",
     "applicationDeploymentName": "simple",
     "databases": [],

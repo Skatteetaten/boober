@@ -3,23 +3,25 @@ package no.skatteetaten.aurora.boober.service.resourceprovisioning
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
-import org.apache.commons.codec.digest.DigestUtils
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
 
 data class S3ProvisioningRequest(
-    val affiliation: String,
-    val environment: String,
-    val application: String
-) {
-    fun toS3Handle(): String =
-        DigestUtils.sha1Hex(listOf(affiliation, environment, application).joinToString("/"))
+    val bucketName: String,
+    val path: String,
+    val userName: String,
+    val access: List<S3Access>
+)
+
+enum class S3Access {
+    READ, WRITE, DELETE
 }
 
 data class S3ProvisioningResult(
-    val request: S3ProvisioningRequest,
     val serviceEndpoint: String,
     val accessKey: String,
     val secretKey: String,
@@ -28,46 +30,51 @@ data class S3ProvisioningResult(
     val bucketRegion: String
 )
 
-private data class FionaCreateUserRequest(
-    val user: String,
-    val path: String
+private data class FionaCreateUserAndPolicyPayload(
+    val userName: String,
+    val access: List<S3Access>
 )
 
-private data class FionaCreateUserResponse(
+private data class FionaCreateUserAndPolicyResponse(
+    val accessKey: String,
     val secretKey: String,
-    val serviceEndpoint: String,
-    val bucket: String,
-    val bucketRegion: String
+    val host: String
 )
+
+@Component
+@ConditionalOnProperty("integrations.fiona.url")
+class FionaRestTemplateWrapper(
+    @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
+    @Value("\${integrations.fiona.url}") override val baseUrl: String,
+    @Value("\${integrations.fiona.retries:3}") override val retries: Int
+) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries, baseUrl = baseUrl)
 
 @Service
 @ConditionalOnProperty("integrations.fiona.url")
 class S3Provisioner(
-    @TargetService(ServiceTypes.FIONA)
-    val restTemplate: RestTemplate,
-    @Value("\${integrations.fiona.url}") val fionaBaseUrl: String
+    val restTemplate: FionaRestTemplateWrapper,
+    @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String
 ) {
     fun provision(request: S3ProvisioningRequest): S3ProvisioningResult {
-        val s3Handle = request.toS3Handle()
-        val user = s3Handle
-        val objectPrefix = s3Handle
         val response = try {
-            restTemplate.postForObject(
-                "$fionaBaseUrl/createuser",
-                FionaCreateUserRequest(user, objectPrefix),
-                FionaCreateUserResponse::class.java
-            )
+            request.run {
+                restTemplate.post(
+                    url = "/buckets/$bucketName/paths/$path/userpolicies/",
+                    body = FionaCreateUserAndPolicyPayload(userName, access),
+                    type = FionaCreateUserAndPolicyResponse::class
+                )
+            }.body ?: throw ProvisioningException("Fiona unexpectedly returned an empty response")
         } catch (e: Exception) {
             throw ProvisioningException("Error while provisioning S3 storage; ${e.message}", e)
-        } ?: throw ProvisioningException("Fiona unexpectedly returned an empty response")
+        }
+
         return S3ProvisioningResult(
-            request,
-            response.serviceEndpoint,
-            user,
-            response.secretKey,
-            response.bucket,
-            objectPrefix,
-            response.bucketRegion
+            serviceEndpoint = response.host,
+            accessKey = response.accessKey,
+            secretKey = response.secretKey,
+            bucketName = request.bucketName,
+            objectPrefix = request.path,
+            bucketRegion = defaultBucketRegion
         )
     }
 }

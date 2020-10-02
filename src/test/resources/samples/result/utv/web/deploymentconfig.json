@@ -91,6 +91,10 @@
                 "value": "8082"
               },
               {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
+              },
+              {
                 "name": "foo2",
                 "value": "baz"
               },
@@ -184,6 +188,10 @@
               {
                 "name": "HTTP_PORT",
                 "value": "8080"
+              },
+              {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
               },
               {
                 "name": "foo2",

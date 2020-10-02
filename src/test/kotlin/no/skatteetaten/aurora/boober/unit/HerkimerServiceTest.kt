@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.contains
-import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
@@ -12,9 +11,10 @@ import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import io.mockk.clearAllMocks
+import no.skatteetaten.aurora.boober.service.ApplicationDeploymentCreateRequest
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
-import no.skatteetaten.aurora.boober.service.ApplicationDeploymentPayload
 import no.skatteetaten.aurora.boober.service.EmptyBodyException
+import no.skatteetaten.aurora.boober.service.HerkimerConfiguration
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.service.HerkimerRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.HerkimerService
@@ -38,7 +38,13 @@ class HerkimerServiceTest {
 
     private val server = MockWebServer()
     val service = HerkimerService(
-        client = HerkimerRestTemplateWrapper(RestTemplateBuilder().rootUri(server.url).build(), retries = 0, baseUrl = "")
+        client = HerkimerRestTemplateWrapper(
+            RestTemplateBuilder().rootUri(server.url).build(),
+            HerkimerConfiguration(
+                retries = 0,
+                url = ""
+            )
+        )
     )
 
     @BeforeEach
@@ -71,7 +77,6 @@ class HerkimerServiceTest {
                     environmentName,
                     cluster,
                     businessGroup,
-                    applicationName,
                     LocalDateTime.now(),
                     LocalDateTime.now(),
                     "aurora",
@@ -119,13 +124,15 @@ class HerkimerServiceTest {
         )
 
         server.execute(herkimerResponse) {
-            assertThat { service.getClaimedResources(adId, ResourceKind.MinioPolicy) }.isSuccess()
+            assertThat { service.getClaimedResources(adId, ResourceKind.MinioPolicy, name = "bucketname") }.isSuccess()
                 .given { listOfResources ->
                     assertThat(listOfResources.singleOrNull()).isNotNull().given { resource ->
+
                         assertThat(resource.ownerId).isEqualTo(adId)
-                        assertThat(resource.claims?.singleOrNull()).isNotNull().given {
-                            assertThat(it.credentials).isEqualTo(credentials)
-                        }
+
+                        assertThat(resource.claims?.singleOrNull()?.credentials)
+                            .isNotNull()
+                            .isEqualTo(credentials)
                     }
                 }
         }
@@ -152,22 +159,6 @@ class HerkimerServiceTest {
     }
 
     @Test
-    fun `Should return empty list for claimed resources when kind is not same as payload`() {
-        val herkimerResponse = HerkimerResponse(
-            items = listOf(
-                createResourceHerkimer()
-            )
-        )
-
-        server.execute(herkimerResponse) {
-            assertThat {
-                service.getClaimedResources("019234abac5", ResourceKind.ExternalSchema)
-            }.isSuccess()
-                .isEmpty()
-        }
-    }
-
-    @Test
     fun `Should create resource and claim it`() {
         val createResourceResponse = HerkimerResponse(items = listOf(createResourceHerkimer()))
         val claimResourceResponse = HerkimerResponse<ResourceClaimHerkimer>(items = emptyList())
@@ -188,7 +179,11 @@ class HerkimerServiceTest {
     fun `Should throw when trying to claim resource and claiming fails with success=false`() {
         val createResourceResponse = HerkimerResponse(items = listOf(createResourceHerkimer()))
         val failedClaimResource =
-            HerkimerResponse<ResourceClaimHerkimer>(success = false, message = "Could not claim resource", items = emptyList())
+            HerkimerResponse<ResourceClaimHerkimer>(
+                success = false,
+                message = "Could not claim resource",
+                items = emptyList()
+            )
 
         server.execute(createResourceResponse, failedClaimResource) {
             assertThat {
@@ -212,7 +207,11 @@ class HerkimerServiceTest {
     @Test
     fun `Should throw when trying to create resource and it fails with success=false`() {
         val failedCreationOfResource =
-            HerkimerResponse<ResourceHerkimer>(success = false, message = "Unable to create resource", items = emptyList())
+            HerkimerResponse<ResourceHerkimer>(
+                success = false,
+                message = "Unable to create resource",
+                items = emptyList()
+            )
 
         server.execute(failedCreationOfResource) {
             assertThat {
@@ -259,11 +258,10 @@ class HerkimerServiceTest {
         modifiedBy = "aurora"
     )
 
-    private fun createAdPayload(): ApplicationDeploymentPayload = ApplicationDeploymentPayload(
+    private fun createAdPayload() = ApplicationDeploymentCreateRequest(
         "testApp",
         "env",
         "utv",
-        "aurora",
-        "testApp"
+        "aurora"
     )
 }
