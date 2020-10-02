@@ -105,6 +105,10 @@
                 "value": "http"
               },
               {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
+              },
+              {
                 "name": "FOO",
                 "value": "bar"
               },

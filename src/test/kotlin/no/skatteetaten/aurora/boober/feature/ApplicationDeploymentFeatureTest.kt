@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isSuccess
 import com.fkorotkov.kubernetes.newOwnerReference
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -24,7 +25,8 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         assertThat(ad).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("ad.json")
 
-        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment("Set owner reference to ApplicationDeployment")
+        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Added env vars", index = 0)
+        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Set owner reference to ApplicationDeployment", index = 1)
         assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(newOwnerReference {
             apiVersion = "skatteetaten.no/v1"
             kind = "ApplicationDeployment"
@@ -40,5 +42,14 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
                 """{ "ttl" : "asd"  }"""
             )
         }.singleApplicationError("'asd' is not a valid simple duration")
+    }
+
+    @Test
+    fun `Should get id when using idServiceFallback`() {
+        assertThat {
+            createAuroraDeploymentContext(useHerkimerIdService = false)
+        }.isSuccess().given {
+            assertThat(it.spec.applicationDeploymentId).isEqualTo("fallbackid")
+        }
     }
 }

@@ -19,6 +19,14 @@
       }
     ]
   },
+  "applicationDeploymentId" : {
+    "source" : "static",
+    "value" : "1234567890",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "1234567890"
+    } ]
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1",

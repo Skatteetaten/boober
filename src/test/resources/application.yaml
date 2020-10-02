@@ -8,6 +8,7 @@ aurora:
     token:
         value: token
 
+
 integrations:
     operations:
         scope: "aos-4016"
@@ -61,6 +62,7 @@ integrations:
         releases: "docker.release.registry:5000"
 
 
+application.deployment.id: abc4567890
 boober:
     encrypt:
         key: "komogsyngensang"
@@ -71,6 +73,12 @@ boober:
         suffix: ".test"
     webseal:
         suffix: ".test.webseal"
+    productionlevel:
+        clusterToLevel:
+            utv: Utvikling
+            qa: Utvikling
+            test: Test
+            prod: Produksjon
 
 vault:
     operations:

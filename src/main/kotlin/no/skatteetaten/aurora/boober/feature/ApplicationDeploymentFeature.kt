@@ -2,11 +2,12 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newOwnerReference
-import java.time.Duration
+import io.fabric8.kubernetes.api.model.EnvVar
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.addEnvVar
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
@@ -16,6 +17,7 @@ import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.boot.convert.DurationStyle.SIMPLE
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
 
@@ -60,6 +62,11 @@ class ApplicationDeploymentFeature : Feature {
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
+        resources.addEnvVar(
+            listOf(
+                EnvVar("APPLICATION_DEPLOYMENT_ID", adc.applicationDeploymentId, null)
+            ), this::class.java
+        )
         resources.forEach {
             if (it.resource.metadata.namespace != null && it.resource.kind !in listOf(
                     "ApplicationDeployment",

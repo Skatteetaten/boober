@@ -90,6 +90,10 @@
                 "value": "8082"
               },
               {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
+              },
+              {
                 "name": "STS_CERTIFICATE_URL",
                 "value": "/u01/secrets/app/komplex-cert/certificate.crt"
               },

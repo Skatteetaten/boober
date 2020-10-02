@@ -1,5 +1,6 @@
         static | applicationDeploymentRef: "utv/job"
         static | configVersion: "master"
+        static | applicationDeploymentId: "1234567890"
     about.json | schemaVersion: "v1"
       job.json | type: "cronjob"
        default | deployState: "deploymentConfig"
@@ -40,6 +41,8 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
+               | beta:
+       default |   s3: false
                | secretVaults:
                |   foo:
        default |     name: "foo"

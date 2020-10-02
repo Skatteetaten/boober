@@ -1,4 +1,14 @@
 {
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
+  },
   "alarm": {
     "source": "default",
     "value": true,

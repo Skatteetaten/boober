@@ -1,5 +1,6 @@
         static | applicationDeploymentRef: "utv/simple"
         static | configVersion: "master"
+        static | applicationDeploymentId: "1234567890"
     about.json | schemaVersion: "v1"
     about.json | type: "deploy"
        default | deployState: "deploymentConfig"
@@ -45,6 +46,8 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
+               | beta:
+       default |   s3: false
    simple.json | sts: true
        default | toxiproxy: false
        default | webseal: false

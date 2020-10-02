@@ -1,5 +1,6 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
+                  static | applicationDeploymentId: "1234567890"
             complex.json | message: "Aurora <3"
             complex.json | ttl: "1d"
               about.json | schemaVersion: "v1"

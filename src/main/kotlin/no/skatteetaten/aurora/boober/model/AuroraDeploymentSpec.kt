@@ -117,6 +117,7 @@ data class AuroraDeploymentSpec(
     companion object {
 
         fun create(
+            applicationDeploymentId: String? = null,
             handlers: Set<AuroraConfigFieldHandler>,
             files: List<AuroraConfigFile>,
             applicationDeploymentRef: ApplicationDeploymentRef,
@@ -139,6 +140,15 @@ data class AuroraDeploymentSpec(
                             mapper.convertValue(auroraConfigVersion)
                         )
                 )
+            val applicationDeploymentStaticField = applicationDeploymentId?.let {
+                listOf(
+                    "applicationDeploymentId" to
+                        AuroraConfigFieldSource(
+                            AuroraConfigFile("static", "{}", isDefault = true),
+                            mapper.convertValue(it)
+                        )
+                )
+            } ?: emptyList()
 
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
                 val defaultValue = handler.defaultValue?.let {
@@ -177,7 +187,8 @@ data class AuroraDeploymentSpec(
                 result
             }
 
-            val allFields: List<Pair<String, AuroraConfigFieldSource>> = staticFields + fields
+            val allFields: List<Pair<String, AuroraConfigFieldSource>> =
+                staticFields + applicationDeploymentStaticField + fields
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .groupBy({ it.first }) { it.second }

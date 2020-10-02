@@ -1,5 +1,6 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
+                  static | applicationDeploymentId: "1234567890"
             complex.json | message: "Aurora <3"
             complex.json | ttl: "1d"
               about.json | schemaVersion: "v1"
@@ -108,6 +109,8 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     enabled: false
                  default |     insecurePolicy: "None"
                  default |     termination: "edge"
+                         | beta:
+                 default |   s3: false
                          | secretVaults:
                          |   foo:
                  default |     name: "foo"
