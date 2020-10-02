@@ -48,7 +48,7 @@ fun <T> Assert<Result<T>>.configErrors(messages: List<String>) {
     this.isFailure()
         .isInstanceOf(AuroraConfigException::class)
         .transform { ace ->
-            val errors=ace.errors.map { it.asWarning()}.distinct()
+            val errors = ace.errors.map { it.asWarning() }.distinct()
 
             if (errors.size != messages.size) {
                 expected("You do not expect all error messages. Actual error messages are ${errors.size}")

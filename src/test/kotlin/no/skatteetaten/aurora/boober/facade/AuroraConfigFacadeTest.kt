@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
-import assertk.assertions.contains
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
@@ -10,7 +9,6 @@ import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotZero
 import assertk.assertions.messageContains
-import assertk.assertions.support.fail
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -19,7 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.configErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -71,7 +68,13 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
             ref = auroraConfigRef,
             adr = adr,
-            overrideFiles = listOf(AuroraConfigFile("utv/simple.json", override = true, contents = """{ "version" : "foo" }""")),
+            overrideFiles = listOf(
+                AuroraConfigFile(
+                    "utv/simple.json",
+                    override = true,
+                    contents = """{ "version" : "foo" }"""
+                )
+            ),
             errorsAsWarnings = false
         )
 
@@ -84,29 +87,44 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
             ref = auroraConfigRef,
             adr = ApplicationDeploymentRef("utv", "ah"),
-            overrideFiles = listOf(AuroraConfigFile("utv/about.json", override = true, contents = """{ "type" : "deploy" }""")),
+            overrideFiles = listOf(
+                AuroraConfigFile(
+                    "utv/about.json",
+                    override = true,
+                    contents = """{ "type" : "deploy" }"""
+                )
+            ),
             errorsAsWarnings = true
         )
 
-        assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false)).contains("foo")
         assertThat(spec.get<String>("type")).isEqualTo("deploy")
     }
 
     @Test
     fun `get spec for applications deployment with override that is invalid and throw errors`() {
 
-        assertThat{ facade.findAuroraDeploymentSpecSingle(
-            ref = auroraConfigRef,
-            adr = ApplicationDeploymentRef("utv", "ah"),
-            overrideFiles = listOf(AuroraConfigFile("utv/about.json", override = true, contents = """{ "type" : "deploy" }""")),
-            errorsAsWarnings = false
-        )}.configErrors(listOf(
-            "GroupId must be set",
-            "/templateFile is not a valid",
-            "/parameters/FEED_NAME is not a valid",
-            "/parameters/DOMAIN_NAME is not a valid",
-            "/parameters/DB_NAME is not a valid"
-        ))
+        assertThat {
+            facade.findAuroraDeploymentSpecSingle(
+                ref = auroraConfigRef,
+                adr = ApplicationDeploymentRef("utv", "ah"),
+                overrideFiles = listOf(
+                    AuroraConfigFile(
+                        "utv/about.json",
+                        override = true,
+                        contents = """{ "type" : "deploy" }"""
+                    )
+                ),
+                errorsAsWarnings = false
+            )
+        }.configErrors(
+            listOf(
+                "GroupId must be set",
+                "/templateFile is not a valid",
+                "/parameters/FEED_NAME is not a valid",
+                "/parameters/DOMAIN_NAME is not a valid",
+                "/parameters/DB_NAME is not a valid"
+            )
+        )
     }
 
     @Test
