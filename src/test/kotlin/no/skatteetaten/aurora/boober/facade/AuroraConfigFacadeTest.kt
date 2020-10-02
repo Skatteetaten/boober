@@ -41,7 +41,13 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     @BeforeEach
     fun beforeDeploy() {
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
-        applicationDeploymentGenerationMock()
+
+        applicationDeploymentGenerationMock {
+            rule({ path.contains("resource") }) {
+                MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", "DeployFacadeTest"))
+                    .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+        }
     }
 
     val adr = ApplicationDeploymentRef("utv", "simple")

@@ -40,10 +40,7 @@ class HerkimerServiceTest {
     val service = HerkimerService(
         client = HerkimerRestTemplateWrapper(
             RestTemplateBuilder().rootUri(server.url).build(),
-            HerkimerConfiguration(
-                retries = 0,
-                url = ""
-            )
+            HerkimerConfiguration(retries = 0, url = "")
         )
     )
 

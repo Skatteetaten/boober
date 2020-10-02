@@ -1,152 +1,220 @@
 {
-  "applicationDeploymentRef" : {
-    "source" : "static",
-    "value" : "utv/simple",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "utv/simple"
-    } ]
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/simple",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/simple"
+      }
+    ]
   },
-  "configVersion" : {
-    "source" : "static",
-    "value" : "master",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "master"
-    } ]
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
   },
-  "applicationDeploymentId" : {
-    "source" : "static",
-    "value" : "1234567890",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "1234567890"
-    } ]
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
   },
-  "schemaVersion" : {
-    "source" : "about.json",
-    "value" : "v1",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "v1"
-    } ]
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
   },
-  "type" : {
-    "source" : "about.json",
-    "value" : "deploy",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "deploy"
-    } ]
+  "type": {
+    "source": "about.json",
+    "value": "deploy",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      }
+    ]
   },
-  "affiliation" : {
-    "source" : "about.json",
-    "value" : "paas",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "paas"
-    } ]
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
   },
-  "segment" : {
-    "source" : "about.json",
-    "value" : "aurora",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "aurora"
-    } ]
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
   },
-  "cluster" : {
-    "source" : "utv/about.json",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "utv"
-    }, {
-      "name" : "utv/about.json",
-      "value" : "utv"
-    } ]
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
   },
-  "permissions" : {
-    "admin" : {
-      "source" : "about.json",
-      "value" : "APP_PaaS_drift APP_PaaS_utv",
-      "sources" : [ {
-        "name" : "about.json",
-        "value" : "APP_PaaS_drift APP_PaaS_utv"
-      } ]
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
     }
   },
-  "envName" : {
-    "source" : "folderName",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "folderName",
-      "value" : "utv"
-    } ]
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
   },
-  "name" : {
-    "source" : "fileName",
-    "value" : "simple",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "simple"
-    } ]
+  "name": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
   },
-  "groupId" : {
-    "source" : "simple.json",
-    "value" : "org.test",
-    "sources" : [ {
-      "name" : "simple.json",
-      "value" : "org.test"
-    } ]
+  "groupId": {
+    "source": "simple.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "simple.json",
+        "value": "org.test"
+      }
+    ]
   },
-  "database" : {
-    "source" : "simple.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
-    } ]
+  "database": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
   },
-  "version" : {
-    "source" : "simple.json",
-    "value" : "1",
-    "sources" : [ {
-      "name" : "simple.json",
-      "value" : "1"
-    } ]
+  "version": {
+    "source": "simple.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "simple.json",
+        "value": "1"
+      }
+    ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "simple",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "simple"
-    } ]
+  "artifactId": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
   },
-  "route" : {
-    "source" : "simple.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
-    } ]
+  "route": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
   },
-  "sts" : {
-    "source" : "simple.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "simple.json",
-      "value" : true
-    } ]
+  "s3": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
+  },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "simple.json",
+      "value": "minYndlingsBucket",
+      "sources": [
+        {
+          "name": "default",
+          "value": "default"
+        },
+        {
+          "name": "simple.json",
+          "value": "minYndlingsBucket"
+        }
+      ]
+    }
+  },
+  "sts": {
+    "source": "simple.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "simple.json",
+        "value": true
+      }
+    ]
   }
 }

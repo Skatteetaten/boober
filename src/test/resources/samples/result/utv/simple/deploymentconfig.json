@@ -128,6 +128,61 @@
                 "value": "http://simple-paas-utv.test"
               },
               {
+              "name" : "S3_SERVICEENDPOINT",
+              "valueFrom" : {
+                "secretKeyRef" : {
+                  "key" : "serviceEndpoint",
+                  "name" : "simple-s3",
+                  "optional" : false
+                }
+              }
+              }, {
+                "name" : "S3_ACCESSKEY",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "accessKey",
+                    "name" : "simple-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_SECRETKEY",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "secretKey",
+                    "name" : "simple-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETREGION",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "bucketRegion",
+                    "name" : "simple-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETNAME",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "bucketName",
+                    "name" : "simple-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_OBJECTPREFIX",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "objectPrefix",
+                    "name" : "simple-s3",
+                    "optional" : false
+                  }
+                }
+              },
+              {
                 "name": "STS_CERTIFICATE_URL",
                 "value": "/u01/secrets/app/simple-sts/certificate.crt"
               },

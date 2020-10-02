@@ -27,7 +27,7 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
 
     val request = S3ProvisioningRequest(
         "bucketName",
-"path",
+        "path",
         "username",
         listOf(S3Access.WRITE)
     )

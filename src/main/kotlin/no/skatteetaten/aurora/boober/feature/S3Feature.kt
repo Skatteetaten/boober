@@ -75,7 +75,7 @@ class S3Feature(
         cmd: AuroraContextCommand
     ): List<Exception> {
         if (fullValidation && adc.cluster == cluster && adc.isS3Enabled) {
-            val bucketName = "${adc.affiliation}-bucket-$productionLevel-default"
+            val bucketName = adc.deduceBucketName()
 
             getBucketCredentials(bucketName)
                 ?: return listOf(IllegalArgumentException("Could not find credentials for bucket with name=$bucketName, please register the credentials."))
@@ -87,10 +87,14 @@ class S3Feature(
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         if (!adc.isS3Enabled) return emptySet()
 
-        val bucketName = "${adc.affiliation}-bucket-$productionLevel-default"
+        val bucketName = adc.deduceBucketName()
 
         val resourceWithClaims =
-            herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.MinioPolicy).firstOrNull()
+            herkimerService.getClaimedResources(
+                claimOwnerId = adc.applicationDeploymentId,
+                resourceKind = ResourceKind.MinioPolicy,
+                name = bucketName
+            ).firstOrNull()
 
         val result =
             when (val credentials = resourceWithClaims?.claims?.singleOrNull()?.credentials) {
@@ -101,7 +105,6 @@ class S3Feature(
                         userName = adc.applicationDeploymentId,
                         access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
                     )
-
                     s3Provisioner.provision(request).also {
                         herkimerService.createResourceAndClaim(
                             adc.applicationDeploymentId,
@@ -119,6 +122,11 @@ class S3Feature(
         return setOf(s3Secret.generateAuroraResource())
     }
 
+    private fun AuroraDeploymentSpec.deduceBucketName(): String {
+        val bucketNameSuffix: String = this["$FEATURE_FIELD_NAME_DEFAULTS/bucketName"]
+        return "$affiliation-bucket-$productionLevel-$bucketNameSuffix"
+    }
+
     private fun getBucketCredentials(bucketName: String): JsonNode? =
         herkimerService.getClaimedResources(
             claimOwnerId = booberApplicationdeploymentId,
@@ -130,7 +138,8 @@ class S3Feature(
             ?.credentials
 }
 
-private const val FEATURE_FIELD_NAME = "beta/s3"
+private const val FEATURE_FIELD_NAME = "s3"
+private const val FEATURE_FIELD_NAME_DEFAULTS = "s3Defaults"
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)
@@ -178,7 +187,11 @@ abstract class S3FeatureTemplate : Feature {
                 validator = { it.boolean() },
                 defaultValue = false,
                 canBeSimplifiedConfig = true
-            )
+            ),
+                AuroraConfigFieldHandler(
+                "$FEATURE_FIELD_NAME_DEFAULTS/bucketName",
+            defaultValue = "default"
+        )
         )
     }
 }

@@ -331,18 +331,6 @@
       }
     }
   },
-  "beta" : {
-    "s3" : {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    }
-  },
   "secretVaults" : {
     "foo" : {
       "name" : {

@@ -126,6 +126,60 @@
               {
                 "name": "ROUTE_URL",
                 "value": "http://easy-paas-utv.test"
+              }, {
+                "name" : "S3_SERVICEENDPOINT",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "serviceEndpoint",
+                    "name" : "easy-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_ACCESSKEY",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "accessKey",
+                    "name" : "easy-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_SECRETKEY",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "secretKey",
+                    "name" : "easy-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETREGION",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "bucketRegion",
+                    "name" : "easy-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETNAME",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "bucketName",
+                    "name" : "easy-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_OBJECTPREFIX",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "objectPrefix",
+                    "name" : "easy-s3",
+                    "optional" : false
+                  }
+                }
               },
               {
             "name" : "STS_CERTIFICATE_URL",
