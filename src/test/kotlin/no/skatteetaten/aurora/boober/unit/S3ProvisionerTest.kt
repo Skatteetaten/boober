@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.service
+package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
 import assertk.assertions.isFailure

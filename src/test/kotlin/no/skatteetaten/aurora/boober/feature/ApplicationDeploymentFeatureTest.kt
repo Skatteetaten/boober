@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isSuccess
 import com.fkorotkov.kubernetes.newOwnerReference
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -41,5 +42,14 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
                 """{ "ttl" : "asd"  }"""
             )
         }.singleApplicationError("'asd' is not a valid simple duration")
+    }
+
+    @Test
+    fun `Should get id when using idServiceFallback`() {
+        assertThat {
+            createAuroraDeploymentContext(useHerkimerIdService = false)
+        }.isSuccess().given {
+            assertThat(it.spec.applicationDeploymentId).isEqualTo("fallbackid")
+        }
     }
 }

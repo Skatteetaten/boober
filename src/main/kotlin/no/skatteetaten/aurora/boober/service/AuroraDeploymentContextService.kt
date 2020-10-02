@@ -29,7 +29,8 @@ private val logger = KotlinLogging.logger {}
 @Service
 class AuroraDeploymentContextService(
     val features: List<Feature>,
-    val idService: IdService
+    val idService: IdService?,
+    val idServiceFallback: IdServiceFallback?
 ) {
 
     fun createValidatedAuroraDeploymentContexts(
@@ -104,14 +105,15 @@ class AuroraDeploymentContextService(
             featureHandlers.flatMap { it.value }.toSet().addIfNotNull(headerHandlers)
 
         val applicationDeploymentId = headerSpec.run {
-            idService.generateOrFetchId(
+            idService?.generateOrFetchId(
                 ApplicationDeploymentCreateRequest(
                     name = name,
                     environmentName = envName,
                     cluster = cluster,
                     businessGroup = affiliation
                 )
-            )
+            ) ?: idServiceFallback?.generateOrFetchId(name, namespace)
+            ?: throw RuntimeException("Unable to generate applicationDeploymentId, no idService available")
         }
         val spec = AuroraDeploymentSpec.create(
             applicationDeploymentId = applicationDeploymentId,

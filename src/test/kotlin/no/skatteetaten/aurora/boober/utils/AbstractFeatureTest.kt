@@ -50,6 +50,7 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.IdService
+import no.skatteetaten.aurora.boober.service.IdServiceFallback
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
@@ -246,7 +247,8 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             idService.generateOrFetchId(any())
         } returns "1234567890"
 
-        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService)
+        val service =
+            AuroraDeploymentContextService(features = listOf(feature), idService = idService, idServiceFallback = null)
         val auroraConfig = createAuroraConfig(file.toMap())
 
         val deployCommand = AuroraContextCommand(
@@ -264,14 +266,26 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createAuroraDeploymentContext(
         app: String = """{}""",
         fullValidation: Boolean = true,
-        files: List<AuroraConfigFile> = emptyList()
+        files: List<AuroraConfigFile> = emptyList(),
+        useHerkimerIdService: Boolean = true
     ): AuroraDeploymentContext {
-        val idService = mockk<IdService>()
+        val idService =
+            if (useHerkimerIdService)
+                mockk<IdService>().also {
+                    every {
+                        it.generateOrFetchId(any())
+                    } returns "1234567890"
+                } else null
 
-        every {
-            idService.generateOrFetchId(any())
-        } returns "1234567890"
-        val service = AuroraDeploymentContextService(features = listOf(feature), idService = idService)
+        val idServiceFallback =
+            if (!useHerkimerIdService)
+                mockk<IdServiceFallback>().also {
+                    every {
+                        it.generateOrFetchId(any(), any())
+                    } returns "fallbackid"
+                } else null
+        val service =
+            AuroraDeploymentContextService(features = listOf(feature), idService = idService, idServiceFallback = idServiceFallback)
         val auroraConfig =
             createAuroraConfig(config.addIfNotNull("$environment/simple.json" to app), files)
 
@@ -401,15 +415,16 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         }
     }
 
-    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String, index: Int = 0) = transform { ar ->
-        val actual = ar.sources.toList()[index]
-        val expected = AuroraResourceSource(feature::class.java, comment)
-        if (actual == expected) {
-            ar
-        } else {
-            expected(":${show(expected)} and:${show(actual)} to be the same")
+    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String, index: Int = 0) =
+        transform { ar ->
+            val actual = ar.sources.toList()[index]
+            val expected = AuroraResourceSource(feature::class.java, comment)
+            if (actual == expected) {
+                ar
+            } else {
+                expected(":${show(expected)} and:${show(actual)} to be the same")
+            }
         }
-    }
 }
 
 inline fun <reified T : HasMetadata> List<AuroraResource>.findResourceByType(): T = this.findResourceByType(T::class)
