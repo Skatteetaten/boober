@@ -39,7 +39,7 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Return deployment spec for env and app`() {
 
-        every { facade.findAuroraDeploymentSpecSingle(auroraConfigRef, adr, emptyList()) } returns specs.first()
+        every { facade.findAuroraDeploymentSpecSingle(auroraConfigRef, adr, emptyList(), false) } returns specs.first()
 
         mockMvc.get(
             Path(
@@ -72,7 +72,7 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
     @Test
     fun `Return deployment spec for env and app formatted`() {
 
-        every { facade.findAuroraDeploymentSpecSingle(auroraConfigRef, adr, emptyList()) } returns specs.first()
+        every { facade.findAuroraDeploymentSpecSingle(auroraConfigRef, adr, emptyList(), false) } returns specs.first()
 
         mockMvc.get(
             Path(

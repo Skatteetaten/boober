@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.configErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
@@ -71,11 +72,65 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     fun `get spec for applications deployment with override`() {
 
         val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
-            auroraConfigRef, adr,
-            listOf(AuroraConfigFile("utv/simple.json", override = true, contents = """{ "version" : "foo" }"""))
+            ref = auroraConfigRef,
+            adr = adr,
+            overrideFiles = listOf(
+                AuroraConfigFile(
+                    "utv/simple.json",
+                    override = true,
+                    contents = """{ "version" : "foo" }"""
+                )
+            ),
+            errorsAsWarnings = false
         )
 
         assertThat(spec.get<String>("version")).isEqualTo("foo")
+    }
+
+    @Test
+    fun `get spec for applications deployment with override that is invalid and swallow errors`() {
+
+        val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
+            ref = auroraConfigRef,
+            adr = ApplicationDeploymentRef("utv", "ah"),
+            overrideFiles = listOf(
+                AuroraConfigFile(
+                    "utv/about.json",
+                    override = true,
+                    contents = """{ "type" : "deploy" }"""
+                )
+            ),
+            errorsAsWarnings = true
+        )
+
+        assertThat(spec.get<String>("type")).isEqualTo("deploy")
+    }
+
+    @Test
+    fun `get spec for applications deployment with override that is invalid and throw errors`() {
+
+        assertThat {
+            facade.findAuroraDeploymentSpecSingle(
+                ref = auroraConfigRef,
+                adr = ApplicationDeploymentRef("utv", "ah"),
+                overrideFiles = listOf(
+                    AuroraConfigFile(
+                        "utv/about.json",
+                        override = true,
+                        contents = """{ "type" : "deploy" }"""
+                    )
+                ),
+                errorsAsWarnings = false
+            )
+        }.configErrors(
+            listOf(
+                "GroupId must be set",
+                "/templateFile is not a valid",
+                "/parameters/FEED_NAME is not a valid",
+                "/parameters/DOMAIN_NAME is not a valid",
+                "/parameters/DB_NAME is not a valid"
+            )
+        )
     }
 
     @Test

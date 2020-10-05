@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.ApplicationRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
@@ -88,12 +89,18 @@ class AuroraDeploymentContextService(
                 auroraConfigVersion = deployCommand.auroraConfig.ref
             )
 
-        AuroraDeploymentSpecConfigFieldValidator(
-            applicationDeploymentRef = deployCommand.applicationDeploymentRef,
+        val headerErrors = AuroraDeploymentSpecConfigFieldValidator(
             applicationFiles = deployCommand.applicationFiles,
             fieldHandlers = headerHandlers,
             fields = headerSpec.fields
         ).validate(false)
+
+        if (!deployCommand.errorsAsWarnings && headerErrors.isNotEmpty()) {
+            throw AuroraConfigException(
+                "Config for application ${deployCommand.applicationDeploymentRef.application} in environment ${deployCommand.applicationDeploymentRef.environment} contains errors",
+                errors = headerErrors
+            )
+        }
 
         val activeFeatures = features.filter { it.enable(headerSpec) }
 
@@ -123,12 +130,17 @@ class AuroraDeploymentContextService(
             auroraConfigVersion = deployCommand.auroraConfig.ref,
             replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
         )
-        AuroraDeploymentSpecConfigFieldValidator(
-            applicationDeploymentRef = deployCommand.applicationDeploymentRef,
+        val errors = AuroraDeploymentSpecConfigFieldValidator(
             applicationFiles = deployCommand.applicationFiles,
             fieldHandlers = allHandlers,
             fields = spec.fields
         ).validate()
+        if (!deployCommand.errorsAsWarnings && errors.isNotEmpty()) {
+            throw AuroraConfigException(
+                "Config for application ${deployCommand.applicationDeploymentRef.application} in environment ${deployCommand.applicationDeploymentRef.environment} contains errors",
+                errors = errors
+            )
+        }
 
         val featureAdc: Map<Feature, AuroraDeploymentSpec> = featureHandlers.mapValues { (_, handlers) ->
             val paths = handlers.map { it.name } + listOf("applicationDeploymentId")
@@ -138,12 +150,16 @@ class AuroraDeploymentContextService(
             spec.copy(fields = fields)
         }
 
+        val errorWarnings = (headerErrors + errors).map {
+            it.asWarning()
+        }.distinct()
+
         return AuroraDeploymentContext(
             spec,
             cmd = deployCommand,
             features = featureAdc,
             featureHandlers = featureHandlers,
-            warnings = findWarnings(deployCommand, featureAdc)
+            warnings = findWarnings(deployCommand, featureAdc) + errorWarnings
         )
     }
 

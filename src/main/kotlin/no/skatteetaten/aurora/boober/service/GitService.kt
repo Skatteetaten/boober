@@ -148,6 +148,7 @@ open class GitService(
                 .setAllowEmpty(false)
                 .setAuthor(authorIdent)
                 .setMessage(message)
+                .setSign(false) // jgit leser lokal .gitconfig og her har jeg satt sign=true.. grr. liker ikke jgit.
                 .call()
             repo.push()
                 .setCredentialsProvider(cp)

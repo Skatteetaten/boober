@@ -54,19 +54,20 @@ class AuroraDeploymentSpecControllerV1(
         return Response(items = specs.map { renderSpecAsJson(it, includeDefaults) })
     }
 
+    // TODO: Når vi skal bruke gobo må vi returnere warnings her.
     @GetMapping("/{environment}/{application}")
     fun get(
         @PathVariable auroraConfigName: String,
         @PathVariable environment: String,
         @PathVariable application: String,
         @RequestParam(name = "overrides", required = false) overrides: String?,
-        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean,
+        @RequestParam(name = "errorsAsWarnings", required = false, defaultValue = "false") errorsAsWarnings: Boolean
     ): Response {
-
         val overrideFiles: List<AuroraConfigFile> = extractOverrides(overrides)
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val adr = ApplicationDeploymentRef(environment, application)
-        val spec = facade.findAuroraDeploymentSpecSingle(ref, adr, overrideFiles)
+        val spec = facade.findAuroraDeploymentSpecSingle(ref, adr, overrideFiles, errorsAsWarnings)
         return Response(items = listOf(spec).map { renderSpecAsJson(it, includeDefaults) })
     }
 
@@ -76,13 +77,14 @@ class AuroraDeploymentSpecControllerV1(
         @PathVariable environment: String,
         @PathVariable application: String,
         @RequestParam(name = "overrides", required = false) overrides: String?,
-        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean
+        @RequestParam(name = "includeDefaults", required = false, defaultValue = "true") includeDefaults: Boolean,
+        @RequestParam(name = "errorsAsWarnings", required = false, defaultValue = "false") errorsAsWarnings: Boolean
     ): Response {
 
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val adr = ApplicationDeploymentRef(environment, application)
         val overrideFiles = extractOverrides(overrides)
-        val spec = facade.findAuroraDeploymentSpecSingle(ref, adr, overrideFiles)
+        val spec = facade.findAuroraDeploymentSpecSingle(ref, adr, overrideFiles, errorsAsWarnings)
         return Response(items = listOf(renderJsonForAuroraDeploymentSpecPointers(spec, includeDefaults)))
     }
 
