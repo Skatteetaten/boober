@@ -142,7 +142,7 @@ private const val FEATURE_FIELD_NAME = "s3"
 private const val FEATURE_FIELD_NAME_DEFAULTS = "s3Defaults"
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
-private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME)
+private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME) || get("beta/$FEATURE_FIELD_NAME")
 
 fun Feature.addEnvVarsToDcContainers(resources: Set<AuroraResource>, envVars: List<EnvVar>) {
     resources.addEnvVar(envVars, this.javaClass)
@@ -182,6 +182,12 @@ fun S3ProvisioningResult.createS3Secret(nsName: String, s3SecretName: String) = 
 abstract class S3FeatureTemplate : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
+            AuroraConfigFieldHandler(
+                "beta/$FEATURE_FIELD_NAME",
+                validator = { it.boolean() },
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            ),
             AuroraConfigFieldHandler(
                 FEATURE_FIELD_NAME,
                 validator = { it.boolean() },
