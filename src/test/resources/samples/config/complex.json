@@ -77,6 +77,9 @@
   "ttl": "1d",
   "pause": true,
   "message": "Aurora <3",
+  "s3": {
+    "name": "minYndlingsBucket"
+  },
   "database": {
     "complex": {
       "enabled": true

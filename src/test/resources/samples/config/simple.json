@@ -3,9 +3,6 @@
   "groupId": "org.test",
   "database": true,
   "s3": true,
-  "s3Defaults": {
-    "bucketName": "minYndlingsBucket"
-  },
   "sts": true,
   "route": true
 }

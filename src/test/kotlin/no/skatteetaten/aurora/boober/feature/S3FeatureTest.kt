@@ -27,7 +27,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTempl
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.findResourceByType
+import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 import org.apache.commons.codec.binary.Base64
@@ -65,22 +65,66 @@ class S3FeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `verify creates secret with value mappings in dc when claim does not exist in herkimer`() {
+    fun `verify supports beta block S3`() {
         mockFiona()
         mockHerkimer(booberAdId = booberAdId, claimExistsInHerkimer = false)
 
-        val resources = generateResources(
+        generateResources(
             """{ 
-                "s3": true,
-                "s3Defaults": {
-                    "bucketName": "minBucket"
+                "beta": {
+                    "s3": true
                 }
            }""",
             createdResources = 1,
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        ).verifyS3SecretsAndEnvs()
+    }
+    @Test
+    fun `verify is able to disable s3 when simple config`() {
+        generateResources(
+            """{ 
+                "s3": false
+           }""",
+            createdResources = 0,
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+    }
+    @Test
+    fun `verify is able to disable s3 when expanded config`() {
+        generateResources(
+            """{ 
+                "s3": {
+                    "default" : {
+                        "enabled": false,
+                        "name": "minBucket"
+                    }
+                }
+           }""",
+            createdResources = 0,
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+    }
+    @Test
+    fun `verify creates secrets and supports custom bucketname suffix`() {
+        mockFiona()
+        mockHerkimer(booberAdId = booberAdId, bucketNames = listOf("$affiliation-bucket-u-minBucket", "$affiliation-bucket-u-minAndreBucket"), claimExistsInHerkimer = false)
+
+        val resources = generateResources(
+            """{ 
+                "s3": {
+                    "default": {
+                        "name": "minBucket"
+                    },
+                    "minAndreBucket": {
+                        "enabled": true
+                    }
+                }
+           }""",
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig()),
+            createdResources = 2
         )
 
-        resources.verifyS3SecretsAndEnvs(expectedBucketNameSuffix = "minBucket")
+        resources.verifyS3SecretsAndEnvs(expectedBucketNameSuffixes = listOf("minBucket", "minAndreBucket"))
     }
 
     @Test
@@ -134,24 +178,27 @@ class S3FeatureTest : AbstractFeatureTest() {
         }
     }
 
-    private fun mockHerkimer(booberAdId: String, claimExistsInHerkimer: Boolean) {
+    private fun mockHerkimer(booberAdId: String, bucketNames: List<String> = listOf("paas-bucket-u-default"), claimExistsInHerkimer: Boolean) {
         val adId = "1234567890"
 
         every {
-            herkimerService.getClaimedResources(booberAdId, ResourceKind.MinioPolicy, any())
-        } returns listOf(
+            herkimerService.getClaimedResources(booberAdId, ResourceKind.MinioPolicy)
+        } returns bucketNames.map {
             createResourceHerkimer(
+                name = it,
                 adId = booberAdId,
                 claims = createResourceClaim(
                     adId = booberAdId,
                     s3ProvisioningResult = jacksonObjectMapper().createObjectNode()
                 )
             )
-        )
+        }
+
         if (claimExistsInHerkimer) {
-            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy, any()) } returns listOf(
+            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy) } returns bucketNames.map {
                 createResourceHerkimer(
                     adId = adId,
+                    name = it,
                     claims = createResourceClaim(
                         adId = adId,
                         s3ProvisioningResult = jacksonObjectMapper().convertValue(
@@ -166,7 +213,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                         )
                     )
                 )
-            )
+            }
         } else {
             every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy, any()) } returns emptyList()
             every {
@@ -175,43 +222,51 @@ class S3FeatureTest : AbstractFeatureTest() {
         }
     }
 
-    private fun List<AuroraResource>.verifyS3SecretsAndEnvs(expectedBucketNameSuffix: String = "default") {
-        val secret: Secret = this.findResourceByType()
+    private fun List<AuroraResource>.verifyS3SecretsAndEnvs(expectedBucketNameSuffixes: List<String> = listOf("default")) {
+        val secrets: List<Secret> = this.findResourcesByType()
 
-        val bucketName = String(Base64.decodeBase64(secret.data["bucketName"]))
-        assertThat(bucketName).isEqualTo("$affiliation-bucket-u-$expectedBucketNameSuffix")
-        assertThat(secret.data.keys).containsAll(
-            "serviceEndpoint",
-            "accessKey",
-            "secretKey",
-            "bucketRegion",
-            "bucketName",
-            "objectPrefix"
-        )
+        secrets.forEach { secret ->
+            val bucketName = String(Base64.decodeBase64(secret.data["bucketName"]))
+            val expectedBucketNameSuffix = expectedBucketNameSuffixes.find { bucketSuffix -> bucketName.contains(bucketSuffix) }
+            assertThat(expectedBucketNameSuffix).isNotNull().given { bucketSuffix ->
+                assertThat(bucketName).isEqualTo("$affiliation-bucket-u-$bucketSuffix")
+                assertThat(secret.data.keys).containsAll(
+                    "serviceEndpoint",
+                    "accessKey",
+                    "secretKey",
+                    "bucketRegion",
+                    "bucketName",
+                    "objectPrefix"
+                )
 
-        val dc = find { it.resource is DeploymentConfig }?.let { it.resource as DeploymentConfig }
-            ?: throw Exception("No dc")
+                val dc = find { it.resource is DeploymentConfig }?.let { it.resource as DeploymentConfig }
+                    ?: throw Exception("No dc")
 
-        val container = dc.spec.template.spec.containers.first()
-        val actualEnvs = container.env.map { it.name to it.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
-        val secretName = "$appName-s3"
-        val expectedEnvs = listOf(
-            "S3_SERVICEENDPOINT" to "$secretName/serviceEndpoint",
-            "S3_ACCESSKEY" to "$secretName/accessKey",
-            "S3_SECRETKEY" to "$secretName/secretKey",
-            "S3_BUCKETREGION" to "$secretName/bucketRegion",
-            "S3_BUCKETNAME" to "$secretName/bucketName",
-            "S3_OBJECTPREFIX" to "$secretName/objectPrefix"
-        )
-        assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
+                val container = dc.spec.template.spec.containers.first()
+                val actualEnvs =
+                    container.env.map { envVar -> envVar.name to envVar.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
+                val secretName = "$appName-$bucketSuffix-s3"
+                val bucketNameSuffixUpper = bucketSuffix.toUpperCase()
+                val expectedEnvs = listOf(
+                    "S3_${bucketNameSuffixUpper}_SERVICEENDPOINT" to "$secretName/serviceEndpoint",
+                    "S3_${bucketNameSuffixUpper}_ACCESSKEY" to "$secretName/accessKey",
+                    "S3_${bucketNameSuffixUpper}_SECRETKEY" to "$secretName/secretKey",
+                    "S3_${bucketNameSuffixUpper}_BUCKETREGION" to "$secretName/bucketRegion",
+                    "S3_${bucketNameSuffixUpper}_BUCKETNAME" to "$secretName/bucketName",
+                    "S3_${bucketNameSuffixUpper}_OBJECTPREFIX" to "$secretName/objectPrefix"
+                )
+                assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
+            }
+        }
     }
 
     private fun createResourceHerkimer(
         adId: String,
+        name: String = "paas-bucket-u-default",
         claims: List<ResourceClaimHerkimer>? = null
     ) = ResourceHerkimer(
         id = "0",
-        name = "myResource",
+        name = name,
         kind = ResourceKind.MinioPolicy,
         ownerId = adId,
         claims = claims,

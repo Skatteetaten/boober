@@ -8,14 +8,15 @@ import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
-import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.HerkimerService
 import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
@@ -33,13 +34,16 @@ private val logger = KotlinLogging.logger {}
 
 @ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
 @Service
-class S3DisabledFeature : S3FeatureTemplate() {
+class S3DisabledFeature(
+    @Value("\${boober.productionlevel}") productionLevel: String
+) : S3FeatureTemplate(productionLevel) {
+
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> =
-        if (adc.isS3Enabled) {
+        if (findS3Buckets(adc, cmd.applicationFiles).isNotEmpty()) {
             listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
         } else {
             emptyList()
@@ -53,20 +57,22 @@ class S3Feature(
     val herkimerService: HerkimerService,
     @Value("\${application.deployment.id}") val booberApplicationdeploymentId: String,
     @Value("\${openshift.cluster}") val cluster: String,
-    @Value("\${boober.productionlevel}") val productionLevel: String
-) : S3FeatureTemplate() {
+    @Value("\${boober.productionlevel}") productionLevel: String
+) : S3FeatureTemplate(productionLevel) {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-
-        val s3Secret = resources.find { it.resource.metadata.name == adc.s3SecretName }
-            ?.let { it.resource as Secret } ?: return
-
-        val envVars = s3Secret.createEnvVarRefs(prefix = "S3_")
-        addEnvVarsToDcContainers(resources, envVars)
+        resources.filter { it.resource.metadata.name.endsWith("s3") }
+            .map {
+                it.resource as Secret
+            }.forEach {
+                val bucketSuffix = String(Base64.decodeBase64(it.data["bucketName"])).substringAfterLast("-").toUpperCase()
+                val envVars = it.createEnvVarRefs(prefix = "S3_${bucketSuffix}_")
+                resources.addEnvVar(envVars, javaClass)
+            }
     }
 
     override fun validate(
@@ -74,79 +80,73 @@ class S3Feature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        if (fullValidation && adc.cluster == cluster && adc.isS3Enabled) {
-            val bucketName = adc.deduceBucketName()
+        val buckets = findS3Buckets(adc, cmd.applicationFiles)
 
-            getBucketCredentials(bucketName)
-                ?: return listOf(IllegalArgumentException("Could not find credentials for bucket with name=$bucketName, please register the credentials."))
+        if (fullValidation && adc.cluster == cluster && buckets.isNotEmpty()) {
+
+            val nameAndCredentials = getBucketCredentials()
+
+            val bucketsNotFound = buckets.mapNotNull {
+                val credentials = nameAndCredentials[it.name]
+                if (credentials == null) IllegalArgumentException("Could not find credentials for bucket with name=${it.name}, please register the credentials")
+                else null
+            }
+
+            if (bucketsNotFound.isNotEmpty()) return bucketsNotFound
         }
 
         return emptyList()
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        if (!adc.isS3Enabled) return emptySet()
-
-        val bucketName = adc.deduceBucketName()
+        val buckets = findS3Buckets(adc, cmd.applicationFiles)
+        if (buckets.isEmpty()) return emptySet()
 
         val resourceWithClaims =
             herkimerService.getClaimedResources(
                 claimOwnerId = adc.applicationDeploymentId,
-                resourceKind = ResourceKind.MinioPolicy,
-                name = bucketName
-            ).firstOrNull()
+                resourceKind = ResourceKind.MinioPolicy
+            ).associateBy { it.name }
 
-        val result =
-            when (val credentials = resourceWithClaims?.claims?.singleOrNull()?.credentials) {
-                null -> {
-                    val request = S3ProvisioningRequest(
-                        bucketName = bucketName,
-                        path = adc.applicationDeploymentId,
-                        userName = adc.applicationDeploymentId,
-                        access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
-                    )
-                    s3Provisioner.provision(request).also {
-                        herkimerService.createResourceAndClaim(
-                            adc.applicationDeploymentId,
-                            ResourceKind.MinioPolicy,
-                            it.bucketName,
-                            it
-                        )
-                    }
-                }
-                else -> jacksonObjectMapper().convertValue(credentials)
+        val provisioningResults = buckets.map { bucket ->
+            val credentials = resourceWithClaims[bucket.name]?.claims?.singleOrNull()?.credentials
+
+            if (credentials != null) return@map jacksonObjectMapper().convertValue<S3ProvisioningResult>(credentials)
+
+            val request = S3ProvisioningRequest(
+                bucketName = bucket.name,
+                path = adc.applicationDeploymentId,
+                userName = adc.applicationDeploymentId,
+                access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
+            )
+
+            s3Provisioner.provision(request).also {
+                herkimerService.createResourceAndClaim(
+                    adc.applicationDeploymentId,
+                    ResourceKind.MinioPolicy,
+                    it.bucketName,
+                    it
+                )
             }
+        }
 
-        val s3Secret = result.createS3Secret(adc.namespace, adc.s3SecretName)
+        val s3Secret = provisioningResults.createS3Secrets(adc.namespace, adc.name)
 
-        return setOf(s3Secret.generateAuroraResource())
+        return s3Secret.map { it.generateAuroraResource() }.toSet()
     }
 
-    private fun AuroraDeploymentSpec.deduceBucketName(): String {
-        val bucketNameSuffix: String = this["$FEATURE_FIELD_NAME_DEFAULTS/bucketName"]
-        return "$affiliation-bucket-$productionLevel-$bucketNameSuffix"
-    }
-
-    private fun getBucketCredentials(bucketName: String): JsonNode? =
+    private fun getBucketCredentials(): Map<String, JsonNode?> =
         herkimerService.getClaimedResources(
             claimOwnerId = booberApplicationdeploymentId,
-            resourceKind = ResourceKind.MinioPolicy,
-            name = bucketName
-        ).singleOrNull()
-            ?.claims
-            ?.singleOrNull()
-            ?.credentials
+            resourceKind = ResourceKind.MinioPolicy
+        ).associate {
+            it.name to it.claims?.singleOrNull()?.credentials
+        }
 }
 
 private const val FEATURE_FIELD_NAME = "s3"
-private const val FEATURE_FIELD_NAME_DEFAULTS = "s3Defaults"
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
-private val AuroraDeploymentSpec.isS3Enabled: Boolean get() = get(FEATURE_FIELD_NAME) || get("beta/$FEATURE_FIELD_NAME")
-
-fun Feature.addEnvVarsToDcContainers(resources: Set<AuroraResource>, envVars: List<EnvVar>) {
-    resources.addEnvVar(envVars, this.javaClass)
-}
 
 private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { it.key }, prefix: String = "") =
     properties.map { propertyName ->
@@ -164,40 +164,75 @@ private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { i
         }
     }
 
-fun S3ProvisioningResult.createS3Secret(nsName: String, s3SecretName: String) = newSecret {
-    metadata {
-        name = s3SecretName
-        namespace = nsName
+fun List<S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) = map {
+    newSecret {
+        metadata {
+            name = "$appName-${it.bucketName.substringAfterLast("-")}-s3" // TODO: possible problem with bucketname that has "-" in its suffix
+            namespace = nsName
+        }
+        data = mapOf(
+            "serviceEndpoint" to it.serviceEndpoint,
+            "accessKey" to it.accessKey,
+            "secretKey" to it.secretKey,
+            "bucketRegion" to it.bucketRegion,
+            "bucketName" to it.bucketName,
+            "objectPrefix" to it.objectPrefix
+        ).mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
     }
-    data = mapOf(
-        "serviceEndpoint" to serviceEndpoint,
-        "accessKey" to accessKey,
-        "secretKey" to secretKey,
-        "bucketRegion" to bucketRegion,
-        "bucketName" to bucketName,
-        "objectPrefix" to objectPrefix
-    ).mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
 }
 
-abstract class S3FeatureTemplate : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
-            AuroraConfigFieldHandler(
-                "beta/$FEATURE_FIELD_NAME",
-                validator = { it.boolean() },
-                defaultValue = false,
-                canBeSimplifiedConfig = true
-            ),
-            AuroraConfigFieldHandler(
-                FEATURE_FIELD_NAME,
-                validator = { it.boolean() },
-                defaultValue = false,
-                canBeSimplifiedConfig = true
-            ),
+    abstract class S3FeatureTemplate(private val productionLevel: String) : Feature {
+        override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+
+            val s3Handlers = findS3Handlers(cmd.applicationFiles)
+            return setOf(
                 AuroraConfigFieldHandler(
-                "$FEATURE_FIELD_NAME_DEFAULTS/bucketName",
-            defaultValue = "default"
-        )
-        )
+                    "beta/$FEATURE_FIELD_NAME",
+                    validator = { it.boolean() },
+                    defaultValue = false,
+                    canBeSimplifiedConfig = true
+                ),
+                AuroraConfigFieldHandler(
+                    FEATURE_FIELD_NAME,
+                    validator = { it.boolean() },
+                    defaultValue = false,
+                    canBeSimplifiedConfig = true
+                )
+            ) + s3Handlers
+        }
+        fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+            applicationFiles.findSubKeysExpanded("s3").flatMap { s3Bucket ->
+                if (s3Bucket.isNotEmpty()) {
+                    listOf(
+                        AuroraConfigFieldHandler("$s3Bucket/name", defaultValue = "default"),
+                        AuroraConfigFieldHandler("$s3Bucket/enabled", validator = { it.boolean() }, defaultValue = true)
+                    )
+                } else emptyList()
+            }
+
+        fun findS3Buckets(adc: AuroraDeploymentSpec, applicationFiles: List<AuroraConfigFile>): List<S3Bucket> =
+            if (adc.isSimplifiedAndEnabled("s3")) {
+                listOf(S3Bucket(adc.deduceBucketName()))
+            } else {
+                applicationFiles.findSubKeysExpanded("s3").mapNotNull {
+                    if (!adc.get<Boolean>("$it/enabled")) return@mapNotNull null
+
+                    val bucketSuffix = adc.get<String>("$it/name").let { name ->
+                        if (name == "default" || name.isNullOrBlank()) {
+                            it.substringAfter("s3/")
+                        } else {
+                            name
+                        }
+                    }
+                    S3Bucket(
+                        name = adc.deduceBucketName(bucketSuffix)
+                    )
+                }
+            }
+
+        private fun AuroraDeploymentSpec.deduceBucketName(suffix: String = "default") = "$affiliation-bucket-$productionLevel-$suffix"
     }
-}
+
+    data class S3Bucket(
+        val name: String
+    )
