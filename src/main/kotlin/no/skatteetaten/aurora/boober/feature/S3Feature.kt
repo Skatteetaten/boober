@@ -108,10 +108,10 @@ class S3Feature(
                 resourceKind = ResourceKind.MinioPolicy
             ).associateBy { it.name }
 
-        val provisioningResults = buckets.map { bucket ->
+        val provisioningResults = buckets.associate { bucket ->
             val credentials = resourceWithClaims[bucket.name]?.claims?.singleOrNull()?.credentials
 
-            if (credentials != null) return@map jacksonObjectMapper().convertValue<S3ProvisioningResult>(credentials)
+            if (credentials != null) return@associate bucket to jacksonObjectMapper().convertValue<S3ProvisioningResult>(credentials)
 
             val request = S3ProvisioningRequest(
                 bucketName = bucket.name,
@@ -120,7 +120,7 @@ class S3Feature(
                 access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
             )
 
-            s3Provisioner.provision(request).also {
+            bucket to s3Provisioner.provision(request).also {
                 herkimerService.createResourceAndClaim(
                     adc.applicationDeploymentId,
                     ResourceKind.MinioPolicy,
@@ -164,20 +164,22 @@ private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { i
         }
     }
 
-fun List<S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) = map {
+fun Map<S3Bucket, S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) = this.map {(bucket, provisionResult)->
     newSecret {
         metadata {
-            name = "$appName-${it.bucketName.substringAfterLast("-")}-s3" // TODO: possible problem with bucketname that has "-" in its suffix
+            name = "$appName-${bucket.suffix}-s3"
             namespace = nsName
         }
-        data = mapOf(
-            "serviceEndpoint" to it.serviceEndpoint,
-            "accessKey" to it.accessKey,
-            "secretKey" to it.secretKey,
-            "bucketRegion" to it.bucketRegion,
-            "bucketName" to it.bucketName,
-            "objectPrefix" to it.objectPrefix
-        ).mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
+        data = provisionResult.run {
+            mapOf(
+                "serviceEndpoint" to serviceEndpoint,
+                "accessKey" to accessKey,
+                "secretKey" to secretKey,
+                "bucketRegion" to bucketRegion,
+                "bucketName" to bucketName,
+                "objectPrefix" to objectPrefix
+            ).mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
+        }
     }
 }
 
@@ -212,7 +214,7 @@ fun List<S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) 
 
         fun findS3Buckets(adc: AuroraDeploymentSpec, applicationFiles: List<AuroraConfigFile>): List<S3Bucket> =
             if (adc.isSimplifiedAndEnabled("s3")) {
-                listOf(S3Bucket(adc.deduceBucketName()))
+                listOf(S3Bucket(adc.deduceBucketName(), "default"))
             } else {
                 applicationFiles.findSubKeysExpanded("s3").mapNotNull {
                     if (!adc.get<Boolean>("$it/enabled")) return@mapNotNull null
@@ -225,7 +227,8 @@ fun List<S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) 
                         }
                     }
                     S3Bucket(
-                        name = adc.deduceBucketName(bucketSuffix)
+                        name = adc.deduceBucketName(bucketSuffix),
+                        suffix = bucketSuffix
                     )
                 }
             }
@@ -234,5 +237,6 @@ fun List<S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) 
     }
 
     data class S3Bucket(
-        val name: String
+        val name: String,
+        val suffix: String
     )
