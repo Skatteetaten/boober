@@ -65,10 +65,10 @@ class S3Feature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        resources.filter { it.resource.metadata.name.endsWith("s3") }
-            .map {
-                it.resource as Secret
-            }.forEach {
+        resources.filter { it.resource.metadata.name.endsWith("-s3") }
+            .filter{it.resource is Secret}
+            .map { it.resource as Secret }
+            .forEach {
                 val bucketSuffix = String(Base64.decodeBase64(it.data["bucketName"])).substringAfterLast("-").toUpperCase()
                 val envVars = it.createEnvVarRefs(prefix = "S3_${bucketSuffix}_")
                 resources.addEnvVar(envVars, javaClass)
