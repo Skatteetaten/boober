@@ -16,6 +16,4 @@ utv/about.json | cluster: "utv"
       fileName | artifactId: "simple"
    simple.json | route: true
    simple.json | s3: true
-               | s3Defaults:
-   simple.json |   bucketName: "minYndlingsBucket"
    simple.json | sts: true

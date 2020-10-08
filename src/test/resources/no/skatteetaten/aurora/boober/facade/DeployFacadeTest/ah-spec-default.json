@@ -375,18 +375,6 @@
       }
     ]
   },
-  "s3Defaults": {
-    "bucketName": {
-      "source": "default",
-      "value": "default",
-      "sources": [
-        {
-          "name": "default",
-          "value": "default"
-        }
-      ]
-    }
-  },
   "sts": {
     "source": "default",
     "value": false,

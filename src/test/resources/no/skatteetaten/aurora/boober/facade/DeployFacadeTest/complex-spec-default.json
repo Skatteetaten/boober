@@ -1030,25 +1030,31 @@
     }
   },
   "s3": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
+    "minYndlingsBucket": {
+      "name": {
+        "source": "default",
+        "value": "minYndlingsBucket",
+        "sources": [
+          {
+            "name": "default",
+            "value": "minYndlingsBucket"
+          }
+        ]
+      },
+      "enabled": {
+        "source": "complex.json",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          },
+          {
+            "name": "complex.json",
+            "value": true
+          }
+        ]
       }
-    ]
-  },
-  "s3Defaults": {
-    "bucketName": {
-      "source": "default",
-      "value": "default",
-      "sources": [
-        {
-          "name": "default",
-          "value": "default"
-        }
-      ]
     }
   },
   "secretVaults": {

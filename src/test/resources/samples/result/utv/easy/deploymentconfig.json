@@ -44,7 +44,7 @@
           "boober.skatteetaten.no/deployTag": "1"
         },
         "labels": {
-          "operationScope" : "aos-4016",
+          "operationScope": "aos-4016",
           "app": "easy",
           "updatedBy": "hero",
           "updatedAt": "0",
@@ -126,74 +126,83 @@
               {
                 "name": "ROUTE_URL",
                 "value": "http://easy-paas-utv.test"
-              }, {
-                "name" : "S3_SERVICEENDPOINT",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "serviceEndpoint",
-                    "name" : "easy-s3",
-                    "optional" : false
-                  }
-                }
-              }, {
-                "name" : "S3_ACCESSKEY",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "accessKey",
-                    "name" : "easy-s3",
-                    "optional" : false
-                  }
-                }
-              }, {
-                "name" : "S3_SECRETKEY",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "secretKey",
-                    "name" : "easy-s3",
-                    "optional" : false
-                  }
-                }
-              }, {
-                "name" : "S3_BUCKETREGION",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "bucketRegion",
-                    "name" : "easy-s3",
-                    "optional" : false
-                  }
-                }
-              }, {
-                "name" : "S3_BUCKETNAME",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "bucketName",
-                    "name" : "easy-s3",
-                    "optional" : false
-                  }
-                }
-              }, {
-                "name" : "S3_OBJECTPREFIX",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "objectPrefix",
-                    "name" : "easy-s3",
-                    "optional" : false
+              },
+              {
+                "name": "S3_DEFAULT_SERVICEENDPOINT",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "serviceEndpoint",
+                    "name": "easy-default-s3",
+                    "optional": false
                   }
                 }
               },
               {
-            "name" : "STS_CERTIFICATE_URL",
-            "value" : "/u01/secrets/app/easy-sts/certificate.crt"},
+                "name": "S3_DEFAULT_ACCESSKEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "accessKey",
+                    "name": "easy-default-s3",
+                    "optional": false
+                  }
+                }
+              },
               {
-            "name" : "STS_PRIVATE_KEY_URL",
-            "value" : "/u01/secrets/app/easy-sts/privatekey.key"
-          },
-              {"name" : "STS_KEYSTORE_DESCRIPTOR",
-            "value" : "/u01/secrets/app/easy-sts/descriptor.properties"
-          },
-              {"name" : "VOLUME_EASY_STS",
-            "value" : "/u01/secrets/app/easy-sts"
-          },
+                "name": "S3_DEFAULT_SECRETKEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "secretKey",
+                    "name": "easy-default-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_DEFAULT_BUCKETREGION",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "bucketRegion",
+                    "name": "easy-default-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_DEFAULT_BUCKETNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "bucketName",
+                    "name": "easy-default-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_DEFAULT_OBJECTPREFIX",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "objectPrefix",
+                    "name": "easy-default-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/easy-sts/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/easy-sts/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/easy-sts/descriptor.properties"
+              },
+              {
+                "name": "VOLUME_EASY_STS",
+                "value": "/u01/secrets/app/easy-sts"
+              },
               {
                 "name": "STS_DISCOVERY_URL",
                 "value": "https://bigbird-utv.org"
@@ -249,12 +258,14 @@
                 "mountPath": "/u01/logs",
                 "name": "application-log-volume"
               },
-              {"mountPath" : "/u01/secrets/app/easy-db",
-            "name" : "easy-db"
-          }, {
-              "mountPath" : "/u01/secrets/app/easy-sts",
-            "name" : "easy-sts"
-          }
+              {
+                "mountPath": "/u01/secrets/app/easy-db",
+                "name": "easy-db"
+              },
+              {
+                "mountPath": "/u01/secrets/app/easy-sts",
+                "name": "easy-sts"
+              }
             ]
           }
         ],

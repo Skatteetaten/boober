@@ -223,7 +223,7 @@ class S3FeatureTest : AbstractFeatureTest() {
     }
 
     private fun List<AuroraResource>.verifyS3SecretsAndEnvs(expectedBucketNameSuffixes: List<String> = listOf("default")) {
-        val secrets: List<Secret> = this.findResourcesByType()
+        val secrets: List<Secret> = findResourcesByType()
 
         secrets.forEach { secret ->
             val bucketName = String(Base64.decodeBase64(secret.data["bucketName"]))

@@ -78,7 +78,9 @@
   "pause": true,
   "message": "Aurora <3",
   "s3": {
-    "name": "minYndlingsBucket"
+    "minYndlingsBucket": {
+      "enabled": true
+    }
   },
   "database": {
     "complex": {

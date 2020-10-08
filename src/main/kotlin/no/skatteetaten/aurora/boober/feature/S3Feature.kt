@@ -29,6 +29,7 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.lang.RuntimeException
 
 private val logger = KotlinLogging.logger {}
 
@@ -65,12 +66,15 @@ class S3Feature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+        val buckets = findS3Buckets(adc, cmd.applicationFiles).associateBy { it.name }
         resources.filter { it.resource.metadata.name.endsWith("-s3") }
-            .filter{it.resource is Secret}
+            .filter { it.resource is Secret }
             .map { it.resource as Secret }
             .forEach {
-                val bucketSuffix = String(Base64.decodeBase64(it.data["bucketName"])).substringAfterLast("-").toUpperCase()
-                val envVars = it.createEnvVarRefs(prefix = "S3_${bucketSuffix}_")
+                val bucketName = String(Base64.decodeBase64(it.data["bucketName"]))
+                val bucketNameSuffix = buckets[bucketName]?.suffix?.toUpperCase()
+                    ?: throw RuntimeException("Failed during creation of envVars, a secret with name=${it.metadata.name} has been created but the bucket does not exist")
+                val envVars = it.createEnvVarRefs(prefix = "S3_${bucketNameSuffix}_")
                 resources.addEnvVar(envVars, javaClass)
             }
     }
@@ -164,7 +168,7 @@ private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { i
         }
     }
 
-fun Map<S3Bucket, S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) = this.map {(bucket, provisionResult)->
+fun Map<S3Bucket, S3ProvisioningResult>.createS3Secrets(nsName: String, appName: String) = this.map { (bucket, provisionResult) ->
     newSecret {
         metadata {
             name = "$appName-${bucket.suffix}-s3"
@@ -202,30 +206,25 @@ fun Map<S3Bucket, S3ProvisioningResult>.createS3Secrets(nsName: String, appName:
                 )
             ) + s3Handlers
         }
-        fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+        private fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
             applicationFiles.findSubKeysExpanded("s3").flatMap { s3Bucket ->
                 if (s3Bucket.isNotEmpty()) {
                     listOf(
-                        AuroraConfigFieldHandler("$s3Bucket/name", defaultValue = "default"),
+                        AuroraConfigFieldHandler("$s3Bucket/name", defaultValue = s3Bucket.substringAfter("s3/")),
                         AuroraConfigFieldHandler("$s3Bucket/enabled", validator = { it.boolean() }, defaultValue = true)
                     )
                 } else emptyList()
             }
 
         fun findS3Buckets(adc: AuroraDeploymentSpec, applicationFiles: List<AuroraConfigFile>): List<S3Bucket> =
-            if (adc.isSimplifiedAndEnabled("s3")) {
+            if (adc.isSimplifiedAndEnabled("s3") || adc.isSimplifiedAndEnabled("beta/s3")) {
                 listOf(S3Bucket(adc.deduceBucketName(), "default"))
             } else {
                 applicationFiles.findSubKeysExpanded("s3").mapNotNull {
                     if (!adc.get<Boolean>("$it/enabled")) return@mapNotNull null
 
-                    val bucketSuffix = adc.get<String>("$it/name").let { name ->
-                        if (name == "default" || name.isNullOrBlank()) {
-                            it.substringAfter("s3/")
-                        } else {
-                            name
-                        }
-                    }
+                    val bucketSuffix = adc.get<String>("$it/name")
+
                     S3Bucket(
                         name = adc.deduceBucketName(bucketSuffix),
                         suffix = bucketSuffix

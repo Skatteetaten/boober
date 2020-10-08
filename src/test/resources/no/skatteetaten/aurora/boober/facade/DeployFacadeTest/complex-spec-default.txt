@@ -111,9 +111,10 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     termination: "edge"
                          | beta:
                  default |   s3: false
-                 default | s3: false
-                         | s3Defaults:
-                 default |   bucketName: "default"
+                         | s3:
+                         |   minYndlingsBucket:
+                 default |     name: "minYndlingsBucket"
+            complex.json |     enabled: true
                          | secretVaults:
                          |   foo:
                  default |     name: "foo"

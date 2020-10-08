@@ -41,7 +41,7 @@
           "boober.skatteetaten.no/deployTag": "komplex"
         },
         "labels": {
-          "operationScope" : "aos-4016",
+          "operationScope": "aos-4016",
           "app": "komplex",
           "updatedBy": "hero",
           "updatedAt": "0",
@@ -176,6 +176,66 @@
               {
                 "name": "ROUTE_URL",
                 "value": "https://komplex-paas-utv.test"
+              },
+              {
+                "name": "S3_MINYNDLINGSBUCKET_SERVICEENDPOINT",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "serviceEndpoint",
+                    "name": "komplex-minYndlingsBucket-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_MINYNDLINGSBUCKET_ACCESSKEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "accessKey",
+                    "name": "komplex-minYndlingsBucket-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_MINYNDLINGSBUCKET_SECRETKEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "secretKey",
+                    "name": "komplex-minYndlingsBucket-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_MINYNDLINGSBUCKET_BUCKETREGION",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "bucketRegion",
+                    "name": "komplex-minYndlingsBucket-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_MINYNDLINGSBUCKET_BUCKETNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "bucketName",
+                    "name": "komplex-minYndlingsBucket-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_MINYNDLINGSBUCKET_OBJECTPREFIX",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "objectPrefix",
+                    "name": "komplex-minYndlingsBucket-s3",
+                    "optional": false
+                  }
+                }
               },
               {
                 "name": "FOO",

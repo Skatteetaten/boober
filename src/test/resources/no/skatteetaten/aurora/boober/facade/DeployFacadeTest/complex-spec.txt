@@ -74,6 +74,9 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |     host: "foobar"
                          |     annotations:
             complex.json |       haproxy.router.openshift.io|timeout: "30s"
+                         | s3:
+                         |   minYndlingsBucket:
+            complex.json |     enabled: true
                          | secretVaults:
                          |   foo:
             complex.json |     keys: ["BAR","FOO"]

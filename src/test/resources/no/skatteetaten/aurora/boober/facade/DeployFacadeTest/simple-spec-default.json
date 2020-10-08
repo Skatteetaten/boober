@@ -523,22 +523,6 @@
       }
     ]
   },
-  "s3Defaults": {
-    "bucketName": {
-      "source": "simple.json",
-      "value": "minYndlingsBucket",
-      "sources": [
-        {
-          "name": "default",
-          "value": "default"
-        },
-        {
-          "name": "simple.json",
-          "value": "minYndlingsBucket"
-        }
-      ]
-    }
-  },
   "sts": {
     "source": "simple.json",
     "value": true,
