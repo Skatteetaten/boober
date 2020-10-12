@@ -16,6 +16,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.HerkimerService
 import no.skatteetaten.aurora.boober.service.ResourceKind
@@ -165,6 +166,7 @@ class S3Feature(
 }
 
 private const val FEATURE_FIELD_NAME = "s3"
+private const val FEATURE_DEFAULTS_FIELD_NAME = "s3Defaults"
 
 private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { it.key }, prefix: String = "") =
     properties.map { propertyName ->
@@ -224,7 +226,7 @@ abstract class S3FeatureTemplate : Feature {
     }
 
     private fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded("s3").flatMap { s3Bucket ->
+        applicationFiles.findSubKeysExpanded(FEATURE_FIELD_NAME).flatMap { s3Bucket ->
             if (s3Bucket.isNotEmpty()) {
                 listOf(
                     AuroraConfigFieldHandler("$s3Bucket/bucketName"),
@@ -236,33 +238,34 @@ abstract class S3FeatureTemplate : Feature {
 
     private fun findS3DefaultHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
         listOf(
-            AuroraConfigFieldHandler("s3Defaults/bucketName"),
-            AuroraConfigFieldHandler("s3Defaults/objectArea")
+            AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
+            AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/objectArea")
         )
 
     fun findS3Buckets(adc: AuroraDeploymentSpec, applicationFiles: List<AuroraConfigFile>): List<S3BucketObjectArea> {
 
-        return if (adc.isSimplifiedAndEnabled("s3") || adc.isSimplifiedAndEnabled("beta/s3")) {
+        return if (adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) || adc.isSimplifiedAndEnabled("beta/$FEATURE_FIELD_NAME")) {
             val defaultS3Bucket = S3BucketObjectArea(
-                bucketName = adc["s3Defaults/bucketName"],
-                name = adc["s3Defaults/objectArea"]
+                bucketName = adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
+                name = adc["$FEATURE_DEFAULTS_FIELD_NAME/objectArea"]
             )
             listOf(defaultS3Bucket)
         } else {
-            applicationFiles.findSubKeysExpanded("s3")
+            applicationFiles.findSubKeys(FEATURE_FIELD_NAME)
                 .mapNotNull { findS3Bucket(it, adc) }
         }
     }
 
-    fun findS3Bucket(
+    private fun findS3Bucket(
         s3ObjectAreaKey: String,
         adc: AuroraDeploymentSpec
     ): S3BucketObjectArea? {
-        if (!adc.get<Boolean>("$s3ObjectAreaKey/enabled")) return null
+        if (!adc.get<Boolean>("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/enabled")) return null
 
         return S3BucketObjectArea(
-            bucketName = adc.getOrNull("$s3ObjectAreaKey/bucketName") ?: adc["s3Defaults/bucketName"],
-            name = adc.getOrNull("$s3ObjectAreaKey/objectArea") ?: s3ObjectAreaKey.substringAfter("s3/")
+            bucketName = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/bucketName")
+                ?: adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
+            name = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea") ?: s3ObjectAreaKey
         )
     }
 }
