@@ -12,7 +12,7 @@ private val logger = KotlinLogging.logger { }
 
 class S3FeatureDisabledTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = S3DisabledFeature("u")
+        get() = S3DisabledFeature()
 
     @Test
     fun `get error if trying to create s3`() {
