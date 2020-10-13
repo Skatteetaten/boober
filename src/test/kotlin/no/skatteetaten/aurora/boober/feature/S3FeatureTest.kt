@@ -60,22 +60,6 @@ class S3FeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `verify supports beta block S3`() {
-        mockFiona()
-        mockHerkimer(booberAdId = booberAdId, claimExistsInHerkimer = false)
-
-        generateResources(
-            """{ 
-                "beta": {
-                    "s3": true
-                }
-           }""",
-            createdResources = 1,
-            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
-        ).verifyS3SecretsAndEnvs()
-    }
-
-    @Test
     fun `verify is able to disable s3 when simple config`() {
         generateResources(
             """{ 
@@ -93,7 +77,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 "s3": {
                     "default" : {
                         "enabled": false,
-                        "name": "minBucket"
+                        "bucketName": "minBucket"
                     }
                 }
            }""",
@@ -174,7 +158,11 @@ class S3FeatureTest : AbstractFeatureTest() {
 
         val resources = generateResources(
             """{ 
-                "s3": true
+                "s3": {
+                    "default" : {
+                        "bucketName": "anotherId"
+                    }
+                }
            }""",
             createdResources = 1,
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
@@ -248,7 +236,7 @@ class S3FeatureTest : AbstractFeatureTest() {
         } else {
             every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy, any()) } returns emptyList()
             every {
-                herkimerService.createResourceAndClaim(any(), any(), any(), any())
+                herkimerService.createClaim(any(), any(), any(), any())
             } just Runs
         }
     }
@@ -278,12 +266,12 @@ class S3FeatureTest : AbstractFeatureTest() {
             val secretName = "$appName-$bucketObjectArea-s3"
             val bucketObjectAreaUpper = bucketObjectArea.toUpperCase()
             val expectedEnvs = listOf(
-                "S3_${bucketObjectAreaUpper}_SERVICEENDPOINT" to "$secretName/serviceEndpoint",
-                "S3_${bucketObjectAreaUpper}_ACCESSKEY" to "$secretName/accessKey",
-                "S3_${bucketObjectAreaUpper}_SECRETKEY" to "$secretName/secretKey",
-                "S3_${bucketObjectAreaUpper}_BUCKETREGION" to "$secretName/bucketRegion",
-                "S3_${bucketObjectAreaUpper}_BUCKETNAME" to "$secretName/bucketName",
-                "S3_${bucketObjectAreaUpper}_OBJECTPREFIX" to "$secretName/objectPrefix"
+                "S3_BUCKETS_${bucketObjectAreaUpper}_SERVICEENDPOINT" to "$secretName/serviceEndpoint",
+                "S3_BUCKETS_${bucketObjectAreaUpper}_ACCESSKEY" to "$secretName/accessKey",
+                "S3_BUCKETS_${bucketObjectAreaUpper}_SECRETKEY" to "$secretName/secretKey",
+                "S3_BUCKETS_${bucketObjectAreaUpper}_BUCKETREGION" to "$secretName/bucketRegion",
+                "S3_BUCKETS_${bucketObjectAreaUpper}_BUCKETNAME" to "$secretName/bucketName",
+                "S3_BUCKETS_${bucketObjectAreaUpper}_OBJECTPREFIX" to "$secretName/objectPrefix"
             )
             assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
         }

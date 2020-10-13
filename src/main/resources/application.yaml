@@ -65,7 +65,7 @@ aurora:
 logging:
     level:
         no.skatteetaten: INFO
-        no.skatteetaten.aurora.boober: DEBUG
+        no.skatteetaten.aurora.boober: INFO
         org:
             jboss: WARN
             hibernate: WARN
@@ -95,12 +95,11 @@ integrations:
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
     skap:
-        url: https://skap-aurora.utv.paas.skead.no
+        url: http://localhost:9090
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: false
-        #url: http://herkimer-aurora.${openshift.cluster}.paas.skead.no
+        url: http://herkimer-aurora.${openshift.cluster}.paas.skead.no
         fallback:
             applikasjonsnavn : "1234567890"
     openshift:

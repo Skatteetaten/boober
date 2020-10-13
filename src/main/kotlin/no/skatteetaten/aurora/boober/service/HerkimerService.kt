@@ -137,7 +137,8 @@ class HerkimerService(
         return herkimerObjectMapper.convertValue(herkimerResponse.items)
     }
 
-    fun createResourceAndClaim(ownerId: String, resourceKind: ResourceKind, resourceName: String, credentials: Any) {
+    fun createClaim(ownerId: String, resourceKind: ResourceKind, resourceName: String, credentials: Any) {
+        // TODO: do not create resource, it is already created
         val resourceResponse = client.post(
             type = HerkimerResponse::class,
             url = "/resource",

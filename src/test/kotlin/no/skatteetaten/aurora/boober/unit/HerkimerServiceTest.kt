@@ -162,7 +162,7 @@ class HerkimerServiceTest {
 
         server.execute(createResourceResponse, claimResourceResponse) {
             assertThat {
-                service.createResourceAndClaim(
+                service.createClaim(
                     "019234abac5",
                     ResourceKind.MinioPolicy,
                     "myResource",
@@ -184,7 +184,7 @@ class HerkimerServiceTest {
 
         server.execute(createResourceResponse, failedClaimResource) {
             assertThat {
-                service.createResourceAndClaim(
+                service.createClaim(
                     "019234abac5",
                     ResourceKind.MinioPolicy,
                     "myResource",
@@ -212,7 +212,7 @@ class HerkimerServiceTest {
 
         server.execute(failedCreationOfResource) {
             assertThat {
-                service.createResourceAndClaim(
+                service.createClaim(
                     "019234abac5",
                     ResourceKind.MinioPolicy,
                     "myResource",
