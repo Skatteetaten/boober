@@ -24,6 +24,7 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   commonName: "komplex"
                          | config:
             complex.json |   FOO: "BAR"
+            complex.json |   THIS.VALUE: "BAZ"
                          | database:
                          |   complex:
             complex.json |     enabled: true

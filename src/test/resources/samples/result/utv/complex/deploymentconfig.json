@@ -114,6 +114,10 @@
                 "value": "BAR"
               },
               {
+                "name": "THIS_VALUE",
+                "value": "BAZ"
+              },
+              {
                 "name": "COMPLEX_DB",
                 "value": "/u01/secrets/app/complex-db/info"
               },

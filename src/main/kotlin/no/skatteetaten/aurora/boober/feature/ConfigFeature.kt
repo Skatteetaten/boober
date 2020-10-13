@@ -21,4 +21,8 @@ class ConfigFeature : Feature {
         val env = adc.getConfigEnv(configHandlers(cmd)).toEnvVars()
         resources.addEnvVar(env, this::class.java)
     }
+
+    fun envVarsKeysWithSpecialCharacters(adc: AuroraDeploymentSpec): List<String> {
+        return adc.getSubKeys("config").keyWillReplaceEnvVar()
+    }
 }
