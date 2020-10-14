@@ -72,16 +72,20 @@ class S3FeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `verify is able to disable s3 when expanded config`() {
+        mockHerkimer(booberAdId, true)
         generateResources(
             """{ 
                 "s3": {
-                    "default" : {
+                    "notDefault" : {
                         "enabled": false,
                         "bucketName": "minBucket"
+                    },
+                    "default" : {
+                        "bucketName" : "anotherId"
                     }
                 }
            }""",
-            createdResources = 0,
+            createdResources = 1,
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
     }
@@ -89,24 +93,8 @@ class S3FeatureTest : AbstractFeatureTest() {
     @Test
     fun `verify creates secrets and supports custom bucketname suffix`() {
         val s3Credentials = listOf(
-            S3Credentials(
-                "default",
-                "http://localhost",
-                "accessKey",
-                "secretKey",
-                "uniqueId",
-                "uniquePrefix",
-                "us-east-1"
-            ),
-            S3Credentials(
-                "minAndreBucket",
-                "http://localhost",
-                "accessKey",
-                "secretKey",
-                "uniqueId",
-                "uniquePrefix",
-                "us-east-1"
-            )
+            createS3Credentials(),
+            createS3Credentials(objectArea = "minAndreBucket")
         )
         mockFiona()
         mockHerkimer(booberAdId = booberAdId, s3Credentials = s3Credentials, claimExistsInHerkimer = false)
@@ -139,6 +127,10 @@ class S3FeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
+                "s3Defaults": {
+                    "bucketName": "minYndlingsBucket",
+                    "objectArea": "default"
+                },
                 "s3": true
            }""",
                 createdResources = 0,
@@ -190,17 +182,7 @@ class S3FeatureTest : AbstractFeatureTest() {
     private fun mockHerkimer(
         booberAdId: String,
         claimExistsInHerkimer: Boolean,
-        s3Credentials: List<S3Credentials> = listOf(
-            S3Credentials(
-                "default",
-                "http://localhost",
-                "accesKey",
-                "secretKey",
-                "anotherId",
-                "objectprefix",
-                "us-east-1"
-            )
-        )
+        s3Credentials: List<S3Credentials> = listOf(createS3Credentials())
     ) {
         val adId = "1234567890"
 
@@ -212,25 +194,32 @@ class S3FeatureTest : AbstractFeatureTest() {
             createResourceHerkimer(
                 name = it,
                 adId = booberAdId,
-                claims = createResourceClaim(
-                    adId = booberAdId,
-                    s3Credentials = jacksonObjectMapper().createObjectNode()
+                claims = listOf(
+                    createResourceClaim(
+                        adId = booberAdId,
+                        s3Credentials = jacksonObjectMapper().createObjectNode()
+                    )
                 )
             )
         }
 
         if (claimExistsInHerkimer) {
-            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy) } returns bucketNames.map {
+            every {
+                herkimerService.getClaimedResources(
+                    adId,
+                    ResourceKind.MinioPolicy
+                )
+            } returns bucketNames.map { bucketName ->
+                val credentials = bucketNamesWithCredentials[bucketName]
                 createResourceHerkimer(
                     adId = adId,
-                    name = it,
-                    claims = createResourceClaim(
-                        adId = adId,
-                        s3Credentials = jacksonObjectMapper().convertValue(
-                            bucketNamesWithCredentials[it]
-                                ?: throw RuntimeException("Failed test, could not find credentials for bucketname=$it")
+                    name = bucketName,
+                    claims = credentials?.map {
+                        createResourceClaim(
+                            adId = adId,
+                            s3Credentials = jacksonObjectMapper().convertValue(it)
                         )
-                    )
+                    } ?: emptyList()
                 )
             }
         } else {
@@ -277,6 +266,18 @@ class S3FeatureTest : AbstractFeatureTest() {
         }
     }
 
+    private fun createS3Credentials(bucketName: String = "anotherId", objectArea: String = "default") =
+        S3Credentials(
+            objectArea,
+            "http://localhost",
+            "access",
+            "secret",
+            bucketName,
+            "objectprefix",
+            "us-east-1"
+
+        )
+
     private fun createResourceHerkimer(
         adId: String,
         name: String = "paas-bucket-u-default",
@@ -296,7 +297,7 @@ class S3FeatureTest : AbstractFeatureTest() {
     private fun createResourceClaim(
         adId: String,
         s3Credentials: JsonNode
-    ) = listOf(
+    ) =
         ResourceClaimHerkimer(
             id = "0L",
             ownerId = adId,
@@ -307,5 +308,4 @@ class S3FeatureTest : AbstractFeatureTest() {
             createdBy = "aurora",
             modifiedBy = "aurora"
         )
-    )
 }

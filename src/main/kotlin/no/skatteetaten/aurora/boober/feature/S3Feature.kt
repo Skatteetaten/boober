@@ -43,12 +43,16 @@ class S3DisabledFeature : S3FeatureTemplate() {
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         cmd: AuroraContextCommand
-    ): List<Exception> =
-        if (findS3Buckets(adc, cmd.applicationFiles).isNotEmpty()) {
-            listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
-        } else {
-            emptyList()
-        }
+    ): List<Exception> {
+        val isS3Enabled = adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) ||
+            cmd.applicationFiles.findSubKeys( FEATURE_FIELD_NAME).isNotEmpty() ||
+            cmd.applicationFiles.findSubKeys( FEATURE_DEFAULTS_FIELD_NAME).isNotEmpty()
+            if (isS3Enabled) {
+                listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
+            } else {
+                emptyList()
+            }
+    }
 }
 
 @ConditionalOnProperty(value = ["integrations.fiona.url", "integrations.herkimer.url"])
