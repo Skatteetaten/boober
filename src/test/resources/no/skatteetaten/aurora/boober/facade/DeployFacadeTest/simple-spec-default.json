@@ -497,18 +497,6 @@
       }
     }
   },
-  "beta": {
-    "s3": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    }
-  },
   "s3": {
     "source": "simple.json",
     "value": true,
@@ -522,6 +510,28 @@
         "value": true
       }
     ]
+  },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "simple.json",
+      "value": "myBucket",
+      "sources": [
+        {
+          "name": "simple.json",
+          "value": "myBucket"
+        }
+      ]
+    },
+    "objectArea" : {
+      "source": "simple.json",
+      "value": "default",
+      "sources": [
+        {
+          "name": "simple.json",
+          "value": "default"
+        }
+      ]
+    }
   },
   "sts": {
     "source": "simple.json",

@@ -102,7 +102,7 @@ class S3FeatureTest : AbstractFeatureTest() {
         val resources = generateResources(
             """{ 
                 "s3Defaults": {
-                    "bucketName": "uniqueId"
+                    "bucketName": "anotherId"
                 },
                 "s3": {
                     "default": {

@@ -187,6 +187,28 @@
       }
     ]
   },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "simple.json",
+      "value": "myBucket",
+      "sources": [
+        {
+          "name": "simple.json",
+          "value": "myBucket"
+        }
+      ]
+    },
+    "objectArea" : {
+      "source": "simple.json",
+      "value": "default",
+      "sources": [
+        {
+          "name": "simple.json",
+          "value": "default"
+        }
+      ]
+    }
+  },
   "sts": {
     "source": "simple.json",
     "value": true,

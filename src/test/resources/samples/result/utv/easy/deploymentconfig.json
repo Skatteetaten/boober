@@ -128,7 +128,7 @@
                 "value": "http://easy-paas-utv.test"
               },
               {
-                "name": "S3_DEFAULT_SERVICEENDPOINT",
+                "name": "S3_BUCKETS_DEFAULT_SERVICEENDPOINT",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "serviceEndpoint",
@@ -138,7 +138,7 @@
                 }
               },
               {
-                "name": "S3_DEFAULT_ACCESSKEY",
+                "name": "S3_BUCKETS_DEFAULT_ACCESSKEY",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "accessKey",
@@ -148,7 +148,7 @@
                 }
               },
               {
-                "name": "S3_DEFAULT_SECRETKEY",
+                "name": "S3_BUCKETS_DEFAULT_SECRETKEY",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "secretKey",
@@ -158,7 +158,7 @@
                 }
               },
               {
-                "name": "S3_DEFAULT_BUCKETREGION",
+                "name": "S3_BUCKETS_DEFAULT_BUCKETREGION",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "bucketRegion",
@@ -168,7 +168,7 @@
                 }
               },
               {
-                "name": "S3_DEFAULT_BUCKETNAME",
+                "name": "S3_BUCKETS_DEFAULT_BUCKETNAME",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "bucketName",
@@ -178,7 +178,7 @@
                 }
               },
               {
-                "name": "S3_DEFAULT_OBJECTPREFIX",
+                "name": "S3_BUCKETS_DEFAULT_OBJECTPREFIX",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "objectPrefix",

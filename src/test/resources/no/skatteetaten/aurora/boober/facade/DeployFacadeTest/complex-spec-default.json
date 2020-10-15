@@ -1017,40 +1017,34 @@
       }
     }
   },
-  "beta": {
-    "s3": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    }
-  },
   "s3": {
-    "minYndlingsBucket": {
-      "name": {
-        "source": "default",
+    "default": {
+      "bucketName": {
+        "source": "complex.json",
         "value": "minYndlingsBucket",
         "sources": [
           {
-            "name": "default",
+            "name": "complex.json",
             "value": "minYndlingsBucket"
           }
         ]
       },
+      "objectArea": {
+        "source": "default",
+        "value": "default",
+        "sources": [
+          {
+            "name": "default",
+            "value": "default"
+          }
+        ]
+      },
       "enabled": {
-        "source": "complex.json",
+        "source": "default",
         "value": true,
         "sources": [
           {
             "name": "default",
-            "value": true
-          },
-          {
-            "name": "complex.json",
             "value": true
           }
         ]

@@ -648,18 +648,14 @@
     }
   },
   "s3": {
-    "minYndlingsBucket": {
-      "enabled": {
+    "default": {
+      "bucketName": {
         "source": "complex.json",
-        "value": true,
+        "value": "minYndlingsBucket",
         "sources": [
           {
-            "name": "default",
-            "value": true
-          },
-          {
             "name": "complex.json",
-            "value": true
+            "value": "minYndlingsBucket"
           }
         ]
       }

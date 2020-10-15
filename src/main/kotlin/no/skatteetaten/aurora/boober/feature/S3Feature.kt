@@ -17,7 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVar
 import no.skatteetaten.aurora.boober.model.findSubKeys
-import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.HerkimerService
 import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
@@ -45,13 +44,13 @@ class S3DisabledFeature : S3FeatureTemplate() {
         cmd: AuroraContextCommand
     ): List<Exception> {
         val isS3Enabled = adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) ||
-            cmd.applicationFiles.findSubKeys( FEATURE_FIELD_NAME).isNotEmpty() ||
-            cmd.applicationFiles.findSubKeys( FEATURE_DEFAULTS_FIELD_NAME).isNotEmpty()
-            if (isS3Enabled) {
-                listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
-            } else {
-                emptyList()
-            }
+            cmd.applicationFiles.findSubKeys(FEATURE_FIELD_NAME).isNotEmpty() ||
+            cmd.applicationFiles.findSubKeys(FEATURE_DEFAULTS_FIELD_NAME).isNotEmpty()
+        return if (isS3Enabled) {
+            listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
+        } else {
+            emptyList()
+        }
     }
 }
 
@@ -220,7 +219,7 @@ abstract class S3FeatureTemplate : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val s3Handlers = findS3Handlers(cmd.applicationFiles)
-        val s3DefaultHandlers = findS3DefaultHandlers(cmd.applicationFiles)
+        val s3DefaultHandlers = findS3DefaultHandlers()
         return setOf(
             AuroraConfigFieldHandler(
                 FEATURE_FIELD_NAME,
@@ -232,17 +231,17 @@ abstract class S3FeatureTemplate : Feature {
     }
 
     private fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded(FEATURE_FIELD_NAME).flatMap { s3Bucket ->
-            if (s3Bucket.isNotEmpty()) {
+        applicationFiles.findSubKeys(FEATURE_FIELD_NAME).flatMap { s3BucketObjectArea ->
+            if (s3BucketObjectArea.isNotEmpty()) {
                 listOf(
-                    AuroraConfigFieldHandler("$s3Bucket/bucketName"),
-                    AuroraConfigFieldHandler("$s3Bucket/objectArea"),
-                    AuroraConfigFieldHandler("$s3Bucket/enabled", validator = { it.boolean() }, defaultValue = true)
+                    AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/$s3BucketObjectArea/bucketName"),
+                    AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/$s3BucketObjectArea/objectArea", defaultValue = s3BucketObjectArea),
+                    AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/$s3BucketObjectArea/enabled", validator = { it.boolean() }, defaultValue = true)
                 )
             } else emptyList()
         }
 
-    private fun findS3DefaultHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+    private fun findS3DefaultHandlers(): List<AuroraConfigFieldHandler> =
         listOf(
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/objectArea")
@@ -271,7 +270,7 @@ abstract class S3FeatureTemplate : Feature {
         return S3BucketObjectArea(
             bucketName = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/bucketName")
                 ?: adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
-            name = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea") ?: s3ObjectAreaKey
+            name = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"]
         )
     }
 }

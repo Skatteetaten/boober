@@ -178,61 +178,61 @@
                 "value": "https://komplex-paas-utv.test"
               },
               {
-                "name": "S3_MINYNDLINGSBUCKET_SERVICEENDPOINT",
+                "name": "S3_BUCKETS_DEFAULT_SERVICEENDPOINT",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "serviceEndpoint",
-                    "name": "komplex-minYndlingsBucket-s3",
+                    "name": "komplex-default-s3",
                     "optional": false
                   }
                 }
               },
               {
-                "name": "S3_MINYNDLINGSBUCKET_ACCESSKEY",
+                "name": "S3_BUCKETS_DEFAULT_ACCESSKEY",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "accessKey",
-                    "name": "komplex-minYndlingsBucket-s3",
+                    "name": "komplex-default-s3",
                     "optional": false
                   }
                 }
               },
               {
-                "name": "S3_MINYNDLINGSBUCKET_SECRETKEY",
+                "name": "S3_BUCKETS_DEFAULT_SECRETKEY",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "secretKey",
-                    "name": "komplex-minYndlingsBucket-s3",
+                    "name": "komplex-default-s3",
                     "optional": false
                   }
                 }
               },
               {
-                "name": "S3_MINYNDLINGSBUCKET_BUCKETREGION",
+                "name": "S3_BUCKETS_DEFAULT_BUCKETREGION",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "bucketRegion",
-                    "name": "komplex-minYndlingsBucket-s3",
+                    "name": "komplex-default-s3",
                     "optional": false
                   }
                 }
               },
               {
-                "name": "S3_MINYNDLINGSBUCKET_BUCKETNAME",
+                "name": "S3_BUCKETS_DEFAULT_BUCKETNAME",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "bucketName",
-                    "name": "komplex-minYndlingsBucket-s3",
+                    "name": "komplex-default-s3",
                     "optional": false
                   }
                 }
               },
               {
-                "name": "S3_MINYNDLINGSBUCKET_OBJECTPREFIX",
+                "name": "S3_BUCKETS_DEFAULT_OBJECTPREFIX",
                 "valueFrom": {
                   "secretKeyRef": {
                     "key": "objectPrefix",
-                    "name": "komplex-minYndlingsBucket-s3",
+                    "name": "komplex-default-s3",
                     "optional": false
                   }
                 }

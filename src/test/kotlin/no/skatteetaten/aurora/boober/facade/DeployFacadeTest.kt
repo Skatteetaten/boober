@@ -54,6 +54,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
         }
 
         val adId = "1234567890"
+
         applicationDeploymentGenerationMock(adId) {
             rule({
                 path.contains("resource?claimedBy=$booberAdId")
