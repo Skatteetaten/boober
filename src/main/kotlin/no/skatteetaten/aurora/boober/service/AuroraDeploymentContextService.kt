@@ -178,9 +178,8 @@ class AuroraDeploymentContextService(
         val configKeysWithSpecialCharacters = features.flatMap { (feature, spec) ->
             if (feature is ConfigFeature) {
                 feature.envVarsKeysWithSpecialCharacters(spec).map {
-                    val field = it.replace("config/", "")
                     logWarning("configKeyWithSpecialChar")
-                    "Config key=$field contains a special character that will be replaced with _"
+                    it
                 }
             } else emptyList()
         }

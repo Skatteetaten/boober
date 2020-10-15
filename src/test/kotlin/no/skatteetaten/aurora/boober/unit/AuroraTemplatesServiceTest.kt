@@ -8,7 +8,7 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
-import org.junit.Test
+import org.junit.jupiter.api.Test
 
 class AuroraTemplatesServiceTest : ResourceLoader() {
 

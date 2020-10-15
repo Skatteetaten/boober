@@ -23,6 +23,15 @@ class ConfigFeature : Feature {
     }
 
     fun envVarsKeysWithSpecialCharacters(adc: AuroraDeploymentSpec): List<String> {
-        return adc.getSubKeys("config").keyWillReplaceEnvVar()
+        return adc.getSubKeys("config").keys.map {
+            it.replace("config/", "")
+        }.mapNotNull {
+            val replaceValue = it.normalizeEnvVar()
+            if (replaceValue == it) {
+                null
+            } else {
+                "Config key=$it was normalized to $replaceValue"
+            }
+        }
     }
 }
