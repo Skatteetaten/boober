@@ -1,0 +1,11 @@
+{
+  "apiVersion" : "v1",
+  "kind" : "ConfigMap",
+  "metadata" : {
+    "name" : "simple-fluent-config",
+    "namespace" : "paas-utv"
+  },
+  "data" : {
+    "fluent-bit.conf" : "\n    [SERVICE]\n    Flush        1\n    Daemon       Off\n    Log_Level    debug\n    Parsers_File parsers.conf\n\n    [INPUT]\n    Name   tail\n    Path   /u01/logs/*.log\n    Tag    log4j\n    Mem_Buf_Limit 10MB\n    Key    event\n\n    [FILTER]\n    Name modify\n    Match *\n    Add index test-index\n    Add host \\$\\{POD_NAME\\}\n    Add environment \\$\\{POD_NAMESPACE\\}\n    Add nodetype openshift\n    Add application simple\n    Add cluster utv\n\n    [FILTER]\n    Name nest\n    Match *\n    Operation nest\n    Wildcard environment\n    Wildcard application\n    Wildcard cluster\n    Wildcard nodetype\n    Nest_under fields\n\n    [OUTPUT]\n    Name splunk\n    Match *\n    Host splunk-hec.skead.no\n    Port 8088\n    Splunk_Token test_hec\n    Splunk_Send_Raw On\n    TLS         On\n    TLS.Verify  Off\n    TLS.Debug 0\n\n    # Debug\n    [OUTPUT]\n    Name file\n    Match *\n    Path /u01/logs\n    "
+  }
+}

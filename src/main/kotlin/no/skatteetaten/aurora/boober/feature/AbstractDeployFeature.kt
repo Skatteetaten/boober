@@ -94,6 +94,32 @@ val AuroraDeploymentSpec.dockerImagePath: String get() = "$dockerGroup/${this.ar
 val AuroraDeploymentSpec.version: String get() = this["version"]
 val AuroraDeploymentSpec.dockerTag: String get() = releaseTo ?: version
 
+val podEnvVariables = listOf(
+        newEnvVar {
+            name = "POD_NAME"
+            valueFrom {
+                fieldRef {
+                    apiVersion = "v1"
+                    fieldPath = "metadata.name"
+                }
+            }
+        },
+        newEnvVar {
+            name = "POD_NAMESPACE"
+            valueFrom {
+                fieldRef {
+                    apiVersion = "v1"
+                    fieldPath = "metadata.namespace"
+                }
+            }
+        }
+)
+
+val loggingMount = newVolumeMount {
+    name = "application-log-volume"
+    mountPath = Paths.logPath
+}
+
 // transform to resource right away?
 fun AuroraDeploymentSpec.probe(name: String): Probe? {
     val adc = this
@@ -353,31 +379,8 @@ abstract class AbstractDeployFeature(
             securityContext {
                 privileged = false
             }
-            volumeMounts = listOf(newVolumeMount {
-                name = "application-log-volume"
-                mountPath = Paths.logPath
-            })
+            volumeMounts = listOf(loggingMount)
 
-            val standardEnv = listOf(
-                newEnvVar {
-                    name = "POD_NAME"
-                    valueFrom {
-                        fieldRef {
-                            apiVersion = "v1"
-                            fieldPath = "metadata.name"
-                        }
-                    }
-                },
-                newEnvVar {
-                    name = "POD_NAMESPACE"
-                    valueFrom {
-                        fieldRef {
-                            apiVersion = "v1"
-                            fieldPath = "metadata.namespace"
-                        }
-                    }
-                }
-            )
             if (adc.deployState == DeploymentState.deployment) {
                 image = dockerImage
             }
@@ -396,7 +399,7 @@ abstract class AbstractDeployFeature(
                 val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
                 EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
             }
-            env = standardEnv + portEnv
+            env = podEnvVariables + portEnv
 
             adc.probe("liveness")?.let {
                 livenessProbe = it
@@ -454,6 +457,7 @@ abstract class AbstractDeployFeature(
                 selector = mapOf("name" to adc.name)
                 template {
                     spec {
+                        // TODO This must be available from sidecar logger as well
                         volumes = volumes + newVolume {
                             name = "application-log-volume"
                             emptyDir()
