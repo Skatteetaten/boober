@@ -87,6 +87,10 @@ vault:
         username: "foo"
         password: "bar"
 
+splunk:
+    hec:
+        token: "Test-HEC-token"
+
 management:
     server.port: 0
 
