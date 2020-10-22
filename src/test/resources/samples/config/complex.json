@@ -45,7 +45,8 @@
     "roles": "admin,dev,@name@"
   },
   "config": {
-    "FOO": "BAR"
+    "FOO": "BAR",
+    "THIS.VALUE": "BAZ"
   },
   "debug": true,
   "route": {

@@ -32,6 +32,7 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   commonName: "komplex"
                          | config:
             complex.json |   FOO: "BAR"
+            complex.json |   THIS.VALUE: "BAZ"
                          | databaseDefaults:
                  default |   flavor: "ORACLE_MANAGED"
                  default |   generate: true

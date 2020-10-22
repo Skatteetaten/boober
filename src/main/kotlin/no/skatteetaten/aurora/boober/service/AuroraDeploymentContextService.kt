@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.CertificateFeature
+import no.skatteetaten.aurora.boober.feature.ConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.RouteFeature
 import no.skatteetaten.aurora.boober.feature.StsFeature
@@ -174,6 +175,15 @@ class AuroraDeploymentContextService(
             feature is WebsealFeature && feature.willCreateResource(spec) && feature.shouldWarnAboutFeature(spec)
         }.isNotEmpty()
 
+        val configKeysWithSpecialCharacters = features.flatMap { (feature, spec) ->
+            if (feature is ConfigFeature) {
+                feature.envVarsKeysWithSpecialCharacters(spec).map {
+                    logWarning("configKeyWithSpecialChar")
+                    it
+                }
+            } else emptyList()
+        }
+
         val route = features.filter { (feature, spec) ->
             feature is RouteFeature && feature.willCreateResource(spec, cmd)
         }.isNotEmpty()
@@ -196,6 +206,6 @@ class AuroraDeploymentContextService(
             "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
         } else null
 
-        return listOfNotNull(websealWarning, stsWarning)
+        return listOfNotNull(websealWarning, stsWarning).addIfNotNull(configKeysWithSpecialCharacters)
     }
 }

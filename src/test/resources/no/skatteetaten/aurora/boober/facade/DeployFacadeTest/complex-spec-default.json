@@ -293,6 +293,14 @@
           "value": "BAR"
         }
       ]
+    },
+    "THIS.VALUE" : {
+      "source" : "complex.json",
+      "value" : "BAZ",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "BAZ"
+      } ]
     }
   },
   "databaseDefaults": {

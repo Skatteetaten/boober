@@ -32,8 +32,10 @@ fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<St
 
 val AuroraDeploymentSpec.splunkIndex: String? get() = this.getOrNull<String>("splunkIndex")
 
+fun String.normalizeEnvVar(): String = this.replace(" ", "_").replace(".", "_").replace("-", "_")
+
 fun Map<String, String>.toEnvVars(): List<EnvVar> = this
-    .mapKeys { it.key.replace(".", "_").replace("-", "_") }
+    .mapKeys { it.key.normalizeEnvVar() }
     .map {
         EnvVarBuilder().withName(it.key).withValue(it.value).build()
     }
