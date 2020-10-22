@@ -26,6 +26,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -44,8 +45,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
         cmd: AuroraContextCommand
     ): List<Exception> {
         val isS3Enabled = adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) ||
-            cmd.applicationFiles.findSubKeys(FEATURE_FIELD_NAME).isNotEmpty() ||
-            cmd.applicationFiles.findSubKeys(FEATURE_DEFAULTS_FIELD_NAME).isNotEmpty()
+            cmd.applicationFiles.findSubKeys(FEATURE_FIELD_NAME).isNotEmpty()
         return if (isS3Enabled) {
             listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
         } else {
@@ -66,14 +66,6 @@ class S3Feature(
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
-    }
-
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val bucketNameAndObjectAreas = findS3Buckets(adc, cmd.applicationFiles)
-            .groupBy { it.bucketName }
-
-        val envVars = resources.extractS3EnvVarsFromSecrets(bucketNameAndObjectAreas)
-        resources.addEnvVarsToMainContainers(envVars, javaClass)
     }
 
     override fun validate(
@@ -100,6 +92,14 @@ class S3Feature(
         return s3Secret.map { it.generateAuroraResource() }.toSet()
     }
 
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+        val bucketNameAndObjectAreas = findS3Buckets(adc, cmd.applicationFiles)
+            .groupBy { it.bucketName }
+
+        val envVars = resources.extractS3EnvVarsFromSecrets(bucketNameAndObjectAreas)
+        resources.addEnvVarsToMainContainers(envVars, javaClass)
+    }
+
     private fun List<S3BucketObjectArea>.verifyBucketCredentialsExistOrElseException(): List<IllegalArgumentException> {
         val nameAndCredentials = getBucketCredentials()
 
@@ -111,14 +111,10 @@ class S3Feature(
         }
     }
 
-    private inline fun <reified T> Set<AuroraResource>.findResourcesWithSuffix(suffix: String = "") =
-        filter { it.resource.metadata.name.endsWith(suffix) }
-            .filter { it.resource is T }
-            .map { it.resource as T }
-
     private fun Set<AuroraResource>.extractS3EnvVarsFromSecrets(bucketNameAndObjectAreas: Map<String, List<S3BucketObjectArea>>): List<EnvVar> =
-        findResourcesWithSuffix<Secret>("-s3")
+        findResourcesByType<Secret>("-s3")
             .mapNotNull { secret ->
+
                 val bucketName = secret.metadata.annotations[ANNOTATION_BUCKETNAME]
                 bucketNameAndObjectAreas[bucketName]
                     ?.flatMap { secret.createEnvVarRefs(prefix = "S3_BUCKETS_${it.name}_") }
@@ -146,6 +142,7 @@ class S3Feature(
         val s3Credentials =
             s3Provisioner.provision(request).toS3Credentials(s3BucketObjectArea.bucketName, request.path)
 
+        //This should be a claim to an objectArea and be connected to the claim to the bucket. With a seperate Kind?
         herkimerService.createClaim(
             ownerId = adc.applicationDeploymentId,
             resourceKind = ResourceKind.MinioPolicy,
@@ -162,15 +159,13 @@ class S3Feature(
                 .associateBy { it.name }
 
         return this.map { s3BucketObjectArea ->
-            val credentialsStoredInHerkimer = resourceWithClaims[s3BucketObjectArea.bucketName]?.claims
+            val credentialsStoredInHerkimer = resourceWithClaims[s3BucketObjectArea.bucketName]
+                ?.claims
                 ?.map { it.credentials }
                 ?.let { S3Credentials.fromJsonNodes(it) }
                 ?.find { it.objectArea == s3BucketObjectArea.name }
 
-            val s3Credentials = when {
-                credentialsStoredInHerkimer == null -> provisionAndStoreS3Credentials(s3BucketObjectArea, adc)
-                else -> credentialsStoredInHerkimer
-            }
+            val s3Credentials = credentialsStoredInHerkimer ?: provisionAndStoreS3Credentials(s3BucketObjectArea, adc)
 
             BucketWithCredentials(
                 s3BucketObjectArea,
@@ -181,13 +176,13 @@ class S3Feature(
 
     private fun S3ProvisioningResult.toS3Credentials(bucketName: String, objectPrefix: String) =
         S3Credentials(
-            "default",
-            serviceEndpoint,
-            accessKey,
-            secretKey,
-            bucketName,
-            objectPrefix,
-            defaultBucketRegion
+            objectArea = "default",
+            serviceEndpoint = serviceEndpoint,
+            accessKey = accessKey,
+            secretKey = secretKey,
+            bucketName = bucketName,
+            objectPrefix = objectPrefix,
+            bucketRegion = defaultBucketRegion
         )
 }
 
@@ -287,7 +282,7 @@ abstract class S3FeatureTemplate : Feature {
             )
             listOf(defaultS3Bucket)
         } else {
-            applicationFiles.findSubKeys(FEATURE_FIELD_NAME)
+            adc.getSubKeyValues(FEATURE_FIELD_NAME)
                 .mapNotNull { findS3Bucket(it, adc) }
         }
     }
@@ -299,8 +294,7 @@ abstract class S3FeatureTemplate : Feature {
         if (!adc.get<Boolean>("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/enabled")) return null
 
         return S3BucketObjectArea(
-            bucketName = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/bucketName")
-                ?: adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
+            bucketName = adc.getOrDefault(FEATURE_FIELD_NAME, s3ObjectAreaKey, "bucketName"),
             name = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"]
         )
     }
