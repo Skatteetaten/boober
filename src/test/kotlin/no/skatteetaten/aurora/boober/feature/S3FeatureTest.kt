@@ -26,13 +26,14 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTempl
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.web.client.RestTemplate
-import java.lang.IllegalArgumentException
 import java.time.LocalDateTime
+import java.util.UUID
 
 class S3FeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -124,6 +125,7 @@ class S3FeatureTest : AbstractFeatureTest() {
     fun `verify fails when no bucket credentials are stored in herkimer`() {
 
         every { herkimerService.getClaimedResources(booberAdId, ResourceKind.MinioPolicy, any()) } returns emptyList()
+        every { herkimerService.getClaimedResources(null, ResourceKind.MinioObjectArea, any()) } returns emptyList()
         assertThat {
             generateResources(
                 """{ 
@@ -136,11 +138,27 @@ class S3FeatureTest : AbstractFeatureTest() {
                 createdResources = 0,
                 resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
             )
-        }.isFailure().isInstanceOf(MultiApplicationValidationException::class).given { validationEx ->
-            assertThat(validationEx.errors.first().errors.first()).isInstanceOf(IllegalArgumentException::class).given {
-                assertThat(it.message).isNotNull().contains("Could not find credentials for bucket")
-            }
-        }
+        }.singleApplicationError("Could not find credentials for bucket")
+    }
+
+    @Test
+    fun `verify fails on validate when someone has claimed the bucketObjectArea`() {
+        mockFiona()
+        mockHerkimer(booberAdId = booberAdId, claimExistsInHerkimer = true, objectAreaIsAlreadyClaimed = true)
+
+        assertThat {
+            generateResources(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName": "anotherId"
+                    }
+                }
+           }""",
+                createdResources = 0,
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("already exists an objectArea")
     }
 
     @Test
@@ -182,18 +200,21 @@ class S3FeatureTest : AbstractFeatureTest() {
     private fun mockHerkimer(
         booberAdId: String,
         claimExistsInHerkimer: Boolean,
-        s3Credentials: List<S3Credentials> = listOf(createS3Credentials())
+        s3Credentials: List<S3Credentials> = listOf(createS3Credentials()),
+        objectAreaIsAlreadyClaimed: Boolean = false
     ) {
         val adId = "1234567890"
 
         val bucketNamesWithCredentials = s3Credentials.groupBy { it.bucketName }
         val bucketNames = bucketNamesWithCredentials.keys
+
         every {
             herkimerService.getClaimedResources(booberAdId, ResourceKind.MinioPolicy)
         } returns bucketNames.map {
             createResourceHerkimer(
                 name = it,
                 adId = booberAdId,
+                kind = ResourceKind.MinioPolicy,
                 claims = listOf(
                     createResourceClaim(
                         adId = booberAdId,
@@ -202,18 +223,39 @@ class S3FeatureTest : AbstractFeatureTest() {
                 )
             )
         }
+        s3Credentials.forEach {
+            every {
+                herkimerService.getClaimedResources(
+                    resourceKind = ResourceKind.MinioObjectArea,
+                    name = "${it.bucketName}/${it.objectArea}"
+                )
+            } returns if (objectAreaIsAlreadyClaimed) listOf(
+                createResourceHerkimer(
+                    adId = adId,
+                    kind = ResourceKind.MinioObjectArea,
+                    name = UUID.randomUUID().toString(),
+                    claims = listOf(
+                        createResourceClaim(
+                            adId = UUID.randomUUID().toString(),
+                            s3Credentials = jacksonObjectMapper().createObjectNode()
+                        )
+                    )
+                )
+            ) else emptyList()
+        }
 
         if (claimExistsInHerkimer) {
             every {
                 herkimerService.getClaimedResources(
                     adId,
-                    ResourceKind.MinioPolicy
+                    ResourceKind.MinioObjectArea
                 )
             } returns bucketNames.map { bucketName ->
                 val credentials = bucketNamesWithCredentials[bucketName]
                 createResourceHerkimer(
                     adId = adId,
                     name = bucketName,
+                    kind = ResourceKind.MinioObjectArea,
                     claims = credentials?.map {
                         createResourceClaim(
                             adId = adId,
@@ -223,9 +265,9 @@ class S3FeatureTest : AbstractFeatureTest() {
                 )
             }
         } else {
-            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioPolicy, any()) } returns emptyList()
+            every { herkimerService.getClaimedResources(adId, ResourceKind.MinioObjectArea, any()) } returns emptyList()
             every {
-                herkimerService.createClaim(any(), any(), any(), any())
+                herkimerService.createResourceAndClaim(any(), any(), any(), any(), any())
             } just Runs
         }
     }
@@ -280,12 +322,13 @@ class S3FeatureTest : AbstractFeatureTest() {
 
     private fun createResourceHerkimer(
         adId: String,
+        kind: ResourceKind,
         name: String = "paas-bucket-u-default",
         claims: List<ResourceClaimHerkimer>? = null
     ) = ResourceHerkimer(
         id = "0",
         name = name,
-        kind = ResourceKind.MinioPolicy,
+        kind = kind,
         ownerId = adId,
         claims = claims,
         createdDate = LocalDateTime.now(),

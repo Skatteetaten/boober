@@ -151,12 +151,15 @@ suspend fun <A, B> Iterable<A>.pmap(f: suspend (A) -> B): List<B> = coroutineSco
     map { async { f(it) } }.awaitAll()
 }
 
-inline fun <reified T : HasMetadata> Collection<AuroraResource>.findResourceByType(): T = this.findResourceByType(T::class).firstOrNull() ?: throw Exception("No resource of specified type found")
-inline fun <reified T : HasMetadata> Collection<AuroraResource>.findResourcesByType(suffix: String?=null): List<T> = this.findResourceByType(T::class).filter { item ->
-    suffix?.let {
-        item.metadata.name.endsWith(it)
-    } ?: true
-}
+inline fun <reified T : HasMetadata> Collection<AuroraResource>.findResourceByType(): T =
+    this.findResourceByType(T::class).firstOrNull() ?: throw Exception("No resource of specified type found")
+
+inline fun <reified T : HasMetadata> Collection<AuroraResource>.findResourcesByType(suffix: String? = null): List<T> =
+    this.findResourceByType(T::class).filter { item ->
+        suffix?.let {
+            item.metadata.name.endsWith(it)
+        } ?: true
+    }
 
 @Suppress("UNCHECKED_CAST")
 fun <T : Any> Collection<AuroraResource>.findResourceByType(kclass: KClass<T>): List<T> =

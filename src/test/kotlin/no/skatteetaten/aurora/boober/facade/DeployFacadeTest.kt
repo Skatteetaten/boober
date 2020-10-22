@@ -36,7 +36,8 @@ private val logger = KotlinLogging.logger { }
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: String) : AbstractSpringBootAuroraConfigTest() {
+class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: String) :
+    AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: DeployFacade
@@ -45,42 +46,8 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     @BeforeEach
     fun beforeDeploy() {
         preprateTestVault(vaultName, mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
-        fionaMock {
-            rule {
-                MockResponse()
-                    .setBody(loadBufferResource("fionaResponse.json"))
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            }
-        }
-
-        val adId = "1234567890"
-
-        applicationDeploymentGenerationMock(adId) {
-            rule({
-                path.contains("resource?claimedBy=$booberAdId")
-            }) {
-                MockResponse()
-                    .setBody(loadBufferResource("herkimerResponseBucketAdmin.json"))
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            }
-            rule({
-                path.contains("resource?claimedBy=$adId")
-            }) {
-                json(HerkimerResponse<Any>())
-            }
-            rule({
-                path.endsWith("/resource")
-            }) {
-                MockResponse()
-                    .setBody(loadBufferResource("herkimerResponseCreateResource.json"))
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            }
-            rule({
-                path.endsWith("/resource/1/claims")
-            }) {
-                json(HerkimerResponse<Any>())
-            }
-        }
+        mockFionaRequests()
+        mockHerkimerRequests()
     }
 
     @Test
@@ -384,5 +351,40 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
                 )
             )
         }.singleApplicationError("The following resources are generated more then once route/ah")
+    }
+
+    private fun mockHerkimerRequests() {
+        val adId = "1234567890"
+
+        applicationDeploymentGenerationMock(adId) {
+            rule({
+                path.contains("resource?claimedBy=$booberAdId")
+            }) {
+                MockResponse()
+                    .setBody(loadBufferResource("herkimerResponseBucketAdmin.json"))
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+            rule({
+                path.endsWith("/resource")
+            }) {
+                MockResponse()
+                    .setBody(loadBufferResource("herkimerResponseCreateResource.json"))
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+
+            rule {
+                json(HerkimerResponse<Any>())
+            }
+        }
+    }
+
+    private fun mockFionaRequests() {
+        fionaMock {
+            rule {
+                MockResponse()
+                    .setBody(loadBufferResource("fionaResponse.json"))
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+        }
     }
 }
