@@ -89,6 +89,10 @@ server:
 openshift:
     cluster: utv
 
+remotePorts:
+    herkimer: 9002
+    cantus: 9003
+
 integrations:
     dbh:
         url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
@@ -99,7 +103,7 @@ integrations:
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: http://herkimer-aurora.${openshift.cluster}.paas.skead.no
+        url: http://localhost:${remotePorts.herkimer}
         fallback:
             applikasjonsnavn : "1234567890"
     openshift:

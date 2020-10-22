@@ -1,0 +1,38 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "annotations": {
+      "bigipRoute": "true"
+    },
+    "labels": {
+      "operationScope" : "aos-4016",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "komplex",
+      "booberDeployId": "deploy1"
+    },
+    "name": "komplex-bigip2",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "host": "74a691b9358d168e305df7a1ae175a5eefda6754.test",
+    "port" : {
+      "targetPort" : "http"
+    },
+    "to": {
+      "kind": "Service",
+      "name": "komplex"
+    }
+  }
+}

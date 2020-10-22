@@ -30,7 +30,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate big ip crd and route`() {
 
-        val (routeResource, bigIpResource) = generateResources(
+        val (routeResource, route2Resourced, bigIpResource) = generateResources(
             """{
             "bigip" : {
               "service" : "simple",
@@ -38,11 +38,14 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                 "haproxy.router.openshift.io|timeout" : "30s"
                }
             }
-        }""", createdResources = 2
+        }""", createdResources = 3
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route.json")
+
+        assertThat(route2Resourced).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route2.json")
 
         assertThat(bigIpResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("bigip.json")
