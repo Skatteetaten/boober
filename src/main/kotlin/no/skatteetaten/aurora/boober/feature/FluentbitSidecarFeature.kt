@@ -21,6 +21,9 @@ import org.springframework.beans.factory.annotation.Value
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
 
+/*
+Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
+ */
 @org.springframework.stereotype.Service
 class FluentbitSidecarFeature(
     @Value("\${splunk.hec.token}") val hecToken: String
@@ -109,21 +112,20 @@ class FluentbitSidecarFeature(
 }
 
 fun generateFluentBitConfig(index: String, application: String, hecToken: String, cluster: String): String {
-    return """
-    [SERVICE]
+    return """[SERVICE]
     Flush        1
     Daemon       Off
     Log_Level    debug
     Parsers_File parsers.conf
 
-    [INPUT]
+[INPUT]
     Name   tail
     Path   /u01/logs/*.log
     Tag    log4j
     Mem_Buf_Limit 10MB
     Key    event
 
-    [FILTER]
+[FILTER]
     Name modify
     Match *
     Add index $index
@@ -133,7 +135,7 @@ fun generateFluentBitConfig(index: String, application: String, hecToken: String
     Add application $application
     Add cluster $cluster
 
-    [FILTER]
+[FILTER]
     Name nest
     Match *
     Operation nest
@@ -143,7 +145,7 @@ fun generateFluentBitConfig(index: String, application: String, hecToken: String
     Wildcard nodetype
     Nest_under fields
 
-    [OUTPUT]
+[OUTPUT]
     Name splunk
     Match *
     Host splunk-hec.skead.no
@@ -154,8 +156,8 @@ fun generateFluentBitConfig(index: String, application: String, hecToken: String
     TLS.Verify  Off
     TLS.Debug 0
 
-    # Debug
-    [OUTPUT]
+# Debug
+[OUTPUT]
     Name file
     Match *
     Path /u01/logs
