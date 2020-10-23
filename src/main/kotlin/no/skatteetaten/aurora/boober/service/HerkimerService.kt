@@ -63,6 +63,7 @@ data class ResourceHerkimer(
     val kind: ResourceKind,
     val ownerId: String,
     val claims: List<ResourceClaimHerkimer>? = null,
+    val parentId: String?,
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
     val createdBy: String,
@@ -127,7 +128,7 @@ class HerkimerService(
 
     private fun getResourceUrl(claimOwnerId: String?, resourceKind: ResourceKind, name: String?): String {
         val nameParam = name?.let { "&name=$it" }.orEmpty()
-        val claimOwnerIdParam = claimOwnerId?.let { "claimedBy=$it&" }.orEmpty()
+        val claimOwnerIdParam = claimOwnerId?.let { "claimedBy=$it&" } ?: "onlyMyClaims=false&"
         return "/resource?${claimOwnerIdParam}resourceKind=$resourceKind$nameParam"
     }
 

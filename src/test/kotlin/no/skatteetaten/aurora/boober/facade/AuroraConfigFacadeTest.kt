@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.configErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -47,6 +48,10 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             rule({ path.contains("resource") }) {
                 MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", "DeployFacadeTest"))
                     .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+
+            rule {
+                json(HerkimerResponse<Any>())
             }
         }
     }

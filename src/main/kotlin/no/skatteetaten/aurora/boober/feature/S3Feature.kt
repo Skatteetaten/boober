@@ -116,7 +116,7 @@ class S3Feature(
             ).singleOrNull()
                 ?.claims ?: emptyList()
 
-            if (claims.isEmpty() || claims.any { it.ownerId == applicationDeploymentId }) null
+            if (claims.isEmpty() || (claims.size == 1 && claims.first().ownerId == applicationDeploymentId)) null
             else IllegalArgumentException("There already exists an objectArea with name=${s3BucketObjectArea.name} within bucket=${s3BucketObjectArea.bucketName}, please choose another objectArea")
         }
     }
@@ -152,7 +152,8 @@ class S3Feature(
     private fun provisionAndStoreS3Credentials(
         s3BucketObjectArea: S3BucketObjectArea,
         adc: AuroraDeploymentSpec,
-        bucketAdmins: Map<String, ResourceHerkimer>
+        bucketAdmins: Map<String, ResourceHerkimer>,
+        objectAreaResourceName: String
     ): S3Credentials {
         val request = S3ProvisioningRequest(
             bucketName = s3BucketObjectArea.bucketName,
@@ -162,7 +163,7 @@ class S3Feature(
         )
 
         val s3Credentials =
-            s3Provisioner.provision(request).toS3Credentials(s3BucketObjectArea.bucketName, request.path)
+            s3Provisioner.provision(request).toS3Credentials(s3BucketObjectArea.bucketName, request.path, s3BucketObjectArea.name)
 
         val bucketAdmin = bucketAdmins[s3BucketObjectArea.bucketName]
             ?: throw IllegalArgumentException("Could not find bucket credentials for bucket. This should not happen. It has been validated in validate step")
@@ -170,7 +171,7 @@ class S3Feature(
         herkimerService.createResourceAndClaim(
             ownerId = adc.applicationDeploymentId,
             resourceKind = ResourceKind.MinioObjectArea,
-            resourceName = "${s3Credentials.bucketName}/${s3Credentials.objectArea}",
+            resourceName = objectAreaResourceName,
             credentials = s3Credentials,
             parentId = bucketAdmin.id
         )
@@ -188,7 +189,8 @@ class S3Feature(
                 .associateBy { it.name }
 
         return this.map { s3BucketObjectArea ->
-            val credentialsStoredInHerkimer = resourceWithClaims[s3BucketObjectArea.bucketName]
+            val objectAreaResourceName = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.name}"
+            val credentialsStoredInHerkimer = resourceWithClaims[objectAreaResourceName]
                 ?.claims
                 ?.map { it.credentials }
                 ?.let { S3Credentials.fromJsonNodes(it) }
@@ -198,7 +200,8 @@ class S3Feature(
                 ?: provisionAndStoreS3Credentials(
                     s3BucketObjectArea = s3BucketObjectArea,
                     adc = adc,
-                    bucketAdmins = s3BucketAdmins
+                    bucketAdmins = s3BucketAdmins,
+                    objectAreaResourceName = objectAreaResourceName
                 )
 
             BucketWithCredentials(
@@ -208,9 +211,9 @@ class S3Feature(
         }
     }
 
-    private fun S3ProvisioningResult.toS3Credentials(bucketName: String, objectPrefix: String) =
+    private fun S3ProvisioningResult.toS3Credentials(bucketName: String, objectPrefix: String, objectArea: String) =
         S3Credentials(
-            objectArea = "default",
+            objectArea = objectArea,
             serviceEndpoint = serviceEndpoint,
             accessKey = accessKey,
             secretKey = secretKey,

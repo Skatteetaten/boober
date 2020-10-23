@@ -252,7 +252,8 @@ class HerkimerServiceTest {
         createdDate = LocalDateTime.now(),
         modifiedDate = LocalDateTime.now(),
         createdBy = "aurora",
-        modifiedBy = "aurora"
+        modifiedBy = "aurora",
+        parentId = null
     )
 
     private fun createAdPayload() = ApplicationDeploymentCreateRequest(
