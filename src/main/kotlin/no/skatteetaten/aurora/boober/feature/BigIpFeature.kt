@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.model.openshift.BigIpKonfigurasjonstjeneste
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -51,9 +52,12 @@ class BigIpFeature(
 
         val routeName = "${adc.name}-bigip"
 
+        // dette var den gamle applicationDeploymentId som må nå være hostname
+        val routeHost = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
+
         val auroraRoute = Route(
             objectName = routeName,
-            host = adc.applicationDeploymentId,
+            host = routeHost,
             annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 

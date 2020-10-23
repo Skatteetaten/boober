@@ -26,7 +26,7 @@
     ]
   },
   "spec": {
-    "host": "1234567890.test",
+    "host": "74a691b9358d168e305df7a1ae175a5eefda6754.test",
     "port" : {
       "targetPort" : "http"
     },
