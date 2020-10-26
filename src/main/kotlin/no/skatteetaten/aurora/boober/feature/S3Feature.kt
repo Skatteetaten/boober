@@ -123,7 +123,6 @@ class S3Feature(
                 logger.debug {
                     "The objectArea=${s3BucketObjectArea.name} in bucket=${s3BucketObjectArea.bucketName}. Claimed by: \n" +
                         claimsOwnedByOthers.joinToString { "ApplicationDeploymentId=${it.ownerId}" }
-
                 }
                 IllegalArgumentException("The objectarea=${s3BucketObjectArea.name} in bucket=${s3BucketObjectArea.bucketName} is already claimed.")
             } else null

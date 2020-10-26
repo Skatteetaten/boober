@@ -26,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
@@ -35,7 +36,9 @@ import org.springframework.test.annotation.DirtiesContext
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
+class AuroraConfigFacadeTest(
+    @Value("\${application.deployment.id}") val booberAdId: String
+) : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: AuroraConfigFacade
@@ -45,7 +48,7 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
 
         applicationDeploymentGenerationMock {
-            rule({ path.contains("resource") }) {
+            rule({ path.contains("resource?claimedBy=$booberAdId") }) {
                 MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", "DeployFacadeTest"))
                     .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }

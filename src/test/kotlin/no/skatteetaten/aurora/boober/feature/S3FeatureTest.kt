@@ -88,23 +88,6 @@ class S3FeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `verify fails when claim is already registered for bucketObjectArea`() {
-        mockHerkimer(booberAdId = booberAdId, claimExistsInHerkimer = true, objectAreaIsAlreadyClaimed = true)
-
-        assertThat { generateResources(
-            """{ 
-                "s3Defaults": {
-                    "bucketName": "anotherId",
-                    "objectArea": "default"
-                },
-                "s3": true
-           }""",
-            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig()),
-            createdResources = 0
-        ) }.singleApplicationError("already exists an objectArea with name=default")
-    }
-
-    @Test
     fun `verify creates secrets and supports custom bucketname suffix`() {
         val s3Credentials = listOf(
             createS3Credentials(),
@@ -171,7 +154,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 createdResources = 0,
                 resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
             )
-        }.singleApplicationError("already exists an objectArea")
+        }.singleApplicationError("is already claimed")
     }
 
     @Test
