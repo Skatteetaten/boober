@@ -110,14 +110,17 @@ class S3Feature(
         applicationDeploymentId: String
     ): List<IllegalArgumentException> {
         return mapNotNull { s3BucketObjectArea ->
-            val claims = herkimerService.getClaimedResources(
+            val claimsOwnedByOthers = herkimerService.getClaimedResources(
                 resourceKind = ResourceKind.MinioObjectArea,
                 name = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.name}"
-            ).singleOrNull()
-                ?.claims ?: emptyList()
+            ).flatMap {
+                it.claims.orEmpty()
+            }.filter {
+                it.ownerId != applicationDeploymentId
+            }
 
-            if (claims.isEmpty() || (claims.size == 1 && claims.first().ownerId == applicationDeploymentId)) null
-            else IllegalArgumentException("There already exists an objectArea with name=${s3BucketObjectArea.name} within bucket=${s3BucketObjectArea.bucketName}, please choose another objectArea")
+            if(claimsOwnedByOthers.isNotEmpty()) IllegalArgumentException("There already exists an objectArea with name=${s3BucketObjectArea.name} within bucket=${s3BucketObjectArea.bucketName}, please choose another objectArea")
+            else null
         }
     }
 
