@@ -119,8 +119,14 @@ class S3Feature(
                 it.ownerId != applicationDeploymentId
             }
 
-            if(claimsOwnedByOthers.isNotEmpty()) IllegalArgumentException("There already exists an objectArea with name=${s3BucketObjectArea.name} within bucket=${s3BucketObjectArea.bucketName}, please choose another objectArea")
-            else null
+            if (claimsOwnedByOthers.isNotEmpty()) {
+                logger.debug {
+                    "The objectArea=${s3BucketObjectArea.name} in bucket=${s3BucketObjectArea.bucketName}. Claimed by: \n" +
+                        claimsOwnedByOthers.joinToString { "ApplicationDeploymentId=${it.ownerId}" }
+
+                }
+                IllegalArgumentException("The objectarea=${s3BucketObjectArea.name} in bucket=${s3BucketObjectArea.bucketName} is already claimed.")
+            } else null
         }
     }
 
@@ -166,7 +172,8 @@ class S3Feature(
         )
 
         val s3Credentials =
-            s3Provisioner.provision(request).toS3Credentials(s3BucketObjectArea.bucketName, request.path, s3BucketObjectArea.name)
+            s3Provisioner.provision(request)
+                .toS3Credentials(s3BucketObjectArea.bucketName, request.path, s3BucketObjectArea.name)
 
         val bucketAdmin = bucketAdmins[s3BucketObjectArea.bucketName]
             ?: throw IllegalArgumentException("Could not find bucket credentials for bucket. This should not happen. It has been validated in validate step")
