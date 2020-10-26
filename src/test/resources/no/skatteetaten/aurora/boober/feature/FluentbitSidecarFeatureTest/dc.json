@@ -41,7 +41,36 @@
                 "fieldPath" : "metadata.namespace"
               }
             }
-          } ],
+          }, {
+            "name" : "HEC_TOKEN",
+            "valueFrom" : {
+              "secretKeyRef" : {
+                "key" : "HEC_TOKEN",
+                "name" : "simple-hec",
+                "optional" : false
+              }
+            }
+          }, {
+            "name" : "SPLUNK_URL",
+            "valueFrom" : {
+              "secretKeyRef" : {
+                "key" : "SPLUNK_URL",
+                "name" : "simple-hec",
+                "optional" : false
+              }
+            }
+          }, {
+            "name" : "SPLUNK_PORT",
+            "valueFrom" : {
+              "secretKeyRef" : {
+                "key" : "SPLUNK_PORT",
+                "name" : "simple-hec",
+                "optional" : false
+              }
+            }
+          }
+        ],
+
           "image" : "fluent/fluent-bit:latest",
           "name" : "simple-fluent-sidecar",
           "resources" : {
