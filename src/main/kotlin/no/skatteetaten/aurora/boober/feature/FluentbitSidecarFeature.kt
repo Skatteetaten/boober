@@ -4,9 +4,13 @@ import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newConfigMap
 import com.fkorotkov.kubernetes.newContainer
+import com.fkorotkov.kubernetes.newEnvVar
+import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.valueFrom
 import com.fkorotkov.kubernetes.resources
+import com.fkorotkov.kubernetes.secretKeyRef
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.apps.Deployment
@@ -16,19 +20,25 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
+val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
+val hecTokenKey: String = "HEC_TOKEN"
+val splunkUrlKey: String = "SPLUNK_URL"
+val splunkPortKey: String = "SPLUNK_PORT"
 
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
 @org.springframework.stereotype.Service
 class FluentbitSidecarFeature(
-    @Value("\${splunk.hec.token}") val hecToken: String
+    @Value("\${splunk.hec.token}") val hecToken: String,
+    @Value("\${splunk.hec.url}") val splunkUrl: String,
+    @Value("\${splunk.hec.port}") val splunkPort: String
 ) : Feature {
-
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         // TODO validate logic
         return header.type in listOf(
@@ -51,9 +61,17 @@ class FluentbitSidecarFeature(
                 name = adc.fluentConfigName
                 namespace = adc.namespace
             }
-            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(index, adc.name, hecToken, adc.cluster))
+            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(index, adc.name, adc.cluster))
         }
-        return setOf(generateResource(resource))
+
+        val hecSecret = newSecret {
+            metadata {
+                name = adc.hecSecretName
+                namespace = adc.namespace
+            }
+            data = mapOf(hecTokenKey to Base64.encodeBase64String(hecToken.toByteArray()))
+        }
+        return setOf(generateResource(resource), generateResource(hecSecret))
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -86,24 +104,57 @@ class FluentbitSidecarFeature(
     }
 
     private fun createFluentbitContainer(adc: AuroraDeploymentSpec): Container {
+        val hecEnvVariables = listOf(
+            newEnvVar {
+                name = hecTokenKey
+                valueFrom {
+                    secretKeyRef {
+                        key = hecTokenKey
+                        name = adc.hecSecretName
+                        optional = false
+                    }
+                }
+            },
+            newEnvVar {
+                name = no.skatteetaten.aurora.boober.feature.splunkUrlKey
+                valueFrom {
+                    secretKeyRef {
+                        key = splunkUrlKey
+                        name = adc.hecSecretName
+                        optional = false
+                    }
+                }
+            },
+            newEnvVar {
+                name = splunkPortKey
+                valueFrom {
+                    secretKeyRef {
+                        key = splunkPortKey
+                        name = adc.hecSecretName
+                        optional = false
+                    }
+                }
+            }
+        )
+
         return newContainer {
             name = "${adc.name}-fluent-sidecar"
-            env = podEnvVariables
+            env = podEnvVariables.addIfNotNull(hecEnvVariables)
             volumeMounts = listOf(
-                newVolumeMount {
-                    name = adc.fluentConfigName
-                    mountPath = "/fluent-bit/etc"
-                }, loggingMount
+                    newVolumeMount {
+                        name = adc.fluentConfigName
+                        mountPath = "/fluent-bit/etc"
+                    }, loggingMount
             )
             resources {
                 limits = mapOf(
-                    // TODO? Add as config parameter
-                    "memory" to Quantity("64Mi"),
-                    "cpu" to Quantity("100m")
+                        // TODO? Add as config parameter
+                        "memory" to Quantity("64Mi"),
+                        "cpu" to Quantity("100m")
                 )
                 requests = mapOf(
-                    "memory" to Quantity("20Mi"),
-                    "cpu" to Quantity("10m")
+                        "memory" to Quantity("20Mi"),
+                        "cpu" to Quantity("10m")
                 )
             }
             image = "fluent/fluent-bit:latest"
@@ -111,7 +162,7 @@ class FluentbitSidecarFeature(
     }
 }
 
-fun generateFluentBitConfig(index: String, application: String, hecToken: String, cluster: String): String {
+fun generateFluentBitConfig(index: String, application: String, cluster: String): String {
     return """[SERVICE]
     Flush        1
     Daemon       Off
@@ -148,9 +199,9 @@ fun generateFluentBitConfig(index: String, application: String, hecToken: String
 [OUTPUT]
     Name splunk
     Match *
-    Host splunk-hec.skead.no
-    Port 8088
-    Splunk_Token $hecToken
+    Host \$\{SPLUNK_HOST\}
+    Port \$\{SPLUNK_PORT\}
+    Splunk_Token \$\{HEC_TOKEN\}
     Splunk_Send_Raw On
     TLS         On
     TLS.Verify  Off

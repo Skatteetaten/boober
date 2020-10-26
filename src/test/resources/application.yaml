@@ -8,6 +8,11 @@ aurora:
     token:
         value: token
 
+splunk:
+    hec:
+        token: token
+        url: "splunk.hec"
+        port: 8080
 
 integrations:
     operations:
@@ -86,10 +91,6 @@ vault:
         checkoutPath: "build/vaultcheckout"
         username: "foo"
         password: "bar"
-
-splunk:
-    hec:
-        token: "Test-HEC-token"
 
 management:
     server.port: 0

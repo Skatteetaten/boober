@@ -6,17 +6,18 @@ import org.junit.jupiter.api.Test
 
 class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = FluentbitSidecarFeature("test_hec")
+        get() = FluentbitSidecarFeature("test_hec", "splunk.url", "8080")
 
     @Test
     fun `should add fluentbit to dc`() {
-
+        // mockVault("foo")
         val (dcResource, configResource) = generateResources(
                 """{
              "logging" : {
                 "index": "test-index"             
              } 
-           }""", createEmptyDeploymentConfig()
+           }""",
+                createEmptyDeploymentConfig()
         )
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume and sidecar container")
             .auroraResourceMatchesFile("dc.json")
