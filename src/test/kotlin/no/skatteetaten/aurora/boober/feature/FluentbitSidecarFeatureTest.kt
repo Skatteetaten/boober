@@ -11,7 +11,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should add fluentbit to dc`() {
         // mockVault("foo")
-        val (dcResource, configResource) = generateResources(
+        val (dcResource, configResource, secretResource) = generateResources(
                 """{
              "logging" : {
                 "index": "test-index"             
@@ -23,5 +23,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("dc.json")
 
         assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
+
+        assertThat(secretResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("secret.json");
     }
 }

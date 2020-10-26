@@ -51,10 +51,10 @@
               }
             }
           }, {
-            "name" : "SPLUNK_URL",
+            "name" : "SPLUNK_HOST",
             "valueFrom" : {
               "secretKeyRef" : {
-                "key" : "SPLUNK_URL",
+                "key" : "SPLUNK_HOST",
                 "name" : "simple-hec",
                 "optional" : false
               }

@@ -27,7 +27,7 @@ val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("l
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
 val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
 val hecTokenKey: String = "HEC_TOKEN"
-val splunkUrlKey: String = "SPLUNK_URL"
+val splunkHostKey: String = "SPLUNK_HOST"
 val splunkPortKey: String = "SPLUNK_PORT"
 
 /*
@@ -69,7 +69,9 @@ class FluentbitSidecarFeature(
                 name = adc.hecSecretName
                 namespace = adc.namespace
             }
-            data = mapOf(hecTokenKey to Base64.encodeBase64String(hecToken.toByteArray()))
+            data = mapOf(hecTokenKey to Base64.encodeBase64String(hecToken.toByteArray()),
+                    splunkHostKey to Base64.encodeBase64String(splunkUrl.toByteArray()),
+                    splunkPortKey to Base64.encodeBase64String(splunkPort.toByteArray()))
         }
         return setOf(generateResource(resource), generateResource(hecSecret))
     }
@@ -116,10 +118,10 @@ class FluentbitSidecarFeature(
                 }
             },
             newEnvVar {
-                name = no.skatteetaten.aurora.boober.feature.splunkUrlKey
+                name = no.skatteetaten.aurora.boober.feature.splunkHostKey
                 valueFrom {
                     secretKeyRef {
-                        key = splunkUrlKey
+                        key = splunkHostKey
                         name = adc.hecSecretName
                         optional = false
                     }
@@ -180,8 +182,8 @@ fun generateFluentBitConfig(index: String, application: String, cluster: String)
     Name modify
     Match *
     Add index $index
-    Add host \$\{POD_NAME\}
-    Add environment \$\{POD_NAMESPACE\}
+    Add host $ {POD_NAME}
+    Add environment $ {POD_NAMESPACE}
     Add nodetype openshift
     Add application $application
     Add cluster $cluster
@@ -199,9 +201,9 @@ fun generateFluentBitConfig(index: String, application: String, cluster: String)
 [OUTPUT]
     Name splunk
     Match *
-    Host \$\{SPLUNK_HOST\}
-    Port \$\{SPLUNK_PORT\}
-    Splunk_Token \$\{HEC_TOKEN\}
+    Host $ {SPLUNK_HOST}
+    Port $ {SPLUNK_PORT}
+    Splunk_Token $ {HEC_TOKEN}
     Splunk_Send_Raw On
     TLS         On
     TLS.Verify  Off
@@ -212,5 +214,5 @@ fun generateFluentBitConfig(index: String, application: String, cluster: String)
     Name file
     Match *
     Path /u01/logs
-    """
+    """.replace("$ {", "\${")
 }
