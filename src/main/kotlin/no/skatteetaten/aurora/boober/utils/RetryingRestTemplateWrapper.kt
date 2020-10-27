@@ -22,6 +22,7 @@ import org.springframework.web.client.HttpServerErrorException
 import org.springframework.web.client.RestClientException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
+import java.net.URLDecoder
 
 private val logger = KotlinLogging.logger {}
 
@@ -59,16 +60,29 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
         return exchange(RequestEntity(body, headers, HttpMethod.PUT, uri), type)
     }
 
+    fun <T, U: Any>patch(
+        body: T,
+        responseType: KClass<U>,
+        url: String,
+        vararg uriVars: Any,
+        headers: HttpHeaders = HttpHeaders.EMPTY
+    ): ResponseEntity<U> {
+        val uri = restTemplate.uriTemplateHandler.expand(url, *uriVars)
+        return exchange(RequestEntity(body, headers, HttpMethod.PATCH, uri), responseType)
+    }
+
     fun exchange(requestEntity: RequestEntity<*>, retry: Boolean = true): ResponseEntity<JsonNode> =
         exchange(requestEntity, JsonNode::class, retry)
 
     fun <U : Any> exchange(requestEntity: RequestEntity<*>, type: KClass<U>, retry: Boolean = true): ResponseEntity<U> {
 
+        // URI og query params med url templates tuller det til med at url blir dobbel encodet, derav decoding
+        val url = baseUrl + URLDecoder.decode(requestEntity.url.toString(), Charsets.UTF_8)
         val responseEntity = if (retry) {
             retryTemplate.execute<ResponseEntity<U>, RestClientException> {
                 it.setAttribute(REQUEST_ENTITY, requestEntity)
                 restTemplate.exchange(
-                    baseUrl + requestEntity.url.toString(),
+                    url,
                     requestEntity.method!!,
                     requestEntity,
                     type.java,
@@ -77,7 +91,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
             }
         } else {
             restTemplate.exchange(
-                baseUrl + requestEntity.url.toString(),
+                url,
                 requestEntity.method!!,
                 requestEntity,
                 type.java,

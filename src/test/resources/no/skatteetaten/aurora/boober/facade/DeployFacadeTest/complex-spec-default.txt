@@ -36,10 +36,12 @@ utv/about-alternate.json |   ttl: "1d"
                          | databaseDefaults:
                  default |   flavor: "ORACLE_MANAGED"
                  default |   generate: true
+                 default |   tryReuse: false
                  default |   name: "@name@"
                          | database:
                          |   complex:
             complex.json |     enabled: true
+                 default |     tryReuse: false
             complex.json |   foo: "123-456"
                          | management:
             complex.json |   path: "/foobar"

@@ -10,8 +10,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -43,6 +41,8 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import java.io.ByteArrayOutputStream
+import java.util.Properties
 
 private val logger = KotlinLogging.logger { }
 
@@ -170,14 +170,16 @@ class DatabaseFeature(
             if (it.id != null) {
                 SchemaIdRequest(
                     id = it.id,
-                    details = details
+                    details = details,
+                    tryReuse = it.tryReuse
                 )
             } else {
                 SchemaForAppRequest(
                     environment = adc.envName,
                     application = it.applicationLabel ?: adc.name,
                     details = details,
-                    generate = it.generate
+                    generate = it.generate,
+                    tryReuse = it.tryReuse
                 )
             }
         }
@@ -214,7 +216,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             generate = adc["$databaseDefaultsKey/generate"],
             instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
             roles = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
-            exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc)
+            exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc),
+            tryReuse = adc["$databaseDefaultsKey/tryReuse"]
         )
         if (adc.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
@@ -249,6 +252,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
             val instance = findInstance(adc, cmd, "$key/instance", flavor.defaultFallback)
             val value: String = adc.getOrNull("$key/id") ?: ""
+            val tryReuse: Boolean = adc.getOrDefault("database", db, "tryReuse")
 
             val instanceName = instance?.name ?: defaultDb.instance.name
             val instanceFallback = instance?.fallback ?: flavor.defaultFallback
@@ -267,7 +271,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 ),
                 roles = defaultDb.roles + roles,
                 exposeTo = defaultDb.exposeTo + exposeTo,
-                applicationLabel = adc.getOrNull("$key/applicationLabel")
+                applicationLabel = adc.getOrNull("$key/applicationLabel"),
+                tryReuse = tryReuse
             )
         }
     }
@@ -312,6 +317,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler("$db/name"),
             AuroraConfigFieldHandler("$db/applicationLabel"),
             AuroraConfigFieldHandler("$db/id"),
+            AuroraConfigFieldHandler("$db/tryReuse", defaultValue = false, validator = { it.boolean() }),
             AuroraConfigFieldHandler(
                 "$db/flavor", validator = { node ->
                     node?.oneOf(DatabaseFlavor.values().map { it.toString() })
@@ -343,6 +349,10 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 validator = { it.boolean() },
                 defaultValue = true
             ),
+            AuroraConfigFieldHandler(
+                "$databaseDefaultsKey/tryReuse",
+                defaultValue = false,
+                validator = { it.boolean() }),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/name",
                 defaultValue = "@name@"
@@ -434,6 +444,7 @@ data class Database(
     val id: String? = null,
     val flavor: DatabaseFlavor,
     val generate: Boolean,
+    val tryReuse: Boolean,
     val exposeTo: Map<String, String> = emptyMap(),
     val roles: Map<String, DatabasePermission> = emptyMap(),
     val instance: DatabaseInstance,

@@ -176,6 +176,14 @@
         }
       ]
     },
+    "tryReuse" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
+    },
     "name": {
       "source": "default",
       "value": "@name@",

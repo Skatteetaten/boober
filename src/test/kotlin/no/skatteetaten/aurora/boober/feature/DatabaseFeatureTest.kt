@@ -121,6 +121,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
             """{ 
                "database" : true,
                "databaseDefaults" : {
+                  "tryReuse" : true,
                   "flavor" : "POSTGRES_MANAGED",
                   "generate" : false,
                   "roles" : {
@@ -148,7 +149,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     fun `create database secret from id`() {
 
         every {
-            provisioner.findSchemaById("123456", any())
+            provisioner.findSchemaById("123456")
         } returns (schema to "Ok")
 
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
@@ -224,7 +225,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
             """{ 
                "database" : {
                  "foo" : {
-                   "enabled" : true
+                   "enabled" : true,
+                   "tryReuse" : true
                   },
                   "bar" : {
                    "enabled" : true
@@ -359,7 +361,8 @@ fun createSchemaProvisionResult(
                 engine = DatabaseEngine.ORACLE,
                 affiliation = "aos",
                 databaseInstance = databaseInstance
-            )
+            ),
+            tryReuse = false
         ),
         dbhSchema = schema,
         responseText = "OK"

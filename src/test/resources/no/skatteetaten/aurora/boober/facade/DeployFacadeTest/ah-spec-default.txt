@@ -18,6 +18,7 @@ utv/about.json | cluster: "utv"
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
+       default |   tryReuse: false
        default |   name: "@name@"
        ah.json | database: true
        default | alarm: true
