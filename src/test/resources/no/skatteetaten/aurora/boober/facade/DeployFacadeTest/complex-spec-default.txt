@@ -41,7 +41,7 @@ utv/about-alternate.json |   ttl: "1d"
                          | database:
                          |   complex:
             complex.json |     enabled: true
-                 default |     tryReuse: false
+            complex.json |     tryReuse: true
             complex.json |   foo: "123-456"
                          | management:
             complex.json |   path: "/foobar"

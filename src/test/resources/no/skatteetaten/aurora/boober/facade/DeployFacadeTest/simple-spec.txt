@@ -11,6 +11,8 @@ utv/about.json | cluster: "utv"
     folderName | envName: "utv"
       fileName | name: "simple"
    simple.json | groupId: "org.test"
+               | databaseDefaults:
+   simple.json |   tryReuse: true
    simple.json | database: true
    simple.json | version: "1"
       fileName | artifactId: "simple"

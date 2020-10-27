@@ -1,6 +1,9 @@
 {
   "version": "1",
   "groupId": "org.test",
+  "databaseDefaults": {
+    "tryReuse": true
+  },
   "database": true,
   "s3": true,
   "s3Defaults": {

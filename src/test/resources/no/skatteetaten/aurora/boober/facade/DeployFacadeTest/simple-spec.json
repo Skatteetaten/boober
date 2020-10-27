@@ -125,6 +125,22 @@
       }
     ]
   },
+  "databaseDefaults": {
+    "tryReuse": {
+      "source": "simple.json",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        },
+        {
+          "name": "simple.json",
+          "value": true
+        }
+      ]
+    }
+  },
   "database": {
     "source": "simple.json",
     "value": true,
