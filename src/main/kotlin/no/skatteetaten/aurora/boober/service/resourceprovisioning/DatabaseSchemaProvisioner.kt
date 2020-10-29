@@ -251,9 +251,7 @@ class DatabaseSchemaProvisioner(
     private inline fun <reified T : Any> parse(response: ResponseEntity<JsonNode>): List<T> {
         return response.body?.let {
             jacksonObjectMapper().convertValue<DbApiEnvelope<T>>(it)
-        }?.items?.map {
-            jacksonObjectMapper().convertValue<T>(it)
-        } ?: emptyList()
+        }?.items ?: emptyList()
     }
 
     private inline fun <reified T : Any> parseAsSingle(response: ResponseEntity<JsonNode>): T? {
