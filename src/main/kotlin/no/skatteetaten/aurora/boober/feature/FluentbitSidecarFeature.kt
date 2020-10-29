@@ -174,9 +174,26 @@ fun generateFluentBitConfig(index: String, application: String, cluster: String)
 [INPUT]
     Name   tail
     Path   /u01/logs/*.log
-    Tag    log4j
+    Tag    log.application
     Mem_Buf_Limit 10MB
     Key    event
+    
+[INPUT]
+    Name   tail
+    Path   /u01/logs/*.access
+    Tag    log.access
+    Mem_Buf_Limit 10MB
+    Key    event
+    
+[FILTER]
+    Name modify
+    Match *.access
+    Set sourcetype access_combined
+    
+[FILTER]
+    Name modify
+    Match *.application
+    Set sourcetype log4j
 
 [FILTER]
     Name modify
@@ -209,10 +226,5 @@ fun generateFluentBitConfig(index: String, application: String, cluster: String)
     TLS.Verify  Off
     TLS.Debug 0
 
-# Debug
-[OUTPUT]
-    Name file
-    Match *
-    Path /u01/logs
     """.replace("$ {", "\${")
 }
