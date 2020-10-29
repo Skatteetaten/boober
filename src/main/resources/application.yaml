@@ -91,11 +91,11 @@ openshift:
 
 integrations:
     dbh:
-        url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
+        url: http://localhost:7080
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
     skap:
-        url: http://localhost:9090
+        url: http://skap-aurora.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:

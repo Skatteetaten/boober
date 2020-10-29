@@ -11,8 +11,10 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
@@ -26,15 +28,23 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 private val logger = KotlinLogging.logger { }
 
 class DatabaseFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = DatabaseFeature(provisioner, "utv")
+        get() = DatabaseFeature(provisioner, userDetailsProvider, "utv")
 
+    val userDetailsProvider: UserDetailsProvider = mockk()
     val provisioner: DatabaseSchemaProvisioner = mockk()
+
+    @BeforeEach
+    fun setupMock() {
+        every { userDetailsProvider.getAuthenticatedUser() } returns User("username", "token")
+    }
 
     @Test
     fun `create database secret`() {
@@ -150,7 +160,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
         every {
             provisioner.findSchemaById("123456")
-        } returns (schema to "Ok")
+        } returns schema
 
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
 
@@ -355,6 +365,7 @@ fun createSchemaProvisionResult(
             environment = env,
             application = appName,
             generate = true,
+            user = User("username", "token"),
             details = SchemaRequestDetails(
                 schemaName = appName,
                 users = listOf(SchemaUser("SCHEMA", "a", "aos")),
@@ -364,7 +375,6 @@ fun createSchemaProvisionResult(
             ),
             tryReuse = false
         ),
-        dbhSchema = schema,
-        responseText = "OK"
+        dbhSchema = schema
     )
 }

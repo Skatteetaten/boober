@@ -23,6 +23,7 @@ import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
@@ -69,6 +70,7 @@ class DatabaseDisabledFeature(
 @ConditionalOnProperty("integrations.dbh.url")
 class DatabaseFeature(
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val userDetailsProvider: UserDetailsProvider,
     @Value("\${openshift.cluster}") cluster: String
 ) : DatabaseFeatureTemplate(cluster) {
 
@@ -179,7 +181,8 @@ class DatabaseFeature(
                     application = it.applicationLabel ?: adc.name,
                     details = details,
                     generate = it.generate,
-                    tryReuse = it.tryReuse
+                    tryReuse = it.tryReuse,
+                    user = userDetailsProvider.getAuthenticatedUser()
                 )
             }
         }
