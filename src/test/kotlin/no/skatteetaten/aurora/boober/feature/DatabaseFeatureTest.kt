@@ -24,11 +24,9 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRe
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
@@ -59,26 +57,6 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
         assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
-    }
-
-    @Test
-    fun `should get error if trying to expose to invalid role`() {
-
-        assertThat {
-            createAuroraDeploymentContext(
-                """{ 
-               "database" : true,
-               "databaseDefaults" : {
-                  "roles" : {
-                     "jalla" : "READ"
-                   },
-                  "exposeTo" : {
-                     "foobar" : "wrong"
-                   }
-                }
-           }"""
-            )
-        }.singleApplicationError("Database cannot expose affiliation=foobar with invalid role=wrong. ValidRoles=jalla.")
     }
 
     @Test
@@ -134,12 +112,6 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                   "tryReuse" : true,
                   "flavor" : "POSTGRES_MANAGED",
                   "generate" : false,
-                  "roles" : {
-                     "jalla" : "READ"
-                   },
-                  "exposeTo" : {
-                     "foobar" : "jalla"
-                   },
                   "instance" : {
                     "name" : "corrusant", 
                     "fallback" : true, 
@@ -159,7 +131,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     fun `create database secret from id`() {
 
         every {
-            provisioner.findSchemaById("123456")
+            provisioner.findSchemaById(any())
         } returns schema
 
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
@@ -368,7 +340,6 @@ fun createSchemaProvisionResult(
             user = User("username", "token"),
             details = SchemaRequestDetails(
                 schemaName = appName,
-                users = listOf(SchemaUser("SCHEMA", "a", "aos")),
                 engine = DatabaseEngine.ORACLE,
                 affiliation = "aos",
                 databaseInstance = databaseInstance

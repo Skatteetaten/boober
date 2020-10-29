@@ -107,23 +107,18 @@ class DatabaseSchemaProvisioner(
     }
 
     fun provisionSchema(request: SchemaProvisionRequest): SchemaProvisionResult {
-        val dbhSchema =
-            if (request.tryReuse) tryReuseSchemaElseNull(request) ?: provisionForAppOrId(request)
-            else provisionForAppOrId(request)
+        val dbhSchema = when (request) {
+            is SchemaIdRequest -> findSchemaById(request)
+            is SchemaForAppRequest -> provisionForApplication(request)
+        }
 
         return SchemaProvisionResult(request, dbhSchema)
     }
 
-    private fun provisionForAppOrId(request: SchemaProvisionRequest): DbhSchema {
-        return when (request) {
-            is SchemaIdRequest -> findSchemaById(request.id)
-            is SchemaForAppRequest -> provisionForApplication(request)
-        }
-    }
-
     private fun provisionForApplication(request: SchemaForAppRequest): DbhSchema {
         val labels = request.toLabels()
-        val schemaFound = findSchemaByLabels(labels, request.details.engine)
+        val schemaFound =
+            findSchemaByLabels(labels, request.details.engine) ?: tryReuseSchemaIfConfiguredElseNull(request)
 
         if (schemaFound == null && !request.generate) {
             throw ProvisioningException("Could not find schema with labels=$labels, generate disabled.")
@@ -132,41 +127,36 @@ class DatabaseSchemaProvisioner(
         return schemaFound ?: createSchema(labels, request.details)
     }
 
-    private fun findSchemaInCooldown(request: SchemaForAppRequest): RestorableSchema? =
-        runCatching {
+    private fun findSchemaInCooldown(forApp: Boolean = false, uriVar: Any): RestorableSchema? {
+        val appPathElseEmpty = if (forApp) "?labels=" else ""
+        return runCatching {
             restTemplate.get(
                 JsonNode::class,
-                "/api/v1/restorableSchema/?labels={1}",
-                toLabelsString(request.toLabels())
+                "/api/v1/restorableSchema/$appPathElseEmpty{1}",
+                uriVar
             )
         }.getRestorableSchema()
-
-    private fun findSchemaInCooldown(request: SchemaIdRequest): RestorableSchema? =
-        runCatching {
-            restTemplate.get(
-                JsonNode::class,
-                "/api/v1/restorableSchema/{1}",
-                request.id
-            )
-        }.getRestorableSchema()
+    }
 
     fun findSchemaById(
-        id: String
+        request: SchemaIdRequest
     ): DbhSchema {
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.get(
                 JsonNode::class,
                 "/api/v1/schema/{1}",
-                id
+                request.id
             )
         } catch (e: Exception) {
             throw createProvisioningException(
-                "Unable to get information on schema with id=$id",
+                "Unable to get information on schema with id=${request.id}",
                 e
             )
         }
 
-        return response.parseAndFailIfEmpty()
+        return parseAsSingle(response)
+            ?: tryReuseSchemaIfConfiguredElseNull(request)
+            ?: throw ProvisioningException("Expected dbh response to contain schema info.")
     }
 
     private fun activateSchema(id: String): DbhSchema {
@@ -210,7 +200,6 @@ class DatabaseSchemaProvisioner(
 
         val payload =
             SchemaRequestPayload(
-                users = details.users,
                 engine = details.engine,
                 instanceName = details.databaseInstance.name,
                 instanceFallback = details.databaseInstance.fallback,
@@ -231,27 +220,35 @@ class DatabaseSchemaProvisioner(
         return response.parseAndFailIfEmpty()
     }
 
-    private fun tryReuseSchemaElseNull(request: SchemaProvisionRequest): DbhSchema? {
+    private fun tryReuseSchemaIfConfiguredElseNull(request: SchemaProvisionRequest): DbhSchema? {
+        if (!request.tryReuse) return null
+
         val cooldownSchema =
             when (request) {
-                is SchemaForAppRequest -> findSchemaInCooldown(request)
-                is SchemaIdRequest -> findSchemaInCooldown(request)
+                is SchemaForAppRequest -> findSchemaInCooldown(
+                    forApp = true,
+                    uriVar = toLabelsString(request.toLabels())
+                )
+                is SchemaIdRequest -> findSchemaInCooldown(forApp = false, uriVar = request.id)
             }
 
-        if (cooldownSchema != null) {
-            activateSchema(cooldownSchema.databaseSchema.id)
-            return cooldownSchema.databaseSchema
-        }
-        return null
+        cooldownSchema ?: return null
+
+        return cooldownSchema.databaseSchema
+            .also { activateSchema(it.id) }
     }
 
-    private inline fun <reified T: Any>ResponseEntity<JsonNode>.parseAndFailIfEmpty(): T =
+    private inline fun <reified T : Any> ResponseEntity<JsonNode>.parseAndFailIfEmpty(): T =
         parseAsSingle<T>(this) ?: throw ProvisioningException("Expected dbh response to contain schema info.")
 
     private inline fun <reified T : Any> parse(response: ResponseEntity<JsonNode>): List<T> {
         return response.body?.let {
-            jacksonObjectMapper().convertValue<DbApiEnvelope<T>>(it)
-        }?.items ?: emptyList()
+            mapper.convertValue<DbApiEnvelope<T>>(it)
+        }?.items?.map {
+            // TODO:This is not optimal, the convertValue above should deserialize completely, but trouble with type erasure.
+            // Fix when refactor to use herkimer for database
+            mapper.convertValue<T>(it)
+        } ?: emptyList()
     }
 
     private inline fun <reified T : Any> parseAsSingle(response: ResponseEntity<JsonNode>): T? {
@@ -268,7 +265,7 @@ class DatabaseSchemaProvisioner(
 
         fun parseErrorResponse(responseMessage: String): DbhErrorResponse? =
             runCatching {
-                jacksonObjectMapper().readValue<DbhErrorResponse>(responseMessage)
+                mapper.readValue<DbhErrorResponse>(responseMessage)
             }.onFailure(::reThrowError)
                 .getOrNull()
 
@@ -311,7 +308,6 @@ class DatabaseSchemaProvisioner(
 
 data class SchemaRequestDetails(
     val schemaName: String,
-    val users: List<SchemaUser>,
     val engine: DatabaseEngine,
     val affiliation: String,
     val databaseInstance: DatabaseInstance
@@ -323,17 +319,10 @@ data class RestoreDatabaseSchemaPayload(
 
 data class SchemaRequestPayload(
     val labels: Map<String, String>,
-    val users: List<SchemaUser>,
     val engine: DatabaseEngine,
     val instanceLabels: Map<String, String>,
     val instanceName: String? = null,
     val instanceFallback: Boolean = false
-)
-
-data class SchemaUser(
-    val name: String,
-    val role: String,
-    val affiliation: String
 )
 
 enum class DatabaseEngine {

@@ -32,7 +32,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdReques
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
@@ -218,8 +217,6 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             flavor = defaultFlavor,
             generate = adc["$databaseDefaultsKey/generate"],
             instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
-            roles = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/roles", adc),
-            exposeTo = cmd.applicationFiles.associateSubKeys("$databaseDefaultsKey/exposeTo", adc),
             tryReuse = adc["$databaseDefaultsKey/tryReuse"]
         )
         if (adc.isSimplifiedAndEnabled("database")) {
@@ -250,8 +247,6 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             if (!adc.get<Boolean>("$key/enabled")) {
                 return null
             }
-            val roles = cmd.applicationFiles.associateSubKeys<DatabasePermission>("$key/roles", adc)
-            val exposeTo = cmd.applicationFiles.associateSubKeys<String>("$key/exposeTo", adc)
             val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
             val instance = findInstance(adc, cmd, "$key/instance", flavor.defaultFallback)
             val value: String = adc.getOrNull("$key/id") ?: ""
@@ -272,8 +267,6 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                     fallback = instanceFallback,
                     labels = instanceLabels
                 ),
-                roles = defaultDb.roles + roles,
-                exposeTo = defaultDb.exposeTo + exposeTo,
                 applicationLabel = adc.getOrNull("$key/applicationLabel"),
                 tryReuse = tryReuse
             )
@@ -327,15 +320,9 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 })
         )
 
-        val validKeyRoles = applicationFiles.findSubKeys("$db/roles")
-        val validDefaultRoles = applicationFiles.findSubKeys("$databaseDefaultsKey/roles")
-        val validRoles = validDefaultRoles + validKeyRoles
-        val databaseRolesHandlers = findRolesHandlers(db, applicationFiles)
-
-        val databaseExposeToHandlers = findExposeToHandlers(db, validRoles, applicationFiles)
         val instanceHandlers = findInstanceHandlers(db, applicationFiles)
 
-        return mainHandlers + databaseRolesHandlers + databaseExposeToHandlers + instanceHandlers
+        return mainHandlers + instanceHandlers
     }
 
     fun findDbDefaultHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
@@ -362,23 +349,9 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             ) // må vi ha på en validator her?
         )
 
-        val databaseRolesHandlers = findRolesHandlers(databaseDefaultsKey, applicationFiles)
-        val validRoles = applicationFiles.findSubKeys("$databaseDefaultsKey/roles")
-        val databaseDefaultExposeToHandlers = findExposeToHandlers(databaseDefaultsKey, validRoles, applicationFiles)
         val instanceHandlers = findInstanceHandlers(databaseDefaultsKey, applicationFiles)
 
-        return listOf<AuroraConfigFieldHandler>() + databaseDefaultHandler + databaseRolesHandlers + databaseDefaultExposeToHandlers + instanceHandlers
-    }
-
-    private fun findRolesHandlers(
-        key: String,
-        applicationFiles: List<AuroraConfigFile>
-    ): List<AuroraConfigFieldHandler> {
-        return applicationFiles.findSubHandlers("$key/roles", validatorFn = {
-            { node ->
-                node.oneOf(DatabasePermission.values().map { it.toString() })
-            }
-        })
+        return listOf<AuroraConfigFieldHandler>() + databaseDefaultHandler + instanceHandlers
     }
 
     private fun findInstanceHandlers(
@@ -391,32 +364,6 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             } else {
                 listOf(AuroraConfigFieldHandler("$key/instance/$it"))
             }
-        }
-    }
-
-    private fun findExposeToHandlers(
-        key: String,
-        validRoles: Set<String>,
-        applicationFiles: List<AuroraConfigFile>
-    ): List<AuroraConfigFieldHandler> {
-        return applicationFiles.findSubHandlers("$key/exposeTo", validatorFn = { exposeTo ->
-            { node -> exposeToValidator(node, validRoles, exposeTo) }
-        })
-    }
-
-    private fun exposeToValidator(
-        node: JsonNode?,
-        validRoles: Set<String>,
-        exposeTo: String
-    ): Exception? {
-        val role = node?.textValue() ?: ""
-        return if (validRoles.contains(role)) {
-            null
-        } else {
-            val validRolesString = validRoles.joinToString(",")
-            IllegalArgumentException(
-                "Database cannot expose affiliation=$exposeTo with invalid role=$role. ValidRoles=$validRolesString"
-            )
         }
     }
 }
@@ -434,22 +381,12 @@ enum class DatabaseFlavor(val engine: DatabaseEngine, val managed: Boolean, val 
     )
 }
 
-enum class DatabasePermission(
-    val permissionString: String
-) {
-    READ("r"),
-    WRITE("rw"),
-    ALL("a")
-}
-
 data class Database(
     val name: String,
     val id: String? = null,
     val flavor: DatabaseFlavor,
     val generate: Boolean,
     val tryReuse: Boolean,
-    val exposeTo: Map<String, String> = emptyMap(),
-    val roles: Map<String, DatabasePermission> = emptyMap(),
     val instance: DatabaseInstance,
     val applicationLabel: String? = null
 )
@@ -460,24 +397,13 @@ data class DatabaseInstance(
     val labels: Map<String, String> = emptyMap()
 )
 
-fun Database.createSchemaDetails(affiliation: String): SchemaRequestDetails {
-
-    val users = if (this.roles.isEmpty()) {
-        listOf(SchemaUser(name = "SCHEMA", role = "a", affiliation = affiliation))
-    } else this.roles.map { role ->
-        val exportedRole = this.exposeTo.filter { it.value == role.key }.map { it.key }.firstOrNull()
-        val userAffiliation = exportedRole ?: affiliation
-        SchemaUser(name = role.key, role = role.value.permissionString, affiliation = userAffiliation)
-    }
-
-    return SchemaRequestDetails(
+fun Database.createSchemaDetails(affiliation: String) =
+    SchemaRequestDetails(
         schemaName = this.name.toLowerCase(),
         databaseInstance = this.instance,
         affiliation = affiliation,
-        users = users,
         engine = this.flavor.engine
     )
-}
 
 fun createDbEnv(name: String, envName: String = name): List<Pair<String, String>> {
     val path = "$secretsPath/${name.toLowerCase()}"
