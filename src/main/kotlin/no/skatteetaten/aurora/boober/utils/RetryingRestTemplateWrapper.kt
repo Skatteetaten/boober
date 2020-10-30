@@ -60,7 +60,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
         return exchange(RequestEntity(body, headers, HttpMethod.PUT, uri), type)
     }
 
-    fun <T, U: Any>patch(
+    fun <T, U : Any> patch(
         body: T,
         responseType: KClass<U>,
         url: String,

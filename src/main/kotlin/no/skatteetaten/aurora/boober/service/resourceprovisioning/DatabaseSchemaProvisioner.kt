@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
@@ -149,7 +148,7 @@ class DatabaseSchemaProvisioner(
             )
         } catch (e: Exception) {
             throw createProvisioningException(
-                "Unable to get information on schema with id=${request.id}",
+                "Unable to get database schema with id=${request.id}",
                 e
             )
         }
@@ -253,10 +252,9 @@ class DatabaseSchemaProvisioner(
 
     private inline fun <reified T : Any> parseAsSingle(response: ResponseEntity<JsonNode>): T? {
         val items = parse<T>(response)
-        val size = items.size
-        return when (size) {
+        return when (val size = items.size) {
             0 -> null
-            1 -> items[0]
+            1 -> items.first()
             else -> throw ProvisioningException("Matched $size database schemas, should be exactly one.")
         }
     }

@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret

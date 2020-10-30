@@ -91,7 +91,7 @@ openshift:
 
 integrations:
     dbh:
-        url: http://localhost:7080
+        url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
     skap:
@@ -99,7 +99,7 @@ integrations:
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: http://herkimer-aurora.${openshift.cluster}.paas.skead.no
+        url: false
         fallback:
             applikasjonsnavn : "1234567890"
     openshift:
