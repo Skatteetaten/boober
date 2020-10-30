@@ -23,7 +23,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 
-val AuroraDeploymentSpec.loggingIndex: String? get() = getLoggerIndex(this)
+val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
 val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
 val hecTokenKey: String = "HEC_TOKEN"
@@ -49,8 +49,7 @@ class FluentbitSidecarFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-            AuroraConfigFieldHandler("logging/index"),
-            AuroraConfigFieldHandler("splunkIndex")
+            AuroraConfigFieldHandler("logging/index")
         )
     }
 
@@ -119,7 +118,7 @@ class FluentbitSidecarFeature(
                 }
             },
             newEnvVar {
-                name = no.skatteetaten.aurora.boober.feature.splunkHostKey
+                name = splunkHostKey
                 valueFrom {
                     secretKeyRef {
                         key = splunkHostKey
@@ -163,13 +162,6 @@ class FluentbitSidecarFeature(
             image = "fluent/fluent-bit:latest"
         }
     }
-}
-
-fun getLoggerIndex(adc: AuroraDeploymentSpec): String? {
-    val loggingIndex = adc.getOrNull<String>("logging/index")
-    val splunkIndex = adc.getOrNull<String>("splunkIndex")
-    val index = loggingIndex ?: splunkIndex
-    return index
 }
 
 fun generateFluentBitConfig(index: String, application: String, cluster: String): String {
