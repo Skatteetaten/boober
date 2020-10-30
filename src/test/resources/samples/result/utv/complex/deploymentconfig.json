@@ -1,383 +1,382 @@
 {
-  "apiVersion" : "apps.openshift.io/v1",
-  "kind" : "DeploymentConfig",
-  "metadata" : {
-    "labels" : {
-      "operationScope" : "aos-4016",
-      "app" : "komplex",
-      "updatedBy" : "hero",
-      "updatedAt" : "0",
-      "affiliation" : "paas",
-      "name" : "komplex",
-      "deployTag" : "komplex",
-      "paused" : "true",
-      "booberDeployId" : "deploy1"
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "komplex",
+      "deployTag": "komplex",
+      "paused": "true",
+      "booberDeployId": "deploy1"
     },
-    "name" : "komplex",
-    "namespace" : "paas-utv",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "komplex",
-      "uid" : "123-123"
-    } ]
+    "name": "komplex",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
   },
-  "spec" : {
-    "replicas" : 0,
-    "selector" : {
-      "name" : "komplex"
+  "spec": {
+    "replicas": 0,
+    "selector": {
+      "name": "komplex"
     },
-    "strategy" : {
-      "recreateParams" : {
-        "timeoutSeconds" : 180
+    "strategy": {
+      "recreateParams": {
+        "timeoutSeconds": 180
       },
-      "type" : "Recreate"
+      "type": "Recreate"
     },
-    "template" : {
-      "metadata" : {
-        "annotations" : {
-          "boober.skatteetaten.no/deployTag" : "komplex"
+    "template": {
+      "metadata": {
+        "annotations": {
+          "boober.skatteetaten.no/deployTag": "komplex"
         },
-        "labels" : {
+        "labels": {
           "operationScope" : "aos-4016",
-          "app" : "komplex",
-          "updatedBy" : "hero",
-          "updatedAt" : "0",
-          "affiliation" : "paas",
-          "name" : "komplex",
-          "deployTag" : "komplex",
-          "paused" : "true"
+          "app": "komplex",
+          "updatedBy": "hero",
+          "updatedAt": "0",
+          "affiliation": "paas",
+          "name": "komplex",
+          "deployTag": "komplex",
+          "paused": "true"
         }
       },
-      "spec" : {
-        "containers" : [ {
-          "env" : [ {
-            "name" : "POD_NAME",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.name"
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "JOLOKIA_HTTP_PORT",
+                "value": "8778"
+              },
+              {
+                "name": "EXTRA_HTTP_PORT",
+                "value": "8082"
+              },
+              {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/komplex-cert/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/komplex-cert/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/komplex-cert/descriptor.properties"
+              },
+              {
+                "name": "VOLUME_KOMPLEX_CERT",
+                "value": "/u01/secrets/app/komplex-cert"
+              },
+              {
+                "name": "FOO",
+                "value": "BAR"
+              },
+              {
+                "name": "THIS_VALUE",
+                "value": "BAZ"
+              },
+              {
+                "name": "COMPLEX_DB",
+                "value": "/u01/secrets/app/complex-db/info"
+              },
+              {
+                "name": "COMPLEX_DB_PROPERTIES",
+                "value": "/u01/secrets/app/complex-db/db.properties"
+              },
+              {
+                "name": "FOO_DB",
+                "value": "/u01/secrets/app/foo-db/info"
+              },
+              {
+                "name": "FOO_DB_PROPERTIES",
+                "value": "/u01/secrets/app/foo-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/complex-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/complex-db/db.properties"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "komplex"
+              },
+              {
+                "name": "SPLUNK_INDEX",
+                "value": "test-index"
+              },
+              {
+                "name": "ENABLE_REMOTE_DEBUG",
+                "value": "true"
+              },
+              {
+                "name": "DEBUG_PORT",
+                "value": "5005"
+              },
+              {
+                "name": "VOLUME_AURORA_TOKEN",
+                "value": "/u01/secrets/app/aurora-token"
+              },
+              {
+                "name": "VOLUME_SECRET_MOUNT",
+                "value": "/u01/foo"
+              },
+              {
+                "name": "VOLUME_PVC",
+                "value": "/foo"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "komplex-paas-utv.test"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "https://komplex-paas-utv.test"
+              },
+              {
+                "name": "FOO",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "FOO",
+                    "name": "komplex-foo-vault",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "BAZ",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "BAZ",
+                    "name": "komplex-foo-vault",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/komplex-sts/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/komplex-sts/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/komplex-sts/descriptor.properties"
+              },
+              {
+                "name": "VOLUME_KOMPLEX_STS",
+                "value": "/u01/secrets/app/komplex-sts"
+              },
+              {
+                "name": "STS_DISCOVERY_URL",
+                "value": "https://bigbird-utv.org"
               }
-            }
-          }, {
-            "name" : "POD_NAMESPACE",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.namespace"
-              }
-            }
-          }, {
-            "name" : "HTTP_PORT",
-            "value" : "8080"
-          }, {
-            "name" : "MANAGEMENT_HTTP_PORT",
-            "value" : "8081"
-          }, {
-            "name" : "JOLOKIA_HTTP_PORT",
-            "value" : "8778"
-          }, {
-            "name" : "EXTRA_HTTP_PORT",
-            "value" : "8082"
-          }, {
-            "name" : "APPLICATION_DEPLOYMENT_ID",
-            "value" : "1234567890"
-          }, {
-            "name" : "STS_CERTIFICATE_URL",
-            "value" : "/u01/secrets/app/komplex-cert/certificate.crt"
-          }, {
-            "name" : "STS_PRIVATE_KEY_URL",
-            "value" : "/u01/secrets/app/komplex-cert/privatekey.key"
-          }, {
-            "name" : "STS_KEYSTORE_DESCRIPTOR",
-            "value" : "/u01/secrets/app/komplex-cert/descriptor.properties"
-          }, {
-            "name" : "VOLUME_KOMPLEX_CERT",
-            "value" : "/u01/secrets/app/komplex-cert"
-          }, {
-            "name" : "FOO",
-            "value" : "BAR"
-          }, {
-            "name" : "THIS_VALUE",
-            "value" : "BAZ"
-          }, {
-            "name" : "COMPLEX_DB",
-            "value" : "/u01/secrets/app/complex-db/info"
-          }, {
-            "name" : "COMPLEX_DB_PROPERTIES",
-            "value" : "/u01/secrets/app/complex-db/db.properties"
-          }, {
-            "name" : "FOO_DB",
-            "value" : "/u01/secrets/app/foo-db/info"
-          }, {
-            "name" : "FOO_DB_PROPERTIES",
-            "value" : "/u01/secrets/app/foo-db/db.properties"
-          }, {
-            "name" : "DB",
-            "value" : "/u01/secrets/app/complex-db/info"
-          }, {
-            "name" : "DB_PROPERTIES",
-            "value" : "/u01/secrets/app/complex-db/db.properties"
-          }, {
-            "name" : "OPENSHIFT_CLUSTER",
-            "value" : "utv"
-          }, {
-            "name" : "APP_NAME",
-            "value" : "komplex"
-          }, {
-            "name" : "SPLUNK_INDEX",
-            "value" : "test-index"
-          }, {
-            "name" : "ENABLE_REMOTE_DEBUG",
-            "value" : "true"
-          }, {
-            "name" : "DEBUG_PORT",
-            "value" : "5005"
-          }, {
-            "name" : "VOLUME_AURORA_TOKEN",
-            "value" : "/u01/secrets/app/aurora-token"
-          }, {
-            "name" : "VOLUME_SECRET_MOUNT",
-            "value" : "/u01/foo"
-          }, {
-            "name" : "VOLUME_PVC",
-            "value" : "/foo"
-          }, {
-            "name" : "ROUTE_NAME",
-            "value" : "komplex-paas-utv.test"
-          }, {
-            "name" : "ROUTE_URL",
-            "value" : "https://komplex-paas-utv.test"
-          }, {
-            "name" : "FOO",
-            "valueFrom" : {
-              "secretKeyRef" : {
-                "key" : "FOO",
-                "name" : "komplex-foo-vault",
-                "optional" : false
-              }
-            }
-          }, {
-            "name" : "BAZ",
-            "valueFrom" : {
-              "secretKeyRef" : {
-                "key" : "BAZ",
-                "name" : "komplex-foo-vault",
-                "optional" : false
-              }
-            }
-          }, {
-            "name" : "STS_CERTIFICATE_URL",
-            "value" : "/u01/secrets/app/komplex-sts/certificate.crt"
-          }, {
-            "name" : "STS_PRIVATE_KEY_URL",
-            "value" : "/u01/secrets/app/komplex-sts/privatekey.key"
-          }, {
-            "name" : "STS_KEYSTORE_DESCRIPTOR",
-            "value" : "/u01/secrets/app/komplex-sts/descriptor.properties"
-          }, {
-            "name" : "VOLUME_KOMPLEX_STS",
-            "value" : "/u01/secrets/app/komplex-sts"
-          }, {
-            "name" : "STS_DISCOVERY_URL",
-            "value" : "https://bigbird-utv.org"
-          } ],
-          "imagePullPolicy" : "IfNotPresent",
-          "livenessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
             },
-            "timeoutSeconds" : 1
-          },
-          "name" : "komplex-java",
-          "ports" : [ {
-            "containerPort" : 8080,
-            "name" : "http",
-            "protocol" : "TCP"
-          }, {
-            "containerPort" : 8081,
-            "name" : "management",
-            "protocol" : "TCP"
-          }, {
-            "containerPort" : 8778,
-            "name" : "jolokia",
-            "protocol" : "TCP"
-          }, {
-            "containerPort" : 8082,
-            "name" : "extra",
-            "protocol" : "TCP"
-          } ],
-          "readinessProbe" : {
-            "initialDelaySeconds" : 10,
-            "tcpSocket" : {
-              "port" : 8080
+            "name": "komplex-java",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8778,
+                "name": "jolokia",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8082,
+                "name": "extra",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
             },
-            "timeoutSeconds" : 1
-          },
-          "resources" : {
-            "limits" : {
-              "cpu" : "2000m",
-              "memory" : "128Mi"
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "128Mi"
+              },
+              "requests": {
+                "cpu": "100m",
+                "memory": "64Mi"
+              }
             },
-            "requests" : {
-              "cpu" : "100m",
-              "memory" : "64Mi"
-            }
-          },
-          "securityContext" : {
-            "privileged" : false
-          },
-          "terminationMessagePath" : "/dev/termination-log",
-          "volumeMounts" : [ {
-            "mountPath" : "/u01/logs",
-            "name" : "application-log-volume"
-          }, {
-            "mountPath" : "/u01/secrets/app/komplex-cert",
-            "name" : "komplex-cert"
-          }, {
-            "mountPath" : "/u01/secrets/app/complex-db",
-            "name" : "komplex-complex-db"
-          }, {
-            "mountPath" : "/u01/secrets/app/foo-db",
-            "name" : "komplex-foo-db"
-          }, {
-            "mountPath" : "/u01/secrets/app/aurora-token",
-            "name" : "aurora-token-mount"
-          }, {
-            "mountPath" : "/u01/foo",
-            "name" : "secret-mount"
-          }, {
-            "mountPath" : "/foo",
-            "name" : "pvc-mount"
-          }, {
-            "mountPath" : "/u01/secrets/app/komplex-sts",
-            "name" : "komplex-sts"
-          } ]
-        }, {
-          "env" : [ {
-            "name" : "POD_NAME",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.name"
-              }
-            }
-          }, {
-            "name" : "POD_NAMESPACE",
-            "valueFrom" : {
-              "fieldRef" : {
-                "apiVersion" : "v1",
-                "fieldPath" : "metadata.namespace"
-              }
-            }
-          }, {
-            "name" : "HEC_TOKEN",
-            "valueFrom" : {
-              "secretKeyRef" : {
-                "key" : "HEC_TOKEN",
-                "name" : "komplex-hec",
-                "optional" : false
-              }
-            }
-          }, {
-            "name" : "SPLUNK_HOST",
-            "valueFrom" : {
-              "secretKeyRef" : {
-                "key" : "SPLUNK_HOST",
-                "name" : "komplex-hec",
-                "optional" : false
-              }
-            }
-          }, {
-            "name" : "SPLUNK_PORT",
-            "valueFrom" : {
-              "secretKeyRef" : {
-                "key" : "SPLUNK_PORT",
-                "name" : "komplex-hec",
-                "optional" : false
-              }
-            }
-          } ],
-          "image" : "fluent/fluent-bit:latest",
-          "name" : "komplex-fluent-sidecar",
-          "resources" : {
-            "limits" : {
-              "memory" : "64Mi",
-              "cpu" : "100m"
+            "securityContext": {
+              "privileged": false
             },
-            "requests" : {
-              "memory" : "20Mi",
-              "cpu" : "10m"
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              },
+              {
+                "mountPath": "/u01/secrets/app/komplex-cert",
+                "name": "komplex-cert"
+              },
+              {
+                "mountPath": "/u01/secrets/app/complex-db",
+                "name": "komplex-complex-db"
+              },
+              {
+                "mountPath": "/u01/secrets/app/foo-db",
+                "name": "komplex-foo-db"
+              },
+              {
+                "mountPath": "/u01/secrets/app/aurora-token",
+                "name": "aurora-token-mount"
+              },
+              {
+                "mountPath": "/u01/foo",
+                "name": "secret-mount"
+              },
+              {
+                "mountPath": "/foo",
+                "name": "pvc-mount"
+              },
+              {
+                "mountPath": "/u01/secrets/app/komplex-sts",
+                "name": "komplex-sts"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "serviceAccount": "aurora-fraggle",
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "application-log-volume"
+          },
+          {
+            "name": "komplex-cert",
+            "secret": {
+              "secretName": "komplex-cert"
             }
           },
-          "volumeMounts" : [ {
-            "mountPath" : "/fluent-bit/etc",
-            "name" : "komplex-fluent-config"
-          }, {
-            "mountPath" : "/u01/logs",
-            "name" : "application-log-volume"
-          } ]
-        } ],
-        "dnsPolicy" : "ClusterFirst",
-        "restartPolicy" : "Always",
-        "serviceAccount" : "aurora-fraggle",
-        "volumes" : [ {
-          "emptyDir" : { },
-          "name" : "application-log-volume"
-        }, {
-          "name" : "komplex-cert",
-          "secret" : {
-            "secretName" : "komplex-cert"
-          }
-        }, {
-          "name" : "komplex-complex-db",
-          "secret" : {
-            "secretName" : "komplex-complex-db"
-          }
-        }, {
-          "name" : "komplex-foo-db",
-          "secret" : {
-            "secretName" : "komplex-foo-db"
-          }
-        }, {
-          "configMap" : {
-            "name" : "komplex-fluent-config"
+          {
+            "name": "komplex-complex-db",
+            "secret": {
+              "secretName": "komplex-complex-db"
+            }
           },
-          "name" : "komplex-fluent-config"
-        }, {
-          "name" : "aurora-token-mount",
-          "secret" : {
-            "secretName" : "aurora-token"
+          {
+            "name": "komplex-foo-db",
+            "secret": {
+              "secretName": "komplex-foo-db"
+            }
+          },
+          {
+            "name": "aurora-token-mount",
+            "secret": {
+              "secretName": "aurora-token"
+            }
+          },
+          {
+            "name": "secret-mount",
+            "secret": {
+              "secretName": "komplex-secret-mount"
+            }
+          },
+          {
+            "name": "pvc-mount",
+            "persistentVolumeClaim": {
+              "claimName": "pvc"
+            }
+          },
+          {
+            "name": "komplex-sts",
+            "secret": {
+              "secretName": "komplex-sts"
+            }
           }
-        }, {
-          "name" : "secret-mount",
-          "secret" : {
-            "secretName" : "komplex-secret-mount"
-          }
-        }, {
-          "name" : "pvc-mount",
-          "persistentVolumeClaim" : {
-            "claimName" : "pvc"
-          }
-        }, {
-          "name" : "komplex-sts",
-          "secret" : {
-            "secretName" : "komplex-sts"
-          }
-        } ]
+        ]
       }
     },
-    "triggers" : [ {
-      "imageChangeParams" : {
-        "automatic" : true,
-        "containerNames" : [ "komplex-java" ],
-        "from" : {
-          "kind" : "ImageStreamTag",
-          "name" : "komplex:latest"
-        }
-      },
-      "type" : "ImageChange"
-    } ]
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "komplex-java"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "komplex:latest"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }
