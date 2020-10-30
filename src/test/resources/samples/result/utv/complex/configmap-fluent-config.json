@@ -1,0 +1,26 @@
+{
+  "apiVersion" : "v1",
+  "kind" : "ConfigMap",
+  "metadata" : {
+    "labels" : {
+      "operationScope" : "aos-4016",
+      "app" : "komplex",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "affiliation" : "paas",
+      "name" : "komplex",
+      "booberDeployId" : "deploy1"
+    },
+    "name" : "komplex-fluent-config",
+    "namespace" : "paas-utv",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "komplex",
+      "uid" : "123-123"
+    } ]
+  },
+  "data" : {
+    "fluent-bit.conf" : "[SERVICE]\n    Flush        1\n    Daemon       Off\n    Log_Level    debug\n    Parsers_File parsers.conf\n\n[INPUT]\n    Name   tail\n    Path   /u01/logs/*.log\n    Tag    log.application\n    Mem_Buf_Limit 10MB\n    Key    event\n    \n[INPUT]\n    Name   tail\n    Path   /u01/logs/*.access\n    Tag    log.access\n    Mem_Buf_Limit 10MB\n    Key    event\n    \n[FILTER]\n    Name modify\n    Match *.access\n    Set sourcetype access_combined\n    \n[FILTER]\n    Name modify\n    Match *.application\n    Set sourcetype log4j\n\n[FILTER]\n    Name modify\n    Match *\n    Add index test-index\n    Add host ${POD_NAME}\n    Add environment ${POD_NAMESPACE}\n    Add nodetype openshift\n    Add application komplex\n    Add cluster utv\n\n[FILTER]\n    Name nest\n    Match *\n    Operation nest\n    Wildcard environment\n    Wildcard application\n    Wildcard cluster\n    Wildcard nodetype\n    Nest_under fields\n\n[OUTPUT]\n    Name splunk\n    Match *\n    Host ${SPLUNK_HOST}\n    Port ${SPLUNK_PORT}\n    Splunk_Token ${HEC_TOKEN}\n    Splunk_Send_Raw On\n    TLS         On\n    TLS.Verify  Off\n    TLS.Debug 0\n\n    "
+  }
+}
