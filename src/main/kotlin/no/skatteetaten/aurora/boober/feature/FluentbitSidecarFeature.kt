@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
@@ -30,6 +31,15 @@ val hecTokenKey: String = "HEC_TOKEN"
 val splunkHostKey: String = "SPLUNK_HOST"
 val splunkPortKey: String = "SPLUNK_PORT"
 
+val logApplication: String = "application"
+val logAuditText: String = "audit_text"
+val logAuditJson: String = "audit_json"
+val logSlow: String = "slow"
+val logGC: String = "gc"
+val logSensitive: String = "sensitive"
+val logStacktrace: String = "stacktrace"
+val logAccess: String = "access"
+val knownLogs: Set<String> = setOf(logApplication, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
@@ -48,20 +58,46 @@ class FluentbitSidecarFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
+        val customHandlers = cmd.applicationFiles.findSubKeys("logging/custom").flatMap { key ->
+            listOf(
+                AuroraConfigFieldHandler(
+                    "logging/custom/$key/index",
+                    defaultValue = header.loggingIndex
+                ),
+                AuroraConfigFieldHandler(
+                    name = "logging/custom/$key/pattern"
+                    // validator =
+                    // TODO validate that this is requered
+                ),
+                AuroraConfigFieldHandler(
+                    name = "logging/custom/$key/sourcetype"
+                    // validator =
+                    // TODO validate that this is requered
+                )
+            )
+        }
+
+        val loggerHanlders = knownLogs.map { log ->
+            AuroraConfigFieldHandler("logging/loggers/$log")
+        }
+
+        return listOf(
             AuroraConfigFieldHandler("logging/index")
-        )
+        ).addIfNotNull(customHandlers)
+            .addIfNotNull(loggerHanlders)
+            .toSet()
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         val index = adc.loggingIndex ?: return emptySet()
+        val loggerIndexes = getLoggingIndexes(adc, cmd, index)
 
         val resource = newConfigMap {
             metadata {
                 name = adc.fluentConfigName
                 namespace = adc.namespace
             }
-            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(index, adc.name, adc.cluster))
+            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(loggerIndexes, adc.name, adc.cluster))
         }
 
         val hecSecret = newSecret {
@@ -164,41 +200,94 @@ class FluentbitSidecarFeature(
     }
 }
 
-fun generateFluentBitConfig(index: String, application: String, cluster: String): String {
+data class LoggingConfig(
+    val name: String,
+    val sourceType: String,
+    val index: String,
+    val filePattern: String
+)
+
+fun getLoggingIndexes(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand, defaultIndex: String): List<LoggingConfig> {
+    val result: MutableList<LoggingConfig> = mutableListOf()
+    val loggers = cmd.applicationFiles.findSubKeys("logging/loggers").flatMap { key ->
+        val value: String = adc.get("logging/loggers/$key")
+        listOf(
+            LoggingConfig(key, getKnownSourceType(key), value, getKnownFilePattern(key))
+        )
+    }
+    result.addAll(loggers.filter { log -> !(log.index.equals("false")) })
+    // Add default loggers if they do not exist
+    val applicationLog = loggers.find { logger -> logger.name.equals(logApplication) }
+    if (applicationLog == null) {
+        val newApplicationLog = LoggingConfig(logApplication, getKnownSourceType(logApplication), defaultIndex, getKnownFilePattern(logApplication))
+        result.add(newApplicationLog)
+    }
+    val accessLog = loggers.find { logger -> logger.name.equals(logAccess) }
+    if (accessLog == null) {
+        val newAccessLog = LoggingConfig(logAccess, getKnownSourceType(logAccess), defaultIndex, getKnownFilePattern(logAccess))
+        result.add(newAccessLog)
+    }
+
+    // TODO Add custom loggers
+    return result
+}
+
+fun getKnownSourceType(logger: String): String {
+    var pattern = "log4j"
+    when (logger) {
+        logAuditJson -> pattern = "_json"
+        logAccess -> pattern = "access_combined"
+        logGC -> pattern = "gc_log"
+    }
+    return pattern
+}
+
+fun getKnownFilePattern(logger: String): String {
+    var pattern = "*.log"
+    when (logger) {
+        logApplication -> pattern = "*.log"
+        logAuditText -> pattern = "*.audit.json"
+        logAuditJson -> pattern = "*.audit.text"
+        logAccess -> pattern = "*.access"
+        logSlow -> pattern = "*.slow"
+        logGC -> pattern = "*.gc"
+        logSensitive -> pattern = "*.sensitive"
+        logStacktrace -> pattern = "*.stacktrace"
+    }
+    return pattern
+}
+
+fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: String, cluster: String): String {
+    val inputs = loggerIndexes.map { log ->
+        """[INPUT]
+    Name   tail
+    Path   /u01/logs/${log.filePattern}
+    Tag    ${log.name}
+    Mem_Buf_Limit 10MB
+    Key    event"""
+    }.joinToString("\n\n")
+
+    val filters = loggerIndexes.map { log ->
+        """[FILTER]
+    Name modify
+    Match ${log.name}
+    Set sourcetype ${log.sourceType}
+    Set index ${log.index}"""
+    }.joinToString("\n\n")
+
     return """[SERVICE]
     Flush        1
     Daemon       Off
     Log_Level    debug
     Parsers_File parsers.conf
 
-[INPUT]
-    Name   tail
-    Path   /u01/logs/*.log
-    Tag    log.application
-    Mem_Buf_Limit 10MB
-    Key    event
-    
-[INPUT]
-    Name   tail
-    Path   /u01/logs/*.access
-    Tag    log.access
-    Mem_Buf_Limit 10MB
-    Key    event
-    
-[FILTER]
-    Name modify
-    Match *.access
-    Set sourcetype access_combined
-    
-[FILTER]
-    Name modify
-    Match *.application
-    Set sourcetype log4j
+$inputs
+
+$filters
 
 [FILTER]
     Name modify
     Match *
-    Add index $index
     Add host $ {POD_NAME}
     Add environment $ {POD_NAMESPACE}
     Add nodetype openshift
@@ -224,7 +313,5 @@ fun generateFluentBitConfig(index: String, application: String, cluster: String)
     Splunk_Send_Raw On
     TLS         On
     TLS.Verify  Off
-    TLS.Debug 0
-
     """.replace("$ {", "\${")
 }

@@ -14,7 +14,21 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val (dcResource, configResource, secretResource) = generateResources(
                 """{
              "logging" : {
-                "index": "test-index"             
+                "index": "test-index",
+                "loggers": {
+                    "sensitive" : "sensitive-index",
+                    "slow" : "false",
+                    "gc" : "false",
+                    "audit_json" : "aud-index",
+                    "audit_text" : "aud-index"
+                },
+                "custom" : {
+                    "test" : {
+                        "index": "custom-index",
+                        "pattern": "*.custom",
+                        "sourcetype": "custom"
+                    }
+                }
              } 
            }""",
                 createEmptyDeploymentConfig(), emptyList(), 2
