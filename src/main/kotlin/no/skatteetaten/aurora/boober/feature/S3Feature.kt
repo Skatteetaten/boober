@@ -28,6 +28,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
+import no.skatteetaten.aurora.boober.utils.pattern
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -75,7 +76,10 @@ class S3Feature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        val s3BucketObjectAreas = findS3Buckets(adc)
+        val requiredFieldsExceptions = adc.validateRequiredFieldsArePresent()
+        if (requiredFieldsExceptions.isNotEmpty()) return requiredFieldsExceptions
+
+        val s3BucketObjectAreas = findS3Buckets(adc).validatedToNotNull()
 
         if (!fullValidation || adc.cluster != cluster || s3BucketObjectAreas.isEmpty()) return emptyList()
 
@@ -87,7 +91,7 @@ class S3Feature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        val s3BucketObjectAreas = findS3Buckets(adc)
+        val s3BucketObjectAreas = findS3Buckets(adc).validatedToNotNull()
 
         if (s3BucketObjectAreas.isEmpty()) return emptySet()
 
@@ -100,6 +104,7 @@ class S3Feature(
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val bucketNameAndObjectAreas = findS3Buckets(adc)
+            .validatedToNotNull()
             .groupBy { it.bucketName }
 
         val envVars = resources.extractS3EnvVarsFromSecrets(bucketNameAndObjectAreas)
@@ -230,6 +235,56 @@ class S3Feature(
             objectPrefix = objectPrefix,
             bucketRegion = defaultBucketRegion
         )
+
+    private fun List<S3BucketObjectAreaNullable>.validatedToNotNull() =
+        this.map {
+            S3BucketObjectArea(
+                it.bucketName!!,
+                it.name!!
+            )
+        }
+
+    private fun findS3Buckets(adc: AuroraDeploymentSpec): List<S3BucketObjectAreaNullable> {
+        return if (adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME)) {
+            val defaultS3Bucket = S3BucketObjectAreaNullable(
+                bucketName = adc.getOrNull("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
+                name = adc.getOrNull("$FEATURE_DEFAULTS_FIELD_NAME/objectArea")
+            )
+
+            listOf(defaultS3Bucket)
+        } else {
+            adc.getSubKeyValues(FEATURE_FIELD_NAME)
+                .mapNotNull { findS3Bucket(it, adc) }
+        }
+    }
+
+    private fun findS3Bucket(
+        s3ObjectAreaKey: String,
+        adc: AuroraDeploymentSpec
+    ): S3BucketObjectAreaNullable? {
+        if (!adc.get<Boolean>("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/enabled")) return null
+
+        return S3BucketObjectAreaNullable(
+            bucketName = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/bucketName")
+                ?: adc.getOrNull("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
+            name = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"]
+        )
+    }
+
+    private fun AuroraDeploymentSpec.validateRequiredFieldsArePresent(): List<IllegalArgumentException> {
+        val s3BucketsNullable = findS3Buckets(this)
+        return s3BucketsNullable.flatMap {
+            val bucketNameException =
+                if (it.bucketName == null) IllegalArgumentException("Missing field: bucketName for s3") else null
+            val objectAreaException =
+                if (it.name == null) IllegalArgumentException("Missing field: objectArea for s3") else null
+
+            listOf(
+                bucketNameException,
+                objectAreaException
+            )
+        }.filterNotNull()
+    }
 }
 
 private data class BucketWithCredentials(
@@ -303,7 +358,8 @@ abstract class S3FeatureTemplate : Feature {
                     AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/$s3BucketObjectArea/bucketName"),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/objectArea",
-                        defaultValue = s3BucketObjectArea
+                        defaultValue = s3BucketObjectArea,
+                        validator = { objectAreaPatternValidation(it) }
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/enabled",
@@ -316,37 +372,23 @@ abstract class S3FeatureTemplate : Feature {
     private fun findS3DefaultHandlers(): List<AuroraConfigFieldHandler> =
         listOf(
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
-            AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/objectArea")
+            AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/objectArea", { objectAreaPatternValidation(it) })
         )
 
-    fun findS3Buckets(adc: AuroraDeploymentSpec): List<S3BucketObjectArea> {
-
-        return if (adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME)) {
-            val defaultS3Bucket = S3BucketObjectArea(
-                bucketName = adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
-                name = adc["$FEATURE_DEFAULTS_FIELD_NAME/objectArea"]
-            )
-            listOf(defaultS3Bucket)
-        } else {
-            adc.getSubKeyValues(FEATURE_FIELD_NAME)
-                .mapNotNull { findS3Bucket(it, adc) }
-        }
-    }
-
-    private fun findS3Bucket(
-        s3ObjectAreaKey: String,
-        adc: AuroraDeploymentSpec
-    ): S3BucketObjectArea? {
-        if (!adc.get<Boolean>("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/enabled")) return null
-
-        return S3BucketObjectArea(
-            bucketName = adc.getOrDefault(FEATURE_FIELD_NAME, s3ObjectAreaKey, "bucketName"),
-            name = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"]
+    private fun objectAreaPatternValidation(it: JsonNode?) =
+        it.pattern(
+            pattern = "[a-z0-9-.]+",
+            message = "s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it?.toPrettyString()}",
+            required = false
         )
-    }
 }
 
-data class S3BucketObjectArea(
+private data class S3BucketObjectAreaNullable(
+    val bucketName: String?,
+    val name: String?
+)
+
+private data class S3BucketObjectArea(
     val bucketName: String,
     val name: String
 )

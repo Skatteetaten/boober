@@ -73,7 +73,7 @@ class S3FeatureTest : AbstractFeatureTest() {
         generateResources(
             """{ 
                 "s3": {
-                    "notDefault" : {
+                    "not-default" : {
                         "enabled": false,
                         "bucketName": "minBucket"
                     },
@@ -91,7 +91,7 @@ class S3FeatureTest : AbstractFeatureTest() {
     fun `verify creates secrets and supports custom bucketname suffix`() {
         val s3Credentials = listOf(
             createS3Credentials(),
-            createS3Credentials(objectArea = "minAndreBucket")
+            createS3Credentials(objectArea = "min-andre-bucket")
         )
         mockFiona()
         mockHerkimer(booberAdId = booberAdId, s3Credentials = s3Credentials, claimExistsInHerkimer = false)
@@ -105,7 +105,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                     "default": {
                         "enabled": true
                     },
-                    "minAndreBucket": {
+                    "min-andre-bucket": {
                         "enabled": true
                     }
                 }
@@ -114,7 +114,7 @@ class S3FeatureTest : AbstractFeatureTest() {
             createdResources = 2
         )
 
-        resources.verifyS3SecretsAndEnvs(expectedBucketObjectAreas = listOf("default", "minAndreBucket"))
+        resources.verifyS3SecretsAndEnvs(expectedBucketObjectAreas = listOf("default", "min-andre-bucket"))
     }
 
     @Test
@@ -155,6 +155,49 @@ class S3FeatureTest : AbstractFeatureTest() {
                 resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
             )
         }.singleApplicationError("is already claimed")
+    }
+
+    @Test
+    fun `Should fail with message when s3 bucketName is missing`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3Defaults": {
+                   "objectArea": "my-object-area"
+                },
+                "s3": true
+           }"""
+            )
+        }.singleApplicationError("Missing field: bucketName for s3")
+    }
+
+    @Test
+    fun `Should fail with message when s3 objectArea is not according to required format`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3Defaults": {
+                   "objectArea": "my-object_Area",
+                   "bucketName": "myBucket"
+                },
+                "s3": true
+           }"""
+            )
+        }.singleApplicationError("s3 objectArea can only contain lower case characters,")
+    }
+
+    @Test
+    fun `Should fail with message when s3 objectArea is missing`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3Defaults": {
+                   "bucketName": "anotherId"
+                },
+                "s3": true
+           }"""
+            )
+        }.singleApplicationError("Missing field: objectArea for s3")
     }
 
     @Test
