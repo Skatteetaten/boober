@@ -238,6 +238,7 @@ class S3Feature(
 
     private fun List<S3BucketObjectAreaNullable>.validatedToNotNull() =
         this.map {
+            // TODO:AOS-5085 not optimal, can be fixed when we introduce shared state. This has already been validated to non null in validate
             S3BucketObjectArea(
                 it.bucketName!!,
                 it.name!!
