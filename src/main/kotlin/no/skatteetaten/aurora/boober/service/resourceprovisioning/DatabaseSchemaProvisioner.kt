@@ -181,7 +181,7 @@ class DatabaseSchemaProvisioner(
         val response: ResponseEntity<JsonNode> = try {
             restTemplate.get(
                 JsonNode::class,
-                "/api/v1/schema/?labels={1}",
+                "/api/v1/schema/?labels={1}&engine={2}",
                 labelsString,
                 engine
             )

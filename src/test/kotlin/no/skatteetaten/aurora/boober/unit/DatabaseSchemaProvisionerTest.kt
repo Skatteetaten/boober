@@ -277,7 +277,10 @@ class DatabaseSchemaProvisionerTest {
                 json(DbApiEnvelope("ok", listOf(createDbhSchema(UUID.randomUUID().toString()))))
             }
 
-            rule {
+            rule({
+                method == "GET" &&
+                    (path.matches(Regex(""".+/schema/\?labels=.+&engine=\w+""")) || path.matches(Regex(""".+/schema/[\w\d]+""")))
+            }) {
                 json(DbApiEnvelope("ok", activeSchemaId?.let { listOf(createDbhSchema(it)) } ?: emptyList()))
             }
         }
