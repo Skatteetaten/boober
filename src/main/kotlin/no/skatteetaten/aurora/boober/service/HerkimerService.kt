@@ -63,6 +63,7 @@ data class ResourceHerkimer(
     val kind: ResourceKind,
     val ownerId: String,
     val claims: List<ResourceClaimHerkimer>? = null,
+    val parentId: String?,
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
     val createdBy: String,
@@ -81,13 +82,14 @@ data class ResourceClaimHerkimer(
 )
 
 enum class ResourceKind {
-    MinioPolicy, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema
+    MinioPolicy, MinioObjectArea, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema
 }
 
 data class ResourcePayload(
     val name: String,
     val kind: ResourceKind,
-    val ownerId: String
+    val ownerId: String,
+    val parentId: String?
 )
 
 @ConditionalOnProperty("integrations.herkimer.url")
@@ -100,7 +102,11 @@ data class HerkimerConfiguration(val url: String, val fallback: Map<String, Stri
 class HerkimerRestTemplateWrapper(
     @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
     val configuration: HerkimerConfiguration
-) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = configuration.retries, baseUrl = configuration.url)
+) : RetryingRestTemplateWrapper(
+    restTemplate = restTemplate,
+    retries = configuration.retries,
+    baseUrl = configuration.url
+)
 
 @Service
 @ConditionalOnProperty("integrations.herkimer.url")
@@ -120,16 +126,20 @@ class HerkimerService(
         return herkimerObjectMapper.convertValue(herkimerResponse.items.single())
     }
 
+    private fun getResourceUrl(claimOwnerId: String?, resourceKind: ResourceKind, name: String?): String {
+        val nameParam = name?.let { "&name=$it" }.orEmpty()
+        val claimOwnerIdParam = claimOwnerId?.let { "claimedBy=$it&" } ?: "onlyMyClaims=false&"
+        return "/resource?${claimOwnerIdParam}resourceKind=$resourceKind$nameParam"
+    }
+
     fun getClaimedResources(
-        claimOwnerId: String,
+        claimOwnerId: String? = null,
         resourceKind: ResourceKind,
         name: String? = null
     ): List<ResourceHerkimer> {
-        val url = "/resource?claimedBy=$claimOwnerId&resourceKind=$resourceKind${ name?.let { "&name=$it" } ?: ""}"
-
         val herkimerResponse = client.get(
             HerkimerResponse::class,
-            url
+            getResourceUrl(claimOwnerId, resourceKind, name)
         ).getBodyOrThrow()
 
         if (!herkimerResponse.success) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.message}")
@@ -137,14 +147,21 @@ class HerkimerService(
         return herkimerObjectMapper.convertValue(herkimerResponse.items)
     }
 
-    fun createResourceAndClaim(ownerId: String, resourceKind: ResourceKind, resourceName: String, credentials: Any) {
+    fun createResourceAndClaim(
+        ownerId: String,
+        resourceKind: ResourceKind,
+        resourceName: String,
+        credentials: Any,
+        parentId: String? = null
+    ) {
         val resourceResponse = client.post(
             type = HerkimerResponse::class,
             url = "/resource",
             body = ResourcePayload(
                 name = resourceName,
                 kind = resourceKind,
-                ownerId = ownerId
+                ownerId = ownerId,
+                parentId = parentId
             )
         ).getBodyOrThrow()
 

@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
@@ -62,7 +62,7 @@ class ApplicationDeploymentFeature : Feature {
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
 
-        resources.addEnvVar(
+        resources.addEnvVarsToMainContainers(
             listOf(
                 EnvVar("APPLICATION_DEPLOYMENT_ID", adc.applicationDeploymentId, null)
             ), this::class.java

@@ -4,7 +4,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import org.springframework.stereotype.Service
 
@@ -19,7 +19,7 @@ class ConfigFeature : Feature {
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val env = adc.getConfigEnv(configHandlers(cmd)).toEnvVars()
-        resources.addEnvVar(env, this::class.java)
+        resources.addEnvVarsToMainContainers(env, this::class.java)
     }
 
     fun envVarsKeysWithSpecialCharacters(adc: AuroraDeploymentSpec): List<String> {

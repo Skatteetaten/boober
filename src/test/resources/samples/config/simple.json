@@ -2,10 +2,11 @@
   "version": "1",
   "groupId": "org.test",
   "database": true,
-  "s3": true,
-  "s3Defaults": {
-    "bucketName": "minYndlingsBucket"
+  "s3Defaults" : {
+    "bucketName": "myBucket",
+    "objectArea": "default"
   },
+  "s3": true,
   "sts": true,
   "route": true
 }

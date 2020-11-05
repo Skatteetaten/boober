@@ -4,7 +4,32 @@
   "items": [
     {
       "id": "1",
-      "name": "paas-bucket-u-default",
+      "name": "myBucket",
+      "kind": "MinioPolicy",
+      "ownerId": "e89b5acc24",
+      "claims": [
+        {
+          "id": "1",
+          "ownerId": "e89b5acc24",
+          "resourceId": 1,
+          "credentials": {
+            "brukernavn": "bruker2",
+            "passord": "pass123"
+          },
+          "createdDate": "2020-09-29T16:04:53.687",
+          "modifiedDate": "2020-09-29T16:04:53.687",
+          "createdBy": "aurora",
+          "modifiedBy": "aurora"
+        }
+      ],
+      "createdDate": "2020-09-29T16:03:26.539",
+      "modifiedDate": "2020-09-29T16:03:26.539",
+      "createdBy": "aurora",
+      "modifiedBy": "aurora"
+    },
+    {
+      "id": "2",
+      "name": "minYndlingsBucket",
       "kind": "MinioPolicy",
       "ownerId": "e89b5acc24",
       "claims": [

@@ -17,5 +17,6 @@ utv/about.json | cluster: "utv"
    simple.json | route: true
    simple.json | s3: true
                | s3Defaults:
-   simple.json |   bucketName: "minYndlingsBucket"
+   simple.json |   bucketName: "myBucket"
+   simple.json |   objectArea: "default"
    simple.json | sts: true
