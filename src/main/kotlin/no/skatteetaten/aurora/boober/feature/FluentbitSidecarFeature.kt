@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
+val AuroraDeploymentSpec.fluentParserName: String? get() = "${this.name}-fluent-parser"
 val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
 val hecTokenKey: String = "HEC_TOKEN"
 val splunkHostKey: String = "SPLUNK_HOST"
@@ -92,7 +93,15 @@ class FluentbitSidecarFeature(
         val index = adc.loggingIndex ?: return emptySet()
         val loggerIndexes = getLoggingIndexes(adc, cmd, index)
 
-        val resource = newConfigMap {
+        val fluentParserMap = newConfigMap {
+            metadata {
+                name = adc.fluentParserName
+                namespace = adc.namespace
+            }
+            data = mapOf("parsers.conf" to generateParserConf())
+        }
+
+        val fluentConfigMap = newConfigMap {
             metadata {
                 name = adc.fluentConfigName
                 namespace = adc.namespace
@@ -109,16 +118,22 @@ class FluentbitSidecarFeature(
                     splunkHostKey to Base64.encodeBase64String(splunkUrl.toByteArray()),
                     splunkPortKey to Base64.encodeBase64String(splunkPort.toByteArray()))
         }
-        return setOf(generateResource(resource), generateResource(hecSecret))
+        return setOf(generateResource(fluentParserMap), generateResource(fluentConfigMap), generateResource(hecSecret))
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         if (adc.loggingIndex == null) return
 
-        val volume = newVolume {
+        val configVolume = newVolume {
             name = adc.fluentConfigName
             configMap {
                 name = adc.fluentConfigName
+            }
+        }
+        val parserVolume = newVolume {
+            name = adc.fluentParserName
+            configMap {
+                name = adc.fluentParserName
             }
         }
 
@@ -128,14 +143,16 @@ class FluentbitSidecarFeature(
                 modifyResource(it, "Added fluentbit volume and sidecar container")
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
                 val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
+                podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
+                podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Deployment") {
                 // TODO: refactor
                 modifyResource(it, "Added fluentbit volume and sidecar container")
                 val dc: Deployment = it.resource as Deployment
                 val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
+                podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
+                podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
             }
         }
@@ -180,6 +197,9 @@ class FluentbitSidecarFeature(
             env = podEnvVariables.addIfNotNull(hecEnvVariables)
             volumeMounts = listOf(
                     newVolumeMount {
+                        name = adc.fluentParserName
+                        mountPath = "/fluent-bit/parser"
+                    }, newVolumeMount {
                         name = adc.fluentConfigName
                         mountPath = "/fluent-bit/etc"
                     }, loggingMount
@@ -259,12 +279,17 @@ fun getKnownFilePattern(logger: String): String {
 
 fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: String, cluster: String): String {
     val inputs = loggerIndexes.map { log ->
+        var multiline = ""
+        if (log.sourceType.equals("log4j")) {
+            multiline = "Multiline    On\n    Parser_Firstline   log4jMultilineParser"
+        }
         """[INPUT]
     Name   tail
     Path   /u01/logs/${log.filePattern}
     Tag    ${log.name}
     Mem_Buf_Limit 10MB
-    Key    event"""
+    Key    event
+    $multiline"""
     }.joinToString("\n\n")
 
     val filters = loggerIndexes.map { log ->
@@ -279,7 +304,7 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     Flush        1
     Daemon       Off
     Log_Level    debug
-    Parsers_File parsers.conf
+    Parsers_File /fluent-bit/parser/parsers.conf
 
 $inputs
 
@@ -314,4 +339,14 @@ $filters
     TLS         On
     TLS.Verify  Off
     """.replace("$ {", "\${")
+}
+
+fun generateParserConf(): String {
+    return """[PARSER]
+    Name     log4jMultilineParser
+    Format   regex
+    Regex   ^(?<timestamp>\d{4}-\d{1,2}-\d{1,2}T\d{2}:\d{2}:\d{2},\d*Z) (?<event>.*)
+    Time_Key    timestamp
+    Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+    Time_Keep  Off"""
 }

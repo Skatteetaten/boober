@@ -84,6 +84,9 @@
             }
           },
           "volumeMounts" : [ {
+            "mountPath" : "/fluent-bit/parser",
+            "name" : "simple-fluent-parser"
+          },{
             "mountPath" : "/fluent-bit/etc",
             "name" : "simple-fluent-config"
           },{
@@ -98,6 +101,11 @@
             "name" : "simple-fluent-config"
           },
           "name" : "simple-fluent-config"
+        }, {
+          "configMap" : {
+            "name" : "simple-fluent-parser"
+          },
+          "name" : "simple-fluent-parser"
         } ]
       }
     },
