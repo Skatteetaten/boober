@@ -283,9 +283,7 @@ class DatabaseSchemaProvisioner(
             .getOrNull()
             ?.let {
                 parse<RestorableSchema>(it)
-            }
-            ?.sortedByDescending { it.setToCooldownAt }
-            ?.firstOrNull()
+            }?.maxBy { it.setToCooldownAt }
 
     private fun SchemaForAppRequest.toLabels() =
         mapOf(
