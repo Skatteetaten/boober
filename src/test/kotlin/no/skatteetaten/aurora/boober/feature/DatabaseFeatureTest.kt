@@ -131,7 +131,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     fun `create database secret from id`() {
 
         every {
-            provisioner.findSchemaById(any())
+            provisioner.findSchema(any())
         } returns schema
 
         every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
