@@ -13,7 +13,7 @@ import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.secretKeyRef
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.Quantity
-import io.fabric8.kubernetes.api.model.apps.Deployment
+import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -41,6 +41,10 @@ val logSensitive: String = "sensitive"
 val logStacktrace: String = "stacktrace"
 val logAccess: String = "access"
 val knownLogs: Set<String> = setOf(logApplication, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
+
+val parserMountPath = "/fluent-bit/parser"
+val parsersFileName = "parsers.conf"
+
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
@@ -98,7 +102,7 @@ class FluentbitSidecarFeature(
                 name = adc.fluentParserName
                 namespace = adc.namespace
             }
-            data = mapOf("parsers.conf" to generateParserConf())
+            data = mapOf(parsersFileName to generateParserConf())
         }
 
         val fluentConfigMap = newConfigMap {
@@ -140,22 +144,20 @@ class FluentbitSidecarFeature(
         val container = createFluentbitContainer(adc)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
-                modifyResource(it, "Added fluentbit volume and sidecar container")
-                val dc: DeploymentConfig = it.resource as DeploymentConfig
-                val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
-                podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
+                modifyAuroraResource(it, configVolume, parserVolume, container)
             } else if (it.resource.kind == "Deployment") {
-                // TODO: refactor
-                modifyResource(it, "Added fluentbit volume and sidecar container")
-                val dc: Deployment = it.resource as Deployment
-                val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
-                podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
+                modifyAuroraResource(it, configVolume, parserVolume, container)
             }
         }
+    }
+
+    private fun modifyAuroraResource(auroraResource: AuroraResource, configVolume: Volume, parserVolume: Volume, container: Container) {
+        modifyResource(auroraResource, "Added fluentbit volume and sidecar container")
+        val dc: DeploymentConfig = auroraResource.resource as DeploymentConfig
+        val podSpec = dc.spec.template.spec
+        podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
+        podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
+        podSpec.containers = podSpec.containers.addIfNotNull(container)
     }
 
     private fun createFluentbitContainer(adc: AuroraDeploymentSpec): Container {
@@ -198,7 +200,7 @@ class FluentbitSidecarFeature(
             volumeMounts = listOf(
                     newVolumeMount {
                         name = adc.fluentParserName
-                        mountPath = "/fluent-bit/parser"
+                        mountPath = parserMountPath
                     }, newVolumeMount {
                         name = adc.fluentConfigName
                         mountPath = "/fluent-bit/etc"
@@ -304,7 +306,7 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     Flush        1
     Daemon       Off
     Log_Level    debug
-    Parsers_File /fluent-bit/parser/parsers.conf
+    Parsers_File $parserMountPath/$parsersFileName
 
 $inputs
 
