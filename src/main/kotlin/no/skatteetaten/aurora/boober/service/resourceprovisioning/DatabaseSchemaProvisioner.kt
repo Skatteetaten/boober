@@ -284,6 +284,7 @@ class DatabaseSchemaProvisioner(
             ?.let {
                 parse<RestorableSchema>(it)
             }
+            ?.sortedByDescending { it.setToCooldownAt }
             ?.firstOrNull()
 
     private fun SchemaForAppRequest.toLabels() =
