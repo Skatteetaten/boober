@@ -35,6 +35,8 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
     fun <U : Any> get(responseType: KClass<U>, url: String, vararg uriVars: Any): ResponseEntity<U> =
         get(HttpHeaders(), responseType, url, *uriVars)
 
+    fun uri(url: String, vararg uriVars: Any) = restTemplate.uriTemplateHandler.expand(url, *uriVars)
+
     fun <U : Any> get(headers: HttpHeaders, type: KClass<U>, url: String, vararg uriVars: Any): ResponseEntity<U> {
         val uri = restTemplate.uriTemplateHandler.expand(url, *uriVars)
         return exchange(RequestEntity<Any>(headers, HttpMethod.GET, uri), type)

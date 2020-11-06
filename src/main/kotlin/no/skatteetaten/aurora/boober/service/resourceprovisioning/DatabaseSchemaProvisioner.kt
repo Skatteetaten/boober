@@ -25,13 +25,18 @@ private val logger = KotlinLogging.logger {}
 sealed class SchemaProvisionRequest {
     abstract val details: SchemaRequestDetails
     abstract val tryReuse: Boolean
+    abstract val findPath: String
+    abstract val findVars: Array<out Any>
 }
-
 data class SchemaIdRequest(
     val id: String,
     override val details: SchemaRequestDetails,
     override val tryReuse: Boolean
-) : SchemaProvisionRequest()
+) : SchemaProvisionRequest() {
+
+    override val findPath = "/api/v1/schema/{1}"
+    override val findVars = arrayOf(id)
+}
 
 data class SchemaForAppRequest(
     val environment: String,
@@ -40,7 +45,19 @@ data class SchemaForAppRequest(
     val user: User,
     override val details: SchemaRequestDetails,
     override val tryReuse: Boolean
-) : SchemaProvisionRequest()
+) : SchemaProvisionRequest() {
+
+    val labels =
+        mapOf(
+            "affiliation" to details.affiliation,
+            "environment" to "${details.affiliation}-$environment",
+            "application" to application,
+            "name" to details.schemaName,
+            "userId" to user.username
+        )
+    override val findPath = "/api/v1/schema/?labels={1}&engine={2}"
+    override val findVars = arrayOf(labels.toLabelsString(), details.engine)
+}
 
 data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 data class SchemaProvisionResult(
@@ -91,12 +108,6 @@ class DatabaseSchemaProvisioner(
     val mapper: ObjectMapper
 ) {
 
-    /*
-      TODO  Error handling, right now provision schema is called in validation for id schemas and schemas with generate false
-      This method will fail on the first error and not collect errors. Should we collect up the errors in a correct way?
-
-      How do we pass state from one step of a feature to another? Because this is actually a use case for it.
-     */
     fun provisionSchemas(schemaProvisionRequests: List<SchemaProvisionRequest>): SchemaProvisionResults {
 
         if (schemaProvisionRequests.isEmpty()) throw IllegalArgumentException("SchemaProvisionRequest cannot be empty")
@@ -105,105 +116,48 @@ class DatabaseSchemaProvisioner(
         return SchemaProvisionResults(results)
     }
 
+    // Ideally this should just return the schema, and not be used anywhere besides validate
     fun provisionSchema(request: SchemaProvisionRequest): SchemaProvisionResult {
-        val dbhSchema = when (request) {
-            is SchemaIdRequest -> findSchemaById(request)
-            is SchemaForAppRequest -> provisionForApplication(request)
+
+        val schema = findSchema(request) ?: tryReuseSchemaIfConfiguredElseNull(request)
+
+        if (schema != null) {
+            return SchemaProvisionResult(request, schema)
         }
 
-        return SchemaProvisionResult(request, dbhSchema)
-    }
-
-    private fun provisionForApplication(request: SchemaForAppRequest): DbhSchema {
-        val labels = request.toLabels()
-        val schemaFound =
-            findSchemaByLabels(labels, request.details.engine) ?: tryReuseSchemaIfConfiguredElseNull(request)
-
-        if (schemaFound == null && !request.generate) {
-            throw ProvisioningException("Could not find schema with labels=$labels, generate disabled.")
+        return when (request) {
+            is SchemaIdRequest -> throw ProvisioningException("Expected dbh response to contain schema info.")
+            is SchemaForAppRequest -> {
+                if (!request.generate) {
+                    throw ProvisioningException("Could not find schema with ${request.labels.toLabelsString()} generate disabled.")
+                } else {
+                    SchemaProvisionResult(request, createSchema(request))
+                }
+            }
         }
-
-        return schemaFound ?: createSchema(labels, request.details)
     }
 
-    private fun findSchemaInCooldown(forApp: Boolean = false, uriVar: Any): RestorableSchema? {
-        val appPathElseEmpty = if (forApp) "?labels=" else ""
-        return runCatching {
-            restTemplate.get(
-                JsonNode::class,
-                "/api/v1/restorableSchema/$appPathElseEmpty{1}",
-                uriVar
-            )
-        }.getRestorableSchema()
-    }
-
-    fun findSchemaById(
-        request: SchemaIdRequest
-    ): DbhSchema {
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.get(
-                JsonNode::class,
-                "/api/v1/schema/{1}",
-                request.id
-            )
-        } catch (e: Exception) {
-            throw createProvisioningException(
-                "Unable to get database schema with id=${request.id}",
-                e
-            )
-        }
-
-        return parseAsSingle(response)
-            ?: tryReuseSchemaIfConfiguredElseNull(request)
-            ?: throw ProvisioningException("Expected dbh response to contain schema info.")
-    }
-
-    private fun activateSchema(id: String): DbhSchema {
-        return runCatching {
-            restTemplate.patch(
-                RestoreDatabaseSchemaPayload(active = true),
-                JsonNode::class,
-                "/api/v1/restorableSchema/{1}",
-                id
-            )
-        }.onFailure(::reThrowError)
-            .getOrElse {
-                throw createProvisioningException("Unable to reactivate schema with id=$id.", it)
-            }.parseAndFailIfEmpty()
-    }
-
-    private fun findSchemaByLabels(
-        labels: Map<String, String>,
-        engine: DatabaseEngine
+    fun findSchema(
+        request: SchemaProvisionRequest
     ): DbhSchema? {
-
-        val labelsString = toLabelsString(labels)
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.get(
-                JsonNode::class,
-                "/api/v1/schema/?labels={1}&engine={2}",
-                labelsString,
-                engine
-            )
+        return try {
+            parseAsSingle(restTemplate.get(JsonNode::class, request.findPath, *request.findVars))
         } catch (e: Exception) {
-            throw createProvisioningException("Unable to get database schema.", e)
+            throw createProvisioningException("Unable to get database schema with uri=${restTemplate.uri(request.findPath, *request.findVars)}", e)
         }
-
-        return parseAsSingle(response)
     }
 
     private fun createSchema(
-        labels: Map<String, String>,
-        details: SchemaRequestDetails
+        request: SchemaForAppRequest
     ): DbhSchema {
-
+        val details = request.details
         val payload =
             SchemaRequestPayload(
                 engine = details.engine,
                 instanceName = details.databaseInstance.name,
                 instanceFallback = details.databaseInstance.fallback,
                 instanceLabels = details.databaseInstance.labels,
-                labels = labels
+                labels = request.labels
             )
 
         val response: ResponseEntity<JsonNode> = try {
@@ -222,11 +176,12 @@ class DatabaseSchemaProvisioner(
     private fun tryReuseSchemaIfConfiguredElseNull(request: SchemaProvisionRequest): DbhSchema? {
         if (!request.tryReuse) return null
 
+        // this could use the same pattern as i did in findSchema. since the vars are the same only the path need to change really.
         val cooldownSchema =
             when (request) {
                 is SchemaForAppRequest -> findSchemaInCooldown(
                     forApp = true,
-                    uriVar = toLabelsString(request.toLabels())
+                    uriVar = request.labels.toLabelsString()
                 )
                 is SchemaIdRequest -> findSchemaInCooldown(forApp = false, uriVar = request.id)
             }
@@ -235,6 +190,31 @@ class DatabaseSchemaProvisioner(
 
         return cooldownSchema.databaseSchema
             .also { activateSchema(it.id) }
+    }
+
+    private fun activateSchema(id: String): DbhSchema {
+        return runCatching {
+            restTemplate.patch(
+                RestoreDatabaseSchemaPayload(active = true),
+                JsonNode::class,
+                "/api/v1/restorableSchema/{1}",
+                id
+            )
+        }.onFailure(::reThrowError)
+            .getOrElse {
+                throw createProvisioningException("Unable to reactivate schema with id=$id.", it)
+            }.parseAndFailIfEmpty()
+    }
+
+    private fun findSchemaInCooldown(forApp: Boolean = false, uriVar: Any): RestorableSchema? {
+        val appPathElseEmpty = if (forApp) "?labels=" else ""
+        return runCatching {
+            restTemplate.get(
+                JsonNode::class,
+                "/api/v1/restorableSchema/$appPathElseEmpty{1}",
+                uriVar
+            )
+        }.getRestorableSchema()
     }
 
     private inline fun <reified T : Any> ResponseEntity<JsonNode>.parseAndFailIfEmpty(): T =
@@ -285,23 +265,14 @@ class DatabaseSchemaProvisioner(
                 parse<RestorableSchema>(it)
             }?.maxBy { it.setToCooldownAt }
 
-    private fun SchemaForAppRequest.toLabels() =
-        mapOf(
-            "affiliation" to details.affiliation,
-            "environment" to "${details.affiliation}-$environment",
-            "application" to application,
-            "name" to details.schemaName,
-            "userId" to user.username
-        )
-
-    private fun toLabelsString(labels: Map<String, String>) = labels.filterKeys { it != "userId" }
-        .map { "${it.key}=${it.value}" }
-        .joinToString(",")
-
     private fun reThrowError(throwable: Throwable) {
         if (throwable is Error) throw throwable
     }
 }
+
+fun Map<String, String>.toLabelsString() = this.filterKeys { it != "userId" }
+    .map { "${it.key}=${it.value}" }
+    .joinToString(",")
 
 data class SchemaRequestDetails(
     val schemaName: String,
