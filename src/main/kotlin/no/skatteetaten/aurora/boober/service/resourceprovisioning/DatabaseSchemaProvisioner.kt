@@ -25,13 +25,18 @@ private val logger = KotlinLogging.logger {}
 sealed class SchemaProvisionRequest {
     abstract val details: SchemaRequestDetails
     abstract val tryReuse: Boolean
+    abstract val findPath: String
+    abstract val findVars: Array<out Any>
 }
-
 data class SchemaIdRequest(
     val id: String,
     override val details: SchemaRequestDetails,
     override val tryReuse: Boolean
-) : SchemaProvisionRequest()
+) : SchemaProvisionRequest() {
+
+    override val findPath = "/api/v1/schema/{1}"
+    override val findVars = arrayOf(id)
+}
 
 data class SchemaForAppRequest(
     val environment: String,
@@ -40,7 +45,19 @@ data class SchemaForAppRequest(
     val user: User,
     override val details: SchemaRequestDetails,
     override val tryReuse: Boolean
-) : SchemaProvisionRequest()
+) : SchemaProvisionRequest() {
+
+    val labels =
+        mapOf(
+            "affiliation" to details.affiliation,
+            "environment" to "${details.affiliation}-$environment",
+            "application" to application,
+            "name" to details.schemaName,
+            "userId" to user.username
+        )
+    override val findPath = "/api/v1/schema/?labels={1}&engine={2}"
+    override val findVars = arrayOf(labels.toLabelsString(), details.engine)
+}
 
 data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
 data class SchemaProvisionResult(
@@ -108,83 +125,39 @@ class DatabaseSchemaProvisioner(
             return SchemaProvisionResult(request, schema)
         }
 
-        // from here on down it is not as nice as i want it to be
-        if (request is SchemaIdRequest) {
-            throw ProvisioningException("Expected dbh response to contain schema info.")
+        return when (request) {
+            is SchemaIdRequest -> throw ProvisioningException("Expected dbh response to contain schema info.")
+            is SchemaForAppRequest -> {
+                if (!request.generate) {
+                    throw ProvisioningException("Could not find schema with ${request.labels.toLabelsString()} generate disabled.")
+                } else {
+                    SchemaProvisionResult(request, createSchema(request))
+                }
+            }
         }
-
-        val appRequest = request as SchemaForAppRequest
-        if (!appRequest.generate) {
-            throw ProvisioningException("Could not find schema with labels=${appRequest.toLabels()} generate disabled.")
-        }
-
-        // why does createSchema not just take the appRequest object?
-        return SchemaProvisionResult(request, createSchema(appRequest.toLabels(), request.details))
     }
 
     fun findSchema(
         request: SchemaProvisionRequest
     ): DbhSchema? {
-        // inline the methods and make them more generic here :w
-
-        return when (request) {
-            is SchemaIdRequest -> findSchemaById(request)
-            is SchemaForAppRequest -> findSchemaByLabels(request)
-        }
-    }
-
-    fun findSchemaById(
-        request: SchemaIdRequest
-    ): DbhSchema? {
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.get(
-                JsonNode::class,
-                "/api/v1/schema/{1}",
-                request.id
-            )
+        return try {
+            parseAsSingle(restTemplate.get(JsonNode::class, request.findPath, *request.findVars))
         } catch (e: Exception) {
-            throw createProvisioningException(
-                "Unable to get database schema with id=${request.id}",
-                e
-            )
+            throw createProvisioningException("Unable to get database schema with uri=${restTemplate.uri(request.findPath, *request.findVars)}", e)
         }
-
-        return parseAsSingle(response)
-    }
-
-    private fun findSchemaByLabels(
-        request: SchemaForAppRequest
-    ): DbhSchema? {
-
-        val labels = request.toLabels()
-
-        val labelsString = toLabelsString(labels)
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.get(
-                JsonNode::class,
-                "/api/v1/schema/?labels={1}&engine={2}",
-                labelsString,
-                request.details.engine
-            )
-        } catch (e: Exception) {
-            throw createProvisioningException("Unable to get database schema.", e)
-        }
-
-        return parseAsSingle(response)
     }
 
     private fun createSchema(
-        labels: Map<String, String>,
-        details: SchemaRequestDetails
+        request: SchemaForAppRequest
     ): DbhSchema {
-
+        val details = request.details
         val payload =
             SchemaRequestPayload(
                 engine = details.engine,
                 instanceName = details.databaseInstance.name,
                 instanceFallback = details.databaseInstance.fallback,
                 instanceLabels = details.databaseInstance.labels,
-                labels = labels
+                labels = request.labels
             )
 
         val response: ResponseEntity<JsonNode> = try {
@@ -203,11 +176,12 @@ class DatabaseSchemaProvisioner(
     private fun tryReuseSchemaIfConfiguredElseNull(request: SchemaProvisionRequest): DbhSchema? {
         if (!request.tryReuse) return null
 
+        // this could use the same pattern as i did in findSchema. since the vars are the same only the path need to change really.
         val cooldownSchema =
             when (request) {
                 is SchemaForAppRequest -> findSchemaInCooldown(
                     forApp = true,
-                    uriVar = toLabelsString(request.toLabels())
+                    uriVar = request.labels.toLabelsString()
                 )
                 is SchemaIdRequest -> findSchemaInCooldown(forApp = false, uriVar = request.id)
             }
@@ -291,23 +265,14 @@ class DatabaseSchemaProvisioner(
                 parse<RestorableSchema>(it)
             }?.maxBy { it.setToCooldownAt }
 
-    private fun SchemaForAppRequest.toLabels() =
-        mapOf(
-            "affiliation" to details.affiliation,
-            "environment" to "${details.affiliation}-$environment",
-            "application" to application,
-            "name" to details.schemaName,
-            "userId" to user.username
-        )
-
-    private fun toLabelsString(labels: Map<String, String>) = labels.filterKeys { it != "userId" }
-        .map { "${it.key}=${it.value}" }
-        .joinToString(",")
-
     private fun reThrowError(throwable: Throwable) {
         if (throwable is Error) throw throwable
     }
 }
+
+fun Map<String, String>.toLabelsString() = this.filterKeys { it != "userId" }
+    .map { "${it.key}=${it.value}" }
+    .joinToString(",")
 
 data class SchemaRequestDetails(
     val schemaName: String,
