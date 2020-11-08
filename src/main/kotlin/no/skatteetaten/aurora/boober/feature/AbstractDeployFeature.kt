@@ -457,7 +457,6 @@ abstract class AbstractDeployFeature(
                 selector = mapOf("name" to adc.name)
                 template {
                     spec {
-                        // TODO This must be available from sidecar logger as well
                         volumes = volumes + newVolume {
                             name = "application-log-volume"
                             emptyDir()

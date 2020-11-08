@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.notBlank
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 
@@ -55,11 +56,11 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.port}") val splunkPort: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        // TODO validate logic
-        return header.type in listOf(
+        val isOfType = header.type in listOf(
                 TemplateType.deploy,
                 TemplateType.development
         )
+        return isOfType && !header.isJob
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -70,14 +71,12 @@ class FluentbitSidecarFeature(
                     defaultValue = header.loggingIndex
                 ),
                 AuroraConfigFieldHandler(
-                    name = "logging/custom/$key/pattern"
-                    // validator =
-                    // TODO validate that this is requered
+                    name = "logging/custom/$key/pattern",
+                    validator = { it.notBlank("pattern for logging/cusomt/$key must be set") }
                 ),
                 AuroraConfigFieldHandler(
-                    name = "logging/custom/$key/sourcetype"
-                    // validator =
-                    // TODO validate that this is requered
+                    name = "logging/custom/$key/sourcetype",
+                    validator = { it.notBlank("sourcetype for logging/cusomt/$key must be set") }
                 )
             )
         }
@@ -88,8 +87,8 @@ class FluentbitSidecarFeature(
 
         return listOf(
             AuroraConfigFieldHandler("logging/index")
-        ).addIfNotNull(customHandlers)
-            .addIfNotNull(loggerHanlders)
+        ).addIfNotNull(loggerHanlders)
+            .addIfNotNull(customHandlers)
             .toSet()
     }
 
