@@ -56,7 +56,7 @@ class DatabaseDisabledFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        val databases = findDatabases(adc, cmd)
+        val databases = findDatabases(adc)
         return if (databases.isNotEmpty()) {
             listOf(IllegalArgumentException("Databases are not supported in this cluster"))
         } else emptyList()
@@ -76,7 +76,7 @@ class DatabaseFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        val databases = findDatabases(adc, cmd).createSchemaRequests(adc)
+        val databases = findDatabases(adc).createSchemaRequests(adc)
 
         if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) return emptyList()
 
@@ -84,7 +84,7 @@ class DatabaseFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        val schemaRequests = findDatabases(adc, cmd)
+        val schemaRequests = findDatabases(adc)
             .createSchemaRequests(adc)
 
         if (schemaRequests.isEmpty()) return emptySet()
@@ -96,7 +96,7 @@ class DatabaseFeature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val databases = findDatabases(adc, cmd)
+        val databases = findDatabases(adc)
 
         if (databases.isEmpty()) return
 
@@ -216,7 +216,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
         )).toSet()
     }
 
-    fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Database> {
+    fun findDatabases(adc: AuroraDeploymentSpec): List<Database> {
         val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
         val defaultInstance = findInstance(adc, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
             ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
@@ -231,14 +231,13 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
         if (adc.isSimplifiedAndEnabled("database")) {
             return listOf(defaultDb)
         }
-        return cmd.applicationFiles.findSubKeys("database").mapNotNull { db -> findDatabase(db, adc, defaultDb, cmd) }
+        return adc.getSubKeyValues("database").mapNotNull { db -> findDatabase(db, adc, defaultDb) }
     }
 
     private fun findDatabase(
         db: String,
         adc: AuroraDeploymentSpec,
-        defaultDb: Database,
-        cmd: AuroraContextCommand
+        defaultDb: Database
     ): Database? {
         val key = "database/$db"
         val isSimple = adc.fields.containsKey(key)
