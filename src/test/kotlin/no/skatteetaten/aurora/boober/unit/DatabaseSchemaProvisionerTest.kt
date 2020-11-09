@@ -50,7 +50,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.dbhSchema.id).isEqualTo(cooldownSchemaId)
+            assertThat(it.id).isEqualTo(cooldownSchemaId)
         }
     }
 
@@ -74,7 +74,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.dbhSchema.id).isEqualTo(cooldownId)
+            assertThat(it.id).isEqualTo(cooldownId)
         }
     }
 
@@ -87,7 +87,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.dbhSchema.id).isEqualTo(activeSchemaId)
+            assertThat(it.id).isEqualTo(activeSchemaId)
         }
     }
 
@@ -100,7 +100,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.dbhSchema.id).isEqualTo(activeSchemaId)
+            assertThat(it.id).isEqualTo(activeSchemaId)
         }
     }
 
@@ -254,13 +254,8 @@ class DatabaseSchemaProvisionerTest {
                 }
             }
 
-            val forAppOrIdPath = when (request) {
-                is SchemaIdRequest -> request.id
-                is SchemaForAppRequest -> "?labels"
-            }
-
             rule({
-                path.contains("restorableSchema/$forAppOrIdPath") && method == "GET"
+                path.contains("restorableSchema/") && method == "GET"
             }) {
                 json(DbApiEnvelope("ok", cooldownSchemaId?.let { listOf(createRestorableSchema(it)) } ?: emptyList()))
             }

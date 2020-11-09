@@ -1051,38 +1051,38 @@
       }
     }
   },
-  "beta": {
-    "s3": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    }
-  },
   "s3": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
+    "default": {
+      "bucketName": {
+        "source": "complex.json",
+        "value": "minYndlingsBucket",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "minYndlingsBucket"
+          }
+        ]
+      },
+      "objectArea": {
+        "source": "default",
+        "value": "default",
+        "sources": [
+          {
+            "name": "default",
+            "value": "default"
+          }
+        ]
+      },
+      "enabled": {
+        "source": "default",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          }
+        ]
       }
-    ]
-  },
-  "s3Defaults": {
-    "bucketName": {
-      "source": "default",
-      "value": "default",
-      "sources": [
-        {
-          "name": "default",
-          "value": "default"
-        }
-      ]
     }
   },
   "secretVaults": {

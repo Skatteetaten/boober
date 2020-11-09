@@ -38,8 +38,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
     fun uri(url: String, vararg uriVars: Any) = restTemplate.uriTemplateHandler.expand(url, *uriVars)
 
     fun <U : Any> get(headers: HttpHeaders, type: KClass<U>, url: String, vararg uriVars: Any): ResponseEntity<U> {
-        val uri = restTemplate.uriTemplateHandler.expand(url, *uriVars)
-        return exchange(RequestEntity<Any>(headers, HttpMethod.GET, uri), type)
+        return exchange(RequestEntity<Any>(headers, HttpMethod.GET, uri(url, *uriVars)), type)
     }
 
     fun <T, U : Any> post(
@@ -58,8 +57,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
         url: String,
         vararg uriVars: Any
     ): ResponseEntity<U> {
-        val uri = restTemplate.uriTemplateHandler.expand(url, *uriVars)
-        return exchange(RequestEntity(body, headers, HttpMethod.PUT, uri), type)
+        return exchange(RequestEntity(body, headers, HttpMethod.PUT, uri(url, *uriVars)), type)
     }
 
     fun <T, U : Any> patch(
@@ -69,8 +67,7 @@ open class RetryingRestTemplateWrapper(val restTemplate: RestTemplate, open val 
         vararg uriVars: Any,
         headers: HttpHeaders = HttpHeaders.EMPTY
     ): ResponseEntity<U> {
-        val uri = restTemplate.uriTemplateHandler.expand(url, *uriVars)
-        return exchange(RequestEntity(body, headers, HttpMethod.PATCH, uri), responseType)
+        return exchange(RequestEntity(body, headers, HttpMethod.PATCH, uri(url, *uriVars)), responseType)
     }
 
     fun exchange(requestEntity: RequestEntity<*>, retry: Boolean = true): ResponseEntity<JsonNode> =

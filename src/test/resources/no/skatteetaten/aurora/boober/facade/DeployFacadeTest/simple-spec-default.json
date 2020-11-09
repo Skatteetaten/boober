@@ -511,18 +511,6 @@
       }
     }
   },
-  "beta": {
-    "s3": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    }
-  },
   "s3": {
     "source": "simple.json",
     "value": true,
@@ -540,15 +528,21 @@
   "s3Defaults": {
     "bucketName": {
       "source": "simple.json",
-      "value": "minYndlingsBucket",
+      "value": "myBucket",
       "sources": [
         {
-          "name": "default",
-          "value": "default"
-        },
+          "name": "simple.json",
+          "value": "myBucket"
+        }
+      ]
+    },
+    "objectArea" : {
+      "source": "simple.json",
+      "value": "default",
+      "sources": [
         {
           "name": "simple.json",
-          "value": "minYndlingsBucket"
+          "value": "default"
         }
       ]
     }

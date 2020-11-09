@@ -453,18 +453,6 @@
       }
     }
   },
-  "beta": {
-    "s3": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    }
-  },
   "s3": {
     "source": "default",
     "value": false,
@@ -474,18 +462,6 @@
         "value": false
       }
     ]
-  },
-  "s3Defaults": {
-    "bucketName": {
-      "source": "default",
-      "value": "default",
-      "sources": [
-        {
-          "name": "default",
-          "value": "default"
-        }
-      ]
-    }
   },
   "sts": {
     "source": "default",

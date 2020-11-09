@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.utils
 
+import io.fabric8.kubernetes.api.model.HasMetadata
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -7,6 +8,8 @@ import kotlinx.coroutines.newFixedThreadPoolContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
+import no.skatteetaten.aurora.boober.model.AuroraResource
+import kotlin.reflect.KClass
 
 fun <K, V> Map<K, V>.addIfNotNull(value: Pair<K, V>?): Map<K, V> {
     return value?.let {
@@ -147,3 +150,18 @@ val threadPool = newFixedThreadPoolContext(6, "boober")
 suspend fun <A, B> Iterable<A>.pmap(f: suspend (A) -> B): List<B> = coroutineScope {
     map { async { f(it) } }.awaitAll()
 }
+
+inline fun <reified T : HasMetadata> Collection<AuroraResource>.findResourceByType(): T =
+    this.findResourceByType(T::class).firstOrNull() ?: throw Exception("No resource of specified type found")
+
+inline fun <reified T : HasMetadata> Collection<AuroraResource>.findResourcesByType(suffix: String? = null): List<T> =
+    this.findResourceByType(T::class).filter { item ->
+        suffix?.let {
+            item.metadata.name.endsWith(it)
+        } ?: true
+    }
+
+@Suppress("UNCHECKED_CAST")
+fun <T : Any> Collection<AuroraResource>.findResourceByType(kclass: KClass<T>): List<T> =
+    filter { it.resource::class == kclass }
+        .map { it.resource as T }

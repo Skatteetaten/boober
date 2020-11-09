@@ -17,7 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.model.addVolumesAndMounts
-import no.skatteetaten.aurora.boober.model.associateSubKeys
 import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
@@ -29,7 +28,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -57,10 +55,9 @@ class DatabaseDisabledFeature(
         cmd: AuroraContextCommand
     ): List<Exception> {
         val databases = findDatabases(adc, cmd)
-        if (databases.isNotEmpty()) {
-            return listOf(IllegalArgumentException("Databases are not supported in this cluster"))
-        }
-        return emptyList()
+        return if (databases.isNotEmpty()) {
+            listOf(IllegalArgumentException("Databases are not supported in this cluster"))
+        } else emptyList()
     }
 }
 
@@ -77,60 +74,23 @@ class DatabaseFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        val databases = findDatabases(adc, cmd)
-        if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
-            return emptyList()
-        }
+        val databases = findDatabases(adc, cmd).createSchemaRequests(adc)
 
-        val databasesThatShouldBeThere = databases.filter { it.id != null || !it.generate }
-        val requests = createSchemaRequest(databasesThatShouldBeThere, adc)
+        if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) return emptyList()
 
-        return requests.mapNotNull { request ->
-            try {
-                databaseSchemaProvisioner.provisionSchema(request)
-                null
-            } catch (e: Exception) {
-                e
-            }
-        }
+        return databaseSchemaProvisioner.validateSchemas(databases)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+        val schemaRequests = findDatabases(adc, cmd)
+            .createSchemaRequests(adc)
 
-        // can we just create schemaRequest manually here?
-        val databases = findDatabases(adc, cmd)
+        if (schemaRequests.isEmpty()) return emptySet()
 
-        if (databases.isEmpty()) return emptySet()
-
-        val schemaRequests = createSchemaRequest(databases, adc)
-        val schemaProvisionResult = databaseSchemaProvisioner.provisionSchemas(schemaRequests)
-
-        return schemaProvisionResult.results.map {
-            val secretName =
-                "${it.request.details.schemaName}-db".replace("_", "-").toLowerCase().ensureStartWith(adc.name, "-")
-            DbhSecretGenerator.createDbhSecret(it, secretName, adc.namespace)
-        }.map {
-            generateResource(it)
-        }.toSet()
-    }
-
-    fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
-        val mountName = "${this.name}-db".toLowerCase()
-        val volumeName = mountName.replace("_", "-").toLowerCase().ensureStartWith(appName, "-")
-
-        val mount = newVolumeMount {
-            name = volumeName
-            mountPath = "$secretsPath/$mountName"
-        }
-
-        val volume =
-            newVolume {
-                name = volumeName
-                secret {
-                    secretName = volumeName
-                }
-            }
-        return volume to mount
+        return schemaRequests.provisionSchemasAndAssociateWithRequest()
+            .createDbhSecrets(adc)
+            .generateAuroraResources()
+            .toSet()
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
@@ -163,9 +123,46 @@ class DatabaseFeature(
         resources.addVolumesAndMounts(dbEnv, volumes, volumeMounts, this::class.java)
     }
 
-    fun createSchemaRequest(databases: List<Database>, adc: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
-        return databases.map {
+    private fun List<SchemaProvisionRequest>.provisionSchemasAndAssociateWithRequest() =
+        this.associateWith {
+            databaseSchemaProvisioner.provisionSchema(it)
+        }
 
+    private fun Map<SchemaProvisionRequest, DbhSchema>.createDbhSecrets(adc: AuroraDeploymentSpec) =
+        this.map { (request, dbhSchema) ->
+            DbhSecretGenerator.createDbhSecret(
+                dbhSchema = dbhSchema,
+                secretName = request.getSecretName(prefix = adc.name),
+                secretNamespace = adc.namespace
+            )
+        }
+
+    fun SchemaProvisionRequest.getSecretName(prefix: String): String {
+        val secretName = this.details.schemaName.replace("_", "-").toLowerCase().ensureStartWith(prefix, "-")
+        return "$secretName-db"
+    }
+
+    fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
+        val mountName = "${this.name}-db".toLowerCase()
+        val volumeName = mountName.replace("_", "-").toLowerCase().ensureStartWith(appName, "-")
+
+        val mount = newVolumeMount {
+            name = volumeName
+            mountPath = "$secretsPath/$mountName"
+        }
+
+        val volume =
+            newVolume {
+                name = volumeName
+                secret {
+                    secretName = volumeName
+                }
+            }
+        return volume to mount
+    }
+
+    fun List<Database>.createSchemaRequests(adc: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
+        return this.map {
             val details = it.createSchemaDetails(adc.affiliation)
             if (it.id != null) {
                 SchemaIdRequest(
@@ -208,7 +205,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
     fun findDatabases(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Database> {
         val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
-        val defaultInstance = findInstance(adc, cmd, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
+        val defaultInstance = findInstance(adc, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
             ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
 
         val defaultDb = Database(
@@ -247,7 +244,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 return null
             }
             val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
-            val instance = findInstance(adc, cmd, "$key/instance", flavor.defaultFallback)
+            val instance = findInstance(adc, "$key/instance", flavor.defaultFallback)
             val value: String = adc.getOrNull("$key/id") ?: ""
             val tryReuse: Boolean = adc.getOrDefault("database", db, "tryReuse")
 
@@ -274,7 +271,6 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
     private fun findInstance(
         adc: AuroraDeploymentSpec,
-        cmd: AuroraContextCommand,
         key: String,
         defaultFallback: Boolean
     ): DatabaseInstance? {
@@ -285,7 +281,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
         return DatabaseInstance(
             name = adc.getOrNull("$key/name"),
             fallback = adc.getOrNull("$key/fallback") ?: defaultFallback,
-            labels = cmd.applicationFiles.associateSubKeys("$key/labels", adc)
+            labels = adc.getSubKeys("$key/labels").mapValues { it.value.value.textValue() }
         )
     }
 
@@ -454,25 +450,25 @@ object DbhSecretGenerator {
     }
 
     fun createDbhSecret(
-        schemaProvisionResult: SchemaProvisionResult,
+        dbhSchema: DbhSchema,
         secretName: String,
         secretNamespace: String
     ): Secret {
-        val connectionProperties = createConnectionProperties(schemaProvisionResult.dbhSchema)
-        val infoFile = createInfoFile(schemaProvisionResult.dbhSchema)
+        val connectionProperties = createConnectionProperties(dbhSchema)
+        val infoFile = createInfoFile(dbhSchema)
 
         return newSecret {
             metadata {
                 name = secretName
                 namespace = secretNamespace
-                labels = mapOf("dbhId" to schemaProvisionResult.dbhSchema.id)
+                labels = mapOf("dbhId" to dbhSchema.id)
             }
             data = mapOf(
                 "db.properties" to connectionProperties,
-                "id" to schemaProvisionResult.dbhSchema.id,
+                "id" to dbhSchema.id,
                 "info" to infoFile,
-                "jdbcurl" to schemaProvisionResult.dbhSchema.jdbcUrl,
-                "name" to schemaProvisionResult.dbhSchema.username
+                "jdbcurl" to dbhSchema.jdbcUrl,
+                "name" to dbhSchema.username
             ).mapValues { it.value.toByteArray() }.mapValues { Base64.encodeBase64String(it.value) }
         }
     }
