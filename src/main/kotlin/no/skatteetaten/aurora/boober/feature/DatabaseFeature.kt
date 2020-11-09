@@ -33,6 +33,7 @@ import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
@@ -40,6 +41,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import java.io.ByteArrayOutputStream
 import java.util.Properties
+import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger { }
 
@@ -95,32 +97,43 @@ class DatabaseFeature(
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         val databases = findDatabases(adc, cmd)
+
         if (databases.isEmpty()) return
 
+        resources.attachDbSecrets(databases, adc.name, this::class)
+        resources.addDatabaseIdsToApplicationDeployment()
+    }
+
+    private fun Set<AuroraResource>.addDatabaseIdsToApplicationDeployment() {
+        val databaseIds = this.findResourcesByType<Secret>().mapNotNull {
+            it.metadata?.labels?.get("dbhId")
+        }
+
+        this.filter { it.resource.kind == "ApplicationDeployment" }
+            .map {
+                modifyResource(it, "Added databaseId")
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
+                ad.spec.databases = databaseIds
+            }
+    }
+
+    private fun Set<AuroraResource>.attachDbSecrets(
+        databases: List<Database>,
+        appName: String,
+        feature: KClass<out Feature>
+    ) {
         val firstEnv = databases.firstOrNull()?.let {
             createDbEnv("${it.name}-db", "db")
         }
         val dbEnv = databases.flatMap { createDbEnv("${it.name}-db") }
             .addIfNotNull(firstEnv).toMap().toEnvVars()
 
-        val volumeAndMounts = databases.map { it.createDatabaseVolumesAndMounts(adc.name) }
+        val volumeAndMounts = databases.map { it.createDatabaseVolumesAndMounts(appName) }
 
         val volumes = volumeAndMounts.map { it.first }
         val volumeMounts = volumeAndMounts.map { it.second }
 
-        val databaseId = resources.filter { it.resource.kind == "Secret" }.mapNotNull {
-            it.resource.metadata?.labels?.get("dbhId")
-        }
-
-        resources.forEach {
-            if (it.resource.kind == "ApplicationDeployment") {
-                modifyResource(it, "Added databaseId")
-                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
-                ad.spec.databases = databaseId
-            }
-        }
-
-        resources.addVolumesAndMounts(dbEnv, volumes, volumeMounts, this::class.java)
+        this.addVolumesAndMounts(dbEnv, volumes, volumeMounts, feature.java)
     }
 
     private fun List<SchemaProvisionRequest>.provisionSchemasAndAssociateWithRequest() =
