@@ -73,11 +73,11 @@ class FluentbitSidecarFeature(
                 ),
                 AuroraConfigFieldHandler(
                     name = "logging/custom/$key/pattern",
-                    validator = { it.notBlank("pattern for logging/cusomt/$key must be set") }
+                    validator = { it.notBlank("pattern for logging/custom/$key must be set") }
                 ),
                 AuroraConfigFieldHandler(
                     name = "logging/custom/$key/sourcetype",
-                    validator = { it.notBlank("sourcetype for logging/cusomt/$key must be set") }
+                    validator = { it.notBlank("sourcetype for logging/custom/$key must be set") }
                 )
             )
         }
