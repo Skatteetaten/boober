@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
@@ -129,13 +130,16 @@ class DatabaseSchemaProvisioner(
         request: SchemaProvisionRequest
     ): DbhSchema? {
         return runCatching {
-            restTemplate.get(JsonNode::class, "$schemaPath/${request.endPath}", *request.uriVars)
+            val response = restTemplate.get(JsonNode::class, "$schemaPath/${request.endPath}", *request.uriVars)
+
+            if (response.statusCode == HttpStatus.NOT_FOUND) null
+            else response
         }.onFailure(::reThrowError)
             .getOrElse {
                 val uri = "$schemaPath/${restTemplate.uri(request.endPath, *request.uriVars)}"
 
                 throw createProvisioningException("Unable to get database schema with uri=$uri", it)
-            }.parseAsSingle()
+            }?.parseAsSingle()
     }
 
     fun findCooldownSchemaIfTryReuseEnabled(request: SchemaProvisionRequest): DbhSchema? {
