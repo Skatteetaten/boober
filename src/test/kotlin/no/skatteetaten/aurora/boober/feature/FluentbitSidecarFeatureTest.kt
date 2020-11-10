@@ -44,7 +44,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                 "index": "test-index",
                 "loggers": {
                     "sensitive" : "sensitive-index",
-                    "slow" : "false",
+                    "slow" : false,
                     "gc" : "false",
                     "audit_json" : "aud-index",
                     "audit_text" : "aud-index"

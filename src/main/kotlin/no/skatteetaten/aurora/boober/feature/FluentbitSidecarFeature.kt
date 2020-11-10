@@ -8,9 +8,9 @@ import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
-import com.fkorotkov.kubernetes.valueFrom
 import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.secretKeyRef
+import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Volume
@@ -41,7 +41,8 @@ val logGC: String = "gc"
 val logSensitive: String = "sensitive"
 val logStacktrace: String = "stacktrace"
 val logAccess: String = "access"
-val knownLogs: Set<String> = setOf(logApplication, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
+val knownLogs: Set<String> =
+    setOf(logApplication, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
 
 val parserMountPath = "/fluent-bit/parser"
 val parsersFileName = "parsers.conf"
@@ -57,8 +58,8 @@ class FluentbitSidecarFeature(
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         val isOfType = header.type in listOf(
-                TemplateType.deploy,
-                TemplateType.development
+            TemplateType.deploy,
+            TemplateType.development
         )
         return isOfType && !header.isJob
     }
@@ -117,9 +118,11 @@ class FluentbitSidecarFeature(
                 name = adc.hecSecretName
                 namespace = adc.namespace
             }
-            data = mapOf(hecTokenKey to Base64.encodeBase64String(hecToken.toByteArray()),
-                    splunkHostKey to Base64.encodeBase64String(splunkUrl.toByteArray()),
-                    splunkPortKey to Base64.encodeBase64String(splunkPort.toByteArray()))
+            data = mapOf(
+                hecTokenKey to Base64.encodeBase64String(hecToken.toByteArray()),
+                splunkHostKey to Base64.encodeBase64String(splunkUrl.toByteArray()),
+                splunkPortKey to Base64.encodeBase64String(splunkPort.toByteArray())
+            )
         }
         return setOf(generateResource(fluentParserMap), generateResource(fluentConfigMap), generateResource(hecSecret))
     }
@@ -150,7 +153,12 @@ class FluentbitSidecarFeature(
         }
     }
 
-    private fun modifyAuroraResource(auroraResource: AuroraResource, configVolume: Volume, parserVolume: Volume, container: Container) {
+    private fun modifyAuroraResource(
+        auroraResource: AuroraResource,
+        configVolume: Volume,
+        parserVolume: Volume,
+        container: Container
+    ) {
         modifyResource(auroraResource, "Added fluentbit volume and sidecar container")
         val dc: DeploymentConfig = auroraResource.resource as DeploymentConfig
         val podSpec = dc.spec.template.spec
@@ -197,23 +205,23 @@ class FluentbitSidecarFeature(
             name = "${adc.name}-fluent-sidecar"
             env = podEnvVariables.addIfNotNull(hecEnvVariables)
             volumeMounts = listOf(
-                    newVolumeMount {
-                        name = adc.fluentParserName
-                        mountPath = parserMountPath
-                    }, newVolumeMount {
-                        name = adc.fluentConfigName
-                        mountPath = "/fluent-bit/etc"
-                    }, loggingMount
+                newVolumeMount {
+                    name = adc.fluentParserName
+                    mountPath = parserMountPath
+                }, newVolumeMount {
+                    name = adc.fluentConfigName
+                    mountPath = "/fluent-bit/etc"
+                }, loggingMount
             )
             resources {
                 limits = mapOf(
-                        // TODO? Add as config parameter
-                        "memory" to Quantity("64Mi"),
-                        "cpu" to Quantity("100m")
+                    // TODO? Add as config parameter
+                    "memory" to Quantity("64Mi"),
+                    "cpu" to Quantity("100m")
                 )
                 requests = mapOf(
-                        "memory" to Quantity("20Mi"),
-                        "cpu" to Quantity("10m")
+                    "memory" to Quantity("20Mi"),
+                    "cpu" to Quantity("10m")
                 )
             }
             image = "fluent/fluent-bit:latest"
@@ -229,53 +237,55 @@ data class LoggingConfig(
 )
 
 fun getLoggingIndexes(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand, defaultIndex: String): List<LoggingConfig> {
-    val result: MutableList<LoggingConfig> = mutableListOf()
-    val loggers = cmd.applicationFiles.findSubKeys("logging/loggers").flatMap { key ->
-        val value: String = adc.get("logging/loggers/$key")
-        listOf(
-            LoggingConfig(key, getKnownSourceType(key), value, getKnownFilePattern(key))
-        )
+
+    val loggers = getLoggingIndexNames(adc, defaultIndex)
+
+    return loggers.map { (key, value) ->
+        LoggingConfig(key, getKnownSourceType(key), value, getKnownFilePattern(key))
     }
-    result.addAll(loggers.filter { log -> !(log.index.equals("false")) })
-    // Add default loggers if they do not exist
-    val applicationLog = loggers.find { logger -> logger.name.equals(logApplication) }
-    if (applicationLog == null) {
-        val newApplicationLog = LoggingConfig(logApplication, getKnownSourceType(logApplication), defaultIndex, getKnownFilePattern(logApplication))
-        result.add(newApplicationLog)
-    }
-    val accessLog = loggers.find { logger -> logger.name.equals(logAccess) }
-    if (accessLog == null) {
-        val newAccessLog = LoggingConfig(logAccess, getKnownSourceType(logAccess), defaultIndex, getKnownFilePattern(logAccess))
-        result.add(newAccessLog)
+}
+
+private fun getLoggingIndexNames(
+    adc: AuroraDeploymentSpec,
+    defaultIndex: String
+): Map<String, String> {
+
+    val loggers: MutableMap<String, String> =
+        adc.associateSubKeys<String>("logging/loggers").filter {
+            it.value != "false"
+        }.toMutableMap()
+
+    if (!loggers.containsKey(logApplication)) {
+        loggers[logApplication] = defaultIndex
     }
 
-    // TODO Add custom loggers
-    return result
+    if (!loggers.containsKey(logAccess)) {
+        loggers[logAccess] = defaultIndex
+    }
+    return loggers.toMap()
 }
 
 fun getKnownSourceType(logger: String): String {
-    var pattern = "log4j"
-    when (logger) {
-        logAuditJson -> pattern = "_json"
-        logAccess -> pattern = "access_combined"
-        logGC -> pattern = "gc_log"
+    return when (logger) {
+        logAuditJson -> "_json"
+        logAccess -> "access_combined"
+        logGC -> "gc_log"
+        else -> "log4j"
     }
-    return pattern
 }
 
 fun getKnownFilePattern(logger: String): String {
-    var pattern = "*.log"
-    when (logger) {
-        logApplication -> pattern = "*.log"
-        logAuditText -> pattern = "*.audit.json"
-        logAuditJson -> pattern = "*.audit.text"
-        logAccess -> pattern = "*.access"
-        logSlow -> pattern = "*.slow"
-        logGC -> pattern = "*.gc"
-        logSensitive -> pattern = "*.sensitive"
-        logStacktrace -> pattern = "*.stacktrace"
+    return when (logger) {
+        logApplication -> "*.log"
+        logAuditText -> "*.audit.json"
+        logAuditJson -> "*.audit.text"
+        logAccess -> "*.access"
+        logSlow -> "*.slow"
+        logGC -> "*.gc"
+        logSensitive -> "*.sensitive"
+        logStacktrace -> "*.stacktrace"
+        else -> "*.log"
     }
-    return pattern
 }
 
 fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: String, cluster: String): String {

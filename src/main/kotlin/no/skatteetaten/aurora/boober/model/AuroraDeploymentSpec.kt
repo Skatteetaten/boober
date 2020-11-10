@@ -12,6 +12,25 @@ data class AuroraDeploymentSpec(
     val replacer: StringSubstitutor
 ) {
 
+    fun findSubKeys(name: String): Set<String> {
+        val prefix = if (!name.endsWith("/")) {
+            "$name/"
+        } else name
+
+        return fields.keys
+            .filter { it.startsWith(prefix) }
+            .map { it.removePrefix(prefix).substringBefore("/") }
+            .toSet()
+    }
+
+    inline fun <reified T> associateSubKeys(
+        name: String
+    ): Map<String, T> {
+        return this.findSubKeys(name).associateWith {
+            this.get<T>("$name/$it")
+        }
+    }
+
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return configExtractors.filter { it.name.count { it == '/' } == 1 }.associate {
             val (_, field) = it.name.split("/", limit = 2)
@@ -78,6 +97,7 @@ data class AuroraDeploymentSpec(
 
     fun hasSubKeys(name: String): Boolean = getSubKeys(name).isNotEmpty()
 
+    // TODO: Rewrite to findSubKeys/associateSubKeys?
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
         return fields
             .filter { it.key.startsWith("$name/") }
