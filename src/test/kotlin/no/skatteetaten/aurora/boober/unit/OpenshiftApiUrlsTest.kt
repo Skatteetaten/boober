@@ -22,7 +22,8 @@ class OpenshiftApiUrlsTest {
         USER("user", "foo", null, "/apis/user.openshift.io/v1/users/foo"),
         TEMPLATE("processedtemplate", null, "bar", "/oapi/v1/namespaces/bar/processedtemplates"),
         PROJECT("project", "foo", null, "/apis/project.openshift.io/v1/projects/foo"),
-        SERVICE("service", "foo", "bar", "/api/v1/namespaces/bar/services/foo")
+        SERVICE("service", "foo", "bar", "/api/v1/namespaces/bar/services/foo"),
+        BIGIP("bigip", "foo", "bar", "/apis/skatteetaten.no/v1/namespaces/bar/bigips/foo")
     }
 
     @ParameterizedTest
