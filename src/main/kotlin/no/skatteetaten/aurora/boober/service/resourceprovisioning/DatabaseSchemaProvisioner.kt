@@ -151,7 +151,7 @@ class DatabaseSchemaProvisioner(
             }.onFailure(::reThrowError)
                 .getOrNull()
                 ?.parse<RestorableSchema>()
-                ?.maxBy { it.setToCooldownAt }
+                ?.firstOrNull()
                 ?.databaseSchema
         }
     }
