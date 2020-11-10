@@ -151,6 +151,10 @@ class AuroraDeploymentContextService(
             spec.copy(fields = fields)
         }
 
+        val featureContext = featureAdc.mapValues { (feature, featureSpec) ->
+            feature.createContext(featureSpec, deployCommand)
+        }
+
         val errorWarnings = (headerErrors + errors).map {
             it.asWarning()
         }.distinct()
@@ -160,6 +164,7 @@ class AuroraDeploymentContextService(
             cmd = deployCommand,
             features = featureAdc,
             featureHandlers = featureHandlers,
+            featureContext = featureContext,
             warnings = findWarnings(deployCommand, featureAdc) + errorWarnings
         )
     }

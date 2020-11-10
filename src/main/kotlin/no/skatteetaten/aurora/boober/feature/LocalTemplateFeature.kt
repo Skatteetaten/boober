@@ -30,10 +30,19 @@ class LocalTemplateFeature(
         }))
     }
 
-    override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode {
-        val templateFile = adc.get<String>("templateFile").let { fileName ->
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+        val templateFile = spec.get<String>("templateFile").let { fileName ->
             cmd.auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
-        return templateFile ?: throw IllegalArgumentException("templateFile is required")
+        return templateFile?.let {
+            mapOf("templateFile" to it)
+        } ?: emptyMap()
+    }
+
+    override fun findTemplate(context: Map<String, Any>): JsonNode {
+        if (!context.containsKey("templateFile")) {
+            throw IllegalArgumentException("templateFile is required")
+        }
+        return context["templateFile"] as JsonNode
     }
 }

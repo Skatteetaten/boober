@@ -37,7 +37,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> =
         if (adc.isS3Enabled) {
             listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
@@ -60,7 +60,11 @@ class S3Feature(
         return !header.isJob
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
 
         val s3Secret = resources.find { it.resource.metadata.name == adc.s3SecretName }
             ?.let { it.resource as Secret } ?: return
@@ -72,7 +76,7 @@ class S3Feature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
         if (fullValidation && adc.cluster == cluster && adc.isS3Enabled) {
             val bucketName = adc.deduceBucketName()
@@ -84,7 +88,7 @@ class S3Feature(
         return emptyList()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
         if (!adc.isS3Enabled) return emptySet()
 
         val bucketName = adc.deduceBucketName()

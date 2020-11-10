@@ -69,14 +69,17 @@ class SecretVaultFeature(
             .toSet()
     }
 
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+        return mapOf("secrets" to getSecretVaults(spec, cmd))
+    }
     // TODO: Room for lots of better refactorings here.
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
 
-        val secrets = getSecretVaults(adc, cmd)
+        val secrets = context["secrets"] as List<AuroraSecret>
         val shallowValidation = validateSecretNames(secrets)
         if (!fullValidation) return shallowValidation
 
@@ -203,9 +206,10 @@ class SecretVaultFeature(
         } else null
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
 
-        val secretEnvResult = handleSecretEnv(adc, cmd)
+        val secrets = context["secrets"] as List<AuroraSecret>
+        val secretEnvResult = handleSecretEnv(adc, secrets)
 
         return secretEnvResult.map {
             val secret = newSecret {
@@ -219,8 +223,7 @@ class SecretVaultFeature(
         }.toSet()
     }
 
-    private fun handleSecretEnv(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<VaultSecretEnvResult> {
-        val secrets = getSecretVaults(adc, cmd)
+    private fun handleSecretEnv(adc: AuroraDeploymentSpec, secrets: List<AuroraSecret>): List<VaultSecretEnvResult> {
         return secrets.mapNotNull { secret: AuroraSecret ->
             val request = VaultRequest(
                 collectionName = adc.affiliation,
@@ -245,9 +248,13 @@ class SecretVaultFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-
-        val secretEnv: List<EnvVar> = handleSecretEnv(adc, cmd).flatMap { result ->
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
+        val secrets = context["secrets"] as List<AuroraSecret>
+        val secretEnv: List<EnvVar> = handleSecretEnv(adc, secrets).flatMap { result ->
             result.secrets.map { secretValue ->
                 newEnvVar {
                     name = secretValue.key

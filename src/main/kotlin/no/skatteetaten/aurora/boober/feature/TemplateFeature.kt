@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -33,6 +34,23 @@ class TemplateFeature(
         )
     }
 
-    override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode =
-        templateService.findTemplate(adc["template"])
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+        val successOrError = try {
+            templateService.findTemplate(spec["template"])
+        } catch (e: Exception) {
+            e
+        }
+        return mapOf("template" to successOrError)
+    }
+
+    override fun findTemplate(
+        context: Map<String, Any>
+    ): JsonNode {
+        return context["template"]?.let {
+            if (it is Exception) {
+                throw it
+            }
+            it as JsonNode
+        } ?: throw AuroraDeploymentSpecValidationException("Template not set in context")
+    }
 }

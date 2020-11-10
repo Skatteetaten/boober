@@ -31,7 +31,15 @@ class ApplicationDeploymentFeature : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+        return mapOf("applicationDeploymentCommand" to ApplicationDeploymentCommand(
+            cmd.overrideFiles,
+            cmd.applicationDeploymentRef,
+            cmd.auroraConfigRef
+        ))
+    }
+
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
 
         val ttl = adc.ttl?.let {
             val removeInstant = Instants.now + it
@@ -45,11 +53,7 @@ class ApplicationDeploymentFeature : Feature {
                 message = adc.getOrNull("message"),
                 applicationDeploymentName = adc.name,
                 applicationDeploymentId = adc.applicationDeploymentId,
-                command = ApplicationDeploymentCommand(
-                    cmd.overrideFiles,
-                    cmd.applicationDeploymentRef,
-                    cmd.auroraConfigRef
-                )
+                command = context["applicationDeploymentCommand"] as ApplicationDeploymentCommand
             ),
             _metadata = newObjectMeta {
                 name = adc.name
@@ -60,7 +64,11 @@ class ApplicationDeploymentFeature : Feature {
         return setOf(generateResource(resource))
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
 
         resources.addEnvVar(
             listOf(

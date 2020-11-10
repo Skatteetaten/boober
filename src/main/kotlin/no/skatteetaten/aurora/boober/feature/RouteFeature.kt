@@ -4,11 +4,11 @@ import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newRoute
 import com.fkorotkov.openshift.port
 import com.fkorotkov.openshift.spec
-import com.fkorotkov.openshift.targetPort
 import com.fkorotkov.openshift.tls
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.Route
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -63,9 +63,19 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             findRouteAnnotationHandlers("routeDefaults", cmd.applicationFiles)
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+        return mapOf(
+            "route" to getRoute(spec, cmd),
+            "applicationDeploymentRef" to cmd.applicationDeploymentRef
 
-        return getRoute(adc, cmd).map {
+        )
+    }
+
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+
+        val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
+
+        return routes.map {
             val resource = it.generateOpenShiftRoute(
                 routeNamespace = adc.namespace,
                 serviceName = adc.name,
@@ -134,8 +144,14 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        getRoute(adc, cmd).firstOrNull()?.let {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
+
+        val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
+        routes.firstOrNull()?.let {
             val url = it.url(routeSuffix)
             val routeVars = mapOf(
                 "ROUTE_NAME" to url,
@@ -173,15 +189,16 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
-        val routes = getRoute(adc, cmd)
+
+        val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
 
         if (routes.isNotEmpty() && adc.isJob) {
             throw AuroraDeploymentSpecValidationException("Routes are not supported for jobs/cronjobs")
         }
 
-        val applicationDeploymentRef = cmd.applicationDeploymentRef
+        val applicationDeploymentRef = context["applicationDeploymentRef"] as ApplicationDeploymentRef
         val tlsErrors = routes.mapNotNull {
             if (it.tls != null && it.host.contains('.')) {
                 AuroraConfigException(
@@ -210,8 +227,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             AuroraConfigException(
                 "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
                 errors = duplicatedHosts.map { route ->
-                    val routes = route.value.joinToString(",") { it.objectName }
-                    ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
+                    val routesValues = route.value.joinToString(",") { it.objectName }
+                    ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routesValues")
                 }
             )
         } else null

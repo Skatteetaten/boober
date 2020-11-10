@@ -35,7 +35,7 @@ class BigIpFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
         if (adc.hasSubKeys("bigip") && adc.getOrNull<String>("bigip/service").isNullOrEmpty()) {
             throw AuroraDeploymentSpecValidationException("bigip/service is required if any other bigip flags are set")
@@ -43,7 +43,7 @@ class BigIpFeature(
         return emptyList()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
 
         if (!adc.hasSubKeys("bigip")) {
             return emptySet()

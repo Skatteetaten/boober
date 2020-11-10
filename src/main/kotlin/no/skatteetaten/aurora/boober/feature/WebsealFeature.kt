@@ -23,7 +23,7 @@ class WebsealDisabledFeature : AbstractWebsealFeature("") {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
         return adc.featureEnabled("webseal") { field ->
             listOf(AuroraConfigException("Webseal is not supported."))
@@ -37,7 +37,7 @@ class WebsealFeature(
     @Value("\${boober.webseal.suffix}") suffix: String
 ) : AbstractWebsealFeature(suffix) {
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
         return adc.featureEnabled("webseal") { field ->
             val roles = adc.getDelimitedStringOrArrayAsSet("$field/roles", ",")
                 .takeIf { it.isNotEmpty() }?.joinToString(",") ?: ""

@@ -55,9 +55,9 @@ class DatabaseDisabledFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
-        val databases = findDatabases(adc, cmd)
+        val databases = context["databases"] as List<Database>
         if (databases.isNotEmpty()) {
             return listOf(IllegalArgumentException("Databases are not supported in this cluster"))
         }
@@ -72,12 +72,13 @@ class DatabaseFeature(
     @Value("\${openshift.cluster}") cluster: String
 ) : DatabaseFeatureTemplate(cluster) {
 
+    // TODO: not sure how to avoid duplicate commands against dbh here. maybe createContext should have fullValidation flag?
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
-        val databases = findDatabases(adc, cmd)
+        val databases = context["databases"] as List<Database>
         if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
             return emptyList()
         }
@@ -95,10 +96,9 @@ class DatabaseFeature(
         }
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
 
-        // can we just create schemaRequest manually here?
-        val databases = findDatabases(adc, cmd)
+        val databases = context["databases"] as List<Database>
 
         if (databases.isEmpty()) return emptySet()
 
@@ -133,8 +133,12 @@ class DatabaseFeature(
         return volume to mount
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val databases = findDatabases(adc, cmd)
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
+        val databases = context["databases"] as List<Database>
         if (databases.isEmpty()) return
 
         val firstEnv = databases.firstOrNull()?.let {
@@ -185,6 +189,11 @@ class DatabaseFeature(
 }
 
 abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
+
+    // TODO: rewrite to not use cmd potentially?
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+        return mapOf("databases" to findDatabases(spec, cmd))
+    }
 
     val databaseDefaultsKey = "databaseDefaults"
 

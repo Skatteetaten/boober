@@ -68,9 +68,13 @@ class MountFeature(
         }.toSet()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+        return mapOf("mounts" to getMounts(spec, cmd))
+    }
 
-        val mounts = getMounts(adc, cmd)
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+
+        val mounts = context["mounts"] as List<Mount>
 
         val secrets = generateSecrets(mounts, adc)
 
@@ -105,9 +109,12 @@ class MountFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-
-        val mounts = getMounts(adc, cmd)
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
+        val mounts = context["mounts"] as List<Mount>
 
         if (mounts.isNotEmpty()) {
 
@@ -125,9 +132,10 @@ class MountFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
-        val mounts = getMounts(adc, cmd)
+
+        val mounts = context["mounts"] as List<Mount>
 
         val errors = validateExistinAndSecretVault(mounts)
         // .addIfNotNull(validatePVCMounts(mounts))
@@ -182,6 +190,7 @@ class MountFeature(
         }
     }
 
+    // TODO: Should be able to write this using only spec
     private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Mount> {
 
         val mountHandlers = handlers(auroraDeploymentSpec, cmd)

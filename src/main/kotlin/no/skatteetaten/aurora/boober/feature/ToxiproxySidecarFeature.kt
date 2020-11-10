@@ -52,7 +52,7 @@ class ToxiproxySidecarFeature : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
 
         return adc.toxiProxy?.let {
             val resource = newConfigMap {
@@ -66,7 +66,11 @@ class ToxiproxySidecarFeature : Feature {
         } ?: emptySet()
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
 
         val toxiProxy = adc.toxiProxy ?: return
 
