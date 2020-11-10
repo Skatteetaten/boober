@@ -86,11 +86,13 @@ class DatabaseFeature(
         return databases.filter { it is SchemaIdRequest || it.isAppRequestWithoutGenerate() }
             .mapNotNull { request ->
                 try {
-                    databaseSchemaProvisioner.findSchema(request)
+                    val schema = databaseSchemaProvisioner.findSchema(request)
                         ?: databaseSchemaProvisioner.findCooldownSchemaIfTryReuseEnabled(request)
-                    null
+
+                    if (schema == null) ProvisioningException("Could not find schema with name=${request.details.schemaName}")
+                    else null
                 } catch (e: Exception) {
-                    ProvisioningException("Could not find schema with name=${request.details.schemaName}", e)
+                    e
                 }
             }
     }

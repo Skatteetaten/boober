@@ -28,6 +28,7 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
@@ -47,6 +48,10 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     @BeforeEach
     fun setupMock() {
         every { userDetailsProvider.getAuthenticatedUser() } returns User("username", "token")
+    }
+
+    @AfterEach
+    fun clearMocks() {
         HttpMock.clearAllHttpMocks()
     }
 
