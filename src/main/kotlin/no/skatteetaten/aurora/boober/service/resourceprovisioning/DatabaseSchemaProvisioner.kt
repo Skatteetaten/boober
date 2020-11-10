@@ -111,24 +111,6 @@ class DatabaseSchemaProvisioner(
     val mapper: ObjectMapper
 ) {
 
-    private fun SchemaProvisionRequest.isAppRequestWithoutGenerate() = this is SchemaForAppRequest && !this.generate
-
-    fun validateSchemas(requests: List<SchemaProvisionRequest>): List<Exception> {
-        return requests.filter { it is SchemaIdRequest || it.isAppRequestWithoutGenerate() }
-            .map { request ->
-                val schemaResult = runCatching {
-                    findSchema(request) ?: findCooldownSchemaIfTryReuseEnabled(request)
-                }
-
-                request to schemaResult
-            }.filter { (_, schemaResult) ->
-                schemaResult.getOrNull() == null
-            }.map { (request, ex) ->
-                ex.exceptionOrNull()?.asException()
-                    ?: ProvisioningException("Could not find schema with name=${request.details.schemaName}")
-            }
-    }
-
     fun provisionSchema(request: SchemaProvisionRequest): DbhSchema {
         val schema = findSchema(request) ?: findCooldownSchemaIfTryReuseEnabled(request)?.activate()
 
@@ -143,7 +125,7 @@ class DatabaseSchemaProvisioner(
         }
     }
 
-    private fun findSchema(
+    fun findSchema(
         request: SchemaProvisionRequest
     ): DbhSchema? {
         return runCatching {
@@ -156,15 +138,25 @@ class DatabaseSchemaProvisioner(
             }.parseAsSingle()
     }
 
-    private fun findCooldownSchemaIfTryReuseEnabled(request: SchemaProvisionRequest): DbhSchema? {
-        return if (request.tryReuse) {
-            findSchemaInCooldown(request)
-        } else {
-            null
+    fun findCooldownSchemaIfTryReuseEnabled(request: SchemaProvisionRequest): DbhSchema? {
+        if (!request.tryReuse) return null
+
+        return request.run {
+            runCatching {
+                restTemplate.get(
+                    JsonNode::class,
+                    "$restorableSchemaPath/$endPath",
+                    *uriVars
+                )
+            }.onFailure(::reThrowError)
+                .getOrNull()
+                ?.parse<RestorableSchema>()
+                ?.maxBy { it.setToCooldownAt }
+                ?.databaseSchema
         }
     }
 
-    private fun createSchema(
+    fun createSchema(
         request: SchemaForAppRequest
     ): DbhSchema {
         return runCatching {
@@ -179,7 +171,7 @@ class DatabaseSchemaProvisioner(
             }.parseAndFailIfEmpty()
     }
 
-    private fun DbhSchema.activate(): DbhSchema {
+    fun DbhSchema.activate(): DbhSchema {
         return runCatching {
             restTemplate.patch(
                 RestoreDatabaseSchemaPayload(active = true),
@@ -191,22 +183,6 @@ class DatabaseSchemaProvisioner(
             .getOrElse {
                 throw createProvisioningException("Unable to reactivate schema with id=$id.", it)
             }.parseAndFailIfEmpty()
-    }
-
-    private fun findSchemaInCooldown(request: SchemaProvisionRequest): DbhSchema? {
-        return request.run {
-            runCatching {
-                restTemplate.get(
-                    JsonNode::class,
-                    "$restorableSchemaPath/$endPath",
-                    *uriVars
-                )
-            }.onFailure(::reThrowError)
-                .getOrNull()
-                ?.parse<RestorableSchema>()
-                ?.maxBy { it.setToCooldownAt }
-                ?.databaseSchema
-        }
     }
 
     private fun SchemaForAppRequest.toSchemaRequest() =
@@ -273,8 +249,6 @@ class DatabaseSchemaProvisioner(
             logger.error { this }
             throw this
         } else this as Exception
-
-    private fun <T> T?.whenNullAndPredicate(predicate: Boolean, fn: () -> T?) = this ?: if (predicate) fn() else null
 }
 
 data class SchemaRequestDetails(

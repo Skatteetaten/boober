@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
@@ -71,6 +72,8 @@ class DatabaseFeature(
     @Value("\${openshift.cluster}") cluster: String
 ) : DatabaseFeatureTemplate(cluster) {
 
+    private fun SchemaProvisionRequest.isAppRequestWithoutGenerate() = this is SchemaForAppRequest && !this.generate
+
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
@@ -80,7 +83,16 @@ class DatabaseFeature(
 
         if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) return emptyList()
 
-        return databaseSchemaProvisioner.validateSchemas(databases)
+        return databases.filter { it is SchemaIdRequest || it.isAppRequestWithoutGenerate() }
+            .mapNotNull { request ->
+                try {
+                    databaseSchemaProvisioner.findSchema(request)
+                        ?: databaseSchemaProvisioner.findCooldownSchemaIfTryReuseEnabled(request)
+                    null
+                } catch (e: Exception) {
+                    ProvisioningException("Could not find schema with name=${request.details.schemaName}", e)
+                }
+            }
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
