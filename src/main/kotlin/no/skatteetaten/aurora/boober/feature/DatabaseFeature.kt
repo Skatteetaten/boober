@@ -334,7 +334,7 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler("$db/name"),
             AuroraConfigFieldHandler("$db/applicationLabel"),
             AuroraConfigFieldHandler("$db/id"),
-            AuroraConfigFieldHandler("$db/tryReuse", defaultValue = false, validator = { it.boolean() }),
+            AuroraConfigFieldHandler("$db/tryReuse", validator = { it.boolean() }),
             AuroraConfigFieldHandler(
                 "$db/flavor", validator = { node ->
                     node?.oneOf(DatabaseFlavor.values().map { it.toString() })

@@ -6,6 +6,7 @@ import assertk.assertions.contains
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isSuccess
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -23,6 +24,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbApiEnvelope
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.RestorableSchema
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
+import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
@@ -243,6 +246,52 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `get two dbs with tryReuse as default and generate disabled`() {
+        val barSchema = createRestorableSchema()
+        val fooSchema = createRestorableSchema()
+
+        httpMockServer(5000) {
+            rule({
+                path.contains("/schema/") && method == "GET"
+            }) {
+                json(DbApiEnvelope("ok", emptyList<Any>()))
+            }
+
+            rule({
+                path.contains("/restorableSchema/") && method == "GET" && path.contains(barSchema.databaseSchema.id)
+            }) {
+                json(DbApiEnvelope("ok", listOf(barSchema)))
+            }
+
+            rule({
+                path.contains("/restorableSchema/") && method == "GET"
+            }) {
+                json(DbApiEnvelope("ok", listOf(fooSchema)))
+            }
+        }
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+               "database" : {
+                 "foo": {
+                    "enabled": true
+                 },
+                 "bar": {
+                    "id": "${barSchema.databaseSchema.id}"
+                 }
+               },
+               "databaseDefaults" : {
+                  "tryReuse" : true,
+                  "flavor" : "POSTGRES_MANAGED",
+                  "generate" : false
+                }
+           }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
     fun `create database ignore disabled`() {
 
         httpMockServer(5000) {
@@ -333,14 +382,20 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 }
 
-val schema = DbhSchema(
-    id = "123",
-    type = "SCHEMA",
-    databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
-    jdbcUrl = "foo/bar/baz",
-    labels = mapOf(
-        "affiliation" to "paas",
-        "name" to "myApp"
-    ),
-    users = listOf(DbhUser("username", "password", type = "SCHEMA"))
-)
+fun createRestorableSchema(id: UUID = UUID.randomUUID()) =
+    RestorableSchema(setToCooldownAt = 0L, deleteAfter = 0L, databaseSchema = createDbhSchema(id))
+
+fun createDbhSchema(id: UUID = UUID.randomUUID()) =
+    DbhSchema(
+        id = id.toString(),
+        type = "SCHEMA",
+        databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
+        jdbcUrl = "foo/bar/baz",
+        labels = mapOf(
+            "affiliation" to "paas",
+            "name" to "myApp"
+        ),
+        users = listOf(DbhUser("username", "password", type = "SCHEMA"))
+    )
+
+val schema = createDbhSchema()
