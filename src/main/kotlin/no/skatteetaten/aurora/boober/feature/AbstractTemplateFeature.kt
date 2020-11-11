@@ -84,16 +84,11 @@ abstract class AbstractTemplateFeature(
         context: Map<String, Any>
     ): List<Exception> {
 
-        // TODO: LocalTemplate could be in normal validation, but very few people us it.
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
 
-        val templateJson = try {
-            findTemplate(context)
-        } catch (e: Exception) {
-            return listOf(e)
-        }
+        val templateJson = findTemplate(context)
 
         val errorMessages = validateTemplateParameters(
             templateJson,
