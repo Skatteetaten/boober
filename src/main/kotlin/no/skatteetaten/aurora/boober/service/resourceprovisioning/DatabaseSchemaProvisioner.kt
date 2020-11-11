@@ -247,12 +247,6 @@ class DatabaseSchemaProvisioner(
             throw throwable
         }
     }
-
-    private fun Throwable.asException(): Exception =
-        if (this is Error) {
-            logger.error { this }
-            throw this
-        } else this as Exception
 }
 
 data class SchemaRequestDetails(
