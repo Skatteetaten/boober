@@ -134,8 +134,8 @@ class DatabaseSchemaProvisioner(
             restTemplate.get(JsonNode::class, "$schemaPath/${request.endPath}", *request.uriVars)
         }.onFailure(::reThrowError)
             .getOrElse {
-                if(it is HttpClientErrorException && it.statusCode == HttpStatus.NOT_FOUND) {
-                   return null
+                if (it is HttpClientErrorException && it.statusCode == HttpStatus.NOT_FOUND) {
+                    return null
                 }
                 val uri = "$schemaPath/${restTemplate.uri(request.endPath, *request.uriVars)}"
 
