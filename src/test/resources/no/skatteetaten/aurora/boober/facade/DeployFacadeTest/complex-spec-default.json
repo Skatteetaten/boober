@@ -368,10 +368,6 @@
         "value": true,
         "sources": [
           {
-            "name": "default",
-            "value": false
-          },
-          {
             "name": "complex.json",
             "value": true
           }
