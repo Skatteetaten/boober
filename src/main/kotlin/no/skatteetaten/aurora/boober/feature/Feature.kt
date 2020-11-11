@@ -41,8 +41,22 @@ interface Feature {
 
     /*
       Method to create a context for the given feature
+
+      This context will be sent to validate/generate/modify steps
      */
     fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> = emptyMap()
+
+    /*
+    Perform validation of this feature.
+
+    If this method throws it will be handled as a single error or multiple errors if ExceptionList
+    */
+    fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        context: Map<String, Any>
+    ): List<Exception> =
+        emptyList()
 
     /*
        Generate a set of AuroraResource from this feature
@@ -78,17 +92,7 @@ interface Feature {
         context: Map<String, Any>
     ) = Unit
 
-    /*
-    Perform validation of this feature.
 
-    If this method throws it will be handled as a single error or multiple errors if ExceptionList
-    */
-    fun validate(
-        adc: AuroraDeploymentSpec,
-        fullValidation: Boolean,
-        context: Map<String, Any>
-    ): List<Exception> =
-        emptyList()
 }
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {

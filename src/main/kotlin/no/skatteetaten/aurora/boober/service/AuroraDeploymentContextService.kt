@@ -163,7 +163,6 @@ class AuroraDeploymentContextService(
             spec,
             cmd = deployCommand,
             features = featureAdc,
-            featureHandlers = featureHandlers,
             featureContext = featureContext,
             warnings = findWarnings(deployCommand, featureAdc) + errorWarnings
         )

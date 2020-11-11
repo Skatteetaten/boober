@@ -371,9 +371,9 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
     fun createAuroraConfigFieldHandlers(
         app: String = """{}"""
-    ): Set<AuroraConfigFieldHandler> {
+    ): AuroraDeploymentSpec {
         val ctx = createAuroraDeploymentContext(app)
-        return ctx.featureHandlers.values.first()
+        return ctx.features.values.first()
     }
 
     fun Assert<AuroraResource>.auroraResourceMountsAttachment(

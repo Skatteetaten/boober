@@ -154,7 +154,6 @@ fun stubAuroraDeploymentContext(): AuroraDeploymentContext {
             auroraConfigRef = AuroraConfigRef("test", "master", "123")
         ),
         features = emptyMap(),
-        featureHandlers = emptyMap(),
         featureContext = emptyMap()
 
     )
