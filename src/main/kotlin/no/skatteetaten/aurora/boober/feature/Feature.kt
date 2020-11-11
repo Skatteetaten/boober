@@ -43,6 +43,8 @@ interface Feature {
       Method to create a context for the given feature
 
       This context will be sent to validate/generate/modify steps
+
+      You can throw an exception here and it will be registered as a validation error if you like
      */
     fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> = emptyMap()
 
@@ -91,8 +93,6 @@ interface Feature {
         resources: Set<AuroraResource>,
         context: Map<String, Any>
     ) = Unit
-
-
 }
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {

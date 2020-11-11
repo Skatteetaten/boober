@@ -31,7 +31,7 @@ abstract class AbstractTemplateFeature(
         auroraConfig: AuroraConfig
     ): Set<AuroraConfigFieldHandler>
 
-    abstract fun findTemplate(context: Map<String, Any>): JsonNode
+    fun findTemplate(context: Map<String, Any>): JsonNode = context["template"] as JsonNode
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 

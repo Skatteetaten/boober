@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -35,14 +34,7 @@ class LocalTemplateFeature(
             cmd.auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
         return templateFile?.let {
-            mapOf("templateFile" to it)
-        } ?: emptyMap()
-    }
-
-    override fun findTemplate(context: Map<String, Any>): JsonNode {
-        if (!context.containsKey("templateFile")) {
-            throw IllegalArgumentException("templateFile is required")
-        }
-        return context["templateFile"] as JsonNode
+            mapOf("template" to it)
+        } ?: throw IllegalArgumentException("templateFile is required")
     }
 }
