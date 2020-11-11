@@ -18,6 +18,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientResponseException
 import org.springframework.web.client.RestTemplate
 
@@ -130,12 +131,12 @@ class DatabaseSchemaProvisioner(
         request: SchemaProvisionRequest
     ): DbhSchema? {
         return runCatching {
-            val response = restTemplate.get(JsonNode::class, "$schemaPath/${request.endPath}", *request.uriVars)
-
-            if (response.statusCode == HttpStatus.NOT_FOUND) null
-            else response
+            restTemplate.get(JsonNode::class, "$schemaPath/${request.endPath}", *request.uriVars)
         }.onFailure(::reThrowError)
             .getOrElse {
+                if(it is HttpClientErrorException && it.statusCode == HttpStatus.NOT_FOUND) {
+                   return null
+                }
                 val uri = "$schemaPath/${restTemplate.uri(request.endPath, *request.uriVars)}"
 
                 throw createProvisioningException("Unable to get database schema with uri=$uri", it)
