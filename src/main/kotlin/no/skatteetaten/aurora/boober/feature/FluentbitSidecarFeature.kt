@@ -14,14 +14,14 @@ import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Volume
+import io.fabric8.kubernetes.api.model.PodSpec
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.notBlank
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 
@@ -65,37 +65,16 @@ class FluentbitSidecarFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        val customHandlers = cmd.applicationFiles.findSubKeys("logging/custom").flatMap { key ->
-            listOf(
-                AuroraConfigFieldHandler(
-                    "logging/custom/$key/index",
-                    defaultValue = header.loggingIndex
-                ),
-                AuroraConfigFieldHandler(
-                    name = "logging/custom/$key/pattern",
-                    validator = { it.notBlank("pattern for logging/custom/$key must be set") }
-                ),
-                AuroraConfigFieldHandler(
-                    name = "logging/custom/$key/sourcetype",
-                    validator = { it.notBlank("sourcetype for logging/custom/$key must be set") }
-                )
-            )
-        }
-
-        val loggerHanlders = knownLogs.map { log ->
+        return knownLogs.map { log ->
             AuroraConfigFieldHandler("logging/loggers/$log")
         }
-
-        return listOf(
-            AuroraConfigFieldHandler("logging/index")
-        ).addIfNotNull(loggerHanlders)
-            .addIfNotNull(customHandlers)
+            .addIfNotNull(AuroraConfigFieldHandler("logging/index"))
             .toSet()
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         val index = adc.loggingIndex ?: return emptySet()
-        val loggerIndexes = getLoggingIndexes(adc, cmd, index)
+        val loggerIndexes = getLoggingIndexes(adc, index)
 
         val fluentParserMap = newConfigMap {
             metadata {
@@ -146,22 +125,25 @@ class FluentbitSidecarFeature(
         val container = createFluentbitContainer(adc)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
-                modifyAuroraResource(it, configVolume, parserVolume, container)
+                val dc: DeploymentConfig = it.resource as DeploymentConfig
+                val podSpec = dc.spec.template.spec
+                modifyAuroraResource(it, podSpec, configVolume, parserVolume, container)
             } else if (it.resource.kind == "Deployment") {
-                modifyAuroraResource(it, configVolume, parserVolume, container)
+                val dc: Deployment = it.resource as Deployment
+                val podSpec = dc.spec.template.spec
+                modifyAuroraResource(it, podSpec, configVolume, parserVolume, container)
             }
         }
     }
 
     private fun modifyAuroraResource(
         auroraResource: AuroraResource,
+        podSpec: PodSpec,
         configVolume: Volume,
         parserVolume: Volume,
         container: Container
     ) {
         modifyResource(auroraResource, "Added fluentbit volume and sidecar container")
-        val dc: DeploymentConfig = auroraResource.resource as DeploymentConfig
-        val podSpec = dc.spec.template.spec
         podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
         podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
         podSpec.containers = podSpec.containers.addIfNotNull(container)
@@ -236,7 +218,7 @@ data class LoggingConfig(
     val filePattern: String
 )
 
-fun getLoggingIndexes(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand, defaultIndex: String): List<LoggingConfig> {
+fun getLoggingIndexes(adc: AuroraDeploymentSpec, defaultIndex: String): List<LoggingConfig> {
 
     val loggers = getLoggingIndexNames(adc, defaultIndex)
 
