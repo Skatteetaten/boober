@@ -294,13 +294,15 @@
         }
       ]
     },
-    "THIS.VALUE" : {
-      "source" : "complex.json",
-      "value" : "BAZ",
-      "sources" : [ {
-        "name" : "complex.json",
-        "value" : "BAZ"
-      } ]
+    "THIS.VALUE": {
+      "source": "complex.json",
+      "value": "BAZ",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "BAZ"
+        }
+      ]
     }
   },
   "databaseDefaults": {
@@ -321,6 +323,16 @@
         {
           "name": "default",
           "value": true
+        }
+      ]
+    },
+    "tryReuse": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
         }
       ]
     },
@@ -345,6 +357,16 @@
             "name": "default",
             "value": true
           },
+          {
+            "name": "complex.json",
+            "value": true
+          }
+        ]
+      },
+      "tryReuse": {
+        "source": "complex.json",
+        "value": true,
+        "sources": [
           {
             "name": "complex.json",
             "value": true

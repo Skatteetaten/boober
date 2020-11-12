@@ -1,21 +1,22 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.JsonMappingException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.readValue
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.feature.DatabaseInstance
 import no.skatteetaten.aurora.boober.service.ProvisioningException
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import org.apache.commons.lang3.exception.ExceptionUtils
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.HttpClientErrorException
 import org.springframework.web.client.RestClientResponseException
@@ -23,61 +24,51 @@ import org.springframework.web.client.RestTemplate
 
 private val logger = KotlinLogging.logger {}
 
+private const val basePath: String = "/api/v1"
+private const val schemaPath: String = "$basePath/schema"
+private const val restorableSchemaPath: String = "$basePath/restorableSchema"
+
 sealed class SchemaProvisionRequest {
-
     abstract val details: SchemaRequestDetails
-}
-
-data class SchemaRequestDetails(
-    val schemaName: String,
-    val users: List<SchemaUser>,
-    val engine: DatabaseEngine,
-    val affiliation: String,
-    val databaseInstance: DatabaseInstance
-)
-
-data class SchemaRequestPayload(
-    val labels: Map<String, String>,
-    val users: List<SchemaUser>,
-    val engine: DatabaseEngine,
-    val instanceLabels: Map<String, String>,
-    val instanceName: String? = null,
-    val instanceFallback: Boolean = false
-)
-
-data class SchemaUser(
-    val name: String,
-    val role: String,
-    val affiliation: String
-)
-
-enum class DatabaseEngine {
-    POSTGRES, ORACLE
+    abstract val tryReuse: Boolean
+    abstract val endPath: String
+    abstract val uriVars: Array<out Any>
 }
 
 data class SchemaIdRequest(
     val id: String,
-    override val details: SchemaRequestDetails
-) : SchemaProvisionRequest()
+    override val details: SchemaRequestDetails,
+    override val tryReuse: Boolean
+) : SchemaProvisionRequest() {
+
+    override val endPath = "{1}"
+    override val uriVars = arrayOf(id)
+}
 
 data class SchemaForAppRequest(
     val environment: String,
     val application: String,
     val generate: Boolean,
-    override val details: SchemaRequestDetails
-) : SchemaProvisionRequest()
+    val user: User,
+    override val details: SchemaRequestDetails,
+    override val tryReuse: Boolean
+) : SchemaProvisionRequest() {
 
-data class SchemaProvisionResult(
-    val request: SchemaProvisionRequest,
-    val dbhSchema: DbhSchema,
-    val responseText: String
-)
+    val labels =
+        mapOf(
+            "affiliation" to details.affiliation,
+            "environment" to "${details.affiliation}-$environment",
+            "application" to application,
+            "name" to details.schemaName,
+            "userId" to user.username
+        )
 
-data class SchemaProvisionResults(val results: List<SchemaProvisionResult>)
+    val labelsAsString = labels.map { "${it.key}=${it.value}" }
+        .joinToString(",")
 
-data class DbhUser(val username: String, val password: String, val type: String)
-
-data class DatabaseSchemaInstance(val port: Long, val host: String?)
+    override val endPath = "?labels={1}&engine={2}"
+    override val uriVars = arrayOf(labelsAsString, details.engine)
+}
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class DbhSchema(
@@ -89,10 +80,10 @@ data class DbhSchema(
     private val users: List<DbhUser> = listOf()
 ) {
     val name: String
-        get() = labels.get("name")!!
+        get() = labels["name"]!!
 
     val affiliation: String
-        get() = labels.get("affiliation")!!
+        get() = labels["affiliation"]!!
 
     val username: String
         get() = users.firstOrNull()?.username ?: ""
@@ -107,190 +98,193 @@ data class DbhSchema(
         get() = jdbcUrl.split("/").last()
 }
 
+@Component
+@ConditionalOnProperty("integrations.dbh.url")
+class DbhRestTemplateWrapper(
+    @TargetService(ServiceTypes.AURORA) restTemplate: RestTemplate,
+    @Value("\${integrations.dbh.url}") override val baseUrl: String,
+    @Value("\${integrations.dbh.retries:0}") override val retries: Int
+) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries, baseUrl = baseUrl)
+
 @Service
 @ConditionalOnProperty("integrations.dbh.url")
 class DatabaseSchemaProvisioner(
-    @TargetService(ServiceTypes.AURORA)
-    val restTemplate: RestTemplate,
-    val mapper: ObjectMapper,
-    val userDetailsProvider: UserDetailsProvider,
-    @Value("\${integrations.dbh.url}") val dbhUrl: String
+    val restTemplate: DbhRestTemplateWrapper,
+    val mapper: ObjectMapper
 ) {
 
-    /*
-      TODO  Error handling, right now provision schema is called in validation for id schemas and schemas with generate false
-      This method will fail on the first error and not collect errors. Should we collect up the errors in a correct way?
+    fun provisionSchema(request: SchemaProvisionRequest): DbhSchema {
+        val schema = findSchema(request) ?: findCooldownSchemaIfTryReuseEnabled(request)?.activate()
 
-      How do we pass state from one step of a feature to another? Because this is actually a use case for it.
-     */
-    fun provisionSchemas(schemaProvisionRequests: List<SchemaProvisionRequest>): SchemaProvisionResults {
+        if (schema != null) return schema
 
-        if (schemaProvisionRequests.isEmpty()) throw IllegalArgumentException("SchemaProvisionRequest cannot be empty")
-
-        val results: List<SchemaProvisionResult> = schemaProvisionRequests.map(this::provisionSchema)
-        return SchemaProvisionResults(results)
-    }
-
-    fun provisionSchema(it: SchemaProvisionRequest): SchemaProvisionResult = when (it) {
-        is SchemaIdRequest -> provisionFromId(it)
-        is SchemaForAppRequest -> provisionForApplication(it)
-    }
-
-    private fun provisionFromId(request: SchemaIdRequest): SchemaProvisionResult {
-
-        val (dbhSchema, responseText) = findSchemaById(request.id, request.details)
-        return SchemaProvisionResult(request, dbhSchema, responseText)
-    }
-
-    fun findSchemaById(
-        id: String,
-        details: SchemaRequestDetails
-    ): Pair<DbhSchema, String> {
-
-        val roleString = details.users.joinToString(",") { it.name }
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.getForEntity(
-                "$dbhUrl/api/v1/schema/{1}?affiliation={2}&roles={3}",
-                JsonNode::class.java,
-                id,
-                details.affiliation,
-                roleString
-            )
-        } catch (e: Exception) {
-            throw createProvisioningException(
-                "Unable to get information on schema with id=$id and affiliation=${details.affiliation}",
-                e
-            )
-        }
-
-        return parseResponseFailIfEmpty(response)
-    }
-
-    private fun provisionForApplication(request: SchemaForAppRequest): SchemaProvisionResult {
-
-        val user = userDetailsProvider.getAuthenticatedUser()
-        val labels = mapOf(
-            "affiliation" to request.details.affiliation,
-            "environment" to "${request.details.affiliation}-${request.environment}",
-            "application" to request.application,
-            "name" to request.details.schemaName,
-            "userId" to user.username
-        )
-
-        val (dbhSchema, responseText) = try {
-            val find = findSchemaByLabels(labels, request.details)
-            if (find == null && !request.generate) {
-                throw ProvisioningException("Could not find schema with labels=$labels, generate disabled.")
+        return when (request) {
+            is SchemaForAppRequest -> {
+                if (request.generate) createSchema(request)
+                else throw ProvisioningException("Could not find schema with ${request.labelsAsString} generate disabled.")
             }
-            find ?: createSchema(labels, request.details)
-        } catch (e: Exception) {
-            val rootCauseMessage = ExceptionUtils.getRootCauseMessage(e)
-            val message = "${e.message.orEmpty()} $rootCauseMessage  Schema query: ${toLabelsString(labels)}"
-            throw ProvisioningException(message, e)
+            is SchemaIdRequest -> throw ProvisioningException("Expected dbh response to contain schema info.")
         }
-
-        return SchemaProvisionResult(request, dbhSchema, responseText)
     }
 
-    private fun findSchemaByLabels(
-        labels: Map<String, String>,
-        details: SchemaRequestDetails
-    ): Pair<DbhSchema, String>? {
+    fun findSchema(
+        request: SchemaProvisionRequest
+    ): DbhSchema? {
+        return runCatching {
+            restTemplate.get(JsonNode::class, "$schemaPath/${request.endPath}", *request.uriVars)
+        }.onFailure(::reThrowError)
+            .getOrElse {
+                if (it is HttpClientErrorException && it.statusCode == HttpStatus.NOT_FOUND) {
+                    return null
+                }
+                val uri = "$schemaPath/${restTemplate.uri(request.endPath, *request.uriVars)}"
 
-        val labelsString = toLabelsString(labels)
-        val roleString = details.users.joinToString(",") { it.name }
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.getForEntity(
-                "$dbhUrl/api/v1/schema/?labels={1}&roles={2}&engine={3}", JsonNode::class.java,
-                labelsString, roleString, details.engine
+                throw createProvisioningException("Unable to get database schema with uri=$uri", it)
+            }?.parseAsSingle()
+    }
+
+    fun findCooldownSchemaIfTryReuseEnabled(request: SchemaProvisionRequest): DbhSchema? {
+        if (!request.tryReuse) return null
+
+        return request.run {
+            runCatching {
+                restTemplate.get(
+                    JsonNode::class,
+                    "$restorableSchemaPath/$endPath",
+                    *uriVars
+                )
+            }.onFailure(::reThrowError)
+                .getOrNull()
+                ?.parse<RestorableSchema>()
+                ?.firstOrNull()
+                ?.databaseSchema
+        }
+    }
+
+    fun createSchema(
+        request: SchemaForAppRequest
+    ): DbhSchema {
+        return runCatching {
+            restTemplate.post(
+                url = "$schemaPath/",
+                body = request.toSchemaRequest(),
+                type = JsonNode::class
             )
-        } catch (e: Exception) {
-            throw createProvisioningException("Unable to get database schema.", e)
-        }
-
-        return parseResponse(response)
+        }.onFailure(::reThrowError)
+            .getOrElse {
+                throw createProvisioningException("Unable to create database schema.", it)
+            }.parseAndFailIfEmpty()
     }
 
-    private fun createSchema(
-        labels: Map<String, String>,
-        details: SchemaRequestDetails
-    ): Pair<DbhSchema, String> {
+    fun DbhSchema.activate(): DbhSchema {
+        return runCatching {
+            restTemplate.patch(
+                RestoreDatabaseSchemaPayload(active = true),
+                JsonNode::class,
+                "$restorableSchemaPath/{1}",
+                id
+            )
+        }.onFailure(::reThrowError)
+            .getOrElse {
+                throw createProvisioningException("Unable to reactivate schema with id=$id.", it)
+            }.parseAndFailIfEmpty()
+    }
 
-        val payload =
+    private fun SchemaForAppRequest.toSchemaRequest() =
+        this.details.let { details ->
             SchemaRequestPayload(
-                users = details.users,
                 engine = details.engine,
                 instanceName = details.databaseInstance.name,
                 instanceFallback = details.databaseInstance.fallback,
                 instanceLabels = details.databaseInstance.labels,
                 labels = labels
             )
-
-        val response: ResponseEntity<JsonNode> = try {
-            restTemplate.postForEntity("$dbhUrl/api/v1/schema/", payload, JsonNode::class.java)
-        } catch (e: Exception) {
-            throw createProvisioningException("Unable to create database schema.${e.getDbhErrorMessage()}", e)
         }
 
-        return parseResponseFailIfEmpty(response)
+    private inline fun <reified T : Any> ResponseEntity<JsonNode>.parseAndFailIfEmpty(): T =
+        this.parseAsSingle<T>() ?: throw ProvisioningException("Expected dbh response to contain schema info.")
+
+    private inline fun <reified T : Any> ResponseEntity<JsonNode>.parse(): List<T> {
+        return this.body?.let {
+            mapper.convertValue<DbApiEnvelope<T>>(it)
+        }?.items?.map {
+            // TODO:This is not optimal, the convertValue above should deserialize completely, but trouble with type erasure.
+            // Fix when refactor to use herkimer for database
+            mapper.convertValue<T>(it)
+        } ?: emptyList()
     }
 
-    private fun parseResponseFailIfEmpty(response: ResponseEntity<JsonNode>): Pair<DbhSchema, String> {
-        return parseResponse(response) ?: throw ProvisioningException("Expected dbh response to contain schema info.")
-    }
-
-    private fun parseResponse(response: ResponseEntity<JsonNode>): Pair<DbhSchema, String>? {
-
-        val responseBody = response.body.toString()
-        val dbApiEnvelope: DbApiEnvelope = mapper.readValue(responseBody, DbApiEnvelope::class.java)
-        val size = dbApiEnvelope.items.size
-        return when (size) {
+    private inline fun <reified T : Any> ResponseEntity<JsonNode>.parseAsSingle(): T? {
+        val items = this.parse<T>()
+        return when (val size = items.size) {
             0 -> null
-            1 -> Pair(dbApiEnvelope.items[0], responseBody)
+            1 -> items.first()
             else -> throw ProvisioningException("Matched $size database schemas, should be exactly one.")
         }
     }
 
-    private fun createProvisioningException(message: String, e: Exception): ProvisioningException {
-        fun parseErrorResponse(responseMessage: String?): DbhErrorResponse {
-            return try {
-                mapper.readValue(responseMessage, DbhErrorResponse::class.java)
-            } catch (e: Exception) {
-                DbhErrorResponse("", emptyList(), 0)
-            }
-        }
+    private fun createProvisioningException(message: String, e: Throwable): ProvisioningException {
+
+        fun parseErrorResponse(responseMessage: String): DbhErrorResponse? =
+            runCatching {
+                mapper.readValue<DbhErrorResponse>(responseMessage)
+            }.onFailure(::reThrowError)
+                .getOrNull()
+
         return when (e) {
-            is HttpClientErrorException -> {
+            is RestClientResponseException -> {
                 val dbhErrorResponse = parseErrorResponse(e.responseBodyAsString)
-                val errorMessage = if (dbhErrorResponse.items.isNotEmpty()) {
-                    dbhErrorResponse.items.first()
-                } else {
-                    ""
-                }
-                ProvisioningException("$message cause=$errorMessage status=${dbhErrorResponse.status}", e)
+                val errorMessage = dbhErrorResponse?.items?.firstOrNull() ?: ""
+
+                ProvisioningException("$message cause=$errorMessage status=${dbhErrorResponse?.status ?: ""}", e)
             }
             else -> ProvisioningException(message, e)
         }
     }
 
-    private fun toLabelsString(labels: Map<String, String>) = labels.filterKeys { it != "userId" }
-        .map { "${it.key}=${it.value}" }
-        .joinToString(",")
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    data class DbApiEnvelope(val status: String, val items: List<DbhSchema> = listOf())
-
-    data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)
-
-    private fun Exception.getDbhErrorMessage() =
-        if (this !is RestClientResponseException) {
-            ""
-        } else {
-            try {
-                jacksonObjectMapper().readValue<DbhErrorResponse>(this.responseBodyAsString).items.firstOrNull()
-                    ?.let { msg -> " $msg." } ?: ""
-            } catch (ignored: JsonMappingException) {
-                ""
-            }
+    private fun reThrowError(throwable: Throwable) {
+        if (throwable is Error) {
+            logger.error { throwable }
+            throw throwable
         }
+    }
 }
+
+data class SchemaRequestDetails(
+    val schemaName: String,
+    val engine: DatabaseEngine,
+    val affiliation: String,
+    val databaseInstance: DatabaseInstance
+)
+
+data class RestoreDatabaseSchemaPayload(
+    val active: Boolean
+)
+
+data class SchemaRequestPayload(
+    val labels: Map<String, String>,
+    val engine: DatabaseEngine,
+    val instanceLabels: Map<String, String>,
+    val instanceName: String? = null,
+    val instanceFallback: Boolean = false
+)
+
+enum class DatabaseEngine {
+    POSTGRES, ORACLE
+}
+
+data class DbhUser(val username: String, val password: String, val type: String)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class DatabaseSchemaInstance(val port: Long, val host: String?)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class DbApiEnvelope<T>(val status: String, val items: List<T> = emptyList())
+
+data class DbhErrorResponse(val status: String, val items: List<String>, val totalCount: Int)
+
+data class RestorableSchema(
+    val setToCooldownAt: Long,
+    val deleteAfter: Long,
+    val databaseSchema: DbhSchema
+)

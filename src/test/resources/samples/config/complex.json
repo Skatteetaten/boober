@@ -85,7 +85,8 @@
   },
   "database": {
     "complex": {
-      "enabled": true
+      "enabled": true,
+      "tryReuse" : true
     },
     "foo": "123-456"
   },
