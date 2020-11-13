@@ -155,6 +155,26 @@ class DatabaseSchemaProvisionerTest {
     }
 
     @Test
+    fun `Verify labels for finding schemas are correct`() {
+        val request = createSchemaForAppRequest(generate = true, tryReuse = false)
+        val expectedLabels = request.run {
+            mapOf(
+                "affiliation" to details.affiliation,
+                "environment" to "${details.affiliation}-$environment",
+                "application" to application,
+                "name" to details.schemaName
+            )
+        }.map { "${it.key}=${it.value}" }
+            .joinToString(",")
+
+        assertThat {
+            request.labelsAsString
+        }.isSuccess().given {
+            assertThat(it).isEqualTo(expectedLabels)
+        }
+    }
+
+    @Test
     fun `Should throw when createSchema fails for SchemaForAppRequest`() {
         val request = createSchemaForAppRequest(generate = true, tryReuse = false)
         mockDbh(request, null, null, FailRequest("POST", "schema/"))
