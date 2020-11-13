@@ -194,6 +194,21 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `Should not run full validation when cluster is not same as boober cluster`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """ {
+                    "databaseDefaults": {
+                        "generate": false
+                    },
+                    "cluster": "notsamecluster",
+                   "database": true
+                   } """.trimIndent()
+            )
+        }.isSuccess()
+    }
+
+    @Test
     fun `create two database secret with auto`() {
         httpMockServer(5000) {
             rule {

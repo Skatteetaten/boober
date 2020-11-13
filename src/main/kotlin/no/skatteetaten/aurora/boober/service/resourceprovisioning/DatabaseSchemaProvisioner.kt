@@ -63,7 +63,8 @@ data class SchemaForAppRequest(
             "userId" to user.username
         )
 
-    val labelsAsString = labels.map { "${it.key}=${it.value}" }
+    val labelsAsString = labels.filter { it.key != "userId" }
+        .map { "${it.key}=${it.value}" }
         .joinToString(",")
 
     override val endPath = "?labels={1}&engine={2}"
