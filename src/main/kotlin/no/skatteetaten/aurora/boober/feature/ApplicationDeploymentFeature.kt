@@ -97,7 +97,7 @@ class ApplicationDeploymentFeature : Feature {
         val mattermost = this.getDelimitedStringOrArrayAsSetOrNull(mattermostNotificationsField, " ")
         val email = this.getDelimitedStringOrArrayAsSetOrNull(emailNotificationsField, " ")
 
-        if(mattermost == null && email== null) {
+        if (mattermost == null && email == null) {
             return null
         }
 
