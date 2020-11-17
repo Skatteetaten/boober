@@ -104,5 +104,9 @@
         "BAR": "BAZ"
       }
     }
+  },
+  "notification" : {
+    "email": "foo@bar.no ola@nordmann.net",
+    "mattermost": ["test", "test2"]
   }
 }

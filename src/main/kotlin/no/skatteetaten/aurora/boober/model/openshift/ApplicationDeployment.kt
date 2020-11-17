@@ -59,7 +59,8 @@ data class ApplicationDeploymentSpec(
     var releaseTo: String? = null,
     var deployTag: String? = null,
     var command: ApplicationDeploymentCommand? = null,
-    var message: String? = null
+    var message: String? = null,
+    var notifications: Notifications? = null
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -68,4 +69,11 @@ data class ApplicationDeploymentCommand(
     val overrideFiles: Map<String, String>,
     val applicationDeploymentRef: ApplicationDeploymentRef,
     val auroraConfig: AuroraConfigRef
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class Notifications(
+    val mattermost: Set<String>?,
+    val email: Set<String>?
 )
