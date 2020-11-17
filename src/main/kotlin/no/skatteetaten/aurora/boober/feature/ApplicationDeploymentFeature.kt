@@ -35,8 +35,8 @@ val emailRegex: Pattern = compile(
         ")+"
 )
 
-val emailNotificationsField = "notifications/email"
-val mattermostNotificationsField = "notifications/mattermost"
+val emailNotificationsField = "notification/email"
+val mattermostNotificationsField = "notification/mattermost"
 
 @Service
 class ApplicationDeploymentFeature : Feature {
