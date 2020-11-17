@@ -44,7 +44,7 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             createAuroraConfigFieldHandlers(
                 """{ "notification" : { "email": "asd"  }}"""
             )
-        }.singleApplicationError("""Email address 'asd' is not a valid email address according to [a-zA-Z0-9\+\.\_\%\-\+]{1,256}\@[a-zA-Z0-9][a-zA-Z0-9\-]{0,64}(\.[a-zA-Z0-9][a-zA-Z0-9\-]{0,25})+""")
+        }.singleApplicationError("""Email address 'asd' is not a valid email address.""")
     }
     @Test
     fun `get error if ttl duration string is wrong`() {

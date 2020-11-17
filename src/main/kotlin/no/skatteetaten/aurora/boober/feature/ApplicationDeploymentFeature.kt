@@ -58,7 +58,7 @@ class ApplicationDeploymentFeature : Feature {
     ): List<Exception> {
         return adc.getDelimitedStringOrArrayAsSet(emailNotificationsField, " ").mapNotNull { email ->
             if (!emailRegex.matcher(email).matches()) {
-                AuroraDeploymentSpecValidationException("Email address '$email' is not a valid email address according to ${emailRegex.pattern()}")
+                AuroraDeploymentSpecValidationException("Email address '$email' is not a valid email address.")
             } else null
         }
     }
@@ -68,15 +68,6 @@ class ApplicationDeploymentFeature : Feature {
         val ttl = adc.ttl?.let {
             val removeInstant = Instants.now + it
             "removeAfter" to removeInstant.epochSecond.toString()
-        }
-
-        val mattermost = adc.getDelimitedStringOrArrayAsSetOrNull(mattermostNotificationsField, " ")
-        val email = adc.getDelimitedStringOrArrayAsSetOrNull(emailNotificationsField, " ")
-
-        val notifications = if (mattermost != null || email != null) {
-            Notifications(mattermost = mattermost, email = email)
-        } else {
-            null
         }
 
         val resource = ApplicationDeployment(
@@ -91,7 +82,7 @@ class ApplicationDeploymentFeature : Feature {
                     cmd.applicationDeploymentRef,
                     cmd.auroraConfigRef
                 ),
-                notifications = notifications
+                notifications = adc.findNotifications()
             ),
             _metadata = newObjectMeta {
                 name = adc.name
@@ -100,6 +91,17 @@ class ApplicationDeploymentFeature : Feature {
             }
         )
         return setOf(generateResource(resource))
+    }
+
+    private fun AuroraDeploymentSpec.findNotifications(): Notifications? {
+        val mattermost = this.getDelimitedStringOrArrayAsSetOrNull(mattermostNotificationsField, " ")
+        val email = this.getDelimitedStringOrArrayAsSetOrNull(emailNotificationsField, " ")
+
+        if(mattermost == null && email== null) {
+            return null
+        }
+
+        return Notifications(mattermost = mattermost, email = email)
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
