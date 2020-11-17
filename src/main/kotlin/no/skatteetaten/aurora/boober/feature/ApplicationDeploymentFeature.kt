@@ -11,6 +11,8 @@ import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
+import no.skatteetaten.aurora.boober.model.openshift.Notifications
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
@@ -18,8 +20,23 @@ import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.boot.convert.DurationStyle.SIMPLE
 import org.springframework.stereotype.Service
 import java.time.Duration
+import java.util.regex.Pattern
+import java.util.regex.Pattern.compile
 
 val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
+
+val emailRegex: Pattern = compile(
+    "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
+        "\\@" +
+        "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,64}" +
+        "(" +
+        "\\." +
+        "[a-zA-Z0-9][a-zA-Z0-9\\-]{0,25}" +
+        ")+"
+)
+
+val emailNotificationsField = "notifications/email"
+val mattermostNotificationsField = "notifications/mattermost"
 
 @Service
 class ApplicationDeploymentFeature : Feature {
@@ -27,8 +44,23 @@ class ApplicationDeploymentFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler("message"),
-            AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
+            AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
+            AuroraConfigFieldHandler(emailNotificationsField),
+            AuroraConfigFieldHandler(mattermostNotificationsField)
+
         )
+    }
+
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        cmd: AuroraContextCommand
+    ): List<Exception> {
+        return adc.getDelimitedStringOrArrayAsSet(emailNotificationsField, " ").mapNotNull { email ->
+            if (!emailRegex.matcher(email).matches()) {
+                AuroraDeploymentSpecValidationException("Email address '$email' is not a valid email address according to ${emailRegex.pattern()}")
+            } else null
+        }
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
@@ -36,6 +68,15 @@ class ApplicationDeploymentFeature : Feature {
         val ttl = adc.ttl?.let {
             val removeInstant = Instants.now + it
             "removeAfter" to removeInstant.epochSecond.toString()
+        }
+
+        val mattermost = adc.getDelimitedStringOrArrayAsSetOrNull(mattermostNotificationsField, " ")
+        val email = adc.getDelimitedStringOrArrayAsSetOrNull(emailNotificationsField, " ")
+
+        val notifications = if (mattermost != null || email != null) {
+            Notifications(mattermost = mattermost, email = email)
+        } else {
+            null
         }
 
         val resource = ApplicationDeployment(
@@ -49,7 +90,8 @@ class ApplicationDeploymentFeature : Feature {
                     cmd.overrideFiles,
                     cmd.applicationDeploymentRef,
                     cmd.auroraConfigRef
-                )
+                ),
+                notifications = notifications
             ),
             _metadata = newObjectMeta {
                 name = adc.name

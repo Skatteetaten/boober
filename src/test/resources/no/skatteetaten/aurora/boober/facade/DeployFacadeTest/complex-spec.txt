@@ -3,6 +3,9 @@
                   static | applicationDeploymentId: "1234567890"
             complex.json | message: "Aurora <3"
             complex.json | ttl: "1d"
+                         | notifications:
+            complex.json |   email: "foo@bar.no ola@nordmann.net"
+            complex.json |   mattermost: ["test","test2"]
               about.json | schemaVersion: "v1"
             complex.json | type: "development"
               about.json | affiliation: "paas"

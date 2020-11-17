@@ -18,7 +18,10 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         val (dc, ad) = generateResources(
             """{ 
             "message" : "This is a note", 
-                "ttl" : "1d" 
+                "ttl" : "1d",
+                "notifications" : {
+                    "email" : "foo@bar.no"
+                }
                 }""", createEmptyDeploymentConfig()
         )
 
@@ -35,6 +38,14 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         })
     }
 
+    @Test
+    fun `get error with wrong email`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ "notifications" : { "email": "asd"  }}"""
+            )
+        }.singleApplicationError("""Email address 'asd' is not a valid email address according to [a-zA-Z0-9\+\.\_\%\-\+]{1,256}\@[a-zA-Z0-9][a-zA-Z0-9\-]{0,64}(\.[a-zA-Z0-9][a-zA-Z0-9\-]{0,25})+""")
+    }
     @Test
     fun `get error if ttl duration string is wrong`() {
         assertThat {
