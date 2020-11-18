@@ -12,9 +12,10 @@ import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.Container
+import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Volume
-import io.fabric8.kubernetes.api.model.PodSpec
+import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -25,27 +26,29 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 
+const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
+
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
 val AuroraDeploymentSpec.fluentParserName: String? get() = "${this.name}-fluent-parser"
 val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
-val hecTokenKey: String = "HEC_TOKEN"
-val splunkHostKey: String = "SPLUNK_HOST"
-val splunkPortKey: String = "SPLUNK_PORT"
+const val hecTokenKey: String = "HEC_TOKEN"
+const val splunkHostKey: String = "SPLUNK_HOST"
+const val splunkPortKey: String = "SPLUNK_PORT"
 
-val logApplication: String = "application"
-val logAuditText: String = "audit_text"
-val logAuditJson: String = "audit_json"
-val logSlow: String = "slow"
-val logGC: String = "gc"
-val logSensitive: String = "sensitive"
-val logStacktrace: String = "stacktrace"
-val logAccess: String = "access"
+const val logApplication: String = "application"
+const val logAuditText: String = "audit_text"
+const val logAuditJson: String = "audit_json"
+const val logSlow: String = "slow"
+const val logGC: String = "gc"
+const val logSensitive: String = "sensitive"
+const val logStacktrace: String = "stacktrace"
+const val logAccess: String = "access"
 val knownLogs: Set<String> =
     setOf(logApplication, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
 
-val parserMountPath = "/fluent-bit/parser"
-val parsersFileName = "parsers.conf"
+const val parserMountPath = "/fluent-bit/parser"
+const val parsersFileName = "parsers.conf"
 
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
@@ -126,27 +129,39 @@ class FluentbitSidecarFeature(
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
-                val podSpec = dc.spec.template.spec
-                modifyAuroraResource(it, podSpec, configVolume, parserVolume, container)
+                val template = dc.spec.template
+                modifyAuroraResource(it, template, configVolume, parserVolume, container)
             } else if (it.resource.kind == "Deployment") {
                 val dc: Deployment = it.resource as Deployment
-                val podSpec = dc.spec.template.spec
-                modifyAuroraResource(it, podSpec, configVolume, parserVolume, container)
+                val template = dc.spec.template
+                modifyAuroraResource(it, template, configVolume, parserVolume, container)
             }
         }
     }
 
     private fun modifyAuroraResource(
         auroraResource: AuroraResource,
-        podSpec: PodSpec,
+        template: PodTemplateSpec,
         configVolume: Volume,
         parserVolume: Volume,
         container: Container
     ) {
-        modifyResource(auroraResource, "Added fluentbit volume and sidecar container")
+        val podSpec = template.spec
+        modifyResource(auroraResource, "Added fluentbit volume, sidecar container and annotation")
         podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
         podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
         podSpec.containers = podSpec.containers.addIfNotNull(container)
+        // Add annotation to exclude pods having fluentbit sidecar from being logged by node deployd splunk connect.
+        if (template.metadata == null) {
+            template.metadata = ObjectMeta()
+        }
+        if (template.metadata.annotations == null) {
+            template.metadata.annotations = mutableMapOf(SPLUNK_CONNECT_EXCLUDE_TAG to "true")
+        } else {
+            template.metadata.annotations.put(
+                SPLUNK_CONNECT_EXCLUDE_TAG, "true"
+            )
+        }
     }
 
     private fun createFluentbitContainer(adc: AuroraDeploymentSpec): Container {

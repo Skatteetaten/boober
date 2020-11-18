@@ -26,7 +26,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
            }""",
                 createEmptyDeploymentConfig(), emptyList(), 3
         )
-        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume and sidecar container")
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume, sidecar container and annotation")
             .auroraResourceMatchesFile("dc.json")
 
         assertThat(parserResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("parser.json")

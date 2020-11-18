@@ -21,6 +21,11 @@
       "type" : "Rolling"
     },
     "template" : {
+      "metadata" : {
+        "annotations" : {
+          "splunk.com/exclude" : "true"
+        }
+      },
       "spec" : {
         "containers" : [ {
           "name" : "simple"
