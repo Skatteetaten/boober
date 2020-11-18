@@ -387,7 +387,9 @@ class S3FeatureTest : AbstractFeatureTest() {
                 "S3_BUCKETS_${bucketObjectAreaUpper}_OBJECTPREFIX" to "$secretName/objectPrefix"
             )
             assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
-            assertThat(actualEnvs.filter { (name, _) -> name.contains(bucketObjectAreaUpper) }).isEqualTo(expectedEnvs.size)
+
+            val objectAreaS3EnvVars = actualEnvs.filter { (name, _) -> name.startsWith("S3_BUCKETS_$bucketObjectAreaUpper") }
+            assertThat(objectAreaS3EnvVars.size).isEqualTo(expectedEnvs.size)
         }
     }
 
