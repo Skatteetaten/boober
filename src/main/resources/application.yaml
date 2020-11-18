@@ -91,15 +91,15 @@ openshift:
 
 integrations:
     dbh:
-        url: http://dbh-aurora.${openshift.cluster}.paas.skead.no
+        url: https://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
     skap:
-        url: http://skap-aurora.${openshift.cluster}.paas.skead.no
+        url: https://skap-aurora.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: false
+        url: https://herkimer-aurora.${openshift.cluster}.paas.skead.no
         fallback:
             applikasjonsnavn : "1234567890"
     openshift:

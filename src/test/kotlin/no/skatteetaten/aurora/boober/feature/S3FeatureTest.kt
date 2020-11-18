@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsAll
+import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -85,6 +86,36 @@ class S3FeatureTest : AbstractFeatureTest() {
             createdResources = 1,
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
+    }
+
+    @Test
+    fun `verify two objectareas with different bucketnames`() {
+        val s3Credentials = listOf(
+            createS3Credentials(bucketName = "minBucket", objectArea = "default"),
+            createS3Credentials(bucketName = "anotherId", objectArea = "default")
+        )
+
+        mockHerkimer(
+            booberAdId = booberAdId,
+            claimExistsInHerkimer = true,
+            s3Credentials = s3Credentials
+        )
+
+        generateResources(
+            """{ 
+                "s3": {
+                    "not-default" : {
+                        "bucketName": "minBucket",
+                        "objectArea": "default" 
+                    },
+                    "default" : {
+                        "bucketName" : "anotherId"
+                    }
+                }
+           }""",
+            createdResources = 2,
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        ).verifyS3SecretsAndEnvs(expectedBucketObjectAreas = listOf("default", "not-default"))
     }
 
     @Test
@@ -339,11 +370,14 @@ class S3FeatureTest : AbstractFeatureTest() {
                 ?: throw Exception("No dc")
 
             val container = dc.spec.template.spec.containers.first()
-            val actualEnvs = container.env
-                .map { envVar -> envVar.name to envVar.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
-
             val secretName = "$appName-$bucketObjectArea-s3"
             val bucketObjectAreaUpper = bucketObjectArea.toUpperCase()
+            val actualEnvs = container.env
+                .map { envVar -> envVar.name to envVar.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
+                .filter { (name, _) ->
+                    name.startsWith("S3_BUCKETS_$bucketObjectAreaUpper")
+                }
+
             val expectedEnvs = listOf(
                 "S3_BUCKETS_${bucketObjectAreaUpper}_SERVICEENDPOINT" to "$secretName/serviceEndpoint",
                 "S3_BUCKETS_${bucketObjectAreaUpper}_ACCESSKEY" to "$secretName/accessKey",
@@ -353,6 +387,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 "S3_BUCKETS_${bucketObjectAreaUpper}_OBJECTPREFIX" to "$secretName/objectPrefix"
             )
             assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
+            assertThat(actualEnvs.size).isEqualTo(expectedEnvs.size)
         }
     }
 

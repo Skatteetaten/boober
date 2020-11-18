@@ -103,11 +103,8 @@ class S3Feature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val bucketNameAndObjectAreas = findS3Buckets(adc)
-            .validatedToNotNull()
-            .groupBy { it.bucketName }
+        val envVars = resources.extractS3EnvVarsFromSecrets()
 
-        val envVars = resources.extractS3EnvVarsFromSecrets(bucketNameAndObjectAreas)
         resources.addEnvVarsToMainContainers(envVars, javaClass)
     }
 
@@ -117,7 +114,7 @@ class S3Feature(
         return mapNotNull { s3BucketObjectArea ->
             val claimsOwnedByOthers = herkimerService.getClaimedResources(
                 resourceKind = ResourceKind.MinioObjectArea,
-                name = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.name}"
+                name = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.area}"
             ).flatMap {
                 it.claims.orEmpty()
             }.filter {
@@ -126,10 +123,10 @@ class S3Feature(
 
             if (claimsOwnedByOthers.isNotEmpty()) {
                 logger.debug {
-                    "The objectArea=${s3BucketObjectArea.name} in bucket=${s3BucketObjectArea.bucketName}. Claimed by: \n" +
+                    "The objectArea=${s3BucketObjectArea.area} in bucket=${s3BucketObjectArea.bucketName}. Claimed by: \n" +
                         claimsOwnedByOthers.joinToString { "ApplicationDeploymentId=${it.ownerId}" }
                 }
-                IllegalArgumentException("The objectarea=${s3BucketObjectArea.name} in bucket=${s3BucketObjectArea.bucketName} is already claimed.")
+                IllegalArgumentException("The objectarea=${s3BucketObjectArea.area} in bucket=${s3BucketObjectArea.bucketName} is already claimed.")
             } else null
         }
     }
@@ -145,13 +142,12 @@ class S3Feature(
         }
     }
 
-    private fun Set<AuroraResource>.extractS3EnvVarsFromSecrets(bucketNameAndObjectAreas: Map<String, List<S3BucketObjectArea>>): List<EnvVar> =
+    private fun Set<AuroraResource>.extractS3EnvVarsFromSecrets(): List<EnvVar> =
         findResourcesByType<Secret>("-s3")
             .mapNotNull { secret ->
+                val objectArea = secret.metadata.annotations[ANNOTATION_OBJECT_AREA]
 
-                val bucketName = secret.metadata.annotations[ANNOTATION_BUCKETNAME]
-                bucketNameAndObjectAreas[bucketName]
-                    ?.flatMap { secret.createEnvVarRefs(prefix = "S3_BUCKETS_${it.name}_") }
+                secret.createEnvVarRefs(prefix = "S3_BUCKETS_${objectArea}_")
             }.flatten()
 
     private fun getBucketCredentials(): Map<String, JsonNode?> =
@@ -177,7 +173,7 @@ class S3Feature(
 
         val s3Credentials =
             s3Provisioner.provision(request)
-                .toS3Credentials(s3BucketObjectArea.bucketName, request.path, s3BucketObjectArea.name)
+                .toS3Credentials(s3BucketObjectArea.bucketName, request.path, s3BucketObjectArea.area)
 
         val bucketAdmin = bucketAdmins[s3BucketObjectArea.bucketName]
             ?: throw IllegalArgumentException("Could not find bucket credentials for bucket. This should not happen. It has been validated in validate step")
@@ -203,12 +199,12 @@ class S3Feature(
                 .associateBy { it.name }
 
         return this.map { s3BucketObjectArea ->
-            val objectAreaResourceName = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.name}"
+            val objectAreaResourceName = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.area}"
             val credentialsStoredInHerkimer = resourceWithClaims[objectAreaResourceName]
                 ?.claims
                 ?.map { it.credentials }
                 ?.let { S3Credentials.fromJsonNodes(it) }
-                ?.find { it.objectArea == s3BucketObjectArea.name }
+                ?.find { it.objectArea == s3BucketObjectArea.area }
 
             val s3Credentials = credentialsStoredInHerkimer
                 ?: provisionAndStoreS3Credentials(
@@ -241,7 +237,8 @@ class S3Feature(
             // TODO:AOS-5085 not optimal, can be fixed when we introduce shared state. This has already been validated to non null in validate
             S3BucketObjectArea(
                 it.bucketName!!,
-                it.name!!
+                it.area!!,
+                it.specifiedAreaKey!!
             )
         }
 
@@ -249,7 +246,7 @@ class S3Feature(
         return if (adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME)) {
             val defaultS3Bucket = S3BucketObjectAreaNullable(
                 bucketName = adc.getOrNull("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
-                name = adc.getOrNull("$FEATURE_DEFAULTS_FIELD_NAME/objectArea")
+                area = adc.getOrNull("$FEATURE_DEFAULTS_FIELD_NAME/objectArea")
             )
 
             listOf(defaultS3Bucket)
@@ -268,7 +265,8 @@ class S3Feature(
         return S3BucketObjectAreaNullable(
             bucketName = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/bucketName")
                 ?: adc.getOrNull("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
-            name = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"]
+            area = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"],
+            specifiedAreaKey = s3ObjectAreaKey
         )
     }
 
@@ -278,7 +276,7 @@ class S3Feature(
             val bucketNameException =
                 if (it.bucketName == null) IllegalArgumentException("Missing field: bucketName for s3") else null
             val objectAreaException =
-                if (it.name == null) IllegalArgumentException("Missing field: objectArea for s3") else null
+                if (it.area == null) IllegalArgumentException("Missing field: objectArea for s3") else null
 
             listOf(
                 bucketNameException,
@@ -295,7 +293,7 @@ private data class BucketWithCredentials(
 
 private const val FEATURE_FIELD_NAME = "s3"
 private const val FEATURE_DEFAULTS_FIELD_NAME = "s3Defaults"
-private const val ANNOTATION_BUCKETNAME = "minio.skatteetaten.no/bucketName"
+private const val ANNOTATION_OBJECT_AREA = "minio.skatteetaten.no/objectArea"
 
 private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { it.key }, prefix: String = "") =
     properties.map { propertyName ->
@@ -317,10 +315,10 @@ private fun List<BucketWithCredentials>.createS3Secrets(nsName: String, appName:
     this.map { (s3BucketObjectArea, provisionResult) ->
         newSecret {
             metadata {
-                name = "$appName-${s3BucketObjectArea.name}-s3"
+                name = "$appName-${s3BucketObjectArea.specifiedAreaKey}-s3"
                 namespace = nsName
                 annotations = mapOf(
-                    ANNOTATION_BUCKETNAME to provisionResult.bucketName
+                    ANNOTATION_OBJECT_AREA to s3BucketObjectArea.specifiedAreaKey
                 )
             }
             data = provisionResult.run {
@@ -386,12 +384,14 @@ abstract class S3FeatureTemplate : Feature {
 
 private data class S3BucketObjectAreaNullable(
     val bucketName: String?,
-    val name: String?
+    val area: String?,
+    val specifiedAreaKey: String? = area
 )
 
 private data class S3BucketObjectArea(
     val bucketName: String,
-    val name: String
+    val area: String,
+    val specifiedAreaKey: String = area
 )
 
 data class S3Credentials(
