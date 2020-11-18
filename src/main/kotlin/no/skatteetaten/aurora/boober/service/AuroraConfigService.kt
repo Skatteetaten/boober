@@ -84,7 +84,7 @@ class AuroraConfigService(
         // This will validate both AuroraConfig and External validation for the affected AID
         auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(affectedAid.map {
             AuroraContextCommand(auroraConfig, it, ref)
-        })
+        }, false)
         watch.stop()
 
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
