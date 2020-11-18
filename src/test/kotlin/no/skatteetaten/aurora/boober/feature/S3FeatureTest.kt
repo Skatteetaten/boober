@@ -375,7 +375,7 @@ class S3FeatureTest : AbstractFeatureTest() {
             val actualEnvs = container.env
                 .map { envVar -> envVar.name to envVar.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
                 .filter { (name, _) ->
-                    name.startsWith("S3_BUCKETS_$bucketObjectAreaUpper")
+                    name.startsWith("S3")
                 }
 
             val expectedEnvs = listOf(
@@ -387,7 +387,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 "S3_BUCKETS_${bucketObjectAreaUpper}_OBJECTPREFIX" to "$secretName/objectPrefix"
             )
             assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
-            assertThat(actualEnvs.size).isEqualTo(expectedEnvs.size)
+            assertThat(actualEnvs.filter { (name, _) -> name.contains(bucketObjectAreaUpper) }).isEqualTo(expectedEnvs.size)
         }
     }
 
