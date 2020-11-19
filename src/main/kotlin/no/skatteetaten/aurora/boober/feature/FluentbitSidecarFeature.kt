@@ -311,7 +311,7 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     return """[SERVICE]
     Flush        1
     Daemon       Off
-    Log_Level    debug
+    Log_Level    info
     Parsers_File $parserMountPath/$parsersFileName
 
 $inputs
