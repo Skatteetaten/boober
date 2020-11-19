@@ -355,6 +355,6 @@ fun generateParserConf(): String {
     Format   regex
     Regex   ^(?<timestamp>\d{4}-\d{1,2}-\d{1,2}T\d{2}:\d{2}:\d{2},\d*Z) (?<event>.*)
     Time_Key    timestamp
-    Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+    Time_Format %Y-%m-%dT%H:%M:%S,%L%z
     Time_Keep  Off"""
 }
