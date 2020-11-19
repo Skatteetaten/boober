@@ -95,11 +95,11 @@ integrations:
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
     skap:
-        url: http://localhost:9090
+        url: http://skap-aurora.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: http://herkimer-aurora.${openshift.cluster}.paas.skead.no
+        url: false
         fallback:
             jfwlocalhost : "1234567890"
     openshift:

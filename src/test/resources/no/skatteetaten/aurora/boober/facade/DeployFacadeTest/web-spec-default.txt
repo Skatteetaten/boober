@@ -27,6 +27,7 @@ utv/about.json | cluster: "utv"
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
+       default |   tryReuse: false
        default |   name: "@name@"
        default | database: false
        default | management: true
@@ -47,11 +48,7 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "Redirect"
        default |     termination: "edge"
-               | beta:
-       default |   s3: false
        default | s3: false
-               | s3Defaults:
-       default |   bucketName: "default"
        default | sts: false
       web.json | toxiproxy: true
                | deployStrategy:

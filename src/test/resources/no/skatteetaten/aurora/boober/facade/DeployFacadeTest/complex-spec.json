@@ -39,6 +39,24 @@
       "value" : "1d"
     } ]
   },
+  "notification" : {
+    "email" : {
+      "source" : "complex.json",
+      "value" : "foo@bar.no ola@nordmann.net",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "foo@bar.no ola@nordmann.net"
+      } ]
+    },
+    "mattermost" : {
+      "source" : "complex.json",
+      "value" : [ "test", "test2" ],
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : [ "test", "test2" ]
+      } ]
+    }
+  },
   "schemaVersion" : {
     "source" : "about.json",
     "value" : "v1",
@@ -124,40 +142,34 @@
       } ]
     }
   },
-  "envFile": {
-    "source": "utv/complex.json",
-    "value": "about-alternate.json",
-    "sources": [
-      {
-        "name": "utv/complex.json",
-        "value": "about-alternate.json"
-      }
-    ]
+  "envFile" : {
+    "source" : "utv/complex.json",
+    "value" : "about-alternate.json",
+    "sources" : [ {
+      "name" : "utv/complex.json",
+      "value" : "about-alternate.json"
+    } ]
   },
-  "bigip": {
-    "service": {
-      "source": "complex.json",
-      "value": "simple-utv",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "simple-utv"
-        }
-      ]
+  "bigip" : {
+    "service" : {
+      "source" : "complex.json",
+      "value" : "simple-utv",
+      "sources" : [ {
+        "name" : "complex.json",
+        "value" : "simple-utv"
+      } ]
     }
   },
-  "artifactId": {
-    "source": "fileName",
-    "value": "complex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
-      }
-    ]
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "complex",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "complex"
+    } ]
   },
-  "groupId": {
-    "source": "complex.json",
+  "groupId" : {
+    "source" : "complex.json",
     "value" : "org.test",
     "sources" : [ {
       "name" : "complex.json",
@@ -209,6 +221,14 @@
           "name" : "default",
           "value" : true
         }, {
+          "name" : "complex.json",
+          "value" : true
+        } ]
+      },
+      "tryReuse" : {
+        "source" : "complex.json",
+        "value" : true,
+        "sources" : [ {
           "name" : "complex.json",
           "value" : true
         } ]
@@ -534,6 +554,18 @@
             "value" : "30s"
           } ]
         }
+      }
+    }
+  },
+  "s3" : {
+    "default" : {
+      "bucketName" : {
+        "source" : "complex.json",
+        "value" : "minYndlingsBucket",
+        "sources" : [ {
+          "name" : "complex.json",
+          "value" : "minYndlingsBucket"
+        } ]
       }
     }
   },

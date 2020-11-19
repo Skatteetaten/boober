@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
+import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
@@ -25,6 +26,23 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError(
             "bigip/service is required if any other bigip flags are set"
         )
+    }
+
+    @Test
+    fun `should not generate big ip crd and route if enabled is false`() {
+        val generatedResource = generateResources(
+            """{
+             "bigip" : {
+                  "service": "simple", 
+                  "routeAnnotations" : {
+                    "haproxy.router.openshift.io|timeout" : "30s"
+                   },
+                   "enabled": false
+             }
+           }"""
+        )
+
+        assertThat(generatedResource).isEmpty()
     }
 
     @Test

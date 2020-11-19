@@ -427,9 +427,9 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         }
 }
 
-inline fun <reified T : HasMetadata> List<AuroraResource>.findResourceByType(): T = this.findResourceByType(T::class)
+inline fun <reified T : HasMetadata> List<AuroraResource>.findResourceByType(): T = this.findResourceByType(T::class).firstOrNull() ?: throw Exception("No resource of specified type found")
+inline fun <reified T : HasMetadata> List<AuroraResource>.findResourcesByType(): List<T> = this.findResourceByType(T::class)
 
-fun <T : HasMetadata> List<AuroraResource>.findResourceByType(kclass: KClass<T>): T =
-    find { it.resource::class == kclass }
-        ?.let { @Suppress("UNCHECKED_CAST") it.resource as T }
-        ?: throw Exception("No resource of specified type found")
+fun <T : Any> List<AuroraResource>.findResourceByType(kclass: KClass<T>): List<T> =
+    filter { it.resource::class == kclass }
+        .map { @Suppress("UNCHECKED_CAST") it.resource as T }

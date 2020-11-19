@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
@@ -261,7 +261,7 @@ class SecretVaultFeature(
                 }
             }
         }
-        resources.addEnvVar(secretEnv, this::class.java)
+        resources.addEnvVarsToMainContainers(secretEnv, this::class.java)
     }
 
     private fun getSecretVaults(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<AuroraSecret> {

@@ -72,7 +72,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
 
         val commands = openShiftCommandBuilder.createOpenShiftDeleteCommands(name, namespace, deployId)
 
-        listOf("BuildConfig", "DeploymentConfig", "ImageStream", "Service", "Secret").forEach {
+        listOf("BuildConfig", "DeploymentConfig", "ImageStream", "Service", "Secret", "BigIp").forEach {
             assertThat(containsKind(it, commands)).isTrue()
         }
     }
