@@ -167,7 +167,7 @@ class S3Feature(
         val request = S3ProvisioningRequest(
             bucketName = s3BucketObjectArea.bucketName,
             path = UUID.randomUUID().toString().replace("-", ""),
-            userName = adc.applicationDeploymentId,
+            userName = UUID.randomUUID().toString().replace("-", ""),
             access = listOf(S3Access.WRITE, S3Access.DELETE, S3Access.READ)
         )
 
