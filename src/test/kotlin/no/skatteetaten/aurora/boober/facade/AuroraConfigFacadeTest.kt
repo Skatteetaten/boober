@@ -366,7 +366,6 @@ class AuroraConfigFacadeTest(
         }.singleApplicationError("/vresion is not a valid config field pointer")
     }
 
-
     @Test
     fun `Should fail to update invalid json file`() {
 
@@ -382,7 +381,6 @@ class AuroraConfigFacadeTest(
             )
         }.isFailure().messageContains("utv/simple.json is not valid")
     }
-
 
     @Test
     fun `Should update one file in AuroraConfig`() {
