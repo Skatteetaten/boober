@@ -351,6 +351,22 @@ class AuroraConfigFacadeTest(
     }
 
     @Test
+    fun `Should fail to update invalid json file with misspelled version`() {
+
+        val fileToChange = "utv/simple.json"
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
+
+        assertThat {
+            facade.updateAuroraConfigFile(
+                auroraConfigRef,
+                fileToChange,
+                """{"vresion": "1.0.0"}""",
+                theFileToChange.version
+            )
+        }.singleApplicationError("/vresion is not a valid config field pointer")
+    }
+
+    @Test
     fun `Should fail to update invalid json file`() {
 
         val fileToChange = "utv/simple.json"
@@ -387,6 +403,44 @@ class AuroraConfigFacadeTest(
             auroraConfigRef,
             fileToChange,
             """{"version": "1.0.0"}""",
+            theFileToChange.version
+        )
+
+        assertThat(file).isNotNull()
+        val json: JsonNode = jacksonObjectMapper().readTree(file.contents)
+        assertThat(json.at("/version").textValue()).isEqualTo("1.0.0")
+    }
+
+    @Test
+    fun `Should update one file in AuroraConfig with deep validation error`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+
+        val fileToChange = "utv/simple.json"
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
+
+        val file = facade.updateAuroraConfigFile(
+            auroraConfigRef,
+            fileToChange,
+            """{
+                "version": "1.0.0",
+                "mounts" : {
+                    "foo" : {
+                        "path" : "/foo",
+                        "type" : "Secret",
+                        "exist": true
+                     }
+                }
+}""".trimMargin(),
             theFileToChange.version
         )
 
