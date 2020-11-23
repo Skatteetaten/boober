@@ -56,6 +56,8 @@ class AuroraDeploymentContextService(
                 null to ContextErrors(cmd, listOf(e))
             }
         }
+
+
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {
             val errorMessages = errors.flatMap { err ->
@@ -64,7 +66,23 @@ class AuroraDeploymentContextService(
             logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
             throw MultiApplicationValidationException(errors)
         }
-        return result.mapNotNull { it.first }
+
+        val contexts = result.mapNotNull { it.first }
+
+        val externalRoutes= contexts.flatMap { ctx ->
+
+            val webSeal = ctx.features.filter { (feature, spec) ->
+                feature is RouteFeature && feature.fetchExternalHosts()
+            }.isNotEmpty()
+            ctx.features.keys.filter {  }
+            //find all externalRoutes
+
+
+        }
+
+
+
+        return contexts
     }
 
     fun findApplicationRef(deployCommand: AuroraContextCommand): ApplicationRef {

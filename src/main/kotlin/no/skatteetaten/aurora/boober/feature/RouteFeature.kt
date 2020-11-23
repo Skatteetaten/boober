@@ -233,6 +233,12 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             adc.getOrNull<Boolean>("route/$it/enabled") == true
         }
     }
+
+    fun fetchExternalHosts(): List<String> {
+
+
+
+    }
 }
 
 data class Route(
