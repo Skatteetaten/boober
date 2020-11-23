@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test
 
 class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = FluentbitSidecarFeature("test_hec", "splunk.url", "8080")
+        get() = FluentbitSidecarFeature("test_hec", "splunk.url", "8080", "fluent/fluent-bit:latest")
 
     @Test
     fun `should add fluentbit to dc`() {

@@ -57,7 +57,8 @@ Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configur
 class FluentbitSidecarFeature(
     @Value("\${splunk.hec.token}") val hecToken: String,
     @Value("\${splunk.hec.url}") val splunkUrl: String,
-    @Value("\${splunk.hec.port}") val splunkPort: String
+    @Value("\${splunk.hec.port}") val splunkPort: String,
+    @Value("\${splunk.fluentbit.image}") val fluentBitImage: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         val isOfType = header.type in listOf(
@@ -221,7 +222,7 @@ class FluentbitSidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "fluent/fluent-bit:latest"
+            image = fluentBitImage
         }
     }
 }

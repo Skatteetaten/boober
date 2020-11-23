@@ -13,6 +13,8 @@ splunk:
         token: token
         url: "splunk.hec"
         port: 8080
+    fluentbit:
+        image: "fluent/fluent-bit:1.6.5"
 
 integrations:
     operations:
