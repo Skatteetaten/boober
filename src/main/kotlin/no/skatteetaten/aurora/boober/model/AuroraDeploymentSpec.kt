@@ -78,6 +78,10 @@ data class AuroraDeploymentSpec(
 
     fun hasSubKeys(name: String): Boolean = getSubKeys(name).isNotEmpty()
 
+    fun findSubKeysRaw(name: String): Set<String> {
+        return fields.filter { it.key.startsWith("$name/") }.keys
+    }
+
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
         return fields
             .filter { it.key.startsWith("$name/") }

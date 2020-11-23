@@ -8,6 +8,7 @@ import com.fkorotkov.openshift.tls
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.Route
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -27,6 +28,8 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+
+private val logger = KotlinLogging.logger {}
 
 @Service
 class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
@@ -64,7 +67,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
-        return getRoute(adc, cmd).map {
+        return getRoute(adc).map {
             val resource = it.generateOpenShiftRoute(
                 routeNamespace = adc.namespace,
                 serviceName = adc.name,
@@ -75,8 +78,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     }
 
     fun getRoute(
-        adc: AuroraDeploymentSpec,
-        cmd: AuroraContextCommand
+        adc: AuroraDeploymentSpec
     ): List<no.skatteetaten.aurora.boober.feature.Route> {
 
         val route = "route"
@@ -103,17 +105,15 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             }
             return listOf()
         }
-        val routes = cmd.applicationFiles.findSubKeys(route)
+        val routes = adc.findSubKeysRaw(route)
 
         return routes.mapNotNull {
-
+            logger.info("$route/$it/enabled")
             if (!adc.get<Boolean>("$route/$it/enabled")) {
                 null
             } else {
                 val secure =
-                    if (cmd.applicationFiles.findSubKeys("$route/$it/tls").isNotEmpty() ||
-                        adc["routeDefaults/tls/enabled"]
-                    ) {
+                    if (adc.hasSubKeys("$route/$it/tls") || adc["routeDefaults/tls/enabled"]) {
                         SecureRoute(
                             adc.getOrDefault(route, it, "tls/insecurePolicy"),
                             adc.getOrDefault(route, it, "tls/termination")
@@ -130,11 +130,12 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     tls = secure
                 )
             }
+
         }
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        getRoute(adc, cmd).firstOrNull()?.let {
+        getRoute(adc).firstOrNull()?.let {
             val url = it.url(routeSuffix)
             val routeVars = mapOf(
                 "ROUTE_NAME" to url,
@@ -174,7 +175,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        val routes = getRoute(adc, cmd)
+        val routes = getRoute(adc)
 
         if (routes.isNotEmpty() && adc.isJob) {
             throw AuroraDeploymentSpecValidationException("Routes are not supported for jobs/cronjobs")
@@ -234,10 +235,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }
     }
 
-    fun fetchExternalHosts(): List<String> {
-
-
-
+    fun fetchExternalHosts(adc: AuroraDeploymentSpec): List<String> {
+        return emptyList()
     }
 }
 

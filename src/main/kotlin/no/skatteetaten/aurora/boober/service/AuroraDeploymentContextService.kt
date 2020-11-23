@@ -61,7 +61,8 @@ class AuroraDeploymentContextService(
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {
             val errorMessages = errors.flatMap { err ->
-                err.errors.map { it.localizedMessage }
+                //err.errors.map { it.localizedMessage }
+                err.errors.map { throw it }
             }
             logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
             throw MultiApplicationValidationException(errors)
@@ -69,16 +70,17 @@ class AuroraDeploymentContextService(
 
         val contexts = result.mapNotNull { it.first }
 
+        /*
         val externalRoutes= contexts.flatMap { ctx ->
 
             val webSeal = ctx.features.filter { (feature, spec) ->
-                feature is RouteFeature && feature.fetchExternalHosts()
+                feature is RouteFeature && feature.fetchExternalHosts(spec)
             }.isNotEmpty()
-            ctx.features.keys.filter {  }
             //find all externalRoutes
 
 
         }
+         */
 
 
 
