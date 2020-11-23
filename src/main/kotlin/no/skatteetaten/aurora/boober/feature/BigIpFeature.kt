@@ -89,4 +89,14 @@ class BigIpFeature(
         val hasSubkeys = this.hasSubKeys("bigip")
         return getOrNull<Boolean>("bigip/enabled") ?: hasSubkeys
     }
+
+    fun fetchExternalHostsAndPaths(adc: AuroraDeploymentSpec): List<String> {
+        val enabled = adc.isFeatureEnabled()
+        if (!enabled) return emptyList()
+        val host: String = adc.getOrNull("bigip/externalHost") ?: return emptyList()
+        return adc.getDelimitedStringOrArrayAsSet("bigip/apiPaths").map{
+            "$host/$it"
+        }
+
+    }
 }

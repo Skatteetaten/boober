@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.BigIpFeature
 import no.skatteetaten.aurora.boober.feature.CertificateFeature
 import no.skatteetaten.aurora.boober.feature.ConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
@@ -57,12 +58,10 @@ class AuroraDeploymentContextService(
             }
         }
 
-
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {
             val errorMessages = errors.flatMap { err ->
-                //err.errors.map { it.localizedMessage }
-                err.errors.map { throw it }
+                err.errors.map { it.localizedMessage }
             }
             logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
             throw MultiApplicationValidationException(errors)
@@ -70,19 +69,23 @@ class AuroraDeploymentContextService(
 
         val contexts = result.mapNotNull { it.first }
 
-        /*
-        val externalRoutes= contexts.flatMap { ctx ->
+        val externalRoutes:List<Pair<AuroraDeploymentContext, String>> = contexts.flatMap { ctx ->
 
-            val webSeal = ctx.features.filter { (feature, spec) ->
-                feature is RouteFeature && feature.fetchExternalHosts(spec)
-            }.isNotEmpty()
-            //find all externalRoutes
-
-
+            ctx.features.flatMap { (feature, spec) ->
+                when (feature) {
+                    is RouteFeature -> feature.fetchExternalHostsAndPath(spec)
+                    is BigIpFeature -> feature.fetchExternalHostsAndPaths(spec)
+                    else -> emptyList()
+                }
+            }.map { ctx to it}
         }
-         */
 
+        val hostContexts= externalRoutes.groupBy(keySelector = { it.second}){ it.first }
+        val duplicatedHosts= hostContexts.filter{ it.value.size > 1 }
 
+        if(duplicatedHosts.isNotEmpty()) {
+            logger.info("OH YEAH!")
+        }
 
         return contexts
     }
