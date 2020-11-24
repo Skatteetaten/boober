@@ -94,9 +94,8 @@ class BigIpFeature(
         val enabled = adc.isFeatureEnabled()
         if (!enabled) return emptyList()
         val host: String = adc.getOrNull("bigip/externalHost") ?: return emptyList()
-        return adc.getDelimitedStringOrArrayAsSet("bigip/apiPaths").map{
-            "$host/$it"
+        return adc.getDelimitedStringOrArrayAsSet("bigip/apiPaths").map {
+            "$host$it"
         }
-
     }
 }

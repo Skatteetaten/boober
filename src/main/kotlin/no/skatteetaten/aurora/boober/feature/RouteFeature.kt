@@ -31,8 +31,8 @@ import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
-val wembleyExternalHostAnnotationName="wembley.sits.no|externalHost"
-val wembleyApiPathAnnotationName="wembley.sits.no|apiPaths"
+val wembleyExternalHostAnnotationName = "wembley.sits.no|externalHost"
+val wembleyApiPathAnnotationName = "wembley.sits.no|apiPaths"
 
 @Service
 class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
@@ -133,7 +133,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     tls = secure
                 )
             }
-
         }
     }
 
@@ -238,13 +237,13 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }
     }
 
-    fun fetchExternalHostsAndPath(adc: AuroraDeploymentSpec): List<String> {
+    fun fetchExternalHostsAndPaths(adc: AuroraDeploymentSpec): List<String> {
         return getRoute(adc).filter {
             it.annotations[wembleyExternalHostAnnotationName] != null &&
                 it.annotations[wembleyApiPathAnnotationName] != null
         }.flatMap {
-            val paths=it.annotations[wembleyApiPathAnnotationName]!!.split(",")
-            val name=it.annotations[wembleyExternalHostAnnotationName] != null
+            val paths = it.annotations[wembleyApiPathAnnotationName]!!.split(",")
+            val name = it.annotations[wembleyExternalHostAnnotationName]
             paths.map { path ->
                 "$name${path.trim()}"
             }

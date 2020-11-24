@@ -69,25 +69,40 @@ class AuroraDeploymentContextService(
 
         val contexts = result.mapNotNull { it.first }
 
-        val externalRoutes:List<Pair<AuroraDeploymentContext, String>> = contexts.flatMap { ctx ->
+        val ctxs: Map<AuroraDeploymentContext, List<String>> = findDuplicatedExternalHosts(contexts)
 
+        return contexts.map {
+            if (ctxs.containsKey(it)) {
+                it.copy(warnings = it.warnings.addIfNotNull(ctxs[it]))
+            } else it
+        }
+    }
+
+    private fun findDuplicatedExternalHosts(contexts: List<AuroraDeploymentContext>): Map<AuroraDeploymentContext, List<String>> {
+
+        // find all the externalHosts both configured as annotations and on bigip feature
+        val externalRoutes: List<Pair<AuroraDeploymentContext, String>> = contexts.flatMap { ctx ->
             ctx.features.flatMap { (feature, spec) ->
                 when (feature) {
-                    is RouteFeature -> feature.fetchExternalHostsAndPath(spec)
+                    is RouteFeature -> feature.fetchExternalHostsAndPaths(spec)
                     is BigIpFeature -> feature.fetchExternalHostsAndPaths(spec)
                     else -> emptyList()
                 }
-            }.map { ctx to it}
+            }.map { ctx to it }
         }
 
-        val hostContexts= externalRoutes.groupBy(keySelector = { it.second}){ it.first }
-        val duplicatedHosts= hostContexts.filter{ it.value.size > 1 }
+        // group them by externalHost+path and filter out any instance that is there more then once. Note that one ADR can be in this list several times if it has configured more routes or bigip annotation that conflicts
+        val duplicatedHosts =
+            externalRoutes.groupBy(keySelector = { it.second }) { it.first }.filter { it.value.size > 1 }
 
-        if(duplicatedHosts.isNotEmpty()) {
-            logger.info("OH YEAH!")
-        }
-
-        return contexts
+        // create a warning for each host/context combination and group them by context
+        return duplicatedHosts.flatMap { (host, contexts) ->
+            val adrString = contexts.map { it.cmd.applicationDeploymentRef.toString() }.distinct()
+            val warningString = "The host=$host has duplicated configurations in the following references=$adrString"
+            contexts.map {
+                it to warningString
+            }
+        }.groupBy(keySelector = { it.first }) { it.second }
     }
 
     fun findApplicationRef(deployCommand: AuroraContextCommand): ApplicationRef {
@@ -191,7 +206,7 @@ class AuroraDeploymentContextService(
 
         fun logWarning(warning: String) {
             val auroraConfigRef = cmd.auroraConfigRef
-            logger.info("AuroraConfigWarning auroraConfig=${auroraConfigRef.name} auroraConfigGitReference=${auroraConfigRef.refName} deploymentReference=${cmd.applicationDeploymentRef} warning=$warning")
+            logger.debug("AuroraConfigWarning auroraConfig=${auroraConfigRef.name} auroraConfigGitReference=${auroraConfigRef.refName} deploymentReference=${cmd.applicationDeploymentRef} warning=$warning")
         }
 
         val webSeal = features.filter { (feature, spec) ->
