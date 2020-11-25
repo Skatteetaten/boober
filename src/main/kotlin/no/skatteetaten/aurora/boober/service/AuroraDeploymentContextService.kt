@@ -80,22 +80,20 @@ class AuroraDeploymentContextService(
 
     private fun findDuplicatedExternalHosts(contexts: List<AuroraDeploymentContext>): Map<AuroraDeploymentContext, List<String>> {
 
-        // find all the externalHosts both configured as annotations and on bigip feature
-        val externalRoutes: List<Pair<AuroraDeploymentContext, String>> = contexts.flatMap { ctx ->
-            ctx.features.flatMap { (feature, spec) ->
-                when (feature) {
-                    is RouteFeature -> feature.fetchExternalHostsAndPaths(spec)
-                    is BigIpFeature -> feature.fetchExternalHostsAndPaths(spec)
-                    else -> emptyList()
-                }
-            }.map { ctx to it }
-        }
+       // blir dette for magi?
+       // contexts.findContextExternalUrlPair().findDuplicatedUrlGroupByFeature().createContextWarnings()
 
-        // group them by externalHost+path and filter out any instance that is there more then once. Note that one ADR can be in this list several times if it has configured more routes or bigip annotation that conflicts
-        val duplicatedHosts =
-            externalRoutes.groupBy(keySelector = { it.second }) { it.first }.filter { it.value.size > 1 }
+        val externalRoutes: List<Pair<AuroraDeploymentContext, String>> = findContextExternalUrlPairs(contexts)
 
-        // create a warning for each host/context combination and group them by context
+        val duplicatedHosts = findDuplicatedUrlGroupedByFeature(externalRoutes)
+
+        return createContextWarningMap(duplicatedHosts)
+    }
+
+        private fun Map<String, List<AuroraDeploymentContext>>.createContextWarnings() = createContextWarningMap(this)
+
+    // create a warning for each host/context combination and group them by context
+    private fun createContextWarningMap(duplicatedHosts: Map<String, List<AuroraDeploymentContext>>): Map<AuroraDeploymentContext, List<String>> {
         return duplicatedHosts.flatMap { (host, contexts) ->
             val adrString = contexts.map { it.cmd.applicationDeploymentRef.toString() }.distinct()
             val warningString = "The host=$host has duplicated configurations in the following references=$adrString"
@@ -103,6 +101,28 @@ class AuroraDeploymentContextService(
                 it to warningString
             }
         }.groupBy(keySelector = { it.first }) { it.second }
+    }
+
+    private fun List<AuroraDeploymentContext>.findContextExternalUrlPair() = findContextExternalUrlPairs(this)
+
+    // find all the externalHosts both configured as annotations and on bigip feature
+    private fun findContextExternalUrlPairs(contexts: List<AuroraDeploymentContext>): List<Pair<AuroraDeploymentContext, String>> {
+        return contexts.flatMap { ctx ->
+            ctx.features.flatMap { (feature, spec) ->
+                when (feature) {
+                    is RouteFeature -> feature.fetchExternalHostsAndPaths(spec)
+                    is BigIpFeature -> feature.fetchExternalHostsAndPaths(spec)
+                    else -> emptyList()
+                }
+            }.map { ctx to it }
+            }
+    }
+
+   private fun List<Pair<AuroraDeploymentContext, kotlin.String>>.findDuplicatedUrlGroupByFeature() = findDuplicatedUrlGroupedByFeature(this)
+
+    // group them by externalHost+path and filter out any instance that is there more then once. Note that one ADR can be in this list several times if it has configured more routes or bigip annotation that conflicts
+    private fun findDuplicatedUrlGroupedByFeature(externalRoutes: List<Pair<AuroraDeploymentContext, String>>): Map<String, List<AuroraDeploymentContext>> {
+            return externalRoutes.groupBy(keySelector = { it.second }) { it.first }.filter { it.value.size > 1 }
     }
 
     fun findApplicationRef(deployCommand: AuroraContextCommand): ApplicationRef {
