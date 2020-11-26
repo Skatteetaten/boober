@@ -29,6 +29,12 @@ import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
+typealias UrlToApplicationDeploymentContextMultimap = Map<String, List<AuroraDeploymentContext>>
+
+typealias AuroraDeploymentContextAndUrlList = List<Pair<AuroraDeploymentContext, String>>
+
+typealias AuroraDeploymentContextUrlMultimap = Map<AuroraDeploymentContext, List<String>>
+
 @Service
 class AuroraDeploymentContextService(
     val features: List<Feature>,
@@ -69,31 +75,26 @@ class AuroraDeploymentContextService(
 
         val contexts = result.mapNotNull { it.first }
 
-        val ctxs: Map<AuroraDeploymentContext, List<String>> = findDuplicatedExternalHosts(contexts)
+        val adcWithDuplicatedUrls: AuroraDeploymentContextUrlMultimap = findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts)
 
         return contexts.map {
-            if (ctxs.containsKey(it)) {
-                it.copy(warnings = it.warnings.addIfNotNull(ctxs[it]))
+            if (adcWithDuplicatedUrls.containsKey(it)) {
+                it.copy(warnings = it.warnings.addIfNotNull(adcWithDuplicatedUrls[it]))
             } else it
         }
     }
 
-    private fun findDuplicatedExternalHosts(contexts: List<AuroraDeploymentContext>): Map<AuroraDeploymentContext, List<String>> {
+    private fun findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts: List<AuroraDeploymentContext>): AuroraDeploymentContextUrlMultimap {
 
-        // blir dette for magi?
-        // contexts.findContextExternalUrlPair().findDuplicatedUrlGroupByFeature().createContextWarnings()
+        val externalRoutes: AuroraDeploymentContextAndUrlList = findContextExternalUrlPairs(contexts)
 
-        val externalRoutes: List<Pair<AuroraDeploymentContext, String>> = findContextExternalUrlPairs(contexts)
-
-        val duplicatedHosts = findDuplicatedUrlsWithADC(externalRoutes)
+        val duplicatedHosts: UrlToApplicationDeploymentContextMultimap = findDuplicatedUrlsWithADC(externalRoutes)
 
         return createContextWarningMap(duplicatedHosts)
     }
 
-    private fun Map<String, List<AuroraDeploymentContext>>.createContextWarnings() = createContextWarningMap(this)
-
     // create a warning for each host/context combination and group them by context
-    private fun createContextWarningMap(duplicatedHosts: Map<String, List<AuroraDeploymentContext>>): Map<AuroraDeploymentContext, List<String>> {
+    private fun createContextWarningMap(duplicatedHosts: UrlToApplicationDeploymentContextMultimap): AuroraDeploymentContextUrlMultimap {
         return duplicatedHosts.flatMap { (host, contexts) ->
             val adrString = contexts.map { it.cmd.applicationDeploymentRef.toString() }.distinct()
             val warningString = "The host=$host has duplicated configurations in the following references=$adrString"
@@ -103,10 +104,8 @@ class AuroraDeploymentContextService(
         }.groupBy(keySelector = { it.first }) { it.second }
     }
 
-    private fun List<AuroraDeploymentContext>.findContextExternalUrlPair() = findContextExternalUrlPairs(this)
-
     // find all the externalHosts both configured as annotations and on bigip feature
-    private fun findContextExternalUrlPairs(contexts: List<AuroraDeploymentContext>): List<Pair<AuroraDeploymentContext, String>> {
+    private fun findContextExternalUrlPairs(contexts: List<AuroraDeploymentContext>): AuroraDeploymentContextAndUrlList {
         return contexts.flatMap { adc ->
             adc.features.flatMap { (feature, spec) ->
                 when (feature) {
@@ -118,11 +117,8 @@ class AuroraDeploymentContextService(
         }
     }
 
-    private fun List<Pair<AuroraDeploymentContext, kotlin.String>>.findDuplicatedUrlGroupByFeature() =
-        findDuplicatedUrlsWithADC(this)
-
     // group them by externalHost+path and filter out any instance that is there more then once. Note that one ADR can be in this list several times if it has configured more routes or bigip annotation that conflicts
-    private fun findDuplicatedUrlsWithADC(externalRoutes: List<Pair<AuroraDeploymentContext, String>>): Map<String, List<AuroraDeploymentContext>> {
+    private fun findDuplicatedUrlsWithADC(externalRoutes: AuroraDeploymentContextAndUrlList): UrlToApplicationDeploymentContextMultimap {
         return externalRoutes.groupBy(keySelector = { it.second }) { it.first }.filter { it.value.size > 1 }
     }
 
