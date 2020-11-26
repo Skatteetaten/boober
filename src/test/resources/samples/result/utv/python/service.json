@@ -10,20 +10,20 @@
     },
     "labels": {
       "operationScope": "aos-4016",
-      "app": "simple",
+      "app": "python",
       "updatedBy": "hero",
       "updatedAt": "0",
       "affiliation": "paas",
-      "name": "simple",
+      "name": "python",
       "booberDeployId": "deploy1"
     },
-    "name": "simple",
+    "name": "python",
     "namespace": "paas-utv",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
         "kind": "ApplicationDeployment",
-        "name": "simple",
+        "name": "python",
         "uid": "123-123"
       }
     ]
@@ -44,7 +44,7 @@
       }
     ],
     "selector": {
-      "name": "simple"
+      "name": "python"
     },
     "sessionAffinity": "None",
     "type": "ClusterIP"

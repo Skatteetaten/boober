@@ -4,32 +4,32 @@
   "metadata": {
     "labels": {
       "operationScope" : "aos-4016",
-      "app": "simple",
+      "app": "python",
       "updatedBy": "hero",
       "updatedAt": "0",
       "affiliation": "paas",
-      "name": "simple",
+      "name": "python",
       "releasedVersion": "1",
       "booberDeployId": "deploy1"
     },
-    "name": "simple",
+    "name": "python",
     "namespace": "paas-utv",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
         "kind": "ApplicationDeployment",
-        "name": "simple",
+        "name": "python",
         "uid": "123-123"
       }
     ]
   },
   "spec": {
-    "dockerImageRepository": "docker.registry:5000/org_test/simple",
+    "dockerImageRepository": "docker.registry:5000/org_test/python",
     "tags": [
       {
         "from": {
           "kind": "DockerImage",
-          "name": "docker.registry:5000/org_test/simple:1"
+          "name": "docker.registry:5000/org_test/python:1"
         },
         "importPolicy": {
           "scheduled": true

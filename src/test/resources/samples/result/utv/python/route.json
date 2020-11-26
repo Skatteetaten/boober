@@ -4,32 +4,32 @@
   "metadata": {
     "labels": {
       "operationScope" : "aos-4016",
-      "app": "simple",
+      "app": "python",
       "updatedBy": "hero",
       "updatedAt": "0",
       "affiliation": "paas",
-      "name": "simple",
+      "name": "python",
       "booberDeployId": "deploy1"
     },
-    "name": "simple",
+    "name": "python",
     "namespace": "paas-utv",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
         "kind": "ApplicationDeployment",
-        "name": "simple",
+        "name": "python",
         "uid": "123-123"
       }
     ]
   },
   "spec": {
-    "host": "simple-paas-utv.test",
+    "host": "python-paas-utv.test",
     "port" : {
       "targetPort" : "http"
     },
     "to": {
       "kind": "Service",
-      "name": "simple"
+      "name": "python"
     }
   }
 }

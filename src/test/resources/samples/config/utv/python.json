@@ -1,1 +1,16 @@
-{}
+{
+  "version": "1",
+  "applicationPlatform": "python",
+  "groupId": "org.test",
+  "databaseDefaults": {
+    "tryReuse": true
+  },
+  "database": true,
+  "s3Defaults" : {
+    "bucketName": "myBucket",
+    "objectArea": "default"
+  },
+  "s3": true,
+  "sts": true,
+  "route": true
+}

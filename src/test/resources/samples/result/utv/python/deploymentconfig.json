@@ -4,21 +4,21 @@
   "metadata": {
     "labels": {
       "operationScope": "aos-4016",
-      "app": "simple",
+      "app": "python",
       "updatedBy": "hero",
       "updatedAt": "0",
       "affiliation": "paas",
-      "name": "simple",
+      "name": "python",
       "deployTag": "1",
       "booberDeployId": "deploy1"
     },
-    "name": "simple",
+    "name": "python",
     "namespace": "paas-utv",
     "ownerReferences": [
       {
         "apiVersion": "skatteetaten.no/v1",
         "kind": "ApplicationDeployment",
-        "name": "simple",
+        "name": "python",
         "uid": "123-123"
       }
     ]
@@ -26,7 +26,7 @@
   "spec": {
     "replicas": 1,
     "selector": {
-      "name": "simple"
+      "name": "python"
     },
     "strategy": {
       "rollingParams": {
@@ -45,11 +45,11 @@
         },
         "labels": {
           "operationScope" : "aos-4016",
-          "app": "simple",
+          "app": "python",
           "updatedBy": "hero",
           "updatedAt": "0",
           "affiliation": "paas",
-          "name": "simple",
+          "name": "python",
           "deployTag": "1"
         }
       },
@@ -92,20 +92,20 @@
                 "value": "1234567890"
               },
               {
-                "name": "SIMPLE_DB",
-                "value": "/u01/secrets/app/simple-db/info"
+                "name": "PYTHON_DB",
+                "value": "/u01/secrets/app/python-db/info"
               },
               {
-                "name": "SIMPLE_DB_PROPERTIES",
-                "value": "/u01/secrets/app/simple-db/db.properties"
+                "name": "PYTHON_DB_PROPERTIES",
+                "value": "/u01/secrets/app/python-db/db.properties"
               },
               {
                 "name": "DB",
-                "value": "/u01/secrets/app/simple-db/info"
+                "value": "/u01/secrets/app/python-db/info"
               },
               {
                 "name": "DB_PROPERTIES",
-                "value": "/u01/secrets/app/simple-db/db.properties"
+                "value": "/u01/secrets/app/python-db/db.properties"
               },
               {
                 "name": "OPENSHIFT_CLUSTER",
@@ -113,22 +113,22 @@
               },
               {
                 "name": "APP_NAME",
-                "value": "simple"
+                "value": "python"
               },
               {
                 "name": "ROUTE_NAME",
-                "value": "simple-paas-utv.test"
+                "value": "python-paas-utv.test"
               },
               {
                 "name": "ROUTE_URL",
-                "value": "http://simple-paas-utv.test"
+                "value": "http://python-paas-utv.test"
               },
               {
               "name" : "S3_BUCKETS_DEFAULT_SERVICEENDPOINT",
               "valueFrom" : {
                 "secretKeyRef" : {
                   "key" : "serviceEndpoint",
-                  "name" : "simple-default-s3",
+                  "name" : "python-default-s3",
                   "optional" : false
                 }
               }
@@ -137,7 +137,7 @@
                 "valueFrom" : {
                   "secretKeyRef" : {
                     "key" : "accessKey",
-                    "name" : "simple-default-s3",
+                    "name" : "python-default-s3",
                     "optional" : false
                   }
                 }
@@ -146,7 +146,7 @@
                 "valueFrom" : {
                   "secretKeyRef" : {
                     "key" : "secretKey",
-                    "name" : "simple-default-s3",
+                    "name" : "python-default-s3",
                     "optional" : false
                   }
                 }
@@ -155,7 +155,7 @@
                 "valueFrom" : {
                   "secretKeyRef" : {
                     "key" : "bucketRegion",
-                    "name" : "simple-default-s3",
+                    "name" : "python-default-s3",
                     "optional" : false
                   }
                 }
@@ -164,7 +164,7 @@
                 "valueFrom" : {
                   "secretKeyRef" : {
                     "key" : "bucketName",
-                    "name" : "simple-default-s3",
+                    "name" : "python-default-s3",
                     "optional" : false
                   }
                 }
@@ -173,26 +173,26 @@
                 "valueFrom" : {
                   "secretKeyRef" : {
                     "key" : "objectPrefix",
-                    "name" : "simple-default-s3",
+                    "name" : "python-default-s3",
                     "optional" : false
                   }
                 }
               },
               {
                 "name": "STS_CERTIFICATE_URL",
-                "value": "/u01/secrets/app/simple-sts/certificate.crt"
+                "value": "/u01/secrets/app/python-sts/certificate.crt"
               },
               {
                 "name": "STS_PRIVATE_KEY_URL",
-                "value": "/u01/secrets/app/simple-sts/privatekey.key"
+                "value": "/u01/secrets/app/python-sts/privatekey.key"
               },
               {
                 "name": "STS_KEYSTORE_DESCRIPTOR",
-                "value": "/u01/secrets/app/simple-sts/descriptor.properties"
+                "value": "/u01/secrets/app/python-sts/descriptor.properties"
               },
               {
-                "name": "VOLUME_SIMPLE_STS",
-                "value": "/u01/secrets/app/simple-sts"
+                "name": "VOLUME_PYTHON_STS",
+                "value": "/u01/secrets/app/python-sts"
               },
               {
                 "name": "STS_DISCOVERY_URL",
@@ -200,7 +200,7 @@
               }
             ],
             "imagePullPolicy": "IfNotPresent",
-            "name": "simple-python",
+            "name": "python-python",
             "ports": [
               {
                 "containerPort": 8080,
@@ -210,11 +210,6 @@
               {
                 "containerPort": 8081,
                 "name": "management",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8778,
-                "name": "jolokia",
                 "protocol": "TCP"
               },
               {
@@ -250,12 +245,12 @@
                 "name": "application-log-volume"
               },
               {
-                "mountPath": "/u01/secrets/app/simple-db",
-                "name": "simple-db"
+                "mountPath": "/u01/secrets/app/python-db",
+                "name": "python-db"
               },
               {
-                "mountPath": "/u01/secrets/app/simple-sts",
-                "name": "simple-sts"
+                "mountPath": "/u01/secrets/app/python-sts",
+                "name": "python-sts"
               }
             ]
           }
@@ -268,15 +263,15 @@
             "name": "application-log-volume"
           },
           {
-            "name": "simple-db",
+            "name": "python-db",
             "secret": {
-              "secretName": "simple-db"
+              "secretName": "python-db"
             }
           },
           {
-            "name": "simple-sts",
+            "name": "python-sts",
             "secret": {
-              "secretName": "simple-sts"
+              "secretName": "python-sts"
             }
           }
         ]
@@ -287,11 +282,11 @@
         "imageChangeParams": {
           "automatic": true,
           "containerNames": [
-            "simple-python"
+            "python-python"
           ],
           "from": {
             "kind": "ImageStreamTag",
-            "name": "simple:default"
+            "name": "python:default"
           }
         },
         "type": "ImageChange"
