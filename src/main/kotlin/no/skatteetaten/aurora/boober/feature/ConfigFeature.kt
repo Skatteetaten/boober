@@ -4,7 +4,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import org.springframework.stereotype.Service
 
@@ -28,7 +28,7 @@ class ConfigFeature : Feature {
     ) {
         val configHandlers = context["config"] as List<AuroraConfigFieldHandler>
         val env = adc.getConfigEnv(configHandlers).toEnvVars()
-        resources.addEnvVar(env, this::class.java)
+        resources.addEnvVarsToMainContainers(env, this::class.java)
     }
 
     // TODO: rewrite to associcateSubKeys

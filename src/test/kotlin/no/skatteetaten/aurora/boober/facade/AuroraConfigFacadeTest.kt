@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.configErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
@@ -34,7 +36,9 @@ import org.springframework.test.annotation.DirtiesContext
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
+class AuroraConfigFacadeTest(
+    @Value("\${application.deployment.id}") val booberAdId: String
+) : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: AuroraConfigFacade
@@ -44,9 +48,13 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
 
         applicationDeploymentGenerationMock {
-            rule({ path.contains("resource") }) {
+            rule({ path.contains("resource?claimedBy=$booberAdId") }) {
                 MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", "DeployFacadeTest"))
                     .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+
+            rule {
+                json(HerkimerResponse<Any>())
             }
         }
     }
@@ -343,6 +351,22 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @Test
+    fun `Should fail to update invalid json file with misspelled version`() {
+
+        val fileToChange = "utv/simple.json"
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
+
+        assertThat {
+            facade.updateAuroraConfigFile(
+                auroraConfigRef,
+                fileToChange,
+                """{"vresion": "1.0.0"}""",
+                theFileToChange.version
+            )
+        }.singleApplicationError("/vresion is not a valid config field pointer")
+    }
+
+    @Test
     fun `Should fail to update invalid json file`() {
 
         val fileToChange = "utv/simple.json"
@@ -379,6 +403,44 @@ class AuroraConfigFacadeTest : AbstractSpringBootAuroraConfigTest() {
             auroraConfigRef,
             fileToChange,
             """{"version": "1.0.0"}""",
+            theFileToChange.version
+        )
+
+        assertThat(file).isNotNull()
+        val json: JsonNode = jacksonObjectMapper().readTree(file.contents)
+        assertThat(json.at("/version").textValue()).isEqualTo("1.0.0")
+    }
+
+    @Test
+    fun `Should update one file in AuroraConfig with deep validation error`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+
+        val fileToChange = "utv/simple.json"
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
+
+        val file = facade.updateAuroraConfigFile(
+            auroraConfigRef,
+            fileToChange,
+            """{
+                "version": "1.0.0",
+                "mounts" : {
+                    "foo" : {
+                        "path" : "/foo",
+                        "type" : "Secret",
+                        "exist": true
+                     }
+                }
+}""".trimMargin(),
             theFileToChange.version
         )
 

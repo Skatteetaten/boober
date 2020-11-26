@@ -1,53 +1,54 @@
 {
-  "apiVersion": "skatteetaten.no/v1",
-  "kind": "ApplicationDeployment",
-  "metadata": {
-    "labels": {
+  "apiVersion" : "skatteetaten.no/v1",
+  "kind" : "ApplicationDeployment",
+  "metadata" : {
+    "labels" : {
       "operationScope" : "aos-4016",
-      "app": "komplex",
-      "updatedBy": "hero",
-      "updatedAt": "0",
-      "affiliation": "paas",
-      "name": "komplex",
-      "id": "1234567890",
-      "removeAfter": "86400",
-      "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
-      "booberDeployId": "deploy1"
+      "app" : "komplex",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "affiliation" : "paas",
+      "name" : "komplex",
+      "id" : "1234567890",
+      "removeAfter" : "86400",
+      "applicationId" : "feddc97db98af8c60b495fb62231c98c65d7225b",
+      "booberDeployId" : "deploy1"
     },
-    "name": "komplex",
-    "namespace": "paas-utv",
-    "uid": "123-123"
+    "name" : "komplex",
+    "namespace" : "paas-utv",
+    "uid" : "123-123"
   },
-  "spec": {
-    "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
-    "updatedAt": "1970-01-01T00:00:00Z",
-    "selector": {
-      "name": "komplex"
+  "spec" : {
+    "applicationId" : "feddc97db98af8c60b495fb62231c98c65d7225b",
+    "updatedAt" : "1970-01-01T00:00:00Z",
+    "selector" : {
+      "name" : "komplex"
     },
-    "applicationDeploymentId": "1234567890",
-    "applicationName": "complex",
+    "applicationDeploymentId" : "1234567890",
+    "applicationName" : "complex",
     "runnableType" : "DeploymentConfig",
-    "applicationDeploymentName": "komplex",
-    "databases": [
-      "fd59dba9-7d67-4ea2-bb98-081a5df8c387",
-      "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
-    ],
-    "splunkIndex": "test-index",
-    "managementPath": ":8081/foobar",
-    "releaseTo": "komplex",
-    "deployTag": "komplex",
-    "command": {
-      "overrideFiles": {},
-      "applicationDeploymentRef": {
-        "environment": "utv",
-        "application": "complex"
+    "applicationDeploymentName" : "komplex",
+    "databases" : [ "fd59dba9-7d67-4ea2-bb98-081a5df8c387", "fd59dba9-7d67-4ea2-bb98-081a5df8c387" ],
+    "splunkIndex" : "test-index",
+    "managementPath" : ":8081/foobar",
+    "releaseTo" : "komplex",
+    "deployTag" : "komplex",
+    "command" : {
+      "overrideFiles" : { },
+      "applicationDeploymentRef" : {
+        "environment" : "utv",
+        "application" : "complex"
       },
-      "auroraConfig": {
-        "name": "paas",
-        "refName": "master",
-        "resolvedRef": "123abb"
+      "auroraConfig" : {
+        "name" : "paas",
+        "refName" : "master",
+        "resolvedRef" : "123abb"
       }
     },
-    "message": "Aurora <3"
+    "message" : "Aurora <3",
+    "notifications" : {
+      "mattermost" : [ "test", "test2" ],
+      "email" : [ "foo@bar.no", "ola@nordmann.net" ]
+    }
   }
 }

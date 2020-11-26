@@ -6,40 +6,65 @@ import assertk.assertions.contains
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isSuccess
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.facade.json
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseEngine
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbApiEnvelope
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResult
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionResults
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaUser
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.RestorableSchema
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.boot.web.client.RestTemplateBuilder
+import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
 class DatabaseFeatureTest : AbstractFeatureTest() {
+    val provisioner = DatabaseSchemaProvisioner(
+        DbhRestTemplateWrapper(RestTemplateBuilder().build(), "http://localhost:5000", 0),
+        jacksonObjectMapper()
+    )
     override val feature: Feature
-        get() = DatabaseFeature(provisioner, "utv")
+        get() = DatabaseFeature(provisioner, userDetailsProvider, "utv")
 
-    val provisioner: DatabaseSchemaProvisioner = mockk()
+    val userDetailsProvider: UserDetailsProvider = mockk()
+
+    @BeforeEach
+    fun setupMock() {
+        every { userDetailsProvider.getAuthenticatedUser() } returns User("username", "token")
+    }
+
+    @AfterEach
+    fun clearMocks() {
+        HttpMock.clearAllHttpMocks()
+    }
 
     @Test
     fun `create database secret`() {
-
-        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+        }
 
         val (adResource, dcResource, secretResource) = generateResources(
             """{ 
@@ -52,31 +77,12 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should get error if trying to expose to invalid role`() {
-
-        assertThat {
-            createAuroraDeploymentContext(
-                """{ 
-               "database" : true,
-               "databaseDefaults" : {
-                  "roles" : {
-                     "jalla" : "READ"
-                   },
-                  "exposeTo" : {
-                     "foobar" : "wrong"
-                   }
-                }
-           }"""
-            )
-        }.singleApplicationError("Database cannot expose affiliation=foobar with invalid role=wrong. ValidRoles=jalla.")
-    }
-
-    @Test
     fun `should get error if schema with id does not exist`() {
-
-        every {
-            provisioner.provisionSchema(any())
-        } throws IllegalArgumentException("Database schema with id=123456 and affiliation=paas does not exist")
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope<DbhSchema>("ok", emptyList()))
+            }
+        }
 
         assertThat {
             createAuroraDeploymentContext(
@@ -86,16 +92,16 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("Database schema with id=123456 and affiliation=paas does not exist")
+        }.singleApplicationError("Could not find schema")
     }
 
     @Test
     fun `should get error if schema with generate false does not exist`() {
-
-        every {
-            provisioner.provisionSchema(any())
-        } throws IllegalArgumentException("Could not find schema with labels")
-
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope<DbhSchema>("ok", emptyList()))
+            }
+        }
         assertThat {
             createAuroraDeploymentContext(
                 """{ 
@@ -106,29 +112,25 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                }
            }"""
             )
-        }.singleApplicationError("Could not find schema with labels")
+        }.singleApplicationError("Could not find schema")
     }
 
     @Test
     fun `create database secret with instance defaults`() {
 
-        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
-
-        // This is the validation query
-        every { provisioner.provisionSchema(any()) } returns createDatabaseResult("simple", "utv").results.first()
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+        }
 
         val (adResource, dcResource, secretResource) = generateResources(
             """{ 
                "database" : true,
                "databaseDefaults" : {
+                  "tryReuse" : true,
                   "flavor" : "POSTGRES_MANAGED",
                   "generate" : false,
-                  "roles" : {
-                     "jalla" : "READ"
-                   },
-                  "exposeTo" : {
-                     "foobar" : "jalla"
-                   },
                   "instance" : {
                     "name" : "corrusant", 
                     "fallback" : true, 
@@ -146,15 +148,11 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `create database secret from id`() {
-
-        every {
-            provisioner.findSchemaById("123456", any())
-        } returns (schema to "Ok")
-
-        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("simple", "utv")
-
-        // This is the validation query
-        every { provisioner.provisionSchema(any()) } returns createDatabaseResult("simple", "utv").results.first()
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+        }
 
         val (adResource, dcResource, secretResource) = generateResources(
             """{ 
@@ -196,9 +194,27 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `create two database secret with auto`() {
+    fun `Should not run full validation when cluster is not same as boober cluster`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """ {
+                    "databaseDefaults": {
+                        "generate": false
+                    },
+                    "cluster": "notsamecluster",
+                   "database": true
+                   } """.trimIndent()
+            )
+        }.isSuccess()
+    }
 
-        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("foo,bar", "utv")
+    @Test
+    fun `create two database secret with auto`() {
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+        }
 
         val (adResource, dcResource, fooDatabase, barDatabase) = generateResources(
             """{ 
@@ -218,13 +234,18 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     @Test
     fun `create two database secret`() {
 
-        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("foo,bar", "utv")
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+        }
 
         val (adResource, dcResource, fooDatabase, barDatabase) = generateResources(
             """{ 
                "database" : {
                  "foo" : {
-                   "enabled" : true
+                   "enabled" : true,
+                   "tryReuse" : true
                   },
                   "bar" : {
                    "enabled" : true
@@ -240,9 +261,59 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `get two dbs with tryReuse as default and generate disabled`() {
+        val barSchema = createRestorableSchema()
+        val fooSchema = createRestorableSchema()
+
+        httpMockServer(5000) {
+            rule({
+                path.contains("/schema/") && method == "GET"
+            }) {
+                json(DbApiEnvelope("ok", emptyList<Any>()))
+            }
+
+            rule({
+                path.contains("/restorableSchema/") && method == "GET" && path.contains(barSchema.databaseSchema.id)
+            }) {
+                json(DbApiEnvelope("ok", listOf(barSchema)))
+            }
+
+            rule({
+                path.contains("/restorableSchema/") && method == "GET"
+            }) {
+                json(DbApiEnvelope("ok", listOf(fooSchema)))
+            }
+        }
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+               "database" : {
+                 "foo": {
+                    "enabled": true
+                 },
+                 "bar": {
+                    "id": "${barSchema.databaseSchema.id}"
+                 }
+               },
+               "databaseDefaults" : {
+                  "tryReuse" : true,
+                  "flavor" : "POSTGRES_MANAGED",
+                  "generate" : false
+                }
+           }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
     fun `create database ignore disabled`() {
 
-        every { provisioner.provisionSchemas(any()) } returns createDatabaseResult("foo", "utv")
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+        }
 
         val (adResource, dcResource, fooDatabase) = generateResources(
             """{ 
@@ -326,42 +397,20 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 }
 
-val schema = DbhSchema(
-    id = "123",
-    type = "SCHEMA",
-    databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
-    jdbcUrl = "foo/bar/baz",
-    labels = emptyMap(),
-    users = listOf(DbhUser("username", "password", type = "SCHEMA"))
-)
+fun createRestorableSchema(id: UUID = UUID.randomUUID()) =
+    RestorableSchema(setToCooldownAt = 0L, deleteAfter = 0L, databaseSchema = createDbhSchema(id))
 
-fun createDatabaseResult(databaseNames: String, env: String): SchemaProvisionResults {
-
-    val databases = databaseNames.split((",")).map { appName ->
-        createSchemaProvisionResult(env, appName)
-    }
-    return SchemaProvisionResults(databases)
-}
-
-fun createSchemaProvisionResult(
-    env: String,
-    appName: String
-): SchemaProvisionResult {
-    val databaseInstance = DatabaseInstance(fallback = true, labels = mapOf("affiliation" to "aos"))
-    return SchemaProvisionResult(
-        request = SchemaForAppRequest(
-            environment = env,
-            application = appName,
-            generate = true,
-            details = SchemaRequestDetails(
-                schemaName = appName,
-                users = listOf(SchemaUser("SCHEMA", "a", "aos")),
-                engine = DatabaseEngine.ORACLE,
-                affiliation = "aos",
-                databaseInstance = databaseInstance
-            )
+fun createDbhSchema(id: UUID = UUID.randomUUID()) =
+    DbhSchema(
+        id = id.toString(),
+        type = "SCHEMA",
+        databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
+        jdbcUrl = "foo/bar/baz",
+        labels = mapOf(
+            "affiliation" to "paas",
+            "name" to "myApp"
         ),
-        dbhSchema = schema,
-        responseText = "OK"
+        users = listOf(DbhUser("username", "password", type = "SCHEMA"))
     )
-}
+
+val schema = createDbhSchema()

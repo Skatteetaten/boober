@@ -3,6 +3,9 @@
                   static | applicationDeploymentId: "1234567890"
             complex.json | message: "Aurora <3"
             complex.json | ttl: "1d"
+                         | notification:
+            complex.json |   email: "foo@bar.no ola@nordmann.net"
+            complex.json |   mattermost: ["test","test2"]
               about.json | schemaVersion: "v1"
             complex.json | type: "development"
               about.json | affiliation: "paas"
@@ -28,6 +31,7 @@ utv/about-alternate.json |   ttl: "1d"
                          | database:
                          |   complex:
             complex.json |     enabled: true
+            complex.json |     tryReuse: true
             complex.json |   foo: "123-456"
                          | management:
             complex.json |   path: "/foobar"
@@ -75,6 +79,9 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |     host: "foobar"
                          |     annotations:
             complex.json |       haproxy.router.openshift.io|timeout: "30s"
+                         | s3:
+                         |   default:
+            complex.json |     bucketName: "minYndlingsBucket"
                          | secretVaults:
                          |   foo:
             complex.json |     keys: ["BAR","FOO"]

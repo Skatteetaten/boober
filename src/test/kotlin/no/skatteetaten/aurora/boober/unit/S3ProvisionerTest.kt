@@ -23,7 +23,7 @@ import org.springframework.web.client.RestTemplate
 class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer, restTemplate: RestTemplate) {
     val baseUrl = "http://fiona"
     val fionaRestTemplate = FionaRestTemplateWrapper(restTemplate, baseUrl, 0)
-    private var provisioner = S3Provisioner(fionaRestTemplate, "us-east-1")
+    private var provisioner = S3Provisioner(fionaRestTemplate)
 
     val request = S3ProvisioningRequest(
         "bucketName",
@@ -54,6 +54,6 @@ class S3ProvisionerTest @Autowired constructor(val server: MockRestServiceServer
             .andRespond(withSuccess(response, MediaType.APPLICATION_JSON))
         val result = provisioner.provision(request)
 
-        assertThat(result.objectPrefix).isNotEmpty()
+        assertThat(result.serviceEndpoint).isNotEmpty()
     }
 }

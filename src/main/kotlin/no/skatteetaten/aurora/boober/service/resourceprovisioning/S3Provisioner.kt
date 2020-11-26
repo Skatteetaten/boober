@@ -24,10 +24,7 @@ enum class S3Access {
 data class S3ProvisioningResult(
     val serviceEndpoint: String,
     val accessKey: String,
-    val secretKey: String,
-    val bucketName: String,
-    val objectPrefix: String,
-    val bucketRegion: String
+    val secretKey: String
 )
 
 private data class FionaCreateUserAndPolicyPayload(
@@ -52,8 +49,7 @@ class FionaRestTemplateWrapper(
 @Service
 @ConditionalOnProperty("integrations.fiona.url")
 class S3Provisioner(
-    val restTemplate: FionaRestTemplateWrapper,
-    @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String
+    val restTemplate: FionaRestTemplateWrapper
 ) {
     fun provision(request: S3ProvisioningRequest): S3ProvisioningResult {
         val response = try {
@@ -71,10 +67,7 @@ class S3Provisioner(
         return S3ProvisioningResult(
             serviceEndpoint = response.host,
             accessKey = response.accessKey,
-            secretKey = response.secretKey,
-            bucketName = request.bucketName,
-            objectPrefix = request.path,
-            bucketRegion = defaultBucketRegion
+            secretKey = response.secretKey
         )
     }
 }

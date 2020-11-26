@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
-import no.skatteetaten.aurora.boober.model.addEnvVar
+import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
@@ -157,7 +157,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 "ROUTE_NAME" to url,
                 "ROUTE_URL" to "${it.protocol}$url"
             ).toEnvVars()
-            resources.addEnvVar(routeVars, this::class.java)
+            resources.addEnvVarsToMainContainers(routeVars, this::class.java)
         }
     }
 

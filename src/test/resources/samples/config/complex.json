@@ -78,9 +78,15 @@
   "ttl": "1d",
   "pause": true,
   "message": "Aurora <3",
+  "s3": {
+    "default": {
+      "bucketName": "minYndlingsBucket"
+    }
+  },
   "database": {
     "complex": {
-      "enabled": true
+      "enabled": true,
+      "tryReuse" : true
     },
     "foo": "123-456"
   },
@@ -98,5 +104,9 @@
         "BAR": "BAZ"
       }
     }
+  },
+  "notification" : {
+    "email": "foo@bar.no ola@nordmann.net",
+    "mattermost": ["test", "test2"]
   }
 }

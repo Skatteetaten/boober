@@ -17,6 +17,7 @@ utv/about.json | cluster: "utv"
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
+   simple.json |   tryReuse: true
        default |   name: "@name@"
    simple.json | database: true
        default | management: true
@@ -46,11 +47,10 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
-               | beta:
-       default |   s3: false
    simple.json | s3: true
                | s3Defaults:
-   simple.json |   bucketName: "minYndlingsBucket"
+   simple.json |   bucketName: "myBucket"
+   simple.json |   objectArea: "default"
    simple.json | sts: true
        default | toxiproxy: false
        default | webseal: false

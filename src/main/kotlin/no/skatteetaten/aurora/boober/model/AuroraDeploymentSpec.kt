@@ -104,6 +104,10 @@ data class AuroraDeploymentSpec(
             .mapKeys { replacer.replace(it.key) }
     }
 
+    fun getSubKeyValues(name: String) = getSubKeys(name).keys.map {
+        it.split("/")[1]
+    }.distinct()
+
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
 
     inline fun <reified T> getOrDefault(

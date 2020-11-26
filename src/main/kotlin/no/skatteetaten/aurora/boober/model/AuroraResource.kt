@@ -78,7 +78,7 @@ fun Set<AuroraResource>.addLabels(
     }
 }
 
-fun Set<AuroraResource>.addEnvVar(
+fun Set<AuroraResource>.addEnvVarsToMainContainers(
     envVars: List<EnvVar>,
     clazz: Class<out Feature>
 ) {

@@ -11,11 +11,14 @@ utv/about.json | cluster: "utv"
     folderName | envName: "utv"
       fileName | name: "simple"
    simple.json | groupId: "org.test"
+               | databaseDefaults:
+   simple.json |   tryReuse: true
    simple.json | database: true
    simple.json | version: "1"
       fileName | artifactId: "simple"
    simple.json | route: true
    simple.json | s3: true
                | s3Defaults:
-   simple.json |   bucketName: "minYndlingsBucket"
+   simple.json |   bucketName: "myBucket"
+   simple.json |   objectArea: "default"
    simple.json | sts: true

@@ -10,6 +10,8 @@ import no.skatteetaten.aurora.boober.model.openshift.BigIpKonfigurasjonstjeneste
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
+import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -28,7 +30,8 @@ class BigIpFeature(
             AuroraConfigFieldHandler("bigip/asmPolicy"),
             AuroraConfigFieldHandler("bigip/externalHost"),
             AuroraConfigFieldHandler("bigip/oauthScopes"),
-            AuroraConfigFieldHandler("bigip/apiPaths")
+            AuroraConfigFieldHandler("bigip/apiPaths"),
+            AuroraConfigFieldHandler("bigip/enabled", { it.boolean() })
         ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles, "routeAnnotations")
     }
 
@@ -44,16 +47,19 @@ class BigIpFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
-
-        if (!adc.hasSubKeys("bigip")) {
+        val enabled = adc.isFeatureEnabled()
+        if (!enabled) {
             return emptySet()
         }
 
         val routeName = "${adc.name}-bigip"
 
+        // dette var den gamle applicationDeploymentId som må nå være hostname
+        val routeHost = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
+
         val auroraRoute = Route(
             objectName = routeName,
-            host = adc.applicationDeploymentId,
+            host = routeHost,
             annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 
@@ -77,5 +83,10 @@ class BigIpFeature(
             auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, routeSuffix).generateAuroraResource(),
             bigIp.generateAuroraResource()
         )
+    }
+
+    private fun AuroraDeploymentSpec.isFeatureEnabled(): Boolean {
+        val hasSubkeys = this.hasSubKeys("bigip")
+        return getOrNull<Boolean>("bigip/enabled") ?: hasSubkeys
     }
 }
