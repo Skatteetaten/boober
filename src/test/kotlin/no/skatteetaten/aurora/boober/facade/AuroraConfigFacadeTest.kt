@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
@@ -313,6 +314,37 @@ class AuroraConfigFacadeTest(
         )
 
         assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isEqualTo(3)
+    }
+
+    @Test
+    fun `validate duplicated host names `() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+        val config = getAuroraConfigSamples()
+        val newConfig = config.copy(files = config.files.filter { it.name != "utv/simple.json" } + AuroraConfigFile("utv/simple.yaml", """
+              "bigip" : {
+                "service" : "simple-utv",
+                "externalHost" :"test.ske",
+                "apiPaths": ["/api"]
+              }""".trimIndent()))
+
+        val validated = facade.validateAuroraConfig(
+            newConfig,
+            resourceValidation = false,
+            auroraConfigRef = auroraConfigRef
+        )
+
+        val warnings = validated[ApplicationDeploymentRef("utv", "complex")]
+        assertThat(warnings?.size).isEqualTo(4)
     }
 
     @Test
