@@ -345,7 +345,6 @@ class AuroraConfigFacadeTest(
 
         val warnings = validated[ApplicationDeploymentRef("utv", "complex")]
         assertThat(warnings?.size).isEqualTo(4)
-        assertThat(warnings!!.last()).contains("The host=test.ske/api has duplicated configurations in the following references=[utv/complex, utv/simple]")
     }
 
     @Test
