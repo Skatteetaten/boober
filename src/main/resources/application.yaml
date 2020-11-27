@@ -120,7 +120,7 @@ splunk:
     hec:
         token: token
     fluentbit:
-        image: "fluent/fluent-bit:1.6.5"
+        image: "container-registry-internal.aurora.skead.no/fluent/fluent-bit:1.6.5"
 
 aurora:
     token:
