@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.Deployer
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.NotificationService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.utils.parallelMap
@@ -33,6 +34,7 @@ class DeployFacade(
     val openShiftDeployer: OpenShiftDeployer,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
+    val notificationService: NotificationService,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
 
@@ -91,6 +93,10 @@ class DeployFacade(
         watch.start("deploy")
 
         val deployResults = openShiftDeployer.performDeployCommands(deployCommands)
+        watch.stop()
+
+        watch.start("send notification")
+        notificationService.sendDeployNotifications(ref, deployResults)
         watch.stop()
 
         watch.start("store result")

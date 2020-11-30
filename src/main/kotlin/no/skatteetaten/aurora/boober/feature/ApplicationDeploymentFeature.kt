@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentComman
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.Notifications
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.durationString
@@ -39,7 +40,9 @@ val emailNotificationsField = "notification/email"
 val mattermostNotificationsField = "notification/mattermost"
 
 @Service
-class ApplicationDeploymentFeature : Feature {
+class ApplicationDeploymentFeature(
+    val cantusService: CantusService
+) : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
@@ -47,8 +50,7 @@ class ApplicationDeploymentFeature : Feature {
             AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
             AuroraConfigFieldHandler(emailNotificationsField),
             AuroraConfigFieldHandler(mattermostNotificationsField)
-
-        )
+        ) + gavHandlers(header, cmd)
     }
 
     override fun validate(
@@ -70,6 +72,9 @@ class ApplicationDeploymentFeature : Feature {
             "removeAfter" to removeInstant.epochSecond.toString()
         }
 
+        val imageInformation = cantusService.getImageInformation(adc.dockerGroup, adc.artifactId, adc.version)
+            .first()
+
         val resource = ApplicationDeployment(
             spec = ApplicationDeploymentSpec(
                 selector = mapOf("name" to adc.name),
@@ -82,7 +87,9 @@ class ApplicationDeploymentFeature : Feature {
                     cmd.applicationDeploymentRef,
                     cmd.auroraConfigRef
                 ),
-                notifications = adc.findNotifications()
+                notifications = adc.findNotifications(),
+                auroraVersion = imageInformation.auroraVersion,
+                appVersion = imageInformation.appVersion
             ),
             _metadata = newObjectMeta {
                 name = adc.name

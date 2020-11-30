@@ -159,6 +159,11 @@ class OpenShiftDeployer(
             warnings = warnings
         )
 
+        if (!applicationResult.success) {
+            val reason = appResponse.at("/message").textValue()
+            return rawResult.copy(success = false, reason = reason)
+        }
+
         logger.info("TagResult=${tagResult?.success}")
         if (tagResult != null && !tagResult.success) {
             logger.info("tag result not successfull")
@@ -194,7 +199,8 @@ class OpenShiftDeployer(
             return result.copy(reason = "Deployment is paused and will be/remain scaled down.")
         }
 
-        val redeployResult = redeployService.triggerRedeploy(openShiftResponses, context.spec.type, context.spec.deployState)
+        val redeployResult =
+            redeployService.triggerRedeploy(openShiftResponses, context.spec.type, context.spec.deployState)
 
         if (!redeployResult.success) {
             return result.copy(
