@@ -116,6 +116,12 @@ vault:
     operations:
         enabled: true
 
+splunk:
+    hec:
+        token: token
+    fluentbit:
+        image: "container-registry-internal.aurora.skead.no/fluent/fluent-bit:1.6.5"
+
 aurora:
     token:
         value: token
