@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
@@ -316,6 +317,37 @@ class AuroraConfigFacadeTest(
     }
 
     @Test
+    fun `validate duplicated host names `() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+        val config = getAuroraConfigSamples()
+        val newConfig = config.copy(files = config.files.filter { it.name != "utv/simple.json" } + AuroraConfigFile("utv/simple.yaml", """
+              "bigip" : {
+                "service" : "simple-utv",
+                "externalHost" :"test.ske",
+                "apiPaths": ["/api"]
+              }""".trimIndent()))
+
+        val validated = facade.validateAuroraConfig(
+            newConfig,
+            resourceValidation = false,
+            auroraConfigRef = auroraConfigRef
+        )
+
+        val warnings = validated[ApplicationDeploymentRef("utv", "complex")]
+        assertThat(warnings?.size).isEqualTo(4)
+    }
+
+    @Test
     fun `validate sample aurora config full`() {
 
         openShiftMock {
@@ -348,6 +380,22 @@ class AuroraConfigFacadeTest(
             auroraConfigRef = auroraConfigRef
         )
         assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isNotNull()
+    }
+
+    @Test
+    fun `Should fail to update invalid json file with misspelled version`() {
+
+        val fileToChange = "utv/simple.json"
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
+
+        assertThat {
+            facade.updateAuroraConfigFile(
+                auroraConfigRef,
+                fileToChange,
+                """{"vresion": "1.0.0"}""",
+                theFileToChange.version
+            )
+        }.singleApplicationError("/vresion is not a valid config field pointer")
     }
 
     @Test
@@ -387,6 +435,44 @@ class AuroraConfigFacadeTest(
             auroraConfigRef,
             fileToChange,
             """{"version": "1.0.0"}""",
+            theFileToChange.version
+        )
+
+        assertThat(file).isNotNull()
+        val json: JsonNode = jacksonObjectMapper().readTree(file.contents)
+        assertThat(json.at("/version").textValue()).isEqualTo("1.0.0")
+    }
+
+    @Test
+    fun `Should update one file in AuroraConfig with deep validation error`() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+
+        val fileToChange = "utv/simple.json"
+        val theFileToChange = facade.findAuroraConfigFile(auroraConfigRef, fileToChange)
+
+        val file = facade.updateAuroraConfigFile(
+            auroraConfigRef,
+            fileToChange,
+            """{
+                "version": "1.0.0",
+                "mounts" : {
+                    "foo" : {
+                        "path" : "/foo",
+                        "type" : "Secret",
+                        "exist": true
+                     }
+                }
+}""".trimMargin(),
             theFileToChange.version
         )
 

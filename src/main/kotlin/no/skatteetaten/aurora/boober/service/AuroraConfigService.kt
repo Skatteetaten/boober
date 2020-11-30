@@ -82,9 +82,12 @@ class AuroraConfigService(
         watch.start("validate")
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
-        auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(affectedAid.map {
-            AuroraContextCommand(auroraConfig, it, ref)
-        })
+        auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(
+            commands = affectedAid.map {
+                AuroraContextCommand(auroraConfig, it, ref)
+            },
+            resourceValidation = false
+        )
         watch.stop()
 
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
