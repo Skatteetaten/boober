@@ -164,6 +164,26 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should generate fullyQualified route`() {
+
+        val (dcResource, routeResource) = generateResources(
+            """{
+            "route" : { 
+              "simple" : {
+                "host" : "foo.bar.baz",
+                "fullyQualifiedHost" : true
+              }
+            }
+        }""", createEmptyDeploymentConfig()
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("fqdn-route.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("foo.bar.baz")
+    }
+
+    @Test
     fun `should generate path based route`() {
 
         val (dcResource, routeResource) = generateResources(
