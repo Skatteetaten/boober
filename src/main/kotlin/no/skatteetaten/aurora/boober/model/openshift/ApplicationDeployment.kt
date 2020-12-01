@@ -60,9 +60,7 @@ data class ApplicationDeploymentSpec(
     var deployTag: String? = null,
     var command: ApplicationDeploymentCommand? = null,
     var message: String? = null,
-    var notifications: Notifications? = null,
-    var auroraVersion: String? = null,
-    var appVersion: String? = null
+    var notifications: Notifications? = null
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

@@ -96,14 +96,14 @@ class DeployFacade(
         watch.stop()
 
         watch.start("send notification")
-        notificationService.sendDeployNotifications(ref, deployResults)
+        val deployResultsAfterNotifications = notificationService.sendDeployNotifications(deployResults)
         watch.stop()
 
         watch.start("store result")
         val deployer = userDetailsProvider.getAuthenticatedUser().let {
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
-        return deployLogService.markRelease(deployResults.flatMap { it.value }, deployer).also {
+        return deployLogService.markRelease(deployResultsAfterNotifications, deployer).also {
             watch.stop()
             logger.info("Deploy: ${watch.prettyPrint()}")
         }
