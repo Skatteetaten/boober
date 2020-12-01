@@ -162,7 +162,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     defaultValue = true
                 ),
                 AuroraConfigFieldHandler("$key/host"),
-                AuroraConfigFieldHandler("$key/fullyQualifiedHost"),
+                AuroraConfigFieldHandler("$key/fullyQualifiedHost", validator = { it.boolean(false) }), // since this is internal I do not want default value on it.
                 AuroraConfigFieldHandler("$key/path",
                     validator = { it?.startsWith("/", "Path must start with /") }),
                 AuroraConfigFieldHandler("$key/tls/enabled", validator = { it.boolean() }),
@@ -254,7 +254,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             }
         }
 
-        val fqdnRoute = routes.filter { it.fullyQualifiedHost }.map { it.url("") }
+        val fqdnRoute = routes.filter { it.fullyQualifiedHost }.map { it.url(urlSuffix = "") }
 
         return annotationeExternalPath.addIfNotNull(fqdnRoute)
     }

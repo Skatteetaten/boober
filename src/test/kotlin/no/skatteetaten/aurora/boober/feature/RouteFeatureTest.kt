@@ -163,7 +163,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
     }
 
-
     @Test
     fun `should generate fullyQualified route`() {
 
@@ -183,7 +182,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
         assertThat(dcResource).auroraRouteEnvAdded("foo.bar.baz")
     }
-
 
     @Test
     fun `should generate path based route`() {
