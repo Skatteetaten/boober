@@ -71,10 +71,11 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
 
         return getRoute(adc).map {
+
             val resource = it.generateOpenShiftRoute(
                 routeNamespace = adc.namespace,
                 serviceName = adc.name,
-                routeSuffix = routeSuffix
+                routeSuffix = it.suffix(routeSuffix)
             )
             generateResource(resource)
         }.toSet()
@@ -130,7 +131,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     host = adc.getOrDefault(route, it, "host"),
                     path = adc.getOrNull("$route/$it/path"),
                     annotations = allAnnotations,
-                    tls = secure
+                    tls = secure,
+                    fullyQualifiedHost = adc.getOrNull("$route/$it/fullyQualifiedHost") ?: false
                 )
             }
         }
@@ -160,6 +162,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     defaultValue = true
                 ),
                 AuroraConfigFieldHandler("$key/host"),
+                AuroraConfigFieldHandler("$key/fullyQualifiedHost"),
                 AuroraConfigFieldHandler("$key/path",
                     validator = { it?.startsWith("/", "Path must start with /") }),
                 AuroraConfigFieldHandler("$key/tls/enabled", validator = { it.boolean() }),
@@ -185,7 +188,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
         val applicationDeploymentRef = cmd.applicationDeploymentRef
         val tlsErrors = routes.mapNotNull {
-            if (it.tls != null && it.host.contains('.')) {
+            if (it.tls != null && it.host.contains('.') && !it.fullyQualifiedHost) {
                 AuroraConfigException(
                     "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have a tls enabled route with a '.' in the host",
                     errors = listOf(ConfigFieldErrorDetail.illegal(message = "Route name=${it.objectName} with tls uses '.' in host name"))
@@ -238,7 +241,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     }
 
     fun fetchExternalHostsAndPaths(adc: AuroraDeploymentSpec): List<String> {
-        return getRoute(adc).filter {
+        val routes = getRoute(adc)
+
+        val annotationeExternalPath = routes.filter {
             it.annotations[WEMBLEY_EXTERNAL_HOST_ANNOTATION_NAME] != null &&
                 it.annotations[WEBMLEY_API_PATHS_ANNOTATION_NAME] != null
         }.flatMap {
@@ -248,6 +253,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 "$name${path.trim()}"
             }
         }
+
+        val fqdnRoute = routes.filter { it.fullyQualifiedHost }.map { it.url("") }
+
+        return annotationeExternalPath.addIfNotNull(fqdnRoute)
     }
 }
 
@@ -256,7 +265,8 @@ data class Route(
     val host: String,
     val path: String? = null,
     val annotations: Map<String, String> = emptyMap(),
-    val tls: SecureRoute? = null
+    val tls: SecureRoute? = null,
+    val fullyQualifiedHost: Boolean = false
 ) {
     val target: String
         get(): String = if (path != null) "$host$path" else host
@@ -264,7 +274,11 @@ data class Route(
     val protocol: String
         get(): String = if (tls != null) "https://" else "http://"
 
-    fun url(urlSuffix: String) = "$host$urlSuffix".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
+    fun suffix(urlSuffix: String) = if (fullyQualifiedHost) "" else urlSuffix
+
+    fun url(urlSuffix: String): String {
+        return "$host${suffix(urlSuffix)}".let { if (path != null) "$it${path.ensureStartWith("/")}" else it }
+    }
 
     fun generateOpenShiftRoute(
         routeNamespace: String,
