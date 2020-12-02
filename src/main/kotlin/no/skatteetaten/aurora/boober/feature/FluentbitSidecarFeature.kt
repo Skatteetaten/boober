@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
 
+val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
 val AuroraDeploymentSpec.fluentParserName: String? get() = "${this.name}-fluent-parser"
@@ -200,7 +201,7 @@ class FluentbitSidecarFeature(
         )
 
         return newContainer {
-            name = "${adc.name}-fluent-sidecar"
+            name = adc.fluentSideCarContainerName
             env = podEnvVariables.addIfNotNull(hecEnvVariables)
             volumeMounts = listOf(
                 newVolumeMount {
