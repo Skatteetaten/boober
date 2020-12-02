@@ -62,7 +62,7 @@ integrations:
         port: 8087
     mattermost:
         url: "http://localhost:${integrations.mattermost.port}"
-        port: 8089
+        port: 8091
         token: "test-token"
     docker:
         registry: "docker.registry:5000"

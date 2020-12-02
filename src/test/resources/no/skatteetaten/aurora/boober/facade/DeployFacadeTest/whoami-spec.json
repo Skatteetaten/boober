@@ -1,144 +1,196 @@
 {
-  "applicationDeploymentRef" : {
-    "source" : "static",
-    "value" : "utv/whoami",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "utv/whoami"
-    } ]
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/whoami",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/whoami"
+      }
+    ]
   },
-  "configVersion" : {
-    "source" : "static",
-    "value" : "master",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "master"
-    } ]
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
   },
-  "applicationDeploymentId" : {
-    "source" : "static",
-    "value" : "1234567890",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "1234567890"
-    } ]
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
   },
-  "schemaVersion" : {
-    "source" : "about.json",
-    "value" : "v1",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "v1"
-    } ]
-  },
-  "type" : {
-    "source" : "whoami.json",
-    "value" : "deploy",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "deploy"
-    }, {
-      "name" : "whoami.json",
-      "value" : "deploy"
-    } ]
-  },
-  "deployState" : {
-    "source" : "whoami.json",
-    "value" : "deployment",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "deploymentConfig"
-    }, {
-      "name" : "whoami.json",
-      "value" : "deployment"
-    } ]
-  },
-  "affiliation" : {
-    "source" : "about.json",
-    "value" : "paas",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "paas"
-    } ]
-  },
-  "segment" : {
-    "source" : "about.json",
-    "value" : "aurora",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "aurora"
-    } ]
-  },
-  "cluster" : {
-    "source" : "utv/about.json",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "utv"
-    }, {
-      "name" : "utv/about.json",
-      "value" : "utv"
-    } ]
-  },
-  "permissions" : {
-    "admin" : {
-      "source" : "about.json",
-      "value" : "APP_PaaS_drift APP_PaaS_utv",
-      "sources" : [ {
-        "name" : "about.json",
-        "value" : "APP_PaaS_drift APP_PaaS_utv"
-      } ]
+  "notification": {
+    "mattermost": {
+      "test100": {
+        "enabled": {
+          "source": "whoami.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "whoami.json",
+              "value": true
+            }
+          ]
+        }
+      }
     }
   },
-  "envName" : {
-    "source" : "folderName",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "folderName",
-      "value" : "utv"
-    } ]
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
   },
-  "name" : {
-    "source" : "fileName",
-    "value" : "whoami",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "whoami"
-    } ]
+  "type": {
+    "source": "whoami.json",
+    "value": "deploy",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      },
+      {
+        "name": "whoami.json",
+        "value": "deploy"
+      }
+    ]
   },
-  "groupId" : {
-    "source" : "whoami.json",
-    "value" : "org.test",
-    "sources" : [ {
-      "name" : "whoami.json",
-      "value" : "org.test"
-    } ]
+  "deployState": {
+    "source": "whoami.json",
+    "value": "deployment",
+    "sources": [
+      {
+        "name": "default",
+        "value": "deploymentConfig"
+      },
+      {
+        "name": "whoami.json",
+        "value": "deployment"
+      }
+    ]
   },
-  "database" : {
-    "source" : "whoami.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "whoami.json",
-      "value" : true
-    } ]
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
   },
-  "version" : {
-    "source" : "whoami.json",
-    "value" : "1",
-    "sources" : [ {
-      "name" : "whoami.json",
-      "value" : "1"
-    } ]
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "whoami",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "whoami"
-    } ]
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
+    }
+  },
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
+  },
+  "name": {
+    "source": "fileName",
+    "value": "whoami",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "whoami"
+      }
+    ]
+  },
+  "groupId": {
+    "source": "whoami.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "whoami.json",
+        "value": "org.test"
+      }
+    ]
+  },
+  "database": {
+    "source": "whoami.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "whoami.json",
+        "value": true
+      }
+    ]
+  },
+  "version": {
+    "source": "whoami.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "whoami.json",
+        "value": "1"
+      }
+    ]
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "whoami",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "whoami"
+      }
+    ]
   }
 }

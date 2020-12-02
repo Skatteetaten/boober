@@ -20,7 +20,11 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             "message" : "This is a note", 
                 "ttl" : "1d",
                 "notification" : {
-                    "email" : "foo@bar.no"
+                    "email" : {
+                      "foo@bar.no": {
+                         "enabled": true
+                      }
+                    }
                 }
                 }""", createEmptyDeploymentConfig()
         )
@@ -42,7 +46,15 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     fun `get error with wrong email`() {
         assertThat {
             createAuroraConfigFieldHandlers(
-                """{ "notification" : { "email": "asd"  }}"""
+                """ {
+                  "notification" : { 
+                    "email": {
+                      "asd": {
+                        "enabled": true
+                      }
+                    }
+                  }
+                }"""
             )
         }.singleApplicationError("""Email address 'asd' is not a valid email address.""")
     }

@@ -29,6 +29,22 @@
       }
     ]
   },
+  "notification": {
+    "mattermost": {
+      "test100": {
+        "enabled": {
+          "source": "whoami.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "whoami.json",
+              "value": true
+            }
+          ]
+        }
+      }
+    }
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1",
@@ -184,13 +200,15 @@
         }
       ]
     },
-    "tryReuse" : {
-      "source" : "default",
-      "value" : false,
-      "sources" : [ {
-        "name" : "default",
-        "value" : false
-      } ]
+    "tryReuse": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
     },
     "name": {
       "source": "default",
