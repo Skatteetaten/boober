@@ -1,0 +1,52 @@
+{
+  "apiVersion": "v1",
+  "kind": "Service",
+  "metadata": {
+    "annotations": {
+      "prometheus.io/scheme": "http",
+      "prometheus.io/scrape": "true",
+      "prometheus.io/path": "/prometheus",
+      "prometheus.io/port": "8081"
+    },
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "python",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "python",
+      "booberDeployId": "deploy1"
+    },
+    "name": "python",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "python",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "ports": [
+      {
+        "name": "http",
+        "port": 80,
+        "protocol": "TCP",
+        "targetPort": 8080
+      },
+      {
+        "name": "extra",
+        "port": 8082,
+        "protocol": "TCP",
+        "targetPort": 8082
+      }
+    ],
+    "selector": {
+      "name": "python"
+    },
+    "sessionAffinity": "None",
+    "type": "ClusterIP"
+  }
+}

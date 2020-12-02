@@ -1,0 +1,25 @@
+         static | applicationDeploymentRef: "utv/python"
+         static | configVersion: "master"
+         static | applicationDeploymentId: "1234567890"
+     about.json | schemaVersion: "v1"
+     about.json | type: "deploy"
+utv/python.json | applicationPlatform: "python"
+     about.json | affiliation: "paas"
+     about.json | segment: "aurora"
+ utv/about.json | cluster: "utv"
+                | permissions:
+     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+     folderName | envName: "utv"
+       fileName | name: "python"
+utv/python.json | groupId: "org.test"
+                | databaseDefaults:
+utv/python.json |   tryReuse: true
+utv/python.json | database: true
+utv/python.json | version: "1"
+       fileName | artifactId: "python"
+utv/python.json | route: true
+utv/python.json | s3: true
+                | s3Defaults:
+utv/python.json |   bucketName: "myBucket"
+utv/python.json |   objectArea: "default"
+utv/python.json | sts: true
