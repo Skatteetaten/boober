@@ -53,7 +53,6 @@ class PreStopFeature : Feature {
         resources.forEach {
             it.resource.allNonSideCarContainers.forEach { container ->
                 modifyResource(it, "Added preStop exec")
-                // TODO: this will overwrite if we have templates with lifecycle?
                 container.lifecycle = containerLifcecyle
             }
 
