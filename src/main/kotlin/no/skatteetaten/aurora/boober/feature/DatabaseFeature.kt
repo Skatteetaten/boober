@@ -220,7 +220,6 @@ class DatabaseFeature(
 
 abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
-    // TODO: rewrite to not use cmd potentially?
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
         return mapOf("databases" to findDatabases(spec))
     }
