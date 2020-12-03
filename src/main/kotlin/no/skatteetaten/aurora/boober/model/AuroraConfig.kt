@@ -117,7 +117,6 @@ data class AuroraConfig(
             throw PreconditionFailureException("The fileName=$name already exist in this AuroraConfig.")
         }
 
-
         val currentFile = indexedValue.value
 
         if (currentFile.version != previousVersion) {
