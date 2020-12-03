@@ -62,7 +62,6 @@ class DatabaseDisabledFeature(
             return listOf(IllegalArgumentException("Databases are not supported in this cluster"))
         }
         return emptyList()
-
     }
 }
 
