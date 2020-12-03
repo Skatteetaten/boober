@@ -112,7 +112,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
         }"""
             )
         }.singleApplicationError(
-            "Application simple in environment utv have duplicated targets. target=simple-paas-utv is duplicated in routes simple-foo,simple-bar."
+            "Application simple in environment utv have duplicated host+path configurations. host=simple-paas-utv is not unique. Remove the configuration from one of the following routes simple-foo,simple-bar."
         )
     }
 
