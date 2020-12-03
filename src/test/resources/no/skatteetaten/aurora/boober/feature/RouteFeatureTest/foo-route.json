@@ -7,8 +7,8 @@
   },
   "spec": {
     "host": "simple-foo.test.foo",
-    "port" : {
-      "targetPort" : "http"
+    "port": {
+      "targetPort": "http"
     },
     "to": {
       "kind": "Service",

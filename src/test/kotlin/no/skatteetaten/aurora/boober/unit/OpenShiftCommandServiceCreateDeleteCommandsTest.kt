@@ -8,7 +8,6 @@ import com.fkorotkov.kubernetes.newConfigMapList
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import java.time.Instant
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -23,6 +22,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.ResponseEntity
+import java.time.Instant
 
 class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
 

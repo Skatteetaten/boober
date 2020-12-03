@@ -4,10 +4,12 @@ Content-Type: application/json
 
 {
   "name": "paas",
-  "files": [{
-      "name" : "dbh/referanse.json",
-      "contents" : " { \"type\" : \"foobar\" }"
-  }]
+  "files": [
+    {
+      "name": "dbh/referanse.json",
+      "contents": " { \"type\" : \"foobar\" }"
+    }
+  ]
 }
 
 ###

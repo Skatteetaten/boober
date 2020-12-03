@@ -536,7 +536,7 @@
         }
       ]
     },
-    "objectArea" : {
+    "objectArea": {
       "source": "simple.json",
       "value": "default",
       "sources": [

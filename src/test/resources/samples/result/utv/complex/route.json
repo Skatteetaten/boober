@@ -3,7 +3,7 @@
   "kind": "Route",
   "metadata": {
     "labels": {
-      "operationScope" : "aos-4016",
+      "operationScope": "aos-4016",
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
@@ -24,8 +24,8 @@
   },
   "spec": {
     "host": "komplex-paas-utv.test",
-    "port" : {
-      "targetPort" : "http"
+    "port": {
+      "targetPort": "http"
     },
     "tls": {
       "insecureEdgeTerminationPolicy": "Allow",

@@ -2,13 +2,13 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
+import java.io.File
+import java.nio.charset.Charset
 
 data class AuroraConfig(
     val files: List<AuroraConfigFile>,
@@ -43,7 +43,8 @@ data class AuroraConfig(
     }
 
     private fun findDuplicateFiles(): Map<String, List<String>> {
-        return files.groupBy { it.name.removeExtension() }.filter { it.value.size > 1 }.mapValues { it.value.map { it.name } }
+        return files.groupBy { it.name.removeExtension() }.filter { it.value.size > 1 }
+            .mapValues { it.value.map { it.name } }
     }
 
     fun getApplicationDeploymentRefs(): List<ApplicationDeploymentRef> {
@@ -51,7 +52,8 @@ data class AuroraConfig(
         // ensure that the filename is not duplicated
         val duplicateFiles = findDuplicateFiles()
         if (duplicateFiles.isNotEmpty()) {
-            val errorMessages: List<String> = duplicateFiles.map { it.value.joinToString(separator = ", ", prefix = "[", postfix = "]") }
+            val errorMessages: List<String> =
+                duplicateFiles.map { it.value.joinToString(separator = ", ", prefix = "[", postfix = "]") }
             val errorMessage = errorMessages.joinToString(" and ")
             throw AuroraDeploymentSpecValidationException("The following files are ambigious $errorMessage")
         }

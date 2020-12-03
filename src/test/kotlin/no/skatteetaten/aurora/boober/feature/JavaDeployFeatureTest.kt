@@ -72,12 +72,12 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createCustomAuroraDeploymentContext(
-                    ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
-                    "about.json" to FEATURE_ABOUT,
-                    "this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to """{ "groupId" : "org.test" }""",
-                    "utv/about.json" to "{}",
-                    "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
-                            """{ "name" : "foo", "artifactId" : "foo", "version" : "1" }"""
+                ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
+                "about.json" to FEATURE_ABOUT,
+                "this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to """{ "groupId" : "org.test" }""",
+                "utv/about.json" to "{}",
+                "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
+                    """{ "name" : "foo", "artifactId" : "foo", "version" : "1" }"""
             )
         }.isSuccess()
     }
@@ -87,12 +87,12 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createCustomAuroraDeploymentContext(
-                    ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
-                    "about.json" to FEATURE_ABOUT,
-                    "this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to """{ "groupId" : "org.test" }""",
-                    "utv/about.json" to "{}",
-                    "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
-                            """{ "name" : "foo", "version" : "1" }"""
+                ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
+                "about.json" to FEATURE_ABOUT,
+                "this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to """{ "groupId" : "org.test" }""",
+                "utv/about.json" to "{}",
+                "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
+                    """{ "name" : "foo", "version" : "1" }"""
             )
         }.singleApplicationError("ArtifactId must be set and be shorter then 50 characters")
     }
@@ -100,9 +100,11 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
     @Test
     fun `Fails when envFile does not start with about`() {
         assertThat {
-            createAuroraDeploymentContext("""{
+            createAuroraDeploymentContext(
+                """{
                 "envFile" : "foo.json"
-            }""")
+            }"""
+            )
         }.singleApplicationError("envFile must start with about")
     }
 }

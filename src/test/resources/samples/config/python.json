@@ -6,7 +6,7 @@
     "tryReuse": true
   },
   "database": true,
-  "s3Defaults" : {
+  "s3Defaults": {
     "bucketName": "myBucket",
     "objectArea": "default"
   },

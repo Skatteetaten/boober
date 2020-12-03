@@ -17,15 +17,15 @@ fun DeploymentConfig.findImageChangeTriggerTagName(): String? {
 }
 
 fun HasMetadata.containersWithName(name: String): List<Container> {
-        val containers = when (this) {
-            is Deployment -> this.spec.template.spec.containers
-            is DeploymentConfig -> this.spec.template.spec.containers
-            is Job -> this.spec.template.spec.containers
-            is CronJob -> this.spec.jobTemplate.spec.template.spec.containers
-            else -> emptyList()
-        }
-        return containers.filter { it.name == name }
+    val containers = when (this) {
+        is Deployment -> this.spec.template.spec.containers
+        is DeploymentConfig -> this.spec.template.spec.containers
+        is Job -> this.spec.template.spec.containers
+        is CronJob -> this.spec.jobTemplate.spec.template.spec.containers
+        else -> emptyList()
     }
+    return containers.filter { it.name == name }
+}
 
 val HasMetadata.allNonSideCarContainers: List<Container>
     get() {
