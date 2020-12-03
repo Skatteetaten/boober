@@ -5,12 +5,32 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.deepSet
+import no.skatteetaten.aurora.boober.utils.toMultiMap
 import org.apache.commons.text.StringSubstitutor
 
 data class AuroraDeploymentSpec(
     val fields: Map<String, AuroraConfigField>,
     val replacer: StringSubstitutor
 ) {
+
+    fun findSubKeys(name: String): Set<String> {
+        val prefix = if (!name.endsWith("/")) {
+            "$name/"
+        } else name
+
+        return fields.keys
+            .filter { it.startsWith(prefix) }
+            .map { it.removePrefix(prefix).substringBefore("/") }
+            .toSet()
+    }
+
+    inline fun <reified T> associateSubKeys(
+        name: String
+    ): Map<String, T> {
+        return this.findSubKeys(name).associateWith {
+            this.get<T>("$name/$it")
+        }
+    }
 
     fun getConfigEnv(configExtractors: List<AuroraConfigFieldHandler>): Map<String, String> {
         return configExtractors.filter { it.name.count { it == '/' } == 1 }.associate {
@@ -77,6 +97,11 @@ data class AuroraDeploymentSpec(
     }
 
     fun hasSubKeys(name: String): Boolean = getSubKeys(name).isNotEmpty()
+
+    // Note that we cannot replace the keys here.
+    fun findSubKeysRaw(name: String): Set<String> {
+        return fields.filter { it.key.startsWith("$name/") }.keys.map { it.split("/")[1] }.toSet()
+    }
 
     fun getSubKeys(name: String): Map<String, AuroraConfigField> {
         return fields
@@ -198,7 +223,7 @@ data class AuroraDeploymentSpec(
                 staticFields + applicationDeploymentStaticField + fields
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
-                .groupBy({ it.first }) { it.second }
+                .toMultiMap()
                 .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
             return AuroraDeploymentSpec(
                 fields = groupedFields,

@@ -114,7 +114,7 @@ class DeploymentConfigFeature : Feature {
                 }
 
                 dc.spec.template.metadata.labels = dc.spec.template.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
-                dc.spec.template.metadata.annotations = mapOf(
+                dc.spec.template.metadata.annotations = mutableMapOf(
                     ANNOTATION_BOOBER_DEPLOYTAG to adc.dockerTag
                 )
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels

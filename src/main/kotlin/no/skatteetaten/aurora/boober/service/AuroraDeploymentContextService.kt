@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.BigIpFeature
 import no.skatteetaten.aurora.boober.feature.CertificateFeature
 import no.skatteetaten.aurora.boober.feature.ConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
@@ -23,10 +24,17 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.validate
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.parallelMap
+import no.skatteetaten.aurora.boober.utils.toMultiMap
 import org.apache.commons.text.StringSubstitutor
 import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
+
+typealias UrlToApplicationDeploymentContextMultimap = Map<String, List<AuroraDeploymentContext>>
+
+typealias UrlAndAuroraDeploymentContextList = List<Pair<String, AuroraDeploymentContext>>
+
+typealias AuroraDeploymentContextUrlMultimap = Map<AuroraDeploymentContext, List<String>>
 
 @Service
 class AuroraDeploymentContextService(
@@ -56,6 +64,7 @@ class AuroraDeploymentContextService(
                 null to ContextErrors(cmd, listOf(e))
             }
         }
+
         val errors = result.mapNotNull { it.second }
         if (errors.isNotEmpty()) {
             val errorMessages = errors.flatMap { err ->
@@ -64,7 +73,54 @@ class AuroraDeploymentContextService(
             logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
             throw MultiApplicationValidationException(errors)
         }
-        return result.mapNotNull { it.first }
+
+        val contexts = result.mapNotNull { it.first }
+
+        val adcWithDuplicatedUrls: AuroraDeploymentContextUrlMultimap = findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts)
+
+        return contexts.map {
+            if (adcWithDuplicatedUrls.containsKey(it)) {
+                it.copy(warnings = it.warnings.addIfNotNull(adcWithDuplicatedUrls[it]))
+            } else it
+        }
+    }
+
+    private fun findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts: List<AuroraDeploymentContext>): AuroraDeploymentContextUrlMultimap {
+
+        val externalRoutes: UrlAndAuroraDeploymentContextList = findContextExternalUrlPairs(contexts)
+
+        val duplicatedHosts: UrlToApplicationDeploymentContextMultimap = findDuplicatedUrlsWithADC(externalRoutes)
+
+        return createContextWarningMap(duplicatedHosts)
+    }
+
+    // create a warning for each host/context combination and group them by context
+    private fun createContextWarningMap(duplicatedHosts: UrlToApplicationDeploymentContextMultimap): AuroraDeploymentContextUrlMultimap {
+        return duplicatedHosts.flatMap { (host, contexts) ->
+            val adrString = contexts.map { it.cmd.applicationDeploymentRef.toString() }.distinct()
+            val warningString = "The external url=$host is not uniquely defined. Only the last applied configuration will be valid. The following configurations references it=$adrString"
+            contexts.map {
+                it to warningString
+            }
+        }.toMultiMap()
+    }
+
+    // find all the externalHosts both configured as annotations and on bigip feature
+    private fun findContextExternalUrlPairs(contexts: List<AuroraDeploymentContext>): UrlAndAuroraDeploymentContextList {
+        return contexts.flatMap { adc ->
+            adc.features.flatMap { (feature, spec) ->
+                when (feature) {
+                    is RouteFeature -> feature.fetchExternalHostsAndPaths(spec)
+                    is BigIpFeature -> feature.fetchExternalHostsAndPaths(spec)
+                    else -> emptyList()
+                }
+            }.map { it to adc }
+        }
+    }
+
+    // group them by externalHost+path and filter out any instance that is there more then once. Note that one ADR can be in this list several times if it has configured more routes or bigip annotation that conflicts
+    private fun findDuplicatedUrlsWithADC(externalRoutes: UrlAndAuroraDeploymentContextList): UrlToApplicationDeploymentContextMultimap {
+        return externalRoutes.toMultiMap().filter { it.value.size > 1 }
     }
 
     fun findApplicationRef(deployCommand: AuroraContextCommand): ApplicationRef {
@@ -168,7 +224,7 @@ class AuroraDeploymentContextService(
 
         fun logWarning(warning: String) {
             val auroraConfigRef = cmd.auroraConfigRef
-            logger.info("AuroraConfigWarning auroraConfig=${auroraConfigRef.name} auroraConfigGitReference=${auroraConfigRef.refName} deploymentReference=${cmd.applicationDeploymentRef} warning=$warning")
+            logger.debug("AuroraConfigWarning auroraConfig=${auroraConfigRef.name} auroraConfigGitReference=${auroraConfigRef.refName} deploymentReference=${cmd.applicationDeploymentRef} warning=$warning")
         }
 
         val webSeal = features.filter { (feature, spec) ->

@@ -1,0 +1,56 @@
+         static | applicationDeploymentRef: "utv/python"
+         static | configVersion: "master"
+         static | applicationDeploymentId: "1234567890"
+     about.json | schemaVersion: "v1"
+     about.json | type: "deploy"
+        default | deployState: "deploymentConfig"
+utv/python.json | applicationPlatform: "python"
+     about.json | affiliation: "paas"
+     about.json | segment: "aurora"
+ utv/about.json | cluster: "utv"
+                | permissions:
+     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+     folderName | envName: "utv"
+       fileName | name: "python"
+        default | certificate: false
+utv/python.json | groupId: "org.test"
+                | databaseDefaults:
+        default |   flavor: "ORACLE_MANAGED"
+        default |   generate: true
+utv/python.json |   tryReuse: true
+        default |   name: "@name@"
+utv/python.json | database: true
+        default | management: true
+        default | alarm: true
+        default | pause: false
+        default | debug: false
+utv/python.json | version: "1"
+                | resources:
+                |   cpu:
+        default |     min: "10m"
+        default |     max: "2000m"
+                |   memory:
+        default |     min: "128Mi"
+        default |     max: "512Mi"
+       fileName | artifactId: "python"
+                | deployStrategy:
+        default |   type: "rolling"
+        default |   timeout: 180
+        default | replicas: 1
+        default | prometheus: true
+        default | readiness: true
+        default | liveness: false
+utv/python.json | route: true
+                | routeDefaults:
+        default |   host: "@name@-@affiliation@-@env@"
+                |   tls:
+        default |     enabled: false
+        default |     insecurePolicy: "None"
+        default |     termination: "edge"
+utv/python.json | s3: true
+                | s3Defaults:
+utv/python.json |   bucketName: "myBucket"
+utv/python.json |   objectArea: "default"
+utv/python.json | sts: true
+        default | toxiproxy: false
+        default | webseal: false

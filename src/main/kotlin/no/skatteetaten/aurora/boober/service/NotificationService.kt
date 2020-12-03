@@ -6,6 +6,8 @@ import no.skatteetaten.aurora.boober.feature.version
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.Notification
 import no.skatteetaten.aurora.boober.model.openshift.NotificationType
+import no.skatteetaten.aurora.boober.utils.findResourceByType
+import no.skatteetaten.aurora.boober.utils.toMultiMap
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -20,8 +22,8 @@ class NotificationService(
         deployResults: List<AuroraDeployResult>
     ): List<AuroraDeployResult> {
         val deployResultsWithNotifications = deployResults
-            .mapToListOfDeployResultAndNotification()
-            .groupDeployResultsByNotification()
+            .mapToListOfNotificationAndDeployResult()
+            .toMultiMap()
             .filterKeys {
                 it.type == NotificationType.Mattermost
             }
@@ -37,10 +39,6 @@ class NotificationService(
         return deployResultWithoutNotifications + deployResultsWithNotifications
     }
 
-    private fun List<Pair<AuroraDeployResult, Notification>>.groupDeployResultsByNotification(): Map<Notification, List<AuroraDeployResult>> =
-        this.groupBy(keySelector = { (_, notification) -> notification }) { (deployResult, _) ->
-            deployResult
-        }
 
     private fun List<AuroraDeployResult>.asListOfDeploysWithVersion() =
         this.joinToString(separator = "\n") { deployResult ->
@@ -104,17 +102,15 @@ class NotificationService(
 
     private fun AuroraDeployResult.findApplicationDeploymentSpec() = this.deployCommand
         .resources
-        .map { it.resource }
-        .find { it is ApplicationDeployment }
-        .let { it as ApplicationDeployment }
+        .findResourceByType<ApplicationDeployment>()
         .spec
 
-    private fun List<AuroraDeployResult>.mapToListOfDeployResultAndNotification(): List<Pair<AuroraDeployResult, Notification>> =
+    private fun List<AuroraDeployResult>.mapToListOfNotificationAndDeployResult(): List<Pair<Notification, AuroraDeployResult>> =
         this.flatMap { result ->
             val notifications = result.findApplicationDeploymentSpec().notifications ?: emptySet()
 
             notifications.map {
-                result to it
+                it to result
             }
         }
 }

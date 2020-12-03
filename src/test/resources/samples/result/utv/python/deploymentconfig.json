@@ -1,0 +1,296 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "python",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "python",
+      "deployTag": "1",
+      "booberDeployId": "deploy1"
+    },
+    "name": "python",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "python",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "python"
+    },
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "metadata": {
+        "annotations": {
+          "boober.skatteetaten.no/deployTag": "1"
+        },
+        "labels": {
+          "operationScope" : "aos-4016",
+          "app": "python",
+          "updatedBy": "hero",
+          "updatedAt": "0",
+          "affiliation": "paas",
+          "name": "python",
+          "deployTag": "1"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HTTP_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8081"
+              },
+              {
+                "name": "EXTRA_HTTP_PORT",
+                "value": "8082"
+              },
+              {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
+              },
+              {
+                "name": "PYTHON_DB",
+                "value": "/u01/secrets/app/python-db/info"
+              },
+              {
+                "name": "PYTHON_DB_PROPERTIES",
+                "value": "/u01/secrets/app/python-db/db.properties"
+              },
+              {
+                "name": "DB",
+                "value": "/u01/secrets/app/python-db/info"
+              },
+              {
+                "name": "DB_PROPERTIES",
+                "value": "/u01/secrets/app/python-db/db.properties"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "python"
+              },
+              {
+                "name": "ROUTE_NAME",
+                "value": "python-paas-utv.test"
+              },
+              {
+                "name": "ROUTE_URL",
+                "value": "http://python-paas-utv.test"
+              },
+              {
+              "name" : "S3_BUCKETS_DEFAULT_SERVICEENDPOINT",
+              "valueFrom" : {
+                "secretKeyRef" : {
+                  "key" : "serviceEndpoint",
+                  "name" : "python-default-s3",
+                  "optional" : false
+                }
+              }
+              }, {
+                "name" : "S3_BUCKETS_DEFAULT_ACCESSKEY",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "accessKey",
+                    "name" : "python-default-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETS_DEFAULT_SECRETKEY",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "secretKey",
+                    "name" : "python-default-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETS_DEFAULT_BUCKETREGION",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "bucketRegion",
+                    "name" : "python-default-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETS_DEFAULT_BUCKETNAME",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "bucketName",
+                    "name" : "python-default-s3",
+                    "optional" : false
+                  }
+                }
+              }, {
+                "name" : "S3_BUCKETS_DEFAULT_OBJECTPREFIX",
+                "valueFrom" : {
+                  "secretKeyRef" : {
+                    "key" : "objectPrefix",
+                    "name" : "python-default-s3",
+                    "optional" : false
+                  }
+                }
+              },
+              {
+                "name": "STS_CERTIFICATE_URL",
+                "value": "/u01/secrets/app/python-sts/certificate.crt"
+              },
+              {
+                "name": "STS_PRIVATE_KEY_URL",
+                "value": "/u01/secrets/app/python-sts/privatekey.key"
+              },
+              {
+                "name": "STS_KEYSTORE_DESCRIPTOR",
+                "value": "/u01/secrets/app/python-sts/descriptor.properties"
+              },
+              {
+                "name": "VOLUME_PYTHON_STS",
+                "value": "/u01/secrets/app/python-sts"
+              },
+              {
+                "name": "STS_DISCOVERY_URL",
+                "value": "https://bigbird-utv.org"
+              }
+            ],
+            "imagePullPolicy": "IfNotPresent",
+            "name": "python-python",
+            "ports": [
+              {
+                "containerPort": 8080,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8081,
+                "name": "management",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8082,
+                "name": "extra",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8080
+              },
+              "timeoutSeconds": 1
+            },
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "128Mi"
+              }
+            },
+            "securityContext": {
+              "privileged": false
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              },
+              {
+                "mountPath": "/u01/secrets/app/python-db",
+                "name": "python-db"
+              },
+              {
+                "mountPath": "/u01/secrets/app/python-sts",
+                "name": "python-sts"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "volumes": [
+          {
+            "emptyDir": {},
+            "name": "application-log-volume"
+          },
+          {
+            "name": "python-db",
+            "secret": {
+              "secretName": "python-db"
+            }
+          },
+          {
+            "name": "python-sts",
+            "secret": {
+              "secretName": "python-sts"
+            }
+          }
+        ]
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "python-python"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "python:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "operationScope" : "aos-4016",
+      "app": "python",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "python",
+      "id": "1234567890",
+      "applicationId" : "6c5d4d2a69e72c1b258d92884268777d59f38183",
+      "booberDeployId": "deploy1"
+    },
+    "name": "python",
+    "namespace": "paas-utv",
+    "uid": "123-123"
+  },
+  "spec": {
+    "applicationId": "6c5d4d2a69e72c1b258d92884268777d59f38183",
+    "updatedAt": "1970-01-01T00:00:00Z",
+    "selector": {
+      "name": "python"
+    },
+    "applicationDeploymentId": "1234567890",
+    "applicationName": "python",
+    "runnableType" : "DeploymentConfig",
+    "applicationDeploymentName": "python",
+    "databases": [
+      "fd59dba9-7d67-4ea2-bb98-081a5df8c387"
+    ],
+    "managementPath": ":8081/actuator",
+    "deployTag": "1",
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "python"
+      },
+      "auroraConfig": {
+        "name": "paas",
+        "refName": "master",
+        "resolvedRef": "123abb"
+      }
+    }
+  }
+}

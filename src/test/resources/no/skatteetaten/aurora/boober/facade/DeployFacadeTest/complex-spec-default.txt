@@ -116,6 +116,8 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     enabled: true
             complex.json |     host: "foobar"
                          |     annotations:
+            complex.json |       wembley.sits.no|externalHost: "test.ske"
+            complex.json |       wembley.sits.no|apiPaths: "/api"
             complex.json |       haproxy.router.openshift.io|timeout: "30s"
                          | routeDefaults:
                  default |   host: "@name@-@affiliation@-@env@"

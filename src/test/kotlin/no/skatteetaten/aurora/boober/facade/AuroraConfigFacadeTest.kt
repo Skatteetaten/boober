@@ -316,6 +316,90 @@ class AuroraConfigFacadeTest(
     }
 
     @Test
+    fun `validate duplicated host names `() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+        val config = getAuroraConfigSamples()
+        val newConfig = config.copy(files = config.files.filter { it.name != "utv/simple.json" } + AuroraConfigFile(
+            "utv/simple.yaml", """
+              "bigip" : {
+                "service" : "simple-utv",
+                "externalHost" :"test.ske",
+                "apiPaths": ["/api"]
+              }""".trimIndent()
+        ))
+
+        val validated = facade.validateAuroraConfig(
+            newConfig,
+            resourceValidation = false,
+            auroraConfigRef = auroraConfigRef
+        )
+
+        val warnings = validated[ApplicationDeploymentRef("utv", "complex")]
+        assertThat(warnings?.size).isEqualTo(4)
+    }
+
+    @Test
+    fun `validate duplicated fqdn host names `() {
+
+        openShiftMock {
+
+            rule({ path?.endsWith("/groups") }) {
+                mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/users") }) {
+                mockJsonFromFile("users.json")
+            }
+        }
+        val config = getAuroraConfigSamples()
+        val newConfig = config.copy(files = config.files
+            .filter { it.name != "utv/simple.json" }
+            .filter { it.name != "utv/whoami.json" } +
+            AuroraConfigFile(
+                "utv/simple.json", """
+              {
+                "route" : {
+                    "simple" : {
+                        "host" : "foo.bar.baz",
+                        "fullyQualifiedHost" : true
+                    }
+                }
+              }""".trimIndent()
+            ) +
+            AuroraConfigFile(
+            "utv/whoami.json", """
+              {
+                "route" : {
+                    "whoami" : {
+                        "host" : "foo.bar.baz",
+                        "fullyQualifiedHost" : true
+                    }
+                }
+              }""".trimIndent()
+        ))
+
+        val validated = facade.validateAuroraConfig(
+            newConfig,
+            resourceValidation = false,
+            auroraConfigRef = auroraConfigRef
+        )
+
+        val warnings = validated[ApplicationDeploymentRef("utv", "simple")] ?: emptyList()
+        assertThat(warnings.size).isEqualTo(1)
+        assertThat(warnings[0]).isEqualTo("The external url=foo.bar.baz is not uniquely defined. Only the last applied configuration will be valid. The following configurations references it=[utv/simple, utv/whoami]")
+    }
+
+    @Test
     fun `validate sample aurora config full`() {
 
         openShiftMock {
