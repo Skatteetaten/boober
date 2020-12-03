@@ -546,6 +546,22 @@
         } ]
       },
       "annotations" : {
+        "wembley.sits.no|externalHost" : {
+          "source" : "complex.json",
+          "value" : "test.ske",
+          "sources" : [ {
+            "name" : "complex.json",
+            "value" : "test.ske"
+          } ]
+        },
+        "wembley.sits.no|apiPaths" : {
+          "source" : "complex.json",
+          "value" : "/api",
+          "sources" : [ {
+            "name" : "complex.json",
+            "value" : "/api"
+          } ]
+        },
         "haproxy.router.openshift.io|timeout" : {
           "source" : "complex.json",
           "value" : "30s",
