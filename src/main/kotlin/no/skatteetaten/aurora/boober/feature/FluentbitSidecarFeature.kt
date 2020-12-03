@@ -25,6 +25,8 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
 
@@ -54,7 +56,8 @@ const val parsersFileName = "parsers.conf"
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
-@org.springframework.stereotype.Service
+@ConditionalOnProperty("\${splunk.hec.url}")
+@Service
 class FluentbitSidecarFeature(
     @Value("\${splunk.hec.token}") val hecToken: String,
     @Value("\${splunk.hec.url}") val splunkUrl: String,

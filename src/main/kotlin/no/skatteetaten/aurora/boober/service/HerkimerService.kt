@@ -62,7 +62,7 @@ data class ResourceHerkimer(
     val name: String,
     val kind: ResourceKind,
     val ownerId: String,
-    val claims: List<ResourceClaimHerkimer>? = null,
+    val claims: List<ResourceClaimHerkimer>,
     val parentId: String?,
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
@@ -82,7 +82,7 @@ data class ResourceClaimHerkimer(
 )
 
 enum class ResourceKind {
-    MinioPolicy, MinioObjectArea, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema
+    MinioPolicy, MinioObjectArea, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema, DatabaseInstance
 }
 
 data class ResourcePayload(
