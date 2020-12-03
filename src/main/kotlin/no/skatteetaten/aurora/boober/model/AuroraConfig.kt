@@ -112,7 +112,14 @@ data class AuroraConfig(
             return Pair(newFile, this.copy(files = files))
         }
 
+        // We are adding a new file
+        if (previousVersion == null) {
+            throw PreconditionFailureException("The fileName=$name already exist in this AuroraConfig.")
+        }
+
+
         val currentFile = indexedValue.value
+
         if (currentFile.version != previousVersion) {
             throw AuroraVersioningException(this, currentFile, previousVersion)
         }
