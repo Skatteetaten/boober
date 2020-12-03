@@ -275,7 +275,7 @@ class AuroraConfigTest : ResourceLoader() {
             auroraConfig.updateFile("about.json", updates)
         }.isFailure().all {
             isInstanceOf(PreconditionFailureException::class)
-            messageContains("The fileName=about.json already exist in this AuroraConfig.")
+            messageContains("The fileName=about.json already exists in this AuroraConfig.")
         }
     }
 

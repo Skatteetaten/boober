@@ -114,7 +114,7 @@ data class AuroraConfig(
 
         // We are adding a new file
         if (previousVersion == null) {
-            throw PreconditionFailureException("The fileName=$name already exist in this AuroraConfig.")
+            throw PreconditionFailureException("The fileName=$name already exists in this AuroraConfig.")
         }
 
         val currentFile = indexedValue.value
