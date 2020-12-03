@@ -375,17 +375,19 @@ abstract class S3FeatureTemplate : Feature {
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName", defaultValue = ""),
             AuroraConfigFieldHandler(
                 "$FEATURE_DEFAULTS_FIELD_NAME/objectArea",
-                { objectAreaPatternValidation(it) },
+                { objectAreaPatternValidation(it, allowEmpty = true) },
                 defaultValue = ""
             )
         )
 
-    private fun objectAreaPatternValidation(it: JsonNode?) =
-        it.pattern(
-            pattern = "[a-z0-9-.]+",
+    private fun objectAreaPatternValidation(it: JsonNode?, allowEmpty: Boolean = false): Exception? {
+        val allowEmptyRegex = if (allowEmpty) "^$|" else ""
+        return it.pattern(
+            pattern = "$allowEmptyRegex[a-z0-9-.]+",
             message = "s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it?.toPrettyString()}",
             required = false
         )
+    }
 }
 
 private data class S3BucketObjectArea(
