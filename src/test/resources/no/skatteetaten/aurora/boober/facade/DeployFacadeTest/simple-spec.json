@@ -209,15 +209,23 @@
       "value": "myBucket",
       "sources": [
         {
+          "name": "default",
+          "value": ""
+        },
+        {
           "name": "simple.json",
           "value": "myBucket"
         }
       ]
     },
-    "objectArea" : {
+    "objectArea": {
       "source": "simple.json",
       "value": "default",
       "sources": [
+        {
+          "name": "default",
+          "value": ""
+        },
         {
           "name": "simple.json",
           "value": "default"

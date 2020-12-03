@@ -184,13 +184,15 @@
         }
       ]
     },
-    "tryReuse" : {
-      "source" : "default",
-      "value" : false,
-      "sources" : [ {
-        "name" : "default",
-        "value" : false
-      } ]
+    "tryReuse": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
     },
     "name": {
       "source": "default",
@@ -518,6 +520,28 @@
         "value": false
       }
     ]
+  },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    },
+    "objectArea": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    }
   },
   "sts": {
     "source": "default",

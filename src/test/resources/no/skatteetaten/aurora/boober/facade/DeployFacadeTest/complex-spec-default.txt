@@ -122,6 +122,9 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |     bucketName: "minYndlingsBucket"
                  default |     objectArea: "default"
                  default |     enabled: true
+                         | s3Defaults:
+                 default |   bucketName: ""
+                 default |   objectArea: ""
                          | secretVaults:
                          |   foo:
                  default |     name: "foo"
