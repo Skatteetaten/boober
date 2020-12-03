@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
@@ -39,8 +40,8 @@ val emailRegex: Pattern = compile(
         ")+"
 )
 
-val emailNotificationsField = "notification/email"
-val mattermostNotificationsField = "notification/mattermost"
+const val emailNotificationsField = "notification/email"
+const val mattermostNotificationsField = "notification/mattermost"
 
 @Service
 class ApplicationDeploymentFeature : Feature {
@@ -49,23 +50,7 @@ class ApplicationDeploymentFeature : Feature {
         return setOf(
             AuroraConfigFieldHandler("message"),
             AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
-        ) + findNotificationHandlers(cmd.applicationFiles).toSet()
-    }
-
-    private fun findNotificationHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
-        val mattermostHandlers = applicationFiles.findSubKeys(mattermostNotificationsField).flatMap { channel_id ->
-            listOf(
-                AuroraConfigFieldHandler(
-                    "$mattermostNotificationsField/$channel_id/enabled",
-                    validator = { it.boolean() })
-            )
-        }
-        val emailHandlers = applicationFiles.findSubKeys(emailNotificationsField).flatMap { email ->
-            listOf(
-                AuroraConfigFieldHandler("$emailNotificationsField/$email/enabled", validator = { it.boolean() })
-            )
-        }
-        return emailHandlers + mattermostHandlers
+        ) + findAllNotificationHandlers(cmd.applicationFiles)
     }
 
     override fun validate(
@@ -110,11 +95,52 @@ class ApplicationDeploymentFeature : Feature {
         return setOf(generateResource(resource))
     }
 
+    private fun AuroraDeploymentSpec.isNotificationLocationEnabled(notificationLocationField: String) =
+        this.getOrNull<Boolean>(notificationLocationField) ?: this["$notificationLocationField/enabled"]
+
+    private fun findAllNotificationHandlers(applicationFiles: List<AuroraConfigFile>): Set<AuroraConfigFieldHandler> {
+        val mattermostHandlers = applicationFiles.findNotificationHandlers(mattermostNotificationsField)
+        val emailHandlers = applicationFiles.findNotificationHandlers(emailNotificationsField)
+
+        return emailHandlers + mattermostHandlers
+    }
+
+    private fun List<AuroraConfigFile>.findNotificationHandlers(notificationField: String) =
+        this.findSubKeysExpanded(notificationField).flatMap { this.findNotificationHandler(it) }.toSet()
+
+    private fun List<AuroraConfigFile>.findNotificationHandler(
+        notificationLocationKey: String
+    ): List<AuroraConfigFieldHandler> {
+        val expandedMattermostKeys = this.findSubKeys(notificationLocationKey)
+        return if (expandedMattermostKeys.isEmpty()) listOf(
+            AuroraConfigFieldHandler(
+                notificationLocationKey,
+                validator = { it.boolean() }
+            )
+        )
+        else listOf(
+            AuroraConfigFieldHandler(
+                "$notificationLocationKey/enabled",
+                validator = { it.boolean() },
+                defaultValue = true
+            )
+        )
+    }
+
+    private fun AuroraDeploymentSpec.findNotificationsByType(
+        field: String,
+        type: NotificationType
+    ): List<Notification> =
+        this.getSubKeyValues(field).filter {
+            isNotificationLocationEnabled(notificationLocationField = "$field/$it")
+        }.map {
+            Notification(it, type)
+        }
+
     private fun AuroraDeploymentSpec.findNotifications(): Set<Notification>? {
-        val mattermost =
-            this.getSubKeyValues(mattermostNotificationsField).map { Notification(it, NotificationType.Mattermost) }
-        val email = this.getSubKeyValues(emailNotificationsField).map { Notification(it, NotificationType.Email) }
-        val notifications = mattermost + email
+        val notifications =
+            this.findNotificationsByType(emailNotificationsField, NotificationType.Email) +
+                this.findNotificationsByType(mattermostNotificationsField, NotificationType.Mattermost)
 
         if (notifications.isEmpty()) {
             return null

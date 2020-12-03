@@ -37,6 +37,10 @@
           "value": true,
           "sources": [
             {
+              "name": "default",
+              "value": true
+            },
+            {
               "name": "whoami.json",
               "value": true
             }

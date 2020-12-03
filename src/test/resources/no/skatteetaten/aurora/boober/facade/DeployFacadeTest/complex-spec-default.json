@@ -57,6 +57,10 @@
           "value": true,
           "sources": [
             {
+              "name": "default",
+              "value": true
+            },
+            {
               "name": "complex.json",
               "value": true
             }
@@ -68,6 +72,10 @@
           "source": "complex.json",
           "value": true,
           "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
             {
               "name": "complex.json",
               "value": true
@@ -83,6 +91,10 @@
           "value": true,
           "sources": [
             {
+              "name": "default",
+              "value": true
+            },
+            {
               "name": "complex.json",
               "value": true
             }
@@ -94,6 +106,10 @@
           "source": "complex.json",
           "value": true,
           "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
             {
               "name": "complex.json",
               "value": true
@@ -1044,21 +1060,25 @@
         ]
       },
       "annotations": {
-        "wembley.sits.no|externalHost" : {
-          "source" : "complex.json",
-          "value" : "test.ske",
-          "sources" : [ {
-            "name" : "complex.json",
-            "value" : "test.ske"
-          } ]
+        "wembley.sits.no|externalHost": {
+          "source": "complex.json",
+          "value": "test.ske",
+          "sources": [
+            {
+              "name": "complex.json",
+              "value": "test.ske"
+            }
+          ]
         },
-        "wembley.sits.no|apiPaths" : {
-          "source" : "complex.json",
-          "value" : "/api",
-          "sources" : [ {
-            "name" : "complex.json",
-            "value" : "/api"
-          } ]
+        "wembley.sits.no|apiPaths": {
+          "source": "complex.json",
+          "value": "/api",
+          "sources": [
+            {
+              "name": "complex.json",
+              "value": "/api"
+            }
+          ]
         },
         "haproxy.router.openshift.io|timeout": {
           "source": "complex.json",

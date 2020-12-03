@@ -51,20 +51,20 @@
     "message": "Aurora <3",
     "notifications": [
       {
-        "notificationLocation": "test",
-        "type": "Mattermost"
-      },
-      {
-        "notificationLocation": "test2",
-        "type": "Mattermost"
-      },
-      {
         "notificationLocation": "foo@bar.no",
         "type": "Email"
       },
       {
         "notificationLocation": "ola@nordmann.net",
         "type": "Email"
+      },
+      {
+        "notificationLocation": "test",
+        "type": "Mattermost"
+      },
+      {
+        "notificationLocation": "test2",
+        "type": "Mattermost"
       }
     ]
   }

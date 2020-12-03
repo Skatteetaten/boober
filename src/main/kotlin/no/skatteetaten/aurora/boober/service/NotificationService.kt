@@ -39,7 +39,6 @@ class NotificationService(
         return deployResultWithoutNotifications + deployResultsWithNotifications
     }
 
-
     private fun List<AuroraDeployResult>.asListOfDeploysWithVersion() =
         this.joinToString(separator = "\n") { deployResult ->
             val adSpec = deployResult.findApplicationDeploymentSpec()

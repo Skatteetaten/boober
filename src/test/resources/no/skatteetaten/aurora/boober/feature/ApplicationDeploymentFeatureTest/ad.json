@@ -35,6 +35,18 @@
       {
         "notificationLocation": "foo@bar.no",
         "type": "Email"
+      },
+      {
+        "notificationLocation": "bar@foo.no",
+        "type": "Email"
+      },
+      {
+        "notificationLocation": "channel1",
+        "type": "Mattermost"
+      },
+      {
+        "notificationLocation": "channel2",
+        "type": "Mattermost"
       }
     ]
   }
