@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.deepSet
 import org.apache.commons.text.StringSubstitutor
+import java.lang.RuntimeException
 
 data class AuroraDeploymentSpec(
     val fields: Map<String, AuroraConfigField>,
@@ -112,7 +113,7 @@ data class AuroraDeploymentSpec(
         it.split("/")[1]
     }.distinct()
 
-    inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
+    inline operator fun <reified T> get(name: String): T = fields[name]?.value() ?: throw RuntimeException("Opps null value for key=$name")
 
     inline fun <reified T> getOrDefault(
         root: String,
