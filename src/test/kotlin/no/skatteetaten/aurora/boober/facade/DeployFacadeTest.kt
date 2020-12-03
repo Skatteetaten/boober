@@ -168,7 +168,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["whoami", "simple", "web", "ah", "complex", "job"])
+    @CsvSource(value = ["whoami", "simple", "web", "ah", "complex", "job", "python"])
     fun `deploy application`(app: String) {
 
         skapMock {

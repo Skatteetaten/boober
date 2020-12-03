@@ -12,40 +12,44 @@ import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.Container
+import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Volume
+import io.fabric8.kubernetes.api.model.PodTemplateSpec
+import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.notBlank
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 
+const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
+
+val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
 val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
 val AuroraDeploymentSpec.fluentParserName: String? get() = "${this.name}-fluent-parser"
 val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
-val hecTokenKey: String = "HEC_TOKEN"
-val splunkHostKey: String = "SPLUNK_HOST"
-val splunkPortKey: String = "SPLUNK_PORT"
+const val hecTokenKey: String = "HEC_TOKEN"
+const val splunkHostKey: String = "SPLUNK_HOST"
+const val splunkPortKey: String = "SPLUNK_PORT"
 
-val logApplication: String = "application"
-val logAuditText: String = "audit_text"
-val logAuditJson: String = "audit_json"
-val logSlow: String = "slow"
-val logGC: String = "gc"
-val logSensitive: String = "sensitive"
-val logStacktrace: String = "stacktrace"
-val logAccess: String = "access"
+const val logApplication: String = "application"
+const val logAuditText: String = "audit_text"
+const val logAuditJson: String = "audit_json"
+const val logSlow: String = "slow"
+const val logGC: String = "gc"
+const val logSensitive: String = "sensitive"
+const val logStacktrace: String = "stacktrace"
+const val logAccess: String = "access"
 val knownLogs: Set<String> =
     setOf(logApplication, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
 
-val parserMountPath = "/fluent-bit/parser"
-val parsersFileName = "parsers.conf"
+const val parserMountPath = "/fluent-bit/parser"
+const val parsersFileName = "parsers.conf"
 
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
@@ -54,7 +58,8 @@ Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configur
 class FluentbitSidecarFeature(
     @Value("\${splunk.hec.token}") val hecToken: String,
     @Value("\${splunk.hec.url}") val splunkUrl: String,
-    @Value("\${splunk.hec.port}") val splunkPort: String
+    @Value("\${splunk.hec.port}") val splunkPort: String,
+    @Value("\${splunk.fluentbit.image}") val fluentBitImage: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         val isOfType = header.type in listOf(
@@ -65,31 +70,10 @@ class FluentbitSidecarFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        val customHandlers = cmd.applicationFiles.findSubKeys("logging/custom").flatMap { key ->
-            listOf(
-                AuroraConfigFieldHandler(
-                    "logging/custom/$key/index",
-                    defaultValue = header.loggingIndex
-                ),
-                AuroraConfigFieldHandler(
-                    name = "logging/custom/$key/pattern",
-                    validator = { it.notBlank("pattern for logging/custom/$key must be set") }
-                ),
-                AuroraConfigFieldHandler(
-                    name = "logging/custom/$key/sourcetype",
-                    validator = { it.notBlank("sourcetype for logging/custom/$key must be set") }
-                )
-            )
-        }
-
-        val loggerHanlders = knownLogs.map { log ->
+        return knownLogs.map { log ->
             AuroraConfigFieldHandler("logging/loggers/$log")
         }
-
-        return listOf(
-            AuroraConfigFieldHandler("logging/index")
-        ).addIfNotNull(loggerHanlders)
-            .addIfNotNull(customHandlers)
+            .addIfNotNull(AuroraConfigFieldHandler("logging/index"))
             .toSet()
     }
 
@@ -150,25 +134,40 @@ class FluentbitSidecarFeature(
         val container = createFluentbitContainer(adc)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
-                modifyAuroraResource(it, configVolume, parserVolume, container)
+                val dc: DeploymentConfig = it.resource as DeploymentConfig
+                val template = dc.spec.template
+                modifyAuroraResource(it, template, configVolume, parserVolume, container)
             } else if (it.resource.kind == "Deployment") {
-                modifyAuroraResource(it, configVolume, parserVolume, container)
+                val dc: Deployment = it.resource as Deployment
+                val template = dc.spec.template
+                modifyAuroraResource(it, template, configVolume, parserVolume, container)
             }
         }
     }
 
     private fun modifyAuroraResource(
         auroraResource: AuroraResource,
+        template: PodTemplateSpec,
         configVolume: Volume,
         parserVolume: Volume,
         container: Container
     ) {
-        modifyResource(auroraResource, "Added fluentbit volume and sidecar container")
-        val dc: DeploymentConfig = auroraResource.resource as DeploymentConfig
-        val podSpec = dc.spec.template.spec
+        val podSpec = template.spec
+        modifyResource(auroraResource, "Added fluentbit volume, sidecar container and annotation")
         podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
         podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
         podSpec.containers = podSpec.containers.addIfNotNull(container)
+        // Add annotation to exclude pods having fluentbit sidecar from being logged by node deployd splunk connect.
+        if (template.metadata == null) {
+            template.metadata = ObjectMeta()
+        }
+        if (template.metadata.annotations == null) {
+            template.metadata.annotations = mutableMapOf(SPLUNK_CONNECT_EXCLUDE_TAG to "true")
+        } else {
+            template.metadata.annotations.put(
+                SPLUNK_CONNECT_EXCLUDE_TAG, "true"
+            )
+        }
     }
 
     private fun createFluentbitContainer(adc: AuroraDeploymentSpec): Container {
@@ -206,7 +205,7 @@ class FluentbitSidecarFeature(
         )
 
         return newContainer {
-            name = "${adc.name}-fluent-sidecar"
+            name = adc.fluentSideCarContainerName
             env = podEnvVariables.addIfNotNull(hecEnvVariables)
             volumeMounts = listOf(
                 newVolumeMount {
@@ -228,7 +227,7 @@ class FluentbitSidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "fluent/fluent-bit:latest"
+            image = fluentBitImage
         }
     }
 }
@@ -318,7 +317,7 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     return """[SERVICE]
     Flush        1
     Daemon       Off
-    Log_Level    debug
+    Log_Level    info
     Parsers_File $parserMountPath/$parsersFileName
 
 $inputs
@@ -362,6 +361,6 @@ fun generateParserConf(): String {
     Format   regex
     Regex   ^(?<timestamp>\d{4}-\d{1,2}-\d{1,2}T\d{2}:\d{2}:\d{2},\d*Z) (?<event>.*)
     Time_Key    timestamp
-    Time_Format %Y-%m-%dT%H:%M:%S.%L%z
+    Time_Format %Y-%m-%dT%H:%M:%S,%L%z
     Time_Keep  Off"""
 }

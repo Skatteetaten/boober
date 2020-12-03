@@ -101,7 +101,7 @@ integrations:
     herkimer:
         url: https://herkimer-aurora.${openshift.cluster}.paas.skead.no
         fallback:
-            jfwlocalhost : "1234567890"
+            applikasjonsnavn : "1234567890"
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
@@ -119,6 +119,8 @@ vault:
 splunk:
     hec:
         token: token
+    fluentbit:
+        image: "container-registry-internal.aurora.skead.no/fluent/fluent-bit:1.6.5"
 
 aurora:
     token:
