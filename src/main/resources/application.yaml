@@ -68,7 +68,7 @@ aurora:
 logging:
     level:
         no.skatteetaten: INFO
-        no.skatteetaten.aurora.boober: DEBUG
+        no.skatteetaten.aurora.boober: INFO
         org:
             jboss: WARN
             hibernate: WARN

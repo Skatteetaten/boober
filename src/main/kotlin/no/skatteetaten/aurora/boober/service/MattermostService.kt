@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.JsonNode
 import mu.KotlinLogging
@@ -18,8 +19,36 @@ private val logger = KotlinLogging.logger {}
 data class MattermostSendMessageRequest(
     val message: String,
     @JsonProperty("channel_id")
-    val channelId: String
+    val channelId: String,
+    val props: MattermostProps
 )
+
+data class MattermostProps(
+    val attachments: List<Attachment>
+)
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class Attachment(
+    val color: String? = null,
+    val text: String? = null,
+    val title: String? = null,
+    @JsonProperty("title_link")
+    val titleLink: String? = null,
+    val fields: List<AttachmentField>? = null
+)
+
+data class AttachmentField(
+    val short: Boolean,
+    val title: String,
+    val value: String
+)
+
+enum class AttachmentColor(val hex: String) {
+    Red("#FF0000"),
+    Green("#008000");
+
+    override fun toString(): String = hex
+}
 
 @Component
 class MattermostRestTemplateWrapper(
@@ -36,13 +65,16 @@ class MattermostService(
     val restTemplateWrapper: MattermostRestTemplateWrapper,
     @Value("\${integrations.mattermost.token}") val mattermostToken: String
 ) {
-    fun sendMessage(channelId: String, message: String): Exception? {
+    fun sendMessage(channelId: String, message: String, attachments: List<Attachment> = emptyList()): Exception? {
         val response = runCatching {
             restTemplateWrapper.post(
                 url = "/posts",
                 body = MattermostSendMessageRequest(
                     message = message,
-                    channelId = channelId
+                    channelId = channelId,
+                    props = MattermostProps(
+                        attachments
+                    )
                 ),
                 type = JsonNode::class,
                 headers = HttpHeaders().apply {

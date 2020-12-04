@@ -22,7 +22,7 @@ class NotificationService(
         deployResults: List<AuroraDeployResult>
     ): List<AuroraDeployResult> {
         val deployResultsWithNotifications = deployResults
-            .mapToListOfNotificationAndDeployResult()
+            .createNotificationsForDeployResults()
             .toMultiMap()
             .filterKeys {
                 it.type == NotificationType.Mattermost
@@ -39,14 +39,20 @@ class NotificationService(
         return deployResultWithoutNotifications + deployResultsWithNotifications
     }
 
-    private fun List<AuroraDeployResult>.asListOfDeploysWithVersion() =
-        this.joinToString(separator = "\n") { deployResult ->
+    private fun List<AuroraDeployResult>.asListOfDeploysWithVersion(isSuccessful: Boolean): String {
+        val rows = this.joinToString(separator = "\n") { deployResult ->
             val adSpec = deployResult.findApplicationDeploymentSpec()
             val message = if (deployResult.success) adSpec.message ?: "" else deployResult.reason ?: "Unknown error"
             val adc = deployResult.auroraDeploymentSpecInternal
 
-            "* ${adc.envName}/${adc.name}   -   ${adc.version}  $message"
+            "| ${adc.envName}/${adc.name} | ${adc.version} ${if (!isSuccessful) "|${deployResult.deployId}" else ""}| $message |"
         }
+        return """
+| env/name | version ${if (!isSuccessful) "|deployId" else ""}| message | 
+| :------- | :-----: ${if (!isSuccessful) "| :---- " else ""}| :------ | 
+$rows
+        """.trimIndent()
+    }
 
     private fun Map<Notification, List<AuroraDeployResult>>.sendMattermostNotification(): List<AuroraDeployResult> {
         val user = userDetailsProvider.getAuthenticatedUser().username
@@ -54,37 +60,43 @@ class NotificationService(
         val headerMessage = "##### @$user has deployed in cluster [$cluster]($openshiftUrl)"
 
         return this.flatMap { (notification, deployResults) ->
-            val message = createMattermostMessage(deployResults, headerMessage)
+            val attachments = deployResults.createMattermostMessage()
             val exceptionOrNull = mattermostService.sendMessage(
                 channelId = notification.notificationLocation,
-                message = message
+                message = headerMessage,
+                attachments = attachments
             )
 
             handleMattermostException(exceptionOrNull, deployResults, notification.notificationLocation)
         }.distinctBy { it.deployId }
     }
 
-    private fun createMattermostMessage(
-        deployResults: List<AuroraDeployResult>,
-        headerMessage: String
-    ): String {
-        val listOfSuccessDeploys = deployResults.filter { it.success }.asListOfDeploysWithVersion()
-        val listOfFailedDeploys = deployResults.filterNot { it.success }.asListOfDeploysWithVersion()
-        val failedDeploysText = if (listOfFailedDeploys.isNotEmpty()) {
-            """
-                       |
-                       |
-                       |##### Some applications could not be deployed
-                       |$listOfFailedDeploys
-                    """.trimMargin()
-        } else ""
+    private fun List<AuroraDeployResult>.createDeployResultMessage(isSuccessful: Boolean): Attachment? {
+        val listOfDeploys = this.asListOfDeploysWithVersion(isSuccessful = isSuccessful)
 
-        return """
-            |$headerMessage
-            |
-            |$listOfSuccessDeploys
-            |$failedDeploysText
-        """.trimMargin()
+        if (listOfDeploys.isEmpty()) return null
+        val headerMessage = if (isSuccessful) "Successful deploys" else "Failed deploys"
+        val color = if (isSuccessful) AttachmentColor.Green else AttachmentColor.Red
+
+        val text = """
+#### $headerMessage
+
+$listOfDeploys
+        """.trimIndent()
+        return Attachment(
+            color = color.hex,
+            text = text
+        )
+    }
+
+    private fun List<AuroraDeployResult>.createMattermostMessage(): List<Attachment> {
+        val listOfSuccessDeploys = this.filter { it.success }.createDeployResultMessage(isSuccessful = true)
+        val listOfFailedDeploys = this.filter { !it.success }.createDeployResultMessage(isSuccessful = false)
+
+        return listOfNotNull(
+            listOfSuccessDeploys,
+            listOfFailedDeploys
+        )
     }
 
     private fun handleMattermostException(
@@ -104,7 +116,7 @@ class NotificationService(
         .findResourceByType<ApplicationDeployment>()
         .spec
 
-    private fun List<AuroraDeployResult>.mapToListOfNotificationAndDeployResult(): List<Pair<Notification, AuroraDeployResult>> =
+    private fun List<AuroraDeployResult>.createNotificationsForDeployResults(): List<Pair<Notification, AuroraDeployResult>> =
         this.flatMap { result ->
             val notifications = result.findApplicationDeploymentSpec().notifications ?: emptySet()
 
