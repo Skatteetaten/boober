@@ -279,6 +279,28 @@ class AuroraConfigTest : ResourceLoader() {
         }
     }
 
+    @Test
+    fun `Should fail when adding old file that does not exist`() {
+
+        val auroraConfig = createAuroraConfig(aid)
+        val updates =
+            """
+            { 
+                "version": "2",
+                "certificate": false,
+                "version": "5"
+            }
+            """.trimIndent()
+
+        assertThat {
+            auroraConfig.updateFile("about2.json", updates, "abc132")
+        }.isFailure().all {
+            isInstanceOf(PreconditionFailureException::class)
+            messageContains("The fileName=about2.json does not exist with a version of (abc132).")
+
+        }
+    }
+
     fun createMockFiles(vararg files: String): List<AuroraConfigFile> {
         return files.map {
             AuroraConfigFile(it, "{}", false, false)
