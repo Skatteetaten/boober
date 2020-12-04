@@ -70,7 +70,12 @@ class S3FeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `verify is able to disable s3 when expanded config`() {
-        mockHerkimer(booberAdId, true)
+        mockHerkimer(
+            booberAdId, true, s3Credentials = listOf(
+                createS3Credentials("anotherId", "default"),
+                createS3Credentials("minBucket", "hello-$environment")
+            )
+        )
         generateResources(
             """{ 
                 "s3": {
@@ -80,10 +85,14 @@ class S3FeatureTest : AbstractFeatureTest() {
                     },
                     "default" : {
                         "bucketName" : "anotherId"
+                    },
+                    "substitutor":{
+                         "bucketName":"minBucket",
+                         "objectArea":"hello-@env@"
                     }
                 }
            }""",
-            createdResources = 1,
+            createdResources = 2,
             resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
     }
@@ -388,7 +397,8 @@ class S3FeatureTest : AbstractFeatureTest() {
             )
             assertThat(actualEnvs).containsAll(*expectedEnvs.toTypedArray())
 
-            val objectAreaS3EnvVars = actualEnvs.filter { (name, _) -> name.startsWith("S3_BUCKETS_$bucketObjectAreaUpper") }
+            val objectAreaS3EnvVars =
+                actualEnvs.filter { (name, _) -> name.startsWith("S3_BUCKETS_$bucketObjectAreaUpper") }
             assertThat(objectAreaS3EnvVars.size).isEqualTo(expectedEnvs.size)
         }
     }
