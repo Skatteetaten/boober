@@ -297,7 +297,6 @@ class AuroraConfigTest : ResourceLoader() {
         }.isFailure().all {
             isInstanceOf(PreconditionFailureException::class)
             messageContains("The fileName=about2.json does not exist with a version of (abc132).")
-
         }
     }
 
