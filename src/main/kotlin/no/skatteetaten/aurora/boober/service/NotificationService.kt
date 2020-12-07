@@ -72,9 +72,9 @@ $rows
     }
 
     private fun List<AuroraDeployResult>.createDeployResultMessage(isSuccessful: Boolean): Attachment? {
+        if (this.isEmpty()) return null
         val listOfDeploys = this.asListOfDeploysWithVersion(isSuccessful = isSuccessful)
 
-        if (listOfDeploys.isEmpty()) return null
         val headerMessage = if (isSuccessful) "Successful deploys" else "Failed deploys"
         val color = if (isSuccessful) AttachmentColor.Green else AttachmentColor.Red
 
