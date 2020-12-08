@@ -42,17 +42,17 @@ class NotificationService(
     private fun List<AuroraDeployResult>.asBulletlistOfDeploys(isSuccessful: Boolean): String {
         return this.joinToString(separator = "\n") { deployResult ->
             val adSpec = deployResult.findApplicationDeploymentSpec()
-            val message = if (deployResult.success) adSpec.message ?: "" else deployResult.reason ?: "Unknown error"
+            val message = if (deployResult.success) adSpec.message else deployResult.reason ?: "Unknown error"
             val adc = deployResult.auroraDeploymentSpecInternal
 
-            "* ${adc.envName}/${adc.name}   -   ${adc.version}  -  ${if (!isSuccessful) "     ${deployResult.deployId}     -" else ""}      $message"
+            "* **${adc.envName}/${adc.name}** *version*=${adc.version}  ${if (!isSuccessful) "*deployId*=${deployResult.deployId}  " else ""}      ${message?.let { "*message*=$it" } ?: ""}"
         }
     }
 
     private fun Map<Notification, List<AuroraDeployResult>>.sendMattermostNotification(): List<AuroraDeployResult> {
         val user = userDetailsProvider.getAuthenticatedUser().username
 
-        val headerMessage = "##### @$user has deployed in cluster [$cluster]($openshiftUrl)"
+        val headerMessage = "@$user has deployed to cluster [$cluster]($openshiftUrl)"
 
         return this.flatMap { (notification, deployResults) ->
             val attachments = deployResults.createMattermostMessage()
@@ -70,14 +70,13 @@ class NotificationService(
         if (this.isEmpty()) return null
         val listOfDeploys = this.asBulletlistOfDeploys(isSuccessful = isSuccessful)
 
-        val headerMessage = if (isSuccessful) "Successful deploys" else "Failed deploys"
+        val headerMessage = if (isSuccessful) "Successful deploys" else "Failed deploys \n For more information run `ao inspect <deployId>` in cli"
         val color = if (isSuccessful) AttachmentColor.Green else AttachmentColor.Red
 
         val text = """
-                #### $headerMessage
-
-                $listOfDeploys
-        """.trimIndent()
+                |#### $headerMessage
+                |$listOfDeploys
+        """.trimMargin()
 
         return Attachment(
             color = color.hex,
