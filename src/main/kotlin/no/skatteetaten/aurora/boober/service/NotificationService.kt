@@ -39,19 +39,14 @@ class NotificationService(
         return deployResultWithoutNotifications + deployResultsWithNotifications
     }
 
-    private fun List<AuroraDeployResult>.asListOfDeploysWithVersion(isSuccessful: Boolean): String {
-        val rows = this.joinToString(separator = "\n") { deployResult ->
+    private fun List<AuroraDeployResult>.asBulletlistOfDeploys(isSuccessful: Boolean): String {
+        return this.joinToString(separator = "\n") { deployResult ->
             val adSpec = deployResult.findApplicationDeploymentSpec()
             val message = if (deployResult.success) adSpec.message ?: "" else deployResult.reason ?: "Unknown error"
             val adc = deployResult.auroraDeploymentSpecInternal
 
-            "| ${adc.envName}/${adc.name} | ${adc.version} ${if (!isSuccessful) "|${deployResult.deployId}" else ""}| $message |"
+            "* ${adc.envName}/${adc.name}   -   ${adc.version}  -  ${if (!isSuccessful) "     ${deployResult.deployId}     -" else ""}      $message"
         }
-        return """
-| env/name | version ${if (!isSuccessful) "|deployId" else ""}| message | 
-| :------- | :-----: ${if (!isSuccessful) "| :---- " else ""}| :------ | 
-$rows
-        """.trimIndent()
     }
 
     private fun Map<Notification, List<AuroraDeployResult>>.sendMattermostNotification(): List<AuroraDeployResult> {
@@ -73,16 +68,17 @@ $rows
 
     private fun List<AuroraDeployResult>.createDeployResultMessage(isSuccessful: Boolean): Attachment? {
         if (this.isEmpty()) return null
-        val listOfDeploys = this.asListOfDeploysWithVersion(isSuccessful = isSuccessful)
+        val listOfDeploys = this.asBulletlistOfDeploys(isSuccessful = isSuccessful)
 
         val headerMessage = if (isSuccessful) "Successful deploys" else "Failed deploys"
         val color = if (isSuccessful) AttachmentColor.Green else AttachmentColor.Red
 
         val text = """
-#### $headerMessage
+                #### $headerMessage
 
-$listOfDeploys
+                $listOfDeploys
         """.trimIndent()
+
         return Attachment(
             color = color.hex,
             text = text
