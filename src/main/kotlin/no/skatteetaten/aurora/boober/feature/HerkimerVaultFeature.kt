@@ -42,7 +42,6 @@ class HerkimerVaultFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         if (!adc.isFeatureEnabled()) return emptySet()
-        val prefix: String = adc["$FEATURE_FIELD/prefix"]
 
         val nameAndCredentials =
             herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.ManagedPostgresDatabase)
@@ -77,7 +76,7 @@ class HerkimerVaultFeature(
         val prefix: String = adc["$FEATURE_FIELD/prefix"]
         val envVars = resources.findResourcesByType<Secret>(suffix = "herkimervault")
             .mapIndexed { index, secret ->
-                secret.createEnvVarRefs(prefix = "${prefix}_${index}_")
+                secret.createEnvVarRefs(prefix = "${prefix}_${index}_", forceUpperCaseForEnvVarName = false)
             }.flatten()
 
         resources.addEnvVarsToMainContainers(envVars, javaClass)

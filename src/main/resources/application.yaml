@@ -99,7 +99,7 @@ integrations:
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: https://m96405-herkimer-aurora-dev.${openshift.cluster}.paas.skead.no
+        url: http://localhost:8090
         fallback:
             applikasjonsnavn : "1234567890"
     openshift:
