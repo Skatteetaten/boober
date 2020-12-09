@@ -134,8 +134,7 @@ class DeploymentConfigFeature : Feature {
                     deployment.spec.template.metadata = ObjectMeta()
                 }
 
-                deployment.spec.template.metadata.labels =
-                    deployment.spec.template.metadata.labels.addIfNotNull(dcLabels)
+                deployment.spec.template.metadata.labels = deployment.spec.template.metadata.labels.addIfNotNull(dcLabels)cLabels)
                 deployment.spec.template.metadata.annotations = mapOf(
                     ANNOTATION_BOOBER_DEPLOYTAG to adc.dockerTag
                 )

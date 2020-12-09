@@ -72,6 +72,7 @@ class SecretVaultFeature(
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
         return mapOf("secrets" to getSecretVaults(spec, cmd))
     }
+
     // TODO: Room for lots of better refactorings here.
     override fun validate(
         adc: AuroraDeploymentSpec,

@@ -64,11 +64,13 @@ class ApplicationDeploymentFeature : Feature {
     }
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
-        return mapOf("applicationDeploymentCommand" to ApplicationDeploymentCommand(
-            cmd.overrideFiles,
-            cmd.applicationDeploymentRef,
-            cmd.auroraConfigRef
-        ))
+        return mapOf(
+            "applicationDeploymentCommand" to ApplicationDeploymentCommand(
+                cmd.overrideFiles,
+                cmd.applicationDeploymentRef,
+                cmd.auroraConfigRef
+            )
+        )
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
