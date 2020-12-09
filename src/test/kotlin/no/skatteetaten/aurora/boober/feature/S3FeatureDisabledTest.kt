@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
-import assertk.assertions.contains
 import assertk.assertions.isSuccess
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
@@ -16,18 +15,22 @@ class S3FeatureDisabledTest : AbstractFeatureTest() {
 
     @Test
     fun `get error if trying to create s3`() {
-        assertThat { generateResources(
-            """{ 
+        assertThat {
+            generateResources(
+                """{ 
                "s3" : true
            }"""
-        ) }.singleApplicationError("S3 storage is not available in this cluster=utv")
+            )
+        }.singleApplicationError("S3 storage is not available in this cluster=utv")
     }
 
     @Test
     fun `get  if trying to create s3`() {
-        assertThat { generateResources(
-            """{
+        assertThat {
+            generateResources(
+                """{
            }"""
-        ) }.isSuccess()
+            )
+        }.isSuccess()
     }
 }

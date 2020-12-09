@@ -1,8 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v2
 
 import com.fasterxml.jackson.annotation.JsonRawValue
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.controller.v1.AuroraConfigFileResource
@@ -19,6 +17,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
 
 private val logger = KotlinLogging.logger {}
 
@@ -54,11 +54,11 @@ class AuroraConfigControllerV2(
             success = true,
             message = "File $fileName successfully added/updated",
             items = listOf(
-                    AuroraConfigFileResource(
-                        file.name,
-                        file.contents,
-                        file.version,
-                        file.type
+                AuroraConfigFileResource(
+                    file.name,
+                    file.contents,
+                    file.version,
+                    file.type
                 )
             )
         )

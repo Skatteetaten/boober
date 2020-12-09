@@ -194,7 +194,8 @@ class OpenShiftDeployer(
             return result.copy(reason = "Deployment is paused and will be/remain scaled down.")
         }
 
-        val redeployResult = redeployService.triggerRedeploy(openShiftResponses, context.spec.type, context.spec.deployState)
+        val redeployResult =
+            redeployService.triggerRedeploy(openShiftResponses, context.spec.type, context.spec.deployState)
 
         if (!redeployResult.success) {
             return result.copy(

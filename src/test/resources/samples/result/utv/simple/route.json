@@ -3,7 +3,7 @@
   "kind": "Route",
   "metadata": {
     "labels": {
-      "operationScope" : "aos-4016",
+      "operationScope": "aos-4016",
       "app": "simple",
       "updatedBy": "hero",
       "updatedAt": "0",
@@ -24,8 +24,8 @@
   },
   "spec": {
     "host": "simple-paas-utv.test",
-    "port" : {
-      "targetPort" : "http"
+    "port": {
+      "targetPort": "http"
     },
     "to": {
       "kind": "Service",

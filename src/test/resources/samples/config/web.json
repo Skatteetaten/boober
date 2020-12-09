@@ -7,7 +7,7 @@
   "config": {
     "foo2": "baz"
   },
-  "webseal" : {
+  "webseal": {
     "strict": false
   },
   "toxiproxy": true

@@ -25,8 +25,8 @@
     },
     "template": {
       "metadata": {
-        "annotations" : {
-          "boober.skatteetaten.no/deployTag" : "1"
+        "annotations": {
+          "boober.skatteetaten.no/deployTag": "1"
         },
         "labels": {
           "deployTag": "1"

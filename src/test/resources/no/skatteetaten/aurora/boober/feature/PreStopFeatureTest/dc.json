@@ -1,51 +1,61 @@
 {
-  "apiVersion" : "apps.openshift.io/v1",
-  "kind" : "DeploymentConfig",
-  "metadata" : {
-    "name" : "simple",
-    "namespace" : "paas-utv"
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
   },
-  "spec" : {
-    "replicas" : 1,
-    "selector" : {
-      "name" : "simple"
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
     },
-    "strategy" : {
-      "rollingParams" : {
-        "intervalSeconds" : 1,
-        "maxSurge" : "25%",
-        "maxUnavailable" : 0,
-        "timeoutSeconds" : 180,
-        "updatePeriodSeconds" : 1
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
       },
-      "type" : "Rolling"
+      "type": "Rolling"
     },
-    "template" : {
-      "spec" : {
-        "containers" : [ {
-          "lifecycle" : {
-            "preStop" : {
-              "exec" : {
-                "command" : [ "sh", "-c", "sleep 10s" ]
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "lifecycle": {
+              "preStop": {
+                "exec": {
+                  "command": [
+                    "sh",
+                    "-c",
+                    "sleep 10s"
+                  ]
+                }
               }
-            }
-          },
-          "name" : "simple"
-        } ],
-        "dnsPolicy" : "ClusterFirst",
-        "restartPolicy" : "Always"
+            },
+            "name": "simple"
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always"
       }
     },
-    "triggers" : [ {
-      "imageChangeParams" : {
-        "automatic" : true,
-        "containerNames" : [ "simple" ],
-        "from" : {
-          "kind" : "ImageStreamTag",
-          "name" : "simple:default"
-        }
-      },
-      "type" : "ImageChange"
-    } ]
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
   }
 }

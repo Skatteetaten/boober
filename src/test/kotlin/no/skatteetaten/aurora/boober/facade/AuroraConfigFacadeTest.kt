@@ -377,7 +377,7 @@ class AuroraConfigFacadeTest(
               }""".trimIndent()
             ) +
             AuroraConfigFile(
-            "utv/whoami.json", """
+                "utv/whoami.json", """
               {
                 "route" : {
                     "whoami" : {
@@ -386,7 +386,7 @@ class AuroraConfigFacadeTest(
                     }
                 }
               }""".trimIndent()
-        ))
+            ))
 
         val validated = facade.validateAuroraConfig(
             newConfig,

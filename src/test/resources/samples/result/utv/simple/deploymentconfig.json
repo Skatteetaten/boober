@@ -44,7 +44,7 @@
           "boober.skatteetaten.no/deployTag": "1"
         },
         "labels": {
-          "operationScope" : "aos-4016",
+          "operationScope": "aos-4016",
           "app": "simple",
           "updatedBy": "hero",
           "updatedAt": "0",
@@ -128,57 +128,62 @@
                 "value": "http://simple-paas-utv.test"
               },
               {
-              "name" : "S3_BUCKETS_DEFAULT_SERVICEENDPOINT",
-              "valueFrom" : {
-                "secretKeyRef" : {
-                  "key" : "serviceEndpoint",
-                  "name" : "simple-default-s3",
-                  "optional" : false
-                }
-              }
-              }, {
-                "name" : "S3_BUCKETS_DEFAULT_ACCESSKEY",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "accessKey",
-                    "name" : "simple-default-s3",
-                    "optional" : false
+                "name": "S3_BUCKETS_DEFAULT_SERVICEENDPOINT",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "serviceEndpoint",
+                    "name": "simple-default-s3",
+                    "optional": false
                   }
                 }
-              }, {
-                "name" : "S3_BUCKETS_DEFAULT_SECRETKEY",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "secretKey",
-                    "name" : "simple-default-s3",
-                    "optional" : false
+              },
+              {
+                "name": "S3_BUCKETS_DEFAULT_ACCESSKEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "accessKey",
+                    "name": "simple-default-s3",
+                    "optional": false
                   }
                 }
-              }, {
-                "name" : "S3_BUCKETS_DEFAULT_BUCKETREGION",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "bucketRegion",
-                    "name" : "simple-default-s3",
-                    "optional" : false
+              },
+              {
+                "name": "S3_BUCKETS_DEFAULT_SECRETKEY",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "secretKey",
+                    "name": "simple-default-s3",
+                    "optional": false
                   }
                 }
-              }, {
-                "name" : "S3_BUCKETS_DEFAULT_BUCKETNAME",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "bucketName",
-                    "name" : "simple-default-s3",
-                    "optional" : false
+              },
+              {
+                "name": "S3_BUCKETS_DEFAULT_BUCKETREGION",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "bucketRegion",
+                    "name": "simple-default-s3",
+                    "optional": false
                   }
                 }
-              }, {
-                "name" : "S3_BUCKETS_DEFAULT_OBJECTPREFIX",
-                "valueFrom" : {
-                  "secretKeyRef" : {
-                    "key" : "objectPrefix",
-                    "name" : "simple-default-s3",
-                    "optional" : false
+              },
+              {
+                "name": "S3_BUCKETS_DEFAULT_BUCKETNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "bucketName",
+                    "name": "simple-default-s3",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "S3_BUCKETS_DEFAULT_OBJECTPREFIX",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "objectPrefix",
+                    "name": "simple-default-s3",
+                    "optional": false
                   }
                 }
               },
