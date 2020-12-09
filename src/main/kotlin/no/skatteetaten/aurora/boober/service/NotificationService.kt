@@ -70,7 +70,8 @@ class NotificationService(
         if (this.isEmpty()) return null
         val listOfDeploys = this.asBulletlistOfDeploys(isSuccessful = isSuccessful)
 
-        val headerMessage = if (isSuccessful) "Successful deploys" else "Failed deploys \n For more information run `ao inspect <deployId>` in cli"
+        val headerMessage =
+            if (isSuccessful) "Successful deploys" else "Failed deploys \n For more information run `ao inspect <deployId>` in cli"
         val color = if (isSuccessful) AttachmentColor.Green else AttachmentColor.Red
 
         val text = """

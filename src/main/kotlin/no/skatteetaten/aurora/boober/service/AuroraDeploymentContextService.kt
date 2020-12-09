@@ -76,7 +76,8 @@ class AuroraDeploymentContextService(
 
         val contexts = result.mapNotNull { it.first }
 
-        val adcWithDuplicatedUrls: AuroraDeploymentContextUrlMultimap = findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts)
+        val adcWithDuplicatedUrls: AuroraDeploymentContextUrlMultimap =
+            findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts)
 
         return contexts.map {
             if (adcWithDuplicatedUrls.containsKey(it)) {
@@ -98,7 +99,8 @@ class AuroraDeploymentContextService(
     private fun createContextWarningMap(duplicatedHosts: UrlToApplicationDeploymentContextMultimap): AuroraDeploymentContextUrlMultimap {
         return duplicatedHosts.flatMap { (host, contexts) ->
             val adrString = contexts.map { it.cmd.applicationDeploymentRef.toString() }.distinct()
-            val warningString = "The external url=$host is not uniquely defined. Only the last applied configuration will be valid. The following configurations references it=$adrString"
+            val warningString =
+                "The external url=$host is not uniquely defined. Only the last applied configuration will be valid. The following configurations references it=$adrString"
             contexts.map {
                 it to warningString
             }

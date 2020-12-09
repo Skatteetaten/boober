@@ -43,6 +43,7 @@ class MattermostServiceTest {
                 .isNull()
         }
     }
+
     @Test
     fun `verify exception when send message to channel fails`() {
         val response = jsonMapper().createObjectNode()

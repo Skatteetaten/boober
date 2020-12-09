@@ -106,7 +106,7 @@ integrations:
     herkimer:
         url: false
         fallback:
-            applikasjonsnavn : "1234567890"
+            applikasjonsnavn: "1234567890"
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}

@@ -182,7 +182,8 @@ class Configuration {
                     )
                     set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                     set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                    set(clientIdHeaderName, applicationName
+                    set(
+                        clientIdHeaderName, applicationName
                     )
                     set("Meldingsid", UUID.randomUUID().toString())
                 }

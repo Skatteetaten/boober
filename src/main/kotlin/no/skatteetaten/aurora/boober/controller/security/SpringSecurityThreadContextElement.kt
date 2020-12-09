@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import kotlin.coroutines.AbstractCoroutineContextElement
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.ThreadContextElement
 import org.springframework.security.core.context.SecurityContext
 import org.springframework.security.core.context.SecurityContextHolder
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 
 class SpringSecurityThreadContextElement(
     val securityContext: SecurityContext = SecurityContextHolder.getContext()

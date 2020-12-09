@@ -4,6 +4,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 data class SpecLine(val source: String, val indent: Int, val content: String)
+
 fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Boolean): String {
 
     val fields = renderSpecAsJson(deploymentSpec, includeDefaults)

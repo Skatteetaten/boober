@@ -38,7 +38,14 @@ class AuroraTemplatesServiceTest : ResourceLoader() {
     @Test
     fun `Should return error if bitbucket throws error`() {
 
-        every { bitbucketService.getFile(project, repo, "atomhopper.json", reference) } throws Exception("Could not connect to bitbucket")
+        every {
+            bitbucketService.getFile(
+                project,
+                repo,
+                "atomhopper.json",
+                reference
+            )
+        } throws Exception("Could not connect to bitbucket")
 
         assertThat {
             service.findTemplate("atomhopper")

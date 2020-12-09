@@ -68,10 +68,12 @@
               {
                 "name": "DB_NAME",
                 "value": "simple"
-              }, {
-                "name" : "CLUSTER",
-                "value" : "utv"
-              }, {
+              },
+              {
+                "name": "CLUSTER",
+                "value": "utv"
+              },
+              {
                 "name": "HOST_NAME",
                 "value": ""
               },

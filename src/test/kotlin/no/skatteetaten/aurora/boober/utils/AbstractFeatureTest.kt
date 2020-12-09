@@ -285,7 +285,11 @@ abstract class AbstractFeatureTest : ResourceLoader() {
                     } returns "fallbackid"
                 } else null
         val service =
-            AuroraDeploymentContextService(features = listOf(feature), idService = idService, idServiceFallback = idServiceFallback)
+            AuroraDeploymentContextService(
+                features = listOf(feature),
+                idService = idService,
+                idServiceFallback = idServiceFallback
+            )
         val auroraConfig =
             createAuroraConfig(config.addIfNotNull("$environment/simple.json" to app), files)
 
@@ -427,8 +431,11 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         }
 }
 
-inline fun <reified T : HasMetadata> List<AuroraResource>.findResourceByType(): T = this.findResourceByType(T::class).firstOrNull() ?: throw Exception("No resource of specified type found")
-inline fun <reified T : HasMetadata> List<AuroraResource>.findResourcesByType(): List<T> = this.findResourceByType(T::class)
+inline fun <reified T : HasMetadata> List<AuroraResource>.findResourceByType(): T =
+    this.findResourceByType(T::class).firstOrNull() ?: throw Exception("No resource of specified type found")
+
+inline fun <reified T : HasMetadata> List<AuroraResource>.findResourcesByType(): List<T> =
+    this.findResourceByType(T::class)
 
 fun <T : Any> List<AuroraResource>.findResourceByType(kclass: KClass<T>): List<T> =
     filter { it.resource::class == kclass }

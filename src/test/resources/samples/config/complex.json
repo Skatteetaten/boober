@@ -63,8 +63,8 @@
     "foobar": {
       "host": "foobar",
       "annotations": {
-        "wembley.sits.no|externalHost" : "test.ske",
-        "wembley.sits.no|apiPaths" : "/api",
+        "wembley.sits.no|externalHost": "test.ske",
+        "wembley.sits.no|apiPaths": "/api",
         "haproxy.router.openshift.io|timeout": "30s"
       }
     }

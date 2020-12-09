@@ -141,7 +141,7 @@ class DatabaseSchemaProvisioner(
                 val uri = "$schemaPath/${restTemplate.uri(request.endPath, *request.uriVars)}"
 
                 throw createProvisioningException("Unable to get database schema with uri=$uri", it)
-            }?.parseAsSingle()
+            }.parseAsSingle()
     }
 
     fun findCooldownSchemaIfTryReuseEnabled(request: SchemaProvisionRequest): DbhSchema? {

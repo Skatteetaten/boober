@@ -6,7 +6,7 @@
       "bigipRoute": "true"
     },
     "labels": {
-      "operationScope" : "aos-4016",
+      "operationScope": "aos-4016",
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
@@ -27,8 +27,8 @@
   },
   "spec": {
     "host": "74a691b9358d168e305df7a1ae175a5eefda6754.test",
-    "port" : {
-      "targetPort" : "http"
+    "port": {
+      "targetPort": "http"
     },
     "to": {
       "kind": "Service",

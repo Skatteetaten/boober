@@ -22,6 +22,7 @@ class JobFeatureTest : AbstractFeatureTest() {
             "Cron schedule is required."
         )
     }
+
     @Test
     fun `should not allow job with non numeric successCount`() {
 

@@ -1,9 +1,9 @@
 {
   "apiVersion": "authorization.openshift.io/v1",
   "kind": "RoleBinding",
-  "metadata" : {
-    "name" : "admin",
-    "namespace" : "paas-utv"
+  "metadata": {
+    "name": "admin",
+    "namespace": "paas-utv"
   },
   "groupNames": [
     "APP_PaaS_drift",
