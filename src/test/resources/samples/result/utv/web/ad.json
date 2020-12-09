@@ -3,7 +3,7 @@
   "kind": "ApplicationDeployment",
   "metadata": {
     "labels": {
-      "operationScope" : "aos-4016",
+      "operationScope": "aos-4016",
       "app": "web",
       "updatedBy": "hero",
       "updatedAt": "0",
@@ -25,7 +25,7 @@
     },
     "applicationDeploymentId": "1234567890",
     "applicationName": "web",
-    "runnableType" : "DeploymentConfig",
+    "runnableType": "DeploymentConfig",
     "applicationDeploymentName": "web",
     "databases": [],
     "managementPath": ":8081/actuator",

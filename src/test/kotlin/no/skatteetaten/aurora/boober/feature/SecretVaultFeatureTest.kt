@@ -268,6 +268,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         val attachmentResource = resource.last()
         assertEnvVarMounted(attachmentResource, "simple", foo)
     }
+
     @Test
     fun `should modify deploymentConfig and add auroraVaultSecret with mapped key`() {
 

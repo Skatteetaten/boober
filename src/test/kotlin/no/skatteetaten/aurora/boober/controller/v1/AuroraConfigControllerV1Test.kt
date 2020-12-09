@@ -5,7 +5,6 @@ import assertk.assertions.isFailure
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
-import java.lang.RuntimeException
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -291,7 +290,8 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             facade.validateAuroraConfig(
                 localAuroraConfig = any(),
                 resourceValidation = false,
-                auroraConfigRef = auroraConfigRef, mergeWithRemoteConfig = true)
+                auroraConfigRef = auroraConfigRef, mergeWithRemoteConfig = true
+            )
         } returns emptyMap()
 
         mockMvc.put(

@@ -43,7 +43,8 @@ class WebSealFeatureTest : AbstractFeatureTest() {
         val (route) = modifyResources(
             """{
              "webseal" : true 
-           }""")
+           }"""
+        )
 
         assertThat(route).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route.json")
@@ -58,7 +59,8 @@ class WebSealFeatureTest : AbstractFeatureTest() {
                "host" : "simple2-paas-utv",
                "roles" : "foo,bar,baz"
              }
-           }""")
+           }"""
+        )
 
         assertThat(route).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-custom.json")
@@ -74,14 +76,15 @@ class WebSealFeatureTest : AbstractFeatureTest() {
                "roles" : "foo,bar,baz",
                "clusterTimeout" : "10s"
              }
-           }""")
+           }"""
+        )
 
         assertThat(route).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-timeout.json")
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["10", "10s" ])
+    @ValueSource(strings = ["10", "10s"])
     fun `should create webseal route with roles and custom host and timeout`(timeout: String) {
 
         val (route) = modifyResources(
@@ -91,7 +94,8 @@ class WebSealFeatureTest : AbstractFeatureTest() {
                "roles" : "foo,bar,baz",
                "clusterTimeout" : "$timeout"
              }
-           }""")
+           }"""
+        )
 
         assertThat(route).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-timeout.json")

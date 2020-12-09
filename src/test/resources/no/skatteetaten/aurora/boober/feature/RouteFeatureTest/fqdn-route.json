@@ -7,8 +7,8 @@
   },
   "spec": {
     "host": "foo.bar.baz",
-    "port" : {
-      "targetPort" : "http"
+    "port": {
+      "targetPort": "http"
     },
     "to": {
       "kind": "Service",

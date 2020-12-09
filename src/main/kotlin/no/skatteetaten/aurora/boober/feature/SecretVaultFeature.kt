@@ -199,9 +199,11 @@ class SecretVaultFeature(
         val secretNames = secrets.map { it.name }
         return if (secretNames.size != secretNames.toSet().size) {
             AuroraDeploymentSpecValidationException(
-                "SecretVaults does not have unique names=[${secretNames.joinToString(
-                    ", "
-                )}]"
+                "SecretVaults does not have unique names=[${
+                    secretNames.joinToString(
+                        ", "
+                    )
+                }]"
             )
         } else null
     }

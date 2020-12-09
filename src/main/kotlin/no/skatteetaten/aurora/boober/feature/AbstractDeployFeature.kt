@@ -95,24 +95,24 @@ val AuroraDeploymentSpec.version: String get() = this["version"]
 val AuroraDeploymentSpec.dockerTag: String get() = releaseTo ?: version
 
 val podEnvVariables = listOf(
-        newEnvVar {
-            name = "POD_NAME"
-            valueFrom {
-                fieldRef {
-                    apiVersion = "v1"
-                    fieldPath = "metadata.name"
-                }
-            }
-        },
-        newEnvVar {
-            name = "POD_NAMESPACE"
-            valueFrom {
-                fieldRef {
-                    apiVersion = "v1"
-                    fieldPath = "metadata.namespace"
-                }
+    newEnvVar {
+        name = "POD_NAME"
+        valueFrom {
+            fieldRef {
+                apiVersion = "v1"
+                fieldPath = "metadata.name"
             }
         }
+    },
+    newEnvVar {
+        name = "POD_NAMESPACE"
+        valueFrom {
+            fieldRef {
+                apiVersion = "v1"
+                fieldPath = "metadata.namespace"
+            }
+        }
+    }
 )
 
 val loggingMount = newVolumeMount {

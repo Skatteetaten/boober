@@ -9,7 +9,6 @@ import io.mockk.clearMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.service.DeployLogService
@@ -23,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.web.client.HttpClientErrorException
+import java.nio.charset.Charset
 
 class DeployLogServiceTest : ResourceLoader() {
 
@@ -31,10 +31,10 @@ class DeployLogServiceTest : ResourceLoader() {
     private val fileName = "test/$deployId.json"
     private val deployer = Deployer("Test Testesen", "test0test.no")
     private val service = DeployLogService(
-            bitbucketService = bitbucketService,
-            mapper = jsonMapper(),
-            project = "ao",
-            repo = "auroradeploymenttags"
+        bitbucketService = bitbucketService,
+        mapper = jsonMapper(),
+        project = "ao",
+        repo = "auroradeploymenttags"
     )
 
     @AfterEach
@@ -76,13 +76,13 @@ class DeployLogServiceTest : ResourceLoader() {
     @Test
     fun `Find deploy result by id throws DeployLogServiceException when git file not found`() {
         every { bitbucketService.getFile(any(), any(), any()) } throws
-                HttpClientErrorException.create(
-                        HttpStatus.NOT_FOUND,
-                        "",
-                        HttpHeaders(),
-                        "404 ".toByteArray(),
-                        Charset.defaultCharset()
-                )
+            HttpClientErrorException.create(
+                HttpStatus.NOT_FOUND,
+                "",
+                HttpHeaders(),
+                "404 ".toByteArray(),
+                Charset.defaultCharset()
+            )
 
         assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")
@@ -92,13 +92,13 @@ class DeployLogServiceTest : ResourceLoader() {
     @Test
     fun `Find deploy result by id throws HttpClientErrorException given bad request`() {
         every { bitbucketService.getFile(any(), any(), any()) } throws
-                HttpClientErrorException.create(
-                        HttpStatus.BAD_REQUEST,
-                        "",
-                        HttpHeaders(),
-                        "400".toByteArray(),
-                        Charset.defaultCharset()
-                )
+            HttpClientErrorException.create(
+                HttpStatus.BAD_REQUEST,
+                "",
+                HttpHeaders(),
+                "400".toByteArray(),
+                Charset.defaultCharset()
+            )
 
         assertThat {
             service.findDeployResultById(AuroraConfigRef("test", "master", "123"), "abc123")

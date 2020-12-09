@@ -27,7 +27,7 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
         val payload = ApplicationDeploymentPayload(listOf(applicationRef))
 
         every { deploymentFacade.executeDelete(payload.applicationRefs) } returns listOf(
-                DeleteApplicationDeploymentResponse(applicationRef, true, "Application was successfully deleted.")
+            DeleteApplicationDeploymentResponse(applicationRef, true, "Application was successfully deleted.")
         )
 
         mockMvc.post(
@@ -47,24 +47,24 @@ class ApplicationDeploymentControllerTest : AbstractControllerTest() {
         val payload = ApplicationDeploymentRefPayload(listOf(adr))
 
         every { deploymentFacade.deploymentExist(auroraConfigRef, payload.adr) } returns listOf(
-                GetApplicationDeploymentResponse(
-                        applicationRef = ApplicationRef("paas-utv", "simple"),
-                        success = true,
-                        exists = true,
-                        message = "Application exists"
-                )
+            GetApplicationDeploymentResponse(
+                applicationRef = ApplicationRef("paas-utv", "simple"),
+                success = true,
+                exists = true,
+                message = "Application exists"
+            )
         )
 
         mockMvc.post(
             path = Path("/v1/applicationdeployment/{auroraConfig}", auroraConfigRef.name),
-                headers = HttpHeaders().contentTypeJson(),
-                body = payload
+            headers = HttpHeaders().contentTypeJson(),
+            body = payload
         ) {
             statusIsOk()
-                    .responseJsonPath("$.success").isTrue()
-                    .responseJsonPath("$.items[0].message").equalsValue("Application exists")
-                    .responseJsonPath("$.items[0].exists").equalsValue(true)
-                    .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("paas-utv", "simple"))
+                .responseJsonPath("$.success").isTrue()
+                .responseJsonPath("$.items[0].message").equalsValue("Application exists")
+                .responseJsonPath("$.items[0].exists").equalsValue(true)
+                .responseJsonPath("$.items[0].applicationRef").equalsObject(ApplicationRef("paas-utv", "simple"))
         }
     }
 }

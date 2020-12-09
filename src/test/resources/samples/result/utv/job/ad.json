@@ -1,44 +1,44 @@
 {
-  "apiVersion" : "skatteetaten.no/v1",
-  "kind" : "ApplicationDeployment",
-  "metadata" : {
-    "labels" : {
-      "operationScope" : "aos-4016",
-      "app" : "job",
-      "updatedBy" : "hero",
-      "updatedAt" : "0",
-      "affiliation" : "paas",
-      "name" : "job",
-      "id" : "1234567890",
-      "applicationId" : "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
-      "booberDeployId" : "deploy1"
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "job",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "job",
+      "id": "1234567890",
+      "applicationId": "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
+      "booberDeployId": "deploy1"
     },
-    "name" : "job",
-    "namespace" : "paas-utv",
-    "uid" : "123-123"
+    "name": "job",
+    "namespace": "paas-utv",
+    "uid": "123-123"
   },
-  "spec" : {
-    "applicationId" : "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
-    "updatedAt" : "1970-01-01T00:00:00Z",
-    "selector" : {
-      "name" : "job"
+  "spec": {
+    "applicationId": "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
+    "updatedAt": "1970-01-01T00:00:00Z",
+    "selector": {
+      "name": "job"
     },
-    "applicationDeploymentId" : "1234567890",
-    "applicationName" : "job",
-    "runnableType" : "CronJob",
-    "applicationDeploymentName" : "job",
-    "databases" : [ ],
-    "deployTag" : "1",
-    "command" : {
-      "overrideFiles" : { },
-      "applicationDeploymentRef" : {
-        "environment" : "utv",
-        "application" : "job"
+    "applicationDeploymentId": "1234567890",
+    "applicationName": "job",
+    "runnableType": "CronJob",
+    "applicationDeploymentName": "job",
+    "databases": [],
+    "deployTag": "1",
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "job"
       },
-      "auroraConfig" : {
-        "name" : "paas",
-        "refName" : "master",
-        "resolvedRef" : "123abb"
+      "auroraConfig": {
+        "name": "paas",
+        "refName": "master",
+        "resolvedRef": "123abb"
       }
     }
   }

@@ -1,38 +1,40 @@
 {
-  "apiVersion" : "route.openshift.io/v1",
-  "kind" : "Route",
-  "metadata" : {
-    "annotations" : {
-      "wembley.sits.no/externalHost" : "test.ske",
-      "wembley.sits.no/apiPaths" : "/api",
-      "haproxy.router.openshift.io/timeout" : "30s"
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "annotations": {
+      "wembley.sits.no/externalHost": "test.ske",
+      "wembley.sits.no/apiPaths": "/api",
+      "haproxy.router.openshift.io/timeout": "30s"
     },
-    "labels" : {
-      "operationScope" : "aos-4016",
-      "app" : "komplex",
-      "updatedBy" : "hero",
-      "updatedAt" : "0",
-      "affiliation" : "paas",
-      "name" : "komplex",
-      "booberDeployId" : "deploy1"
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "komplex",
+      "booberDeployId": "deploy1"
     },
-    "name" : "komplex-foobar",
-    "namespace" : "paas-utv",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "komplex",
-      "uid" : "123-123"
-    } ]
+    "name": "komplex-foobar",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
   },
-  "spec" : {
-    "host" : "foobar.test",
-    "port" : {
-      "targetPort" : "http"
+  "spec": {
+    "host": "foobar.test",
+    "port": {
+      "targetPort": "http"
     },
-    "to" : {
-      "kind" : "Service",
-      "name" : "komplex"
+    "to": {
+      "kind": "Service",
+      "name": "komplex"
     }
   }
 }

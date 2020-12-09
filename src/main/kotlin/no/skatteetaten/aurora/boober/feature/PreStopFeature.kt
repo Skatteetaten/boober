@@ -3,7 +3,6 @@ package no.skatteetaten.aurora.boober.feature
 import com.fkorotkov.kubernetes.exec
 import com.fkorotkov.kubernetes.newLifecycle
 import com.fkorotkov.kubernetes.preStop
-import com.fkorotkov.kubernetes.resources
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -17,7 +16,8 @@ import java.time.Duration
 
 const val PRE_STOP_DURATION: String = "lifecycle/preStopDuration"
 
-val AuroraDeploymentSpec.preStop: Duration? get() = this.getOrNull<String>(PRE_STOP_DURATION)?.let { DurationStyle.SIMPLE.parse(it) }
+val AuroraDeploymentSpec.preStop: Duration?
+    get() = this.getOrNull<String>(PRE_STOP_DURATION)?.let { DurationStyle.SIMPLE.parse(it) }
 
 @Service
 class PreStopFeature : Feature {

@@ -198,7 +198,10 @@ class VaultService(
             val response = try {
                 function(vaultCollection, repo)
             } catch (e: Exception) {
-                throw AuroraVaultServiceException("Could not update auroraVault underlying message=${e.localizedMessage}", e)
+                throw AuroraVaultServiceException(
+                    "Could not update auroraVault underlying message=${e.localizedMessage}",
+                    e
+                )
             }
             repo.close()
             response

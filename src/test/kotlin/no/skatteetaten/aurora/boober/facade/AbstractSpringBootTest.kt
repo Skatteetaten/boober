@@ -108,7 +108,10 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     fun herkimerMock(block: HttpMock.() -> Unit = {}): MockWebServer =
         httpMockServer(herkimerPort.toInt(), block)
 
-    fun applicationDeploymentGenerationMock(adId: String = "1234567890", also: HttpMock.() -> Unit = {}): MockWebServer {
+    fun applicationDeploymentGenerationMock(
+        adId: String = "1234567890",
+        also: HttpMock.() -> Unit = {}
+    ): MockWebServer {
         val ad = ApplicationDeploymentHerkimer(
             id = adId,
             name = "name",

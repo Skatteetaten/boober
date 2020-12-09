@@ -3,7 +3,7 @@
   "kind": "ApplicationDeployment",
   "metadata": {
     "labels": {
-      "operationScope" : "aos-4016",
+      "operationScope": "aos-4016",
       "app": "easy",
       "updatedBy": "hero",
       "updatedAt": "0",
@@ -25,7 +25,7 @@
     },
     "applicationDeploymentId": "1234567890",
     "applicationName": "simple",
-    "runnableType" : "DeploymentConfig",
+    "runnableType": "DeploymentConfig",
     "applicationDeploymentName": "easy",
     "databases": [
       "fd59dba9-7d67-4ea2-bb98-081a5df8c387"

@@ -9,12 +9,12 @@ import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.kubernetes.api.model.batch.CronJob
 import io.fabric8.kubernetes.api.model.batch.Job
 import io.fabric8.openshift.api.model.DeploymentConfig
-import java.time.Instant
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
+import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
 
@@ -65,7 +65,8 @@ fun Set<AuroraResource>.addLabels(
             if (deployment.spec.template.metadata == null) {
                 deployment.spec.template.metadata = ObjectMeta()
             }
-            deployment.spec.template.metadata.labels = commonLabels.addIfNotNull(deployment.spec.template.metadata?.labels)
+            deployment.spec.template.metadata.labels =
+                commonLabels.addIfNotNull(deployment.spec.template.metadata?.labels)
         }
         if (it.resource.kind == "CronJob") {
             it.sources.add(AuroraResourceSource(feature = clazz, comment = "$comment to to jobTemplate"))
@@ -73,7 +74,8 @@ fun Set<AuroraResource>.addLabels(
             if (cronJob.spec.jobTemplate.metadata == null) {
                 cronJob.spec.jobTemplate.metadata = ObjectMeta()
             }
-            cronJob.spec.jobTemplate.metadata.labels = commonLabels.addIfNotNull(cronJob.spec.jobTemplate.metadata?.labels)
+            cronJob.spec.jobTemplate.metadata.labels =
+                commonLabels.addIfNotNull(cronJob.spec.jobTemplate.metadata?.labels)
         }
     }
 }
@@ -116,7 +118,8 @@ fun Set<AuroraResource>.addVolumesAndMounts(
     this.filter { it.resource.kind == "CronJob" }.forEach {
         it.sources.add(AuroraResourceSource(feature = clazz, comment = "Added env vars, volume mount, volume"))
         val cronJob: CronJob = it.resource as CronJob
-        cronJob.spec.jobTemplate.spec.template.spec.volumes = cronJob.spec.jobTemplate.spec.template.spec.volumes.addIfNotNull(volumes)
+        cronJob.spec.jobTemplate.spec.template.spec.volumes =
+            cronJob.spec.jobTemplate.spec.template.spec.volumes.addIfNotNull(volumes)
         cronJob.allNonSideCarContainers.forEach { container ->
             container.volumeMounts = container.volumeMounts.addIfNotNull(volumeMounts)
             container.env = container.env.addIfNotNull(envVars)

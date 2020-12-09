@@ -103,7 +103,12 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
     if (duplicatedNames.isNotEmpty()) {
         val namesString = duplicatedNames.joinToString(", ").toLowerCase()
         val error: List<ContextErrors> =
-            listOf(ContextErrors(this.cmd, listOf(RuntimeException("The following resources are generated more then once $namesString"))))
+            listOf(
+                ContextErrors(
+                    this.cmd,
+                    listOf(RuntimeException("The following resources are generated more then once $namesString"))
+                )
+            )
         return error to featureResources
     }
 
