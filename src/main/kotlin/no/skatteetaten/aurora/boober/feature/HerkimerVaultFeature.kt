@@ -15,21 +15,30 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.jsonMapper
+import no.skatteetaten.aurora.boober.utils.notBlank
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
-private const val FEATURE_FIELD = "vault"
+private const val FEATURE_FIELD = "resources"
 
 @Service
 class HerkimerVaultFeature(
     val herkimerService: HerkimerService
 ) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
-            AuroraConfigFieldHandler("$FEATURE_FIELD/enabled", validator = { it.boolean() }),
-            AuroraConfigFieldHandler("$FEATURE_FIELD/prefix", defaultValue = "")
-
-        )
+        return header.getSubKeyValues(FEATURE_FIELD).flatMap { key ->
+            setOf(
+                AuroraConfigFieldHandler("$FEATURE_FIELD/$key/enabled", validator = { it.boolean() }),
+                AuroraConfigFieldHandler("$FEATURE_FIELD/$key/prefix", defaultValue = ""),
+                AuroraConfigFieldHandler(
+                    "$FEATURE_FIELD/$key/serviceClass",
+                    validator = { it.notBlank("serviceClass needs a value") }),
+                AuroraConfigFieldHandler(
+                    "$FEATURE_FIELD/$key/multiple",
+                    defaultValue = false,
+                    validator = { it.boolean() })
+            )
+        }.toSet()
     }
 
     override fun validate(
