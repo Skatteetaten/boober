@@ -101,8 +101,6 @@ integrations:
         url: https://skap-aurora.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
-    mattermost:
-        url: https://chat.sits.no
     herkimer:
         url: false
         fallback:
