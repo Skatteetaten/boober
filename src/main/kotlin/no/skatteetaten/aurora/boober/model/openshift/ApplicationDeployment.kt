@@ -60,7 +60,7 @@ data class ApplicationDeploymentSpec(
     var deployTag: String? = null,
     var command: ApplicationDeploymentCommand? = null,
     var message: String? = null,
-    var notifications: Notifications? = null
+    var notifications: Set<Notification>? = null
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -71,9 +71,10 @@ data class ApplicationDeploymentCommand(
     val auroraConfig: AuroraConfigRef
 )
 
+enum class NotificationType {
+    Email, Mattermost
+}
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class Notifications(
-    val mattermost: Set<String>?,
-    val email: Set<String>?
-)
+data class Notification(val notificationLocation: String, val type: NotificationType)

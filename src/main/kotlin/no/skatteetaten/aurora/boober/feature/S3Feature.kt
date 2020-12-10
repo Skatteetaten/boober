@@ -138,7 +138,7 @@ class S3Feature(
         val nameAndCredentials = getBucketCredentials()
 
         return this.mapNotNull {
-            val credentials = nameAndCredentials[it.bucketName]
+            val credentials = nameAndCredentials[it.bucketName.trim()]
 
             if (credentials == null) IllegalArgumentException("Could not find credentials for bucket with name=${it.bucketName}, please register the credentials")
             else null

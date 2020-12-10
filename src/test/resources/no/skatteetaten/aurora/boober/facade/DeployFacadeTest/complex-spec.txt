@@ -4,8 +4,16 @@
             complex.json | message: "Aurora <3"
             complex.json | ttl: "1d"
                          | notification:
-            complex.json |   email: "foo@bar.no ola@nordmann.net"
-            complex.json |   mattermost: ["test","test2"]
+                         |   email:
+                         |     foo@bar.no:
+            complex.json |       enabled: true
+                         |     ola@nordmann.net:
+            complex.json |       enabled: true
+                         |   mattermost:
+                         |     test:
+            complex.json |       enabled: true
+                         |     test2:
+            complex.json |       enabled: true
               about.json | schemaVersion: "v1"
             complex.json | type: "development"
               about.json | affiliation: "paas"
