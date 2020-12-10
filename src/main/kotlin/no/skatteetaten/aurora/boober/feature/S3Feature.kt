@@ -253,6 +253,17 @@ class S3Feature(
         }
     }
 
+    private fun List<S3BucketObjectArea>.validateObjectAreasPattern(): List<IllegalArgumentException> {
+        return this.mapNotNull {
+            val objectAreaPattern = Regex("[a-z0-9-.]+")
+            if (!it.area.matches(objectAreaPattern)) {
+                IllegalArgumentException("s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it.area}")
+            } else {
+                null
+            }
+        }
+    }
+
     private fun findS3Bucket(
         s3ObjectAreaKey: String,
         adc: AuroraDeploymentSpec
@@ -359,8 +370,7 @@ abstract class S3FeatureTemplate : Feature {
                     AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/$s3BucketObjectArea/bucketName"),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/objectArea",
-                        defaultValue = s3BucketObjectArea,
-                        validator = { objectAreaPatternValidation(it) }
+                        defaultValue = s3BucketObjectArea
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/enabled",

@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
@@ -255,6 +256,48 @@ class AuroraConfigTest : ResourceLoader() {
 
         assertThat { auroraConfigFile.asJsonNode }.isFailure()
             .messageContains("First line in file does not contains space after ':'")
+    }
+
+    @Test
+    fun `Should fail when adding new file that already exist`() {
+
+        val auroraConfig = createAuroraConfig(aid)
+        val updates =
+            """
+            { 
+                "version": "2",
+                "certificate": false,
+                "version": "5"
+            }
+            """.trimIndent()
+
+        assertThat {
+            auroraConfig.updateFile("about.json", updates)
+        }.isFailure().all {
+            isInstanceOf(PreconditionFailureException::class)
+            messageContains("The fileName=about.json already exists in this AuroraConfig.")
+        }
+    }
+
+    @Test
+    fun `Should fail when adding old file that does not exist`() {
+
+        val auroraConfig = createAuroraConfig(aid)
+        val updates =
+            """
+            { 
+                "version": "2",
+                "certificate": false,
+                "version": "5"
+            }
+            """.trimIndent()
+
+        assertThat {
+            auroraConfig.updateFile("about2.json", updates, "abc132")
+        }.isFailure().all {
+            isInstanceOf(PreconditionFailureException::class)
+            messageContains("The fileName=about2.json does not exist with a version of (abc132).")
+        }
     }
 
     fun createMockFiles(vararg files: String): List<AuroraConfigFile> {
