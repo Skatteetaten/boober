@@ -12,11 +12,13 @@ class StsFeatureDisabledTest : AbstractFeatureTest() {
     @Test
     fun `get error if trying to create certificate when feature disabled`() {
 
-        assertThat { generateResources(
-            """{ 
+        assertThat {
+            generateResources(
+                """{ 
                "sts" : true,
                "groupId" : "org.test"
            }"""
-        ) }.singleApplicationError("STS is not supported")
+            )
+        }.singleApplicationError("STS is not supported")
     }
 }

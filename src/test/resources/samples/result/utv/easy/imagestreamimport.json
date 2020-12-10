@@ -1,23 +1,25 @@
 {
-  "apiVersion" : "image.openshift.io/v1",
-  "kind" : "ImageStreamImport",
-  "metadata" : {
-    "name" : "easy",
-    "namespace" : "paas-utv"
+  "apiVersion": "image.openshift.io/v1",
+  "kind": "ImageStreamImport",
+  "metadata": {
+    "name": "easy",
+    "namespace": "paas-utv"
   },
-  "spec" : {
-    "images" : [ {
-      "from" : {
-        "kind" : "DockerImage",
-        "name" : "docker.registry:5000/org_test/simple:1"
-      },
-      "importPolicy" : {
-        "scheduled" : true
-      },
-      "to" : {
-        "name" : "default"
+  "spec": {
+    "images": [
+      {
+        "from": {
+          "kind": "DockerImage",
+          "name": "docker.registry:5000/org_test/simple:1"
+        },
+        "importPolicy": {
+          "scheduled": true
+        },
+        "to": {
+          "name": "default"
+        }
       }
-    } ],
-    "import" : true
+    ],
+    "import": true
   }
 }

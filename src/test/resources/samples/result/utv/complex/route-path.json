@@ -3,7 +3,7 @@
   "kind": "Route",
   "metadata": {
     "labels": {
-      "operationScope" : "aos-4016",
+      "operationScope": "aos-4016",
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
@@ -25,8 +25,8 @@
   "spec": {
     "host": "pathroute.test",
     "path": "/path",
-    "port" : {
-      "targetPort" : "http"
+    "port": {
+      "targetPort": "http"
     },
     "to": {
       "kind": "Service",

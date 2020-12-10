@@ -1,503 +1,628 @@
 {
-  "applicationDeploymentRef" : {
-    "source" : "static",
-    "value" : "utv/python",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "utv/python"
-    } ]
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/python",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/python"
+      }
+    ]
   },
-  "configVersion" : {
-    "source" : "static",
-    "value" : "master",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "master"
-    } ]
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
   },
-  "applicationDeploymentId" : {
-    "source" : "static",
-    "value" : "1234567890",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "1234567890"
-    } ]
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
   },
-  "schemaVersion" : {
-    "source" : "about.json",
-    "value" : "v1",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "v1"
-    } ]
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
   },
-  "type" : {
-    "source" : "about.json",
-    "value" : "deploy",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "deploy"
-    } ]
+  "type": {
+    "source": "about.json",
+    "value": "deploy",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      }
+    ]
   },
-  "deployState" : {
-    "source" : "default",
-    "value" : "deploymentConfig",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "deploymentConfig"
-    } ]
+  "deployState": {
+    "source": "default",
+    "value": "deploymentConfig",
+    "sources": [
+      {
+        "name": "default",
+        "value": "deploymentConfig"
+      }
+    ]
   },
-  "applicationPlatform" : {
-    "source" : "utv/python.json",
-    "value" : "python",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "java"
-    }, {
-      "name" : "python.json",
-      "value" : "python"
-    }, {
-      "name" : "utv/python.json",
-      "value" : "python"
-    } ]
-  },
-  "affiliation" : {
-    "source" : "about.json",
-    "value" : "paas",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "paas"
-    } ]
-  },
-  "segment" : {
-    "source" : "about.json",
-    "value" : "aurora",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "aurora"
-    } ]
-  },
-  "cluster" : {
-    "source" : "utv/about.json",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "utv"
-    }, {
-      "name" : "utv/about.json",
-      "value" : "utv"
-    } ]
-  },
-  "permissions" : {
-    "admin" : {
-      "source" : "about.json",
-      "value" : "APP_PaaS_drift APP_PaaS_utv",
-      "sources" : [ {
-        "name" : "about.json",
-        "value" : "APP_PaaS_drift APP_PaaS_utv"
-      } ]
-    }
-  },
-  "envName" : {
-    "source" : "folderName",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "folderName",
-      "value" : "utv"
-    } ]
-  },
-  "name" : {
-    "source" : "fileName",
-    "value" : "python",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "python"
-    } ]
-  },
-  "certificate" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "groupId" : {
-    "source" : "utv/python.json",
-    "value" : "org.test",
-    "sources" : [ {
-      "name" : "python.json",
-      "value" : "org.test"
-    }, {
-      "name" : "utv/python.json",
-      "value" : "org.test"
-    } ]
-  },
-  "databaseDefaults" : {
-    "flavor" : {
-      "source" : "default",
-      "value" : "ORACLE_MANAGED",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "ORACLE_MANAGED"
-      } ]
-    },
-    "generate" : {
-      "source" : "default",
-      "value" : true,
-      "sources" : [ {
-        "name" : "default",
-        "value" : true
-      } ]
-    },
-    "tryReuse" : {
-      "source" : "utv/python.json",
-      "value" : true,
-      "sources" : [ {
-        "name" : "default",
-        "value" : false
-      }, {
-        "name" : "python.json",
-        "value" : true
-      }, {
-        "name" : "utv/python.json",
-        "value" : true
-      } ]
-    },
-    "name" : {
-      "source" : "default",
-      "value" : "@name@",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "@name@"
-      } ]
-    }
-  },
-  "database" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
-  },
-  "management" : {
-    "path" : {
-      "source" : "default",
-      "value" : "actuator",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "actuator"
-      } ]
-    },
-    "port" : {
-      "source" : "default",
-      "value" : "8081",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "8081"
-      } ]
-    },
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ]
-  },
-  "alarm" : {
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ]
-  },
-  "pause" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "debug" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "version" : {
-    "source" : "utv/python.json",
-    "value" : "1",
-    "sources" : [ {
-      "name" : "python.json",
-      "value" : "1"
-    }, {
-      "name" : "utv/python.json",
-      "value" : "1"
-    } ]
-  },
-  "resources" : {
-    "cpu" : {
-      "min" : {
-        "source" : "default",
-        "value" : "10m",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "10m"
-        } ]
+  "applicationPlatform": {
+    "source": "utv/python.json",
+    "value": "python",
+    "sources": [
+      {
+        "name": "default",
+        "value": "java"
       },
-      "max" : {
-        "source" : "default",
-        "value" : "2000m",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "2000m"
-        } ]
+      {
+        "name": "python.json",
+        "value": "python"
+      },
+      {
+        "name": "utv/python.json",
+        "value": "python"
+      }
+    ]
+  },
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
+  },
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
+    }
+  },
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
+  },
+  "name": {
+    "source": "fileName",
+    "value": "python",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "python"
+      }
+    ]
+  },
+  "certificate": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "groupId": {
+    "source": "utv/python.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "python.json",
+        "value": "org.test"
+      },
+      {
+        "name": "utv/python.json",
+        "value": "org.test"
+      }
+    ]
+  },
+  "databaseDefaults": {
+    "flavor": {
+      "source": "default",
+      "value": "ORACLE_MANAGED",
+      "sources": [
+        {
+          "name": "default",
+          "value": "ORACLE_MANAGED"
+        }
+      ]
+    },
+    "generate": {
+      "source": "default",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": true
+        }
+      ]
+    },
+    "tryReuse": {
+      "source": "utv/python.json",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        },
+        {
+          "name": "python.json",
+          "value": true
+        },
+        {
+          "name": "utv/python.json",
+          "value": true
+        }
+      ]
+    },
+    "name": {
+      "source": "default",
+      "value": "@name@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@"
+        }
+      ]
+    }
+  },
+  "database": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
+  },
+  "management": {
+    "path": {
+      "source": "default",
+      "value": "actuator",
+      "sources": [
+        {
+          "name": "default",
+          "value": "actuator"
+        }
+      ]
+    },
+    "port": {
+      "source": "default",
+      "value": "8081",
+      "sources": [
+        {
+          "name": "default",
+          "value": "8081"
+        }
+      ]
+    },
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "alarm": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "pause": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "version": {
+    "source": "utv/python.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "python.json",
+        "value": "1"
+      },
+      {
+        "name": "utv/python.json",
+        "value": "1"
+      }
+    ]
+  },
+  "resources": {
+    "cpu": {
+      "min": {
+        "source": "default",
+        "value": "10m",
+        "sources": [
+          {
+            "name": "default",
+            "value": "10m"
+          }
+        ]
+      },
+      "max": {
+        "source": "default",
+        "value": "2000m",
+        "sources": [
+          {
+            "name": "default",
+            "value": "2000m"
+          }
+        ]
       }
     },
-    "memory" : {
-      "min" : {
-        "source" : "default",
-        "value" : "128Mi",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "128Mi"
-        } ]
+    "memory": {
+      "min": {
+        "source": "default",
+        "value": "128Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "128Mi"
+          }
+        ]
       },
-      "max" : {
-        "source" : "default",
-        "value" : "512Mi",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "512Mi"
-        } ]
-      }
-    }
-  },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "python",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "python"
-    } ]
-  },
-  "deployStrategy" : {
-    "type" : {
-      "source" : "default",
-      "value" : "rolling",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "rolling"
-      } ]
-    },
-    "timeout" : {
-      "source" : "default",
-      "value" : 180,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 180
-      } ]
-    }
-  },
-  "replicas" : {
-    "source" : "default",
-    "value" : 1,
-    "sources" : [ {
-      "name" : "default",
-      "value" : 1
-    } ]
-  },
-  "prometheus" : {
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ],
-    "path" : {
-      "source" : "default",
-      "value" : "/prometheus",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "/prometheus"
-      } ]
-    },
-    "port" : {
-      "source" : "default",
-      "value" : 8081,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 8081
-      } ]
-    }
-  },
-  "readiness" : {
-    "source" : "default",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : true
-    } ],
-    "port" : {
-      "source" : "default",
-      "value" : 8080,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 8080
-      } ]
-    },
-    "delay" : {
-      "source" : "default",
-      "value" : 10,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 10
-      } ]
-    },
-    "timeout" : {
-      "source" : "default",
-      "value" : 1,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 1
-      } ]
-    }
-  },
-  "liveness" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
-  "route" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
-  },
-  "routeDefaults" : {
-    "host" : {
-      "source" : "default",
-      "value" : "@name@-@affiliation@-@env@",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "@name@-@affiliation@-@env@"
-      } ]
-    },
-    "tls" : {
-      "enabled" : {
-        "source" : "default",
-        "value" : false,
-        "sources" : [ {
-          "name" : "default",
-          "value" : false
-        } ]
-      },
-      "insecurePolicy" : {
-        "source" : "default",
-        "value" : "None",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "None"
-        } ]
-      },
-      "termination" : {
-        "source" : "default",
-        "value" : "edge",
-        "sources" : [ {
-          "name" : "default",
-          "value" : "edge"
-        } ]
+      "max": {
+        "source": "default",
+        "value": "512Mi",
+        "sources": [
+          {
+            "name": "default",
+            "value": "512Mi"
+          }
+        ]
       }
     }
   },
-  "s3" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
+  "artifactId": {
+    "source": "fileName",
+    "value": "python",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "python"
+      }
+    ]
   },
-  "s3Defaults" : {
-    "bucketName" : {
-      "source" : "utv/python.json",
-      "value" : "myBucket",
-      "sources" : [ {
-        "name" : "python.json",
-        "value" : "myBucket"
-      }, {
-        "name" : "utv/python.json",
-        "value" : "myBucket"
-      } ]
+  "deployStrategy": {
+    "type": {
+      "source": "default",
+      "value": "rolling",
+      "sources": [
+        {
+          "name": "default",
+          "value": "rolling"
+        }
+      ]
     },
-    "objectArea" : {
-      "source" : "utv/python.json",
-      "value" : "default",
-      "sources" : [ {
-        "name" : "python.json",
-        "value" : "default"
-      }, {
-        "name" : "utv/python.json",
-        "value" : "default"
-      } ]
+    "timeout": {
+      "source": "default",
+      "value": 180,
+      "sources": [
+        {
+          "name": "default",
+          "value": 180
+        }
+      ]
     }
   },
-  "sts" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
+  "replicas": {
+    "source": "default",
+    "value": 1,
+    "sources": [
+      {
+        "name": "default",
+        "value": 1
+      }
+    ]
   },
-  "toxiproxy" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
+  "prometheus": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "path": {
+      "source": "default",
+      "value": "/prometheus",
+      "sources": [
+        {
+          "name": "default",
+          "value": "/prometheus"
+        }
+      ]
+    },
+    "port": {
+      "source": "default",
+      "value": 8081,
+      "sources": [
+        {
+          "name": "default",
+          "value": 8081
+        }
+      ]
+    }
   },
-  "webseal" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
+  "readiness": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ],
+    "port": {
+      "source": "default",
+      "value": 8080,
+      "sources": [
+        {
+          "name": "default",
+          "value": 8080
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": 10,
+      "sources": [
+        {
+          "name": "default",
+          "value": 10
+        }
+      ]
+    },
+    "timeout": {
+      "source": "default",
+      "value": 1,
+      "sources": [
+        {
+          "name": "default",
+          "value": 1
+        }
+      ]
+    }
+  },
+  "liveness": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "route": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
+  },
+  "routeDefaults": {
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@-@affiliation@-@env@"
+        }
+      ]
+    },
+    "tls": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "insecurePolicy": {
+        "source": "default",
+        "value": "None",
+        "sources": [
+          {
+            "name": "default",
+            "value": "None"
+          }
+        ]
+      },
+      "termination": {
+        "source": "default",
+        "value": "edge",
+        "sources": [
+          {
+            "name": "default",
+            "value": "edge"
+          }
+        ]
+      }
+    }
+  },
+  "s3": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
+  },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "utv/python.json",
+      "value": "myBucket",
+      "sources": [
+        {
+          "name": "python.json",
+          "value": "myBucket"
+        },
+        {
+          "name": "utv/python.json",
+          "value": "myBucket"
+        }
+      ]
+    },
+    "objectArea": {
+      "source": "utv/python.json",
+      "value": "default",
+      "sources": [
+        {
+          "name": "python.json",
+          "value": "default"
+        },
+        {
+          "name": "utv/python.json",
+          "value": "default"
+        }
+      ]
+    }
+  },
+  "sts": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
+  },
+  "toxiproxy": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "webseal": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   }
 }

@@ -29,7 +29,10 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("ad.json")
 
         assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Added env vars", index = 0)
-        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Set owner reference to ApplicationDeployment", index = 1)
+        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(
+            comment = "Set owner reference to ApplicationDeployment",
+            index = 1
+        )
         assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(newOwnerReference {
             apiVersion = "skatteetaten.no/v1"
             kind = "ApplicationDeployment"
@@ -46,6 +49,7 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             )
         }.singleApplicationError("""Email address 'asd' is not a valid email address.""")
     }
+
     @Test
     fun `get error if ttl duration string is wrong`() {
         assertThat {
