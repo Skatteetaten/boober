@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.service
 
 import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.releaseTo
 import no.skatteetaten.aurora.boober.feature.version
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.Notification
@@ -43,9 +44,12 @@ class NotificationService(
         return this.joinToString(separator = "\n") { deployResult ->
             val adSpec = deployResult.findApplicationDeploymentSpec()
             val message = if (deployResult.success) adSpec.message else deployResult.reason ?: "Unknown error"
+            val messageFormatted = message?.let { " *message*=$it" } ?: ""
             val adc = deployResult.auroraDeploymentSpecInternal
+            val releaseTo = adc.releaseTo?.let { " *releaseTo*=$it " } ?: ""
+            val deployId = if (!isSuccessful) "*deployId*=${deployResult.deployId} " else ""
 
-            "* **${adc.envName}/${adc.name}** *version*=${adc.version}  ${if (!isSuccessful) "*deployId*=${deployResult.deployId}  " else ""}      ${message?.let { "*message*=$it" } ?: ""}"
+            "* **${adc.envName}/${adc.name}** *version*=${adc.version}  $releaseTo $deployId $messageFormatted"
         }
     }
 
