@@ -28,7 +28,10 @@ class HerkimerVaultFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return header.getSubKeyValues(FEATURE_FIELD).flatMap { key ->
             setOf(
-                AuroraConfigFieldHandler("$FEATURE_FIELD/$key/enabled", validator = { it.boolean() }),
+                AuroraConfigFieldHandler(
+                    "$FEATURE_FIELD/$key/enabled",
+                    defaultValue = true,
+                    validator = { it.boolean() }),
                 AuroraConfigFieldHandler("$FEATURE_FIELD/$key/prefix", defaultValue = ""),
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/serviceClass",
@@ -46,34 +49,44 @@ class HerkimerVaultFeature(
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        return emptyList()
+        val configuredHerkimerVaultResources = adc.findAllConfiguredHerkimerResources()
+
+        return validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
         if (!adc.isFeatureEnabled()) return emptySet()
 
-        val nameAndCredentials =
-            herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.ManagedPostgresDatabase)
-                .associate { resource ->
-                    resource.name to resource.claims.firstOrNull()?.credentials
-                }.mapValues { (name, credentials) ->
-                    credentials ?: TODO()
-                    if (credentials.isObject) {
+        val herkimerVaultResources = adc.findAllConfiguredHerkimerResources().groupBy { it.prefix }
+        val secrets = herkimerVaultResources.flatMap { (prefix, resources) ->
+            resources.map {
+                // TODO: skal vi la getClaimedResources ta en string istedenfor ResourceKind enum
+                herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.valueOf(it.serviceClass))
+                    .associate { resource ->
+                        // TODO: valider dette i fullvalidation
+                        resource.name to resource.claims.first().credentials
+                    }.mapValues { (name, credentials) ->
+                        // TODO: valider i full validation at det kun er Objects i herkimer som kan serialiseres til Map<String, String>
                         jsonMapper().convertValue<Map<String, String>>(credentials)
-                    } else {
-                        TODO("NOT supported, fix it")
+                    }
+            }
+        }.flatMap { resourcesWithCredentials ->
+
+                resourcesWithCredentials.map { (resourceName, credentials) ->
+                    newSecret {
+                        metadata {
+                            name = "${adc.name}-$resourceName-resources"
+                            namespace = adc.namespace
+                            annotations = mapOf(
+                                // TODO: annotationsname const val
+                                "prefix" to
+                            )
+                        }
+                        data = credentials.mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
                     }
                 }
 
-        val secrets = nameAndCredentials.map { (resourceName, credentials) ->
-            newSecret {
-                metadata {
-                    name = "${adc.name}-$resourceName-herkimervault"
-                    namespace = adc.namespace
-                }
-                data = credentials.mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
             }
-        }
 
         return secrets.map {
             it.generateAuroraResource()
@@ -82,6 +95,8 @@ class HerkimerVaultFeature(
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
         if (!adc.isFeatureEnabled()) return
+
+        val herkimerVaultResources = adc.findAllConfiguredHerkimerResources()
         val prefix: String = adc["$FEATURE_FIELD/prefix"]
         val envVars = resources.findResourcesByType<Secret>(suffix = "herkimervault")
             .mapIndexed { index, secret ->
@@ -91,5 +106,42 @@ class HerkimerVaultFeature(
         resources.addEnvVarsToMainContainers(envVars, javaClass)
     }
 
+    private fun AuroraDeploymentSpec.findAllConfiguredHerkimerResources() =
+        this.getSubKeyValues("$FEATURE_FIELD").mapNotNull {
+            this.findConfiguredHerkimerResource(it)
+        }
+
+    private fun AuroraDeploymentSpec.findConfiguredHerkimerResource(resourceKey: String): HerkimerVaultResource? {
+        val enabled: Boolean = this["$FEATURE_FIELD/$resourceKey/enabled"]
+        if (!enabled) return null
+        return HerkimerVaultResource(
+            prefix = this["$FEATURE_FIELD/$resourceKey/prefix"],
+            serviceClass = this["$FEATURE_FIELD/$resourceKey/serviceClass"],
+            multiple = this["$FEATURE_FIELD/$resourceKey/multiple"]
+
+        )
+    }
+
     private fun AuroraDeploymentSpec.isFeatureEnabled(): Boolean = this.hasSubKeys(FEATURE_FIELD)
+
+    private fun validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources: List<HerkimerVaultResource>): List<IllegalArgumentException> =
+        configuredHerkimerVaultResources.groupBy { it.prefix }.mapNotNull { (prefix, vaultResource) ->
+            val resourcesWithMultiple = vaultResource.filter { it.multiple }
+            val resourcesWithoutMultiple = vaultResource.filter { !it.multiple }
+            if (resourcesWithMultiple.isNotEmpty() && resourcesWithoutMultiple.isNotEmpty()) {
+                IllegalArgumentException(
+                    """
+                        |The resources with prefix=$prefix has both some resources 
+                        |that expect multiple envvars and some other that does not expect multiple envvars. 
+                        |This is not possible. Resources with multiple=true is ${resourcesWithMultiple.joinToString()} 
+                        |and with multiple=false is ${resourcesWithoutMultiple.joinToString()}""".trimMargin()
+                )
+            } else null
+        }
 }
+
+data class HerkimerVaultResource(
+    val prefix: String,
+    val serviceClass: String,
+    val multiple: Boolean
+)
