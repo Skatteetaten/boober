@@ -107,18 +107,28 @@ data class AuroraConfig(
             it.value.name == name
         }
 
+        if (indexedValue == null) {
+            if (previousVersion != null) {
+                throw PreconditionFailureException("The fileName=$name does not exist with a version of ($previousVersion).")
+            }
+        } else {
+            if (previousVersion == null) {
+                throw PreconditionFailureException("The fileName=$name already exists in this AuroraConfig.")
+            }
+
+            if (indexedValue.value.version != previousVersion) {
+                throw AuroraVersioningException(this, indexedValue.value, previousVersion)
+            }
+        }
+
         val files = files.toMutableList()
+
         val newFile = AuroraConfigFile(name, contents)
         if (indexedValue == null) {
             files.add(newFile)
-            return Pair(newFile, this.copy(files = files))
+        } else {
+            files[indexedValue.index] = newFile
         }
-
-        val currentFile = indexedValue.value
-        if (currentFile.version != previousVersion) {
-            throw AuroraVersioningException(this, currentFile, previousVersion)
-        }
-        files[indexedValue.index] = newFile
 
         return Pair(newFile, this.copy(files = files))
     }

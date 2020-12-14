@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -30,10 +29,12 @@ class LocalTemplateFeature(
         }))
     }
 
-    override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode {
-        val templateFile = adc.get<String>("templateFile").let { fileName ->
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+        val templateFile = spec.get<String>("templateFile").let { fileName ->
             cmd.auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }
-        return templateFile ?: throw IllegalArgumentException("templateFile is required")
+        return templateFile?.let {
+            mapOf("template" to it)
+        } ?: throw IllegalArgumentException("templateFile is required")
     }
 }

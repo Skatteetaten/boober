@@ -50,7 +50,7 @@ class AuroraDeploymentContextService(
         val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.parallelMap { cmd ->
             try {
                 logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")
-                val context = createAuroraDeploymentContext(cmd)
+                val context = createAuroraDeploymentContext(cmd, resourceValidation)
 
                 val errors = context.validate(resourceValidation).flatMap { it.value }
 
@@ -126,16 +126,17 @@ class AuroraDeploymentContextService(
 
     fun findApplicationRef(deployCommand: AuroraContextCommand): ApplicationRef {
 
-        val adc = createAuroraDeploymentContext(deployCommand)
+        val adc = createAuroraDeploymentContext(deployCommand, false)
         return ApplicationRef(adc.spec.namespace, adc.spec.name)
     }
 
     // Do not want to expose createADC without it beeing validated
     fun findApplicationDeploymentSpec(deployCommand: AuroraContextCommand) =
-        createAuroraDeploymentContext(deployCommand).spec
+        createAuroraDeploymentContext(deployCommand, false).spec
 
     private fun createAuroraDeploymentContext(
-        deployCommand: AuroraContextCommand
+        deployCommand: AuroraContextCommand,
+        fullValidation: Boolean
     ): AuroraDeploymentContext {
 
         val headerHandlers = deployCommand.applicationDeploymentRef.headerHandlers
@@ -208,6 +209,10 @@ class AuroraDeploymentContextService(
             spec.copy(fields = fields)
         }
 
+        val featureContext = featureAdc.mapValues { (feature, featureSpec) ->
+            feature.createContext(featureSpec, deployCommand, !fullValidation)
+        }
+
         val errorWarnings = (headerErrors + errors).map {
             it.asWarning()
         }.distinct()
@@ -216,7 +221,7 @@ class AuroraDeploymentContextService(
             spec,
             cmd = deployCommand,
             features = featureAdc,
-            featureHandlers = featureHandlers,
+            featureContext = featureContext,
             warnings = findWarnings(deployCommand, featureAdc) + errorWarnings
         )
     }

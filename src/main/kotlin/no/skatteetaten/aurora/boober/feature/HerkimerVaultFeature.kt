@@ -48,14 +48,14 @@ class HerkimerVaultFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
         val configuredHerkimerVaultResources = adc.findAllConfiguredHerkimerResources()
 
         return validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources)
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec,  context: Map<String, Any>): Set<AuroraResource> {
         if (!adc.isFeatureEnabled()) return emptySet()
 
         val herkimerVaultResources = adc.findAllConfiguredHerkimerResources().groupBy { it.prefix }
@@ -85,7 +85,7 @@ class HerkimerVaultFeature(
         }.toSet()
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>,  context: Map<String, Any>) {
         if (!adc.isFeatureEnabled()) return
 
         val herkimerVaultResources = adc.findAllConfiguredHerkimerResources()

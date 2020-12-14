@@ -55,12 +55,13 @@ class DatabaseDisabledFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
-        val databases = findDatabases(adc)
-        return if (databases.isNotEmpty()) {
-            listOf(IllegalArgumentException("Databases are not supported in this cluster"))
-        } else emptyList()
+        val databases = context["databases"] as List<Database>
+        if (databases.isNotEmpty()) {
+            return listOf(IllegalArgumentException("Databases are not supported in this cluster"))
+        }
+        return emptyList()
     }
 }
 
@@ -77,11 +78,13 @@ class DatabaseFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
-        val databases = findDatabases(adc).createSchemaRequests(adc)
-
-        if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) return emptyList()
+        val db = context["databases"] as List<Database>
+        val databases = db.createSchemaRequests(adc)
+        if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
+            return emptyList()
+        }
 
         return databases.filter { it is SchemaIdRequest || it.isAppRequestWithoutGenerate() }
             .mapNotNull { request ->
@@ -97,9 +100,10 @@ class DatabaseFeature(
             }
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
-        val schemaRequests = findDatabases(adc)
-            .createSchemaRequests(adc)
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+        val databases = context["databases"] as List<Database>
+
+        val schemaRequests = databases.createSchemaRequests(adc)
 
         if (schemaRequests.isEmpty()) return emptySet()
 
@@ -109,9 +113,12 @@ class DatabaseFeature(
             .toSet()
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-        val databases = findDatabases(adc)
-
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
+        val databases = context["databases"] as List<Database>
         if (databases.isEmpty()) return
 
         resources.attachDbSecrets(databases, adc.name, this::class)
@@ -212,6 +219,10 @@ class DatabaseFeature(
 }
 
 abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
+
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+        return mapOf("databases" to findDatabases(spec))
+    }
 
     val databaseDefaultsKey = "databaseDefaults"
 

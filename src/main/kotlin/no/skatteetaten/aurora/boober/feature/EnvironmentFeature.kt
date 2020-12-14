@@ -51,7 +51,7 @@ class EnvironmentFeature(
         return setOf()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
 
         val rolebindings = generateRolebindings(adc).map {
             generateResource(it, header = true)
@@ -121,7 +121,7 @@ class EnvironmentFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: Map<String, Any>
     ): List<Exception> {
 
         val errors: List<Exception> = try {

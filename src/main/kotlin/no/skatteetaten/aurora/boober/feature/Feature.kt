@@ -41,19 +41,42 @@ interface Feature {
     fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler>
 
     /*
-        Generate a set of AuroraResource from this feature
+      Method to create a context for the given feature
 
-        Resource generation of all features are run before the modify step occurs
+      This context will be sent to validate/generate/modify steps
 
-        If this method throws errors other features will still be run.
+      The validationContext flag will let the  the context know if the context should only be used for validation
 
-        If any feature has thrown an error the process will stop
-
-        use the generateResource method in this interface as a helper to add the correct source
-
-        If you have more then one error throw an ExceptionList
+      You can throw an exception here and it will be registered as a validation error if you like
      */
-    fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> = emptySet()
+    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> = emptyMap()
+
+    /*
+    Perform validation of this feature.
+
+    If this method throws it will be handled as a single error or multiple errors if ExceptionList
+    */
+    fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        context: Map<String, Any>
+    ): List<Exception> =
+        emptyList()
+
+    /*
+       Generate a set of AuroraResource from this feature
+
+       Resource generation of all features are run before the modify step occurs
+
+       If this method throws errors other features will still be run.
+
+       If any feature has thrown an error the process will stop
+
+       use the generateResource method in this interface as a helper to add the correct source
+
+       If you have more then one error throw an ExceptionList
+    */
+    fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> = emptySet()
 
     /*
         Modify generated resources
@@ -68,15 +91,11 @@ interface Feature {
 
         If you have more then one error throw an ExceptionList
      */
-    fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) = Unit
-
-    /*
-    Perform validation of this feature.
-
-    If this method throws it will be handled as a single error or multiple errors if ExceptionList
-    */
-    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, cmd: AuroraContextCommand): List<Exception> =
-        emptyList()
+    fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) = Unit
 }
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {

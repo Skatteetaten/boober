@@ -77,7 +77,7 @@ class FluentbitSidecarFeature(
             .toSet()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
         val index = adc.loggingIndex ?: return emptySet()
         val loggerIndexes = getLoggingIndexes(adc, index)
 
@@ -111,7 +111,11 @@ class FluentbitSidecarFeature(
         return setOf(generateResource(fluentParserMap), generateResource(fluentConfigMap), generateResource(hecSecret))
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: Map<String, Any>
+    ) {
         if (adc.loggingIndex == null) return
 
         val configVolume = newVolume {
