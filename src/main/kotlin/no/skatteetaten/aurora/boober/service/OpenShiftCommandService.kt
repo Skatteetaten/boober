@@ -168,7 +168,10 @@ class OpenShiftCommandService(
         "Service",
         "Route",
         "ImageStream",
-        "BigIp"
+        "BigIp",
+        "CronJob",
+        "Job",
+        "Deployment"
     )
 
     fun createOpenShiftDeleteCommands(

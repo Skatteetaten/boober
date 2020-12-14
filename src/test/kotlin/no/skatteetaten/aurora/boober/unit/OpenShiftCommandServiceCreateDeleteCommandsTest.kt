@@ -4,6 +4,9 @@ import assertk.assertThat
 import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fkorotkov.kubernetes.apps.newDeploymentList
+import com.fkorotkov.kubernetes.batch.newCronJobList
+import com.fkorotkov.kubernetes.batch.newJobList
 import com.fkorotkov.kubernetes.newConfigMapList
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -53,8 +56,15 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         val deployId = "abc123"
         val adr = ApplicationDeploymentRef(namespace, name)
         val configMapList = newConfigMapList { }
+        val deploymentList = newDeploymentList()
+        val jobList = newJobList()
+        val cronJobList = newCronJobList()
+
         val responses = createResponsesFromResultFiles(adr)
             .addIfNotNull("configmap" to jsonMapper().convertValue<JsonNode>(configMapList))
+            .addIfNotNull("deployment" to jsonMapper().convertValue<JsonNode>(deploymentList))
+            .addIfNotNull("job" to jsonMapper().convertValue<JsonNode>(jobList))
+            .addIfNotNull("cronjob" to jsonMapper().convertValue<JsonNode>(cronJobList))
 
         responses.forEach {
             val kind = it.key
