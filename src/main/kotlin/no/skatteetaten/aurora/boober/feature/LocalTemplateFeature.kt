@@ -29,7 +29,7 @@ class LocalTemplateFeature(
         }))
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         val templateFile = spec.get<String>("templateFile").let { fileName ->
             cmd.auroraConfig.files.find { it.name == fileName }?.asJsonNode
         }

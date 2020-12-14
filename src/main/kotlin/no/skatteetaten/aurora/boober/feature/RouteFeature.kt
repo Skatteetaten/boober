@@ -69,7 +69,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             findRouteAnnotationHandlers("routeDefaults", cmd.applicationFiles)
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         return mapOf(
             "route" to getRoute(spec),
             "applicationDeploymentRef" to cmd.applicationDeploymentRef

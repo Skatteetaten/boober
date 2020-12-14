@@ -63,7 +63,7 @@ class ApplicationDeploymentFeature : Feature {
         }
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         return mapOf(
             "applicationDeploymentCommand" to ApplicationDeploymentCommand(
                 cmd.overrideFiles,

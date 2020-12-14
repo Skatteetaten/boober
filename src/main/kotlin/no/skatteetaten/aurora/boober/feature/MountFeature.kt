@@ -68,7 +68,7 @@ class MountFeature(
         }.toSet()
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         return mapOf("mounts" to getMounts(spec, cmd))
     }
 

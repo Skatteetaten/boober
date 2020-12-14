@@ -18,7 +18,7 @@ class ConfigFeature : Feature {
         return configHandlers(cmd).toSet()
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         return mapOf("config" to configHandlers(cmd))
     }
 

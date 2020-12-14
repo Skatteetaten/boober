@@ -45,9 +45,11 @@ interface Feature {
 
       This context will be sent to validate/generate/modify steps
 
+      The validationContext flag will let the  the context know if the context should only be used for validation
+
       You can throw an exception here and it will be registered as a validation error if you like
      */
-    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> = emptyMap()
+    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> = emptyMap()
 
     /*
     Perform validation of this feature.

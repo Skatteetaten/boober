@@ -71,7 +71,7 @@ class S3Feature(
         return !header.isJob
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         val s3BucketObjectAreas = findS3Buckets(spec)
         return mapOf(
             "bucketObjectAreas" to s3BucketObjectAreas

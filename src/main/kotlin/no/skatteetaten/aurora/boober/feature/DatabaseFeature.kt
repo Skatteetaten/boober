@@ -220,7 +220,7 @@ class DatabaseFeature(
 
 abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         return mapOf("databases" to findDatabases(spec))
     }
 

@@ -32,7 +32,10 @@ class TemplateFeature(
         )
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Map<String, Any> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+        if(validationContext) {
+            return mapOf()
+        }
         return mapOf("template" to templateService.findTemplate(spec["template"]))
     }
 }
