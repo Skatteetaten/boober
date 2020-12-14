@@ -79,7 +79,7 @@ class HerkimerVaultFeature(
                             namespace = adc.namespace
                             annotations = mapOf(
                                 // TODO: annotationsname const val
-                                "prefix" to
+                                "prefix" to "foo"
                             )
                         }
                         data = credentials.mapValues { Base64.encodeBase64String(it.value.toByteArray()) }

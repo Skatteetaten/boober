@@ -62,7 +62,7 @@ data class ResourceHerkimer(
     val name: String,
     val kind: ResourceKind,
     val ownerId: String,
-    val claims: List<ResourceClaimHerkimer>,
+    val claims: List<ResourceClaimHerkimer> = emptyList(),
     val parentId: String?,
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
