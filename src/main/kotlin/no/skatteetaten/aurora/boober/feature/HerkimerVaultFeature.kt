@@ -16,6 +16,7 @@ import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
@@ -35,7 +36,7 @@ class HerkimerVaultFeature(
                 AuroraConfigFieldHandler("$FEATURE_FIELD/$key/prefix", defaultValue = ""),
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/serviceClass",
-                    validator = { it.notBlank("serviceClass needs a value") }),
+                    validator = { node -> node.oneOf(ResourceKind.values().map { it.toString()})}),
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/multiple",
                     defaultValue = false,
@@ -58,35 +59,26 @@ class HerkimerVaultFeature(
         if (!adc.isFeatureEnabled()) return emptySet()
 
         val herkimerVaultResources = adc.findAllConfiguredHerkimerResources().groupBy { it.prefix }
-        val secrets = herkimerVaultResources.flatMap { (prefix, resources) ->
-            resources.map {
-                // TODO: skal vi la getClaimedResources ta en string istedenfor ResourceKind enum
-                herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.valueOf(it.serviceClass))
-                    .associate { resource ->
-                        // TODO: valider dette i fullvalidation
-                        resource.name to resource.claims.first().credentials
-                    }.mapValues { (name, credentials) ->
-                        // TODO: valider i full validation at det kun er Objects i herkimer som kan serialiseres til Map<String, String>
-                        jsonMapper().convertValue<Map<String, String>>(credentials)
-                    }
-            }
-        }.flatMap { resourcesWithCredentials ->
-
-                resourcesWithCredentials.map { (resourceName, credentials) ->
-                    newSecret {
-                        metadata {
-                            name = "${adc.name}-$resourceName-resources"
-                            namespace = adc.namespace
-                            annotations = mapOf(
-                                // TODO: annotationsname const val
-                                "prefix" to "foo"
-                            )
+        val secrets: List<Secret> = herkimerVaultResources.flatMap { (prefix, resources) ->
+            //TODO: refactor
+            resources.flatMap {
+                herkimerService.getClaimedResources(adc.applicationDeploymentId, it.serviceClass).flatMap { resource ->
+                    resource.claims.map { claims ->
+                        val values = jsonMapper().convertValue<Map<String, String>>(claims.credentials)
+                        newSecret {
+                            metadata {
+                                name = "${adc.name}-${resource.name}-resources"
+                                namespace = adc.namespace
+                                annotations = mapOf(
+                                    "prefix" to prefix
+                                )
+                            }
+                            data = values.mapValues { content -> Base64.encodeBase64String(content.value.toByteArray()) }
                         }
-                        data = credentials.mapValues { Base64.encodeBase64String(it.value.toByteArray()) }
                     }
                 }
-
             }
+        }
 
         return secrets.map {
             it.generateAuroraResource()
@@ -142,6 +134,6 @@ class HerkimerVaultFeature(
 
 data class HerkimerVaultResource(
     val prefix: String,
-    val serviceClass: String,
+    val serviceClass: ResourceKind,
     val multiple: Boolean
 )
