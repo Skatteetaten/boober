@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.service.ResourceClaimHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -28,6 +29,58 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     fun after() {
         HttpMock.clearAllHttpMocks()
     }
+
+
+    @Test
+    fun `should get validation error if single and returns multiple responses`() {
+
+        mockHerkimerDatabase(
+            createResourceHerkimer("ski-postgres", mapOf("foo" to "bar", "bar" to "baz")),
+            createResourceHerkimer("pros-postgres", mapOf("foo" to "baz", "bar" to "foo"))
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "resources": {
+                    "ski" : {
+                        "serviceClass": "DatabaseInstance"
+                    }
+                }
+           }""",
+                createdResources = 1,
+                resources = mutableSetOf(createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("Resource with key=ski expects a single result but 2 was returned")
+    }
+
+    @Test
+    fun `should get validation error if both single and multiple with same prefix`() {
+
+        mockHerkimerDatabase(
+            createResourceHerkimer("ski-postgres", mapOf("foo" to "bar", "bar" to "baz"))
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "resources": {
+                    "ski" : {
+                        "serviceClass": "DatabaseInstance",
+                        "multiple" : true
+                    },
+                    "ski2" : {
+                        "serviceClass" : "DatabaseInstance",
+                        "prefix" : "ski"
+                    }
+                }
+           }""",
+                createdResources = 1,
+                resources = mutableSetOf(createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("that expect multiple envvars and some other that does not expect multiple envvars.")
+    }
+
 
     @Test
     fun `verify creating secret from herkimer`() {
