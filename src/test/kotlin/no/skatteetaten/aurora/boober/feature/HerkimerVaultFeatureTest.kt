@@ -30,7 +30,6 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         HttpMock.clearAllHttpMocks()
     }
 
-
     @Test
     fun `should get validation error if single and returns multiple responses`() {
 
@@ -80,7 +79,6 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
             )
         }.singleApplicationError("that expect multiple envvars and some other that does not expect multiple envvars.")
     }
-
 
     @Test
     fun `verify creating secret from herkimer`() {

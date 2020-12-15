@@ -93,11 +93,11 @@ class HerkimerVaultFeature(
 
         val errors = validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources)
 
-        if(!fullValidation) return errors
+        if (!fullValidation) return errors
 
         val herkimerResponses = context[HERKIMER_REPONSE_KEY] as Map<HerkimerVaultResource, List<ResourceHerkimer>>
 
-        val fullValidationErrors=herkimerResponses.filter{ !it.key.multiple && it.value.size > 1 }.map {
+        val fullValidationErrors = herkimerResponses.filter { !it.key.multiple && it.value.size > 1 }.map {
             IllegalStateException("Resource with key=${it.key.key} expects a single result but ${it.value.size} was returned")
         }
         return errors.addIfNotNull(fullValidationErrors)
@@ -117,8 +117,8 @@ class HerkimerVaultFeature(
 
     private fun generateHerkimerSecret(response: ResourceHerkimer, adc: AuroraDeploymentSpec): Secret {
 
-        //TODO: Should this be first and should it be called credentials?
-        //TODO: What do we do if there are multiple claims?
+        // TODO: Should this be first and should it be called credentials?
+        // TODO: What do we do if there are multiple claims?
         val values = jsonMapper().convertValue<Map<String, String>>(response.claims.first().credentials)
         return newSecret {
             metadata {
@@ -136,13 +136,13 @@ class HerkimerVaultFeature(
 
         val herkimerVaultResources = context[HERKIMER_SECRETS_KEY] as Map<HerkimerVaultResource, List<Secret>>
 
-        val envVars =herkimerVaultResources.flatMap { (config, secrets) ->
-            if(config.multiple) {
+        val envVars = herkimerVaultResources.flatMap { (config, secrets) ->
+            if (config.multiple) {
                 secrets.mapIndexed { index, secret ->
-                    secret.createEnvVarRefs(prefix = "${config.prefix}_${index}_", forceUpperCaseForEnvVarName = false)
+                    secret.createEnvVarRefs(prefix = "${config.prefix}_${index}_")
                 }
-            }else {
-                listOf(secrets.first().createEnvVarRefs(prefix="${config.prefix}_"))
+            } else {
+                listOf(secrets.first().createEnvVarRefs(prefix = "${config.prefix}_"))
             }
         }.flatten()
 
@@ -158,7 +158,7 @@ class HerkimerVaultFeature(
         val enabled: Boolean = this["$FEATURE_FIELD/$resourceKey/enabled"]
         if (!enabled) return null
         return HerkimerVaultResource(
-            key= resourceKey,
+            key = resourceKey,
             prefix = this.getOrNull<String>("$FEATURE_FIELD/$resourceKey/prefix") ?: resourceKey,
             serviceClass = this["$FEATURE_FIELD/$resourceKey/serviceClass"],
             multiple = this["$FEATURE_FIELD/$resourceKey/multiple"]

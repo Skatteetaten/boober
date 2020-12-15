@@ -7,8 +7,7 @@ import io.fabric8.kubernetes.api.model.Secret
 
 fun Secret.createEnvVarRefs(
     properties: Set<String> = this.data.keys,
-    prefix: String = "",
-    forceUpperCaseForEnvVarName: Boolean = true
+    prefix: String = ""
 ) =
     properties.map { propertyName ->
         val envVarName = "$prefix$propertyName".toUpperCase()
@@ -17,8 +16,6 @@ fun Secret.createEnvVarRefs(
             name = envVarName
             valueFrom {
                 secretKeyRef {
-                    //TODO: could not get this to work.
-           //         key = if (forceUpperCaseForEnvVarName) propertyName.toUpperCase() else propertyName
                     key = propertyName
                     name = secretName
                     optional = false
