@@ -24,7 +24,7 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
 private const val HERKIMER_RESOURCE_KEY = "resources"
-private const val FEATURE_FIELD = HERKIMER_RESOURCE_KEY
+private const val FEATURE_FIELD = "herkimer"
 private const val HERKIMER_REPONSE_KEY = "herkimerResponse"
 private const val HERKIMER_SECRETS_KEY = "secrets"
 

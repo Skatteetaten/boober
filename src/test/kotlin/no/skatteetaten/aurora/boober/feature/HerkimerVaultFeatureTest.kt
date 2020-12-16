@@ -41,7 +41,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "resources": {
+                "herkimer": {
                     "ski" : {
                         "serviceClass": "DatabaseInstance"
                     }
@@ -63,7 +63,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "resources": {
+                "herkimer": {
                     "ski" : {
                         "serviceClass": "DatabaseInstance",
                         "multiple" : true
@@ -89,7 +89,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret) = generateResources(
             """{ 
-                "resources": {
+                "herkimer": {
                     "ski" : {
                         "serviceClass": "DatabaseInstance",
                         "multiple" : true
@@ -113,7 +113,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret1, secret2) = generateResources(
             """{ 
-                "resources": {
+                "herkimer": {
                     "ski" : {
                         "serviceClass": "DatabaseInstance",
                         "multiple" : true
@@ -137,7 +137,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret) = generateResources(
             """{ 
-                "resources": {
+                "herkimer": {
                     "ski" : {
                         "serviceClass": "DatabaseInstance"
                     }
