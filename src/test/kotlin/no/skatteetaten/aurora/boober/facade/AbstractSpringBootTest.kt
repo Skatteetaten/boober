@@ -67,6 +67,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     @Value("\${integrations.fiona.port}")
     lateinit var fionaPort: String
 
+    @Value("\${integrations.mattermost.port}")
+    lateinit var mattermostPort: String
+
     fun RecordedRequest.replayRequestJsonWithModification(
         rootPath: String,
         key: String,
@@ -105,10 +108,16 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         return httpMockServer(fionaPort.toInt(), block)
     }
 
+    fun mattermostMock(block: HttpMock.() -> Unit = {}): MockWebServer =
+        httpMockServer(mattermostPort.toInt(), block)
+
     fun herkimerMock(block: HttpMock.() -> Unit = {}): MockWebServer =
         httpMockServer(herkimerPort.toInt(), block)
 
-    fun applicationDeploymentGenerationMock(adId: String = "1234567890", also: HttpMock.() -> Unit = {}): MockWebServer {
+    fun applicationDeploymentGenerationMock(
+        adId: String = "1234567890",
+        also: HttpMock.() -> Unit = {}
+    ): MockWebServer {
         val ad = ApplicationDeploymentHerkimer(
             id = adId,
             name = "name",
@@ -160,8 +169,8 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     }
 }
 
-fun json(body: String) =
-    MockResponse().setResponseCode(200)
+fun json(body: String, responseCode: Int = 200) =
+    MockResponse().setResponseCode(responseCode)
         .setBody(body)
         .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
 

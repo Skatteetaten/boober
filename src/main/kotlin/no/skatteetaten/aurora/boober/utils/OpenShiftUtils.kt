@@ -39,8 +39,11 @@ val apiGroups: Map<String, List<String>> =
     mapOf(
         "skatteetaten.no/v1" to listOf("applicationdeployment", "bigip"),
         "apps.openshift.io/v1" to listOf("deploymentconfig", "deploymentrequest"),
+        "apps/v1" to listOf("deployment"),
         "route.openshift.io/v1" to listOf("route"),
         "user.openshift.io/v1" to listOf("user", "group"),
+        "batch/v1" to listOf("job"),
+        "batch/v1beta1" to listOf("cronjob"),
         "project.openshift.io/v1" to listOf("project", "projectrequest"),
         "template.openshift.io/v1" to listOf("template"),
         "image.openshift.io/v1" to listOf("imagestream", "imagestreamtag", "imagestreamimport"),

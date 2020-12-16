@@ -28,7 +28,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
-import no.skatteetaten.aurora.boober.utils.pattern
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -80,6 +79,10 @@ class S3Feature(
         if (requiredFieldsExceptions.isNotEmpty()) return requiredFieldsExceptions
 
         val s3BucketObjectAreas = findS3Buckets(adc).validatedToNotNull()
+
+        val validatedObjectAreasPattern = s3BucketObjectAreas.validateObjectAreasPattern()
+
+        if (validatedObjectAreasPattern.isNotEmpty()) return validatedObjectAreasPattern
 
         if (!fullValidation || adc.cluster != cluster || s3BucketObjectAreas.isEmpty()) return emptyList()
 
@@ -135,7 +138,7 @@ class S3Feature(
         val nameAndCredentials = getBucketCredentials()
 
         return this.mapNotNull {
-            val credentials = nameAndCredentials[it.bucketName]
+            val credentials = nameAndCredentials[it.bucketName.trim()]
 
             if (credentials == null) IllegalArgumentException("Could not find credentials for bucket with name=${it.bucketName}, please register the credentials")
             else null
@@ -256,6 +259,17 @@ class S3Feature(
         }
     }
 
+    private fun List<S3BucketObjectArea>.validateObjectAreasPattern(): List<IllegalArgumentException> {
+        return this.mapNotNull {
+            val objectAreaPattern = Regex("[a-z0-9-.]+")
+            if (!it.area.matches(objectAreaPattern)) {
+                IllegalArgumentException("s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it.area}")
+            } else {
+                null
+            }
+        }
+    }
+
     private fun findS3Bucket(
         s3ObjectAreaKey: String,
         adc: AuroraDeploymentSpec
@@ -357,8 +371,7 @@ abstract class S3FeatureTemplate : Feature {
                     AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/$s3BucketObjectArea/bucketName"),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/objectArea",
-                        defaultValue = s3BucketObjectArea,
-                        validator = { objectAreaPatternValidation(it) }
+                        defaultValue = s3BucketObjectArea
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/enabled",
@@ -371,14 +384,7 @@ abstract class S3FeatureTemplate : Feature {
     private fun findS3DefaultHandlers(): List<AuroraConfigFieldHandler> =
         listOf(
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName"),
-            AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/objectArea", { objectAreaPatternValidation(it) })
-        )
-
-    private fun objectAreaPatternValidation(it: JsonNode?) =
-        it.pattern(
-            pattern = "[a-z0-9-.]+",
-            message = "s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it?.toPrettyString()}",
-            required = false
+            AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/objectArea")
         )
 }
 

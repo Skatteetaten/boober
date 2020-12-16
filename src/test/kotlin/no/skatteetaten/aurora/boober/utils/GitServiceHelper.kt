@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.utils
 
-import java.io.File
 import org.eclipse.jgit.api.Git
+import java.io.File
 
 fun recreateRepo(folder: File): Git {
     recreateFolder(folder)

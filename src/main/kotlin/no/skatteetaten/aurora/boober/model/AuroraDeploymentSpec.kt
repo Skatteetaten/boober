@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.deepSet
+import no.skatteetaten.aurora.boober.utils.toMultiMap
 import org.apache.commons.text.StringSubstitutor
 
 data class AuroraDeploymentSpec(
@@ -108,9 +109,12 @@ data class AuroraDeploymentSpec(
             .mapKeys { replacer.replace(it.key) }
     }
 
-    fun getSubKeyValues(name: String) = getSubKeys(name).keys.map {
-        it.split("/")[1]
-    }.distinct()
+    fun getSubKeyValues(name: String): List<String> {
+        val amountOfSubKeysInName = name.split("/").size
+        return getSubKeys(name).keys.map {
+            it.split("/")[amountOfSubKeysInName]
+        }.distinct()
+    }
 
     inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
 
@@ -219,7 +223,7 @@ data class AuroraDeploymentSpec(
                 staticFields + applicationDeploymentStaticField + fields
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
-                .groupBy({ it.first }) { it.second }
+                .toMultiMap()
                 .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
             return AuroraDeploymentSpec(
                 fields = groupedFields,

@@ -13,6 +13,9 @@ spring:
             cache-names: groups, templates
 
 integrations:
+    # TODO: add url to auroraConfig for ocp4
+    konsoll:
+        url: "http://konsoll.aurora.${openshift.cluster}.paas.skead.no"
     bitbucket:
         url: "https://git.aurora.skead.no/"
     cantus:
@@ -87,7 +90,7 @@ server:
     port: 8080
 
 openshift:
-    cluster: utv04
+    cluster: utv
 
 integrations:
     dbh:
@@ -99,9 +102,9 @@ integrations:
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: https://herkimer-aurora.${openshift.cluster}.paas.skead.no
+        url: false
         fallback:
-            jfwapplikasjonsnavn : "1234567890"
+            applikasjonsnavn: "1234567890"
     openshift:
         port: 8443
         url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}

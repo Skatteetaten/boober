@@ -1,175 +1,218 @@
 {
-  "applicationDeploymentRef" : {
-    "source" : "static",
-    "value" : "utv/web",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "utv/web"
-    } ]
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/web",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/web"
+      }
+    ]
   },
-  "configVersion" : {
-    "source" : "static",
-    "value" : "master",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "master"
-    } ]
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
   },
-  "applicationDeploymentId" : {
-    "source" : "static",
-    "value" : "1234567890",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "1234567890"
-    } ]
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
   },
-  "schemaVersion" : {
-    "source" : "about.json",
-    "value" : "v1",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "v1"
-    } ]
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
   },
-  "type" : {
-    "source" : "web.json",
-    "value" : "development",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "deploy"
-    }, {
-      "name" : "web.json",
-      "value" : "development"
-    } ]
+  "type": {
+    "source": "web.json",
+    "value": "development",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      },
+      {
+        "name": "web.json",
+        "value": "development"
+      }
+    ]
   },
-  "applicationPlatform" : {
-    "source" : "web.json",
-    "value" : "web",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "java"
-    }, {
-      "name" : "web.json",
-      "value" : "web"
-    } ]
+  "applicationPlatform": {
+    "source": "web.json",
+    "value": "web",
+    "sources": [
+      {
+        "name": "default",
+        "value": "java"
+      },
+      {
+        "name": "web.json",
+        "value": "web"
+      }
+    ]
   },
-  "affiliation" : {
-    "source" : "about.json",
-    "value" : "paas",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "paas"
-    } ]
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
   },
-  "segment" : {
-    "source" : "about.json",
-    "value" : "aurora",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "aurora"
-    } ]
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
   },
-  "cluster" : {
-    "source" : "utv/about.json",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "utv"
-    }, {
-      "name" : "utv/about.json",
-      "value" : "utv"
-    } ]
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
   },
-  "permissions" : {
-    "admin" : {
-      "source" : "about.json",
-      "value" : "APP_PaaS_drift APP_PaaS_utv",
-      "sources" : [ {
-        "name" : "about.json",
-        "value" : "APP_PaaS_drift APP_PaaS_utv"
-      } ]
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
     }
   },
-  "envName" : {
-    "source" : "folderName",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "folderName",
-      "value" : "utv"
-    } ]
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
   },
-  "name" : {
-    "source" : "fileName",
-    "value" : "web",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "web"
-    } ]
+  "name": {
+    "source": "fileName",
+    "value": "web",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "web"
+      }
+    ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "web",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "web"
-    } ]
+  "artifactId": {
+    "source": "fileName",
+    "value": "web",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "web"
+      }
+    ]
   },
-  "groupId" : {
-    "source" : "web.json",
-    "value" : "org.test",
-    "sources" : [ {
-      "name" : "web.json",
-      "value" : "org.test"
-    } ]
+  "groupId": {
+    "source": "web.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "web.json",
+        "value": "org.test"
+      }
+    ]
   },
-  "version" : {
-    "source" : "web.json",
-    "value" : "develop-SNAPSHOT",
-    "sources" : [ {
-      "name" : "web.json",
-      "value" : "develop-SNAPSHOT"
-    } ]
+  "version": {
+    "source": "web.json",
+    "value": "develop-SNAPSHOT",
+    "sources": [
+      {
+        "name": "web.json",
+        "value": "develop-SNAPSHOT"
+      }
+    ]
   },
-  "config" : {
-    "foo2" : {
-      "source" : "web.json",
-      "value" : "baz",
-      "sources" : [ {
-        "name" : "web.json",
-        "value" : "baz"
-      } ]
+  "config": {
+    "foo2": {
+      "source": "web.json",
+      "value": "baz",
+      "sources": [
+        {
+          "name": "web.json",
+          "value": "baz"
+        }
+      ]
     }
   },
-  "route" : {
-    "source" : "web.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "web.json",
-      "value" : true
-    } ]
+  "route": {
+    "source": "web.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "web.json",
+        "value": true
+      }
+    ]
   },
-  "toxiproxy" : {
-    "source" : "web.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "web.json",
-      "value" : true
-    } ]
+  "toxiproxy": {
+    "source": "web.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "web.json",
+        "value": true
+      }
+    ]
   },
-  "webseal" : {
-    "strict" : {
-      "source" : "web.json",
-      "value" : false,
-      "sources" : [ {
-        "name" : "web.json",
-        "value" : false
-      } ]
+  "webseal": {
+    "strict": {
+      "source": "web.json",
+      "value": false,
+      "sources": [
+        {
+          "name": "web.json",
+          "value": false
+        }
+      ]
     }
   }
 }

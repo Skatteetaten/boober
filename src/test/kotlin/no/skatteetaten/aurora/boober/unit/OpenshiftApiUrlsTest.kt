@@ -23,7 +23,10 @@ class OpenshiftApiUrlsTest {
         TEMPLATE("processedtemplate", null, "bar", "/oapi/v1/namespaces/bar/processedtemplates"),
         PROJECT("project", "foo", null, "/apis/project.openshift.io/v1/projects/foo"),
         SERVICE("service", "foo", "bar", "/api/v1/namespaces/bar/services/foo"),
-        BIGIP("bigip", "foo", "bar", "/apis/skatteetaten.no/v1/namespaces/bar/bigips/foo")
+        BIGIP("bigip", "foo", "bar", "/apis/skatteetaten.no/v1/namespaces/bar/bigips/foo"),
+        DEPLOYMENT("deployment", "foo", "bar", "/apis/apps/v1/namespaces/bar/deployments/foo"),
+        JOB("job", "foo", "bar", "/apis/batch/v1/namespaces/bar/jobs/foo"),
+        CRONJOB("cronjob", "foo", "bar", "/apis/batch/v1beta1/namespaces/bar/cronjobs/foo"),
     }
 
     @ParameterizedTest

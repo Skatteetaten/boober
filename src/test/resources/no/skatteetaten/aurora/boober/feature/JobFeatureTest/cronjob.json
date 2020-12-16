@@ -1,39 +1,41 @@
 {
-  "apiVersion" : "batch/v1beta1",
-  "kind" : "CronJob",
-  "metadata" : {
-    "name" : "simple",
-    "namespace" : "paas-utv"
+  "apiVersion": "batch/v1beta1",
+  "kind": "CronJob",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
   },
-  "spec" : {
-    "concurrencyPolicy" : "Forbid",
-    "failedJobsHistoryLimit" : 1,
-    "jobTemplate" : {
-      "metadata" : {
-        "generateName" : "simple"
+  "spec": {
+    "concurrencyPolicy": "Forbid",
+    "failedJobsHistoryLimit": 1,
+    "jobTemplate": {
+      "metadata": {
+        "generateName": "simple"
       },
-      "spec" : {
-        "completions" : 1,
-        "parallelism" : 1,
-        "template" : {
-          "metadata" : {
-            "generateName" : "simple"
+      "spec": {
+        "completions": 1,
+        "parallelism": 1,
+        "template": {
+          "metadata": {
+            "generateName": "simple"
           },
-          "spec" : {
-            "containers" : [ {
-              "image" : "docker.registry/aurora/turbo:0",
-              "imagePullPolicy" : "Always",
-              "name" : "simple"
-            } ],
-            "dnsPolicy" : "ClusterFirst",
-            "restartPolicy" : "Never"
+          "spec": {
+            "containers": [
+              {
+                "image": "docker.registry/aurora/turbo:0",
+                "imagePullPolicy": "Always",
+                "name": "simple"
+              }
+            ],
+            "dnsPolicy": "ClusterFirst",
+            "restartPolicy": "Never"
           }
         }
       }
     },
-    "schedule" : "0/5 * * * *",
-    "startingDeadlineSeconds" : 60,
-    "successfulJobsHistoryLimit" : 3,
-    "suspend" : false
+    "schedule": "0/5 * * * *",
+    "startingDeadlineSeconds": 60,
+    "successfulJobsHistoryLimit": 3,
+    "suspend": false
   }
 }

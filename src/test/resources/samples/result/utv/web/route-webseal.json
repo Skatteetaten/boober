@@ -1,37 +1,39 @@
 {
-  "apiVersion" : "route.openshift.io/v1",
-  "kind" : "Route",
-  "metadata" : {
-    "annotations" : {
-      "marjory.sits.no/isOpen" : "false",
-      "marjory.sits.no/route.roles" : ""
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "annotations": {
+      "marjory.sits.no/isOpen": "false",
+      "marjory.sits.no/route.roles": ""
     },
-    "labels" : {
-      "operationScope" : "aos-4016",
-      "app" : "web",
-      "updatedBy" : "hero",
-      "updatedAt" : "0",
-      "affiliation" : "paas",
-      "name" : "web",
-      "booberDeployId" : "deploy1"
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "web",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "affiliation": "paas",
+      "name": "web",
+      "booberDeployId": "deploy1"
     },
-    "name" : "web-webseal",
-    "namespace" : "paas-utv",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "web",
-      "uid" : "123-123"
-    } ]
+    "name": "web-webseal",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "web",
+        "uid": "123-123"
+      }
+    ]
   },
-  "spec" : {
-    "host" : "web-paas-utv.test.webseal",
-    "port" : {
-      "targetPort" : "http"
+  "spec": {
+    "host": "web-paas-utv.test.webseal",
+    "port": {
+      "targetPort": "http"
     },
-    "to" : {
-      "kind" : "Service",
-      "name" : "web"
+    "to": {
+      "kind": "Service",
+      "name": "web"
     }
   }
 }

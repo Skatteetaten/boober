@@ -12,10 +12,12 @@ class WebsealFeatureDisabledTest : AbstractFeatureTest() {
     @Test
     fun `get error if trying to create webseal opening when feature disabled`() {
 
-        assertThat { generateResources(
-            """{ 
+        assertThat {
+            generateResources(
+                """{ 
                 "webseal" : true
            }"""
-        ) }.singleApplicationError("Webseal is not supported")
+            )
+        }.singleApplicationError("Webseal is not supported")
     }
 }

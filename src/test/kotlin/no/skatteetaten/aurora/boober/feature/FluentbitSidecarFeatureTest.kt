@@ -15,7 +15,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     fun `should add fluentbit to dc`() {
         // mockVault("foo")
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
-                """{
+            """{
              "logging" : {
                 "index": "test-index",
                 "loggers": {
@@ -27,7 +27,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                 }
              } 
            }""",
-                createEmptyDeploymentConfig(), emptyList(), 3
+            createEmptyDeploymentConfig(), emptyList(), 3
         )
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume, sidecar container and annotation")
             .auroraResourceMatchesFile("dc.json")

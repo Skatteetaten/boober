@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate
 class CantusServiceTest {
 
     val httpClient = mockk<RestTemplate>()
-    val service = CantusService(CantusRestTemplateWrapper(httpClient))
+    val service = CantusService(CantusRestTemplateWrapper(httpClient), "http://docker.com")
     val mapper = jsonMapper()
 
     @BeforeEach

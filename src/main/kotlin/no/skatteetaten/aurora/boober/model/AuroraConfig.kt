@@ -2,13 +2,13 @@ package no.skatteetaten.aurora.boober.model
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
-import java.io.File
-import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
+import java.io.File
+import java.nio.charset.Charset
 
 data class AuroraConfig(
     val files: List<AuroraConfigFile>,
@@ -43,7 +43,8 @@ data class AuroraConfig(
     }
 
     private fun findDuplicateFiles(): Map<String, List<String>> {
-        return files.groupBy { it.name.removeExtension() }.filter { it.value.size > 1 }.mapValues { it.value.map { it.name } }
+        return files.groupBy { it.name.removeExtension() }.filter { it.value.size > 1 }
+            .mapValues { it.value.map { it.name } }
     }
 
     fun getApplicationDeploymentRefs(): List<ApplicationDeploymentRef> {
@@ -51,7 +52,8 @@ data class AuroraConfig(
         // ensure that the filename is not duplicated
         val duplicateFiles = findDuplicateFiles()
         if (duplicateFiles.isNotEmpty()) {
-            val errorMessages: List<String> = duplicateFiles.map { it.value.joinToString(separator = ", ", prefix = "[", postfix = "]") }
+            val errorMessages: List<String> =
+                duplicateFiles.map { it.value.joinToString(separator = ", ", prefix = "[", postfix = "]") }
             val errorMessage = errorMessages.joinToString(" and ")
             throw AuroraDeploymentSpecValidationException("The following files are ambigious $errorMessage")
         }
@@ -105,18 +107,28 @@ data class AuroraConfig(
             it.value.name == name
         }
 
+        if (indexedValue == null) {
+            if (previousVersion != null) {
+                throw PreconditionFailureException("The fileName=$name does not exist with a version of ($previousVersion).")
+            }
+        } else {
+            if (previousVersion == null) {
+                throw PreconditionFailureException("The fileName=$name already exists in this AuroraConfig.")
+            }
+
+            if (indexedValue.value.version != previousVersion) {
+                throw AuroraVersioningException(this, indexedValue.value, previousVersion)
+            }
+        }
+
         val files = files.toMutableList()
+
         val newFile = AuroraConfigFile(name, contents)
         if (indexedValue == null) {
             files.add(newFile)
-            return Pair(newFile, this.copy(files = files))
+        } else {
+            files[indexedValue.index] = newFile
         }
-
-        val currentFile = indexedValue.value
-        if (currentFile.version != previousVersion) {
-            throw AuroraVersioningException(this, currentFile, previousVersion)
-        }
-        files[indexedValue.index] = newFile
 
         return Pair(newFile, this.copy(files = files))
     }
@@ -150,7 +162,7 @@ data class AuroraConfig(
         }
     }
 
-    private fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
+    fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
         val fileName = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
         val file = files.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")

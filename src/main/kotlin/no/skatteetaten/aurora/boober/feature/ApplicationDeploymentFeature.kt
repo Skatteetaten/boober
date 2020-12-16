@@ -4,17 +4,22 @@ import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newOwnerReference
 import io.fabric8.kubernetes.api.model.EnvVar
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
+import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
-import no.skatteetaten.aurora.boober.model.openshift.Notifications
+import no.skatteetaten.aurora.boober.model.openshift.Notification
+import no.skatteetaten.aurora.boober.model.openshift.NotificationType
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.boot.convert.DurationStyle.SIMPLE
@@ -35,8 +40,8 @@ val emailRegex: Pattern = compile(
         ")+"
 )
 
-val emailNotificationsField = "notification/email"
-val mattermostNotificationsField = "notification/mattermost"
+const val emailNotificationsField = "notification/email"
+const val mattermostNotificationsField = "notification/mattermost"
 
 @Service
 class ApplicationDeploymentFeature : Feature {
@@ -44,11 +49,8 @@ class ApplicationDeploymentFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler("message"),
-            AuroraConfigFieldHandler("ttl", validator = { it.durationString() }),
-            AuroraConfigFieldHandler(emailNotificationsField),
-            AuroraConfigFieldHandler(mattermostNotificationsField)
-
-        )
+            AuroraConfigFieldHandler("ttl", validator = { it.durationString() })
+        ) + findAllNotificationHandlers(cmd.applicationFiles)
     }
 
     override fun validate(
@@ -56,7 +58,7 @@ class ApplicationDeploymentFeature : Feature {
         fullValidation: Boolean,
         cmd: AuroraContextCommand
     ): List<Exception> {
-        return adc.getDelimitedStringOrArrayAsSet(emailNotificationsField, " ").mapNotNull { email ->
+        return adc.getSubKeyValues(emailNotificationsField).mapNotNull { email ->
             if (!emailRegex.matcher(email).matches()) {
                 AuroraDeploymentSpecValidationException("Email address '$email' is not a valid email address.")
             } else null
@@ -93,15 +95,58 @@ class ApplicationDeploymentFeature : Feature {
         return setOf(generateResource(resource))
     }
 
-    private fun AuroraDeploymentSpec.findNotifications(): Notifications? {
-        val mattermost = this.getDelimitedStringOrArrayAsSetOrNull(mattermostNotificationsField, " ")
-        val email = this.getDelimitedStringOrArrayAsSetOrNull(emailNotificationsField, " ")
+    private fun AuroraDeploymentSpec.isNotificationLocationEnabled(notificationLocationField: String) =
+        this.getOrNull<Boolean>(notificationLocationField) ?: this["$notificationLocationField/enabled"]
 
-        if (mattermost == null && email == null) {
+    private fun findAllNotificationHandlers(applicationFiles: List<AuroraConfigFile>): Set<AuroraConfigFieldHandler> {
+        val mattermostHandlers = applicationFiles.findNotificationHandlers(mattermostNotificationsField)
+        val emailHandlers = applicationFiles.findNotificationHandlers(emailNotificationsField)
+
+        return emailHandlers + mattermostHandlers
+    }
+
+    private fun List<AuroraConfigFile>.findNotificationHandlers(notificationField: String) =
+        this.findSubKeysExpanded(notificationField).flatMap { this.findNotificationHandler(it) }.toSet()
+
+    private fun List<AuroraConfigFile>.findNotificationHandler(
+        notificationLocationKey: String
+    ): List<AuroraConfigFieldHandler> {
+        val expandedMattermostKeys = this.findSubKeys(notificationLocationKey)
+        return if (expandedMattermostKeys.isEmpty()) listOf(
+            AuroraConfigFieldHandler(
+                notificationLocationKey,
+                validator = { it.boolean() }
+            )
+        )
+        else listOf(
+            AuroraConfigFieldHandler(
+                "$notificationLocationKey/enabled",
+                validator = { it.boolean() },
+                defaultValue = true
+            )
+        )
+    }
+
+    private fun AuroraDeploymentSpec.findNotificationsByType(
+        field: String,
+        type: NotificationType
+    ): List<Notification> =
+        this.getSubKeyValues(field).filter {
+            isNotificationLocationEnabled(notificationLocationField = "$field/$it")
+        }.map {
+            Notification(it, type)
+        }
+
+    private fun AuroraDeploymentSpec.findNotifications(): Set<Notification>? {
+        val notifications =
+            this.findNotificationsByType(emailNotificationsField, NotificationType.Email) +
+                this.findNotificationsByType(mattermostNotificationsField, NotificationType.Mattermost)
+
+        if (notifications.isEmpty()) {
             return null
         }
 
-        return Notifications(mattermost = mattermost, email = email)
+        return notifications.toSet()
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {

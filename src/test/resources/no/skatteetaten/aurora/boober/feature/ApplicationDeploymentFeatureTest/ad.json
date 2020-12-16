@@ -1,38 +1,53 @@
 {
-  "apiVersion" : "skatteetaten.no/v1",
-  "kind" : "ApplicationDeployment",
-  "metadata" : {
-    "labels" : {
-      "id" : "1234567890",
-      "removeAfter" : "86400"
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "id": "1234567890",
+      "removeAfter": "86400"
     },
-    "name" : "simple",
-    "namespace" : "paas-utv"
+    "name": "simple",
+    "namespace": "paas-utv"
   },
-  "spec" : {
-    "updatedAt" : "1970-01-01T00:00:00Z",
-    "selector" : {
-      "name" : "simple"
+  "spec": {
+    "updatedAt": "1970-01-01T00:00:00Z",
+    "selector": {
+      "name": "simple"
     },
-    "applicationDeploymentId" : "1234567890",
-    "runnableType" : "",
-    "applicationDeploymentName" : "simple",
-    "databases" : [ ],
-    "command" : {
-      "overrideFiles" : { },
-      "applicationDeploymentRef" : {
-        "environment" : "utv",
-        "application" : "simple"
+    "applicationDeploymentId": "1234567890",
+    "runnableType": "",
+    "applicationDeploymentName": "simple",
+    "databases": [],
+    "command": {
+      "overrideFiles": {},
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "simple"
       },
-      "auroraConfig" : {
-        "name" : "test",
-        "refName" : "master",
-        "resolvedRef" : "123abb"
+      "auroraConfig": {
+        "name": "test",
+        "refName": "master",
+        "resolvedRef": "123abb"
       }
     },
-    "message" : "This is a note",
-    "notifications" : {
-      "email" : [ "foo@bar.no" ]
-    }
+    "message": "This is a note",
+    "notifications": [
+      {
+        "notificationLocation": "foo@bar.no",
+        "type": "Email"
+      },
+      {
+        "notificationLocation": "bar@foo.no",
+        "type": "Email"
+      },
+      {
+        "notificationLocation": "channel1",
+        "type": "Mattermost"
+      },
+      {
+        "notificationLocation": "channel2",
+        "type": "Mattermost"
+      }
+    ]
   }
 }

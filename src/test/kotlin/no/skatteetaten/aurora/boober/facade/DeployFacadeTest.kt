@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.doesNotContain
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
 import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
@@ -238,12 +241,30 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
             }
         }
 
+        mattermostMock {
+            rule {
+                val responseCode = if (app == "complex") 201 else 401
+                json("""{}""", responseCode = responseCode)
+            }
+        }
+
         val result = facade.executeDeploy(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", app)))
 
         assertThat(result.first().auroraDeploymentSpecInternal).auroraDeploymentSpecMatchesSpecFiles("$app-spec")
         assertThat(result).auroraDeployResultMatchesFiles()
 
+        if (app == "whoami") {
+            result.forEach {
+                assertThat(it.reason).isNotNull()
+                    .contains("Failed to send notification")
+            }
+        }
         if (app == "complex") {
+            result.forEach {
+                assertThat(it.reason).isNotNull()
+                    .doesNotContain("Failed to send notification")
+            }
+
             assertThat(result.first().warnings).isEqualTo(
                 listOf(
                     "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",

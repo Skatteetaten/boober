@@ -162,7 +162,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     defaultValue = true
                 ),
                 AuroraConfigFieldHandler("$key/host"),
-                AuroraConfigFieldHandler("$key/fullyQualifiedHost", validator = { it.boolean(false) }), // since this is internal I do not want default value on it.
+                AuroraConfigFieldHandler(
+                    "$key/fullyQualifiedHost",
+                    validator = { it.boolean(false) }), // since this is internal I do not want default value on it.
                 AuroraConfigFieldHandler("$key/path",
                     validator = { it?.startsWith("/", "Path must start with /") }),
                 AuroraConfigFieldHandler("$key/tls/enabled", validator = { it.boolean() }),
@@ -210,13 +212,14 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             )
         } else null
 
-        val duplicatedHosts = routes.groupBy { it.target }.filter { it.value.size > 1 }
+        val duplicatedHosts = routes.groupBy { it.host to it.path }.filter { it.value.size > 1 }
         val duplicateHostError = if (duplicatedHosts.isNotEmpty()) {
             AuroraConfigException(
-                "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated targets",
+                "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} have duplicated host+path configurations",
                 errors = duplicatedHosts.map { route ->
+                    val path = route.key.second?.let { " host=$it" } ?: ""
                     val routes = route.value.joinToString(",") { it.objectName }
-                    ConfigFieldErrorDetail.illegal(message = "target=${route.key} is duplicated in routes $routes")
+                    ConfigFieldErrorDetail.illegal(message = "host=${route.key.first}$path is not unique. Remove the configuration from one of the following routes $routes")
                 }
             )
         } else null

@@ -63,14 +63,14 @@
     "foobar": {
       "host": "foobar",
       "annotations": {
-        "wembley.sits.no|externalHost" : "test.ske",
-        "wembley.sits.no|apiPaths" : "/api",
+        "wembley.sits.no|externalHost": "test.ske",
+        "wembley.sits.no|apiPaths": "/api",
         "haproxy.router.openshift.io|timeout": "30s"
       }
     }
   },
-  "bigip" : {
-    "service" : "simple-utv"
+  "bigip": {
+    "service": "simple-utv"
   },
   "liveness": true,
   "releaseTo": "komplex",
@@ -88,14 +88,14 @@
   "database": {
     "complex": {
       "enabled": true,
-      "tryReuse" : true
+      "tryReuse": true
     },
     "foo": "123-456"
   },
   "certificate": {
     "commonName": "komplex"
   },
-  "sts" : true,
+  "sts": true,
   "secretVaults": {
     "foo": {
       "keys": [
@@ -107,8 +107,22 @@
       }
     }
   },
-  "notification" : {
-    "email": "foo@bar.no ola@nordmann.net",
-    "mattermost": ["test", "test2"]
+  "notification": {
+    "email": {
+      "foo@bar.no": {
+        "enabled": true
+      },
+      "ola@nordmann.net": {
+        "enabled": true
+      }
+    },
+    "mattermost": {
+      "test": {
+        "enabled": true
+      },
+      "test2": {
+        "enabled": true
+      }
+    }
   }
 }

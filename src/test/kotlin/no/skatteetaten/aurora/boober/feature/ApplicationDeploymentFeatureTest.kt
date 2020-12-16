@@ -20,7 +20,26 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             "message" : "This is a note", 
                 "ttl" : "1d",
                 "notification" : {
-                    "email" : "foo@bar.no"
+                    "mattermost":{
+                      "channel1": true,
+                      "channel2": {
+                        "enabled": true
+                      },
+                      "channel3":{
+                        "enabled": false
+                      },
+                      "channel4": false
+                    },
+                    "email" : {
+                      "foo@bar.no": {
+                         "enabled": true
+                      },
+                      "bar@foo.no": true,
+                      "baz@skatt.no":{
+                        "enabled": false
+                      },
+                      "bat@skatt.no": false
+                    }
                 }
                 }""", createEmptyDeploymentConfig()
         )
@@ -29,7 +48,10 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("ad.json")
 
         assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Added env vars", index = 0)
-        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Set owner reference to ApplicationDeployment", index = 1)
+        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(
+            comment = "Set owner reference to ApplicationDeployment",
+            index = 1
+        )
         assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(newOwnerReference {
             apiVersion = "skatteetaten.no/v1"
             kind = "ApplicationDeployment"
@@ -42,10 +64,19 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     fun `get error with wrong email`() {
         assertThat {
             createAuroraConfigFieldHandlers(
-                """{ "notification" : { "email": "asd"  }}"""
+                """ {
+                  "notification" : { 
+                    "email": {
+                      "asd": {
+                        "enabled": true
+                      }
+                    }
+                  }
+                }"""
             )
         }.singleApplicationError("""Email address 'asd' is not a valid email address.""")
     }
+
     @Test
     fun `get error if ttl duration string is wrong`() {
         assertThat {
