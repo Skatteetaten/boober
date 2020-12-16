@@ -1,6 +1,9 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
+import assertk.assertions.isNotNull
+import assertk.assertions.isNull
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 
@@ -34,5 +37,37 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
 
         assertThat(secretResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("secret.json")
+    }
+
+    @Test
+    fun `should validate but not generate sidecar setup for templates`() {
+        val (dcResource) = generateResources(
+            """{
+             "type" : "template",
+             "logging": {
+                "index": "test-index"
+             }
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 0)
+        assertThat(dcResource).isNotNull()
+        val config = dcResource.resource as DeploymentConfig
+        val annotations = config.spec.template.metadata.annotations
+        assertThat(annotations).isNotNull()
+        assertThat(annotations.get("splunk.com/index")).equals("test-index")
+    }
+
+    @Test
+    fun `should validate and not generate sidecar setup for templates with empty index`() {
+        val (dcResource) = generateResources(
+            """{
+             "type" : "template",
+             "logging": {
+                "index": ""
+             }
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 0)
+        assertThat(dcResource).isNotNull()
+        val config = dcResource.resource as DeploymentConfig
+        assertThat(config.spec.template.metadata).isNull()
     }
 }
