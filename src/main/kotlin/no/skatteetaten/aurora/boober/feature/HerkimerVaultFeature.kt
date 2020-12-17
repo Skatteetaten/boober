@@ -74,6 +74,7 @@ class HerkimerVaultFeature(
     ): Map<String, Any> {
         val herkimerVaultResources: List<HerkimerVaultResource> = spec.findAllConfiguredHerkimerResources()
         val resources = mapOf(HERKIMER_RESOURCE_KEY to herkimerVaultResources)
+
         if (validationContext) {
             return resources
         }
@@ -120,8 +121,6 @@ class HerkimerVaultFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        if (!adc.isFeatureEnabled()) return emptySet()
-
         return context.herkimerVaultResources.values.flatMap { secrets ->
             secrets.map {
                 it.generateAuroraResource()
@@ -146,8 +145,6 @@ class HerkimerVaultFeature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
-        if (!adc.isFeatureEnabled()) return
-
         val envVars = context.herkimerVaultResources.flatMap { (config, secrets) ->
             if (config.multiple) {
                 secrets.mapIndexed { index, secret ->
