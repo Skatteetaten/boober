@@ -82,7 +82,7 @@ data class ResourceClaimHerkimer(
 )
 
 enum class ResourceKind {
-    MinioPolicy, MinioObjectArea, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema, DatabaseInstance
+    MinioPolicy, MinioObjectArea, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema, PostgresDatabaseInstance, OracleDatabaseInstance
 }
 
 data class ResourcePayload(

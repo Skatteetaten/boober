@@ -31,6 +31,33 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should get validation error if two configurations bot single with same prefix`() {
+
+        mockHerkimerDatabase(
+            createResourceHerkimer("ski-postgres", mapOf("foo" to "bar", "bar" to "baz"))
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "herkimer": {
+                    "ski" : {
+                        "serviceClass": "PostgresDatabaseInstance",
+                        "multiple" : false
+                    },
+                    "ski2" : {
+                        "serviceClass": "PostgresDatabaseInstance",
+                        "prefix" : "ski",
+                        "multiple" : false
+                    }
+                }
+           }""",
+                createdResources = 1,
+                resources = mutableSetOf(createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=[ski, ski2]")
+    }
+    @Test
     fun `should get validation error if single and returns multiple responses`() {
 
         mockHerkimerDatabase(
@@ -43,7 +70,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
                 """{ 
                 "herkimer": {
                     "ski" : {
-                        "serviceClass": "DatabaseInstance"
+                        "serviceClass": "PostgresDatabaseInstance"
                     }
                 }
            }""",
@@ -65,11 +92,11 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
                 """{ 
                 "herkimer": {
                     "ski" : {
-                        "serviceClass": "DatabaseInstance",
+                        "serviceClass": "PostgresDatabaseInstance",
                         "multiple" : true
                     },
                     "ski2" : {
-                        "serviceClass" : "DatabaseInstance",
+                        "serviceClass" : "PostgresDatabaseInstance",
                         "prefix" : "ski"
                     }
                 }
@@ -91,7 +118,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
             """{ 
                 "herkimer": {
                     "ski" : {
-                        "serviceClass": "DatabaseInstance",
+                        "serviceClass": "PostgresDatabaseInstance",
                         "multiple" : true
                     }
                 }
@@ -115,7 +142,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
             """{ 
                 "herkimer": {
                     "ski" : {
-                        "serviceClass": "DatabaseInstance",
+                        "serviceClass": "PostgresDatabaseInstance",
                         "multiple" : true
                     }
                 }
@@ -139,7 +166,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
             """{ 
                 "herkimer": {
                     "ski" : {
-                        "serviceClass": "DatabaseInstance"
+                        "serviceClass": "PostgresDatabaseInstance"
                     }
                 }
            }""",
@@ -154,7 +181,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         vararg resourceHerkimer: ResourceHerkimer
     ) {
         every {
-            herkimerService.getClaimedResources("1234567890", ResourceKind.DatabaseInstance)
+            herkimerService.getClaimedResources("1234567890", ResourceKind.PostgresDatabaseInstance)
         } returns resourceHerkimer.toList()
     }
 
@@ -164,7 +191,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     ) = ResourceHerkimer(
         id = "0",
         name = name,
-        kind = ResourceKind.DatabaseInstance,
+        kind = ResourceKind.PostgresDatabaseInstance,
         ownerId = "1234567890",
         claims = listOf(createResourceClaim(data = jacksonObjectMapper().convertValue(data))),
         createdDate = LocalDateTime.now(),
