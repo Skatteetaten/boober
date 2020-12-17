@@ -23,10 +23,26 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
-private const val HERKIMER_RESOURCE_KEY = "resources"
 private const val FEATURE_FIELD = "herkimer"
+
+private const val HERKIMER_RESOURCE_KEY = "resources"
 private const val HERKIMER_REPONSE_KEY = "herkimerResponse"
 private const val HERKIMER_SECRETS_KEY = "secrets"
+
+private val FeatureContext.configuredHerkimerVaultResources: List<HerkimerVaultResource>
+    get() = this.getContextKey(
+        HERKIMER_RESOURCE_KEY
+    )
+
+private val FeatureContext.herkimerResponse: Map<HerkimerVaultResource, List<ResourceHerkimer>>
+    get() = this.getContextKey(
+        HERKIMER_REPONSE_KEY
+    )
+
+private val FeatureContext.herkimerVaultResources: Map<HerkimerVaultResource, List<Secret>>
+    get() = this.getContextKey(
+        HERKIMER_SECRETS_KEY
+    )
 
 @Service
 class HerkimerVaultFeature(
@@ -86,16 +102,16 @@ class HerkimerVaultFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
 
-        val configuredHerkimerVaultResources = context[HERKIMER_RESOURCE_KEY] as List<HerkimerVaultResource>
+        val configuredHerkimerVaultResources = context.configuredHerkimerVaultResources
 
         val errors = validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources)
 
         if (!fullValidation) return errors
 
-        val herkimerResponses = context[HERKIMER_REPONSE_KEY] as Map<HerkimerVaultResource, List<ResourceHerkimer>>
+        val herkimerResponses = context.herkimerResponse
 
         val fullValidationErrors = herkimerResponses.filter { !it.key.multiple && it.value.size > 1 }.map {
             IllegalStateException("Resource with key=${it.key.key} expects a single result but ${it.value.size} was returned")
@@ -103,12 +119,10 @@ class HerkimerVaultFeature(
         return errors.addIfNotNull(fullValidationErrors)
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         if (!adc.isFeatureEnabled()) return emptySet()
 
-        val herkimerVaultResources = context[HERKIMER_SECRETS_KEY] as Map<HerkimerVaultResource, List<Secret>>
-
-        return herkimerVaultResources.values.flatMap { secrets ->
+        return context.herkimerVaultResources.values.flatMap { secrets ->
             secrets.map {
                 it.generateAuroraResource()
             }
@@ -131,12 +145,10 @@ class HerkimerVaultFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: Map<String, Any>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
         if (!adc.isFeatureEnabled()) return
 
-        val herkimerVaultResources = context[HERKIMER_SECRETS_KEY] as Map<HerkimerVaultResource, List<Secret>>
-
-        val envVars = herkimerVaultResources.flatMap { (config, secrets) ->
+        val envVars = context.herkimerVaultResources.flatMap { (config, secrets) ->
             if (config.multiple) {
                 secrets.mapIndexed { index, secret ->
                     secret.createEnvVarRefs(prefix = "${config.prefix}_${index}_")
