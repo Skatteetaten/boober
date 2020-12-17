@@ -35,6 +35,10 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
+private const val BUCKET_OBJECT_AREA_CONTEXT_KEY = "bucketObjectAreas"
+
+private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea> get() = this.getContextKey(BUCKET_OBJECT_AREA_CONTEXT_KEY)
+
 @ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
 @Service
 class S3DisabledFeature : S3FeatureTemplate() {
@@ -42,7 +46,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         val isS3Enabled = adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) ||
             adc.getSubKeys(FEATURE_FIELD_NAME).isNotEmpty()
@@ -72,16 +76,17 @@ class S3Feature(
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         val s3BucketObjectAreas = findS3Buckets(spec)
         return mapOf(
-            "bucketObjectAreas" to s3BucketObjectAreas
+            BUCKET_OBJECT_AREA_CONTEXT_KEY to s3BucketObjectAreas
         )
     }
 
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
-        val s3BucketObjectAreas = context["bucketObjectAreas"] as List<S3BucketObjectArea>
+
+        val s3BucketObjectAreas = context.bucketObjectArea
 
         val requiredFieldsExceptions = s3BucketObjectAreas.validateRequiredFieldsArePresent()
         if (requiredFieldsExceptions.isNotEmpty()) return requiredFieldsExceptions
@@ -95,8 +100,8 @@ class S3Feature(
         return bucketExistsExceptions + bucketObjectAreaAlreadyClaimedException
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
-        val s3BucketObjectAreas = context["bucketObjectAreas"] as List<S3BucketObjectArea>
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+        val s3BucketObjectAreas = context.bucketObjectArea
 
         if (s3BucketObjectAreas.isEmpty()) return emptySet()
 
@@ -107,7 +112,7 @@ class S3Feature(
         return s3Secret.map { it.generateAuroraResource() }.toSet()
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: Map<String, Any>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
         val envVars = resources.extractS3EnvVarsFromSecrets()
 
         resources.addEnvVarsToMainContainers(envVars, javaClass)

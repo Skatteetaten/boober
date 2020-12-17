@@ -25,6 +25,11 @@ import java.util.regex.Pattern.compile
 
 val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
 
+private const val APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY = "applicationDeploymentCommand"
+
+private val FeatureContext.applicationDeploymentCommand: ApplicationDeploymentCommand get() = this.getContextKey(
+    APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY)
+
 val emailRegex: Pattern = compile(
     "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
         "\\@" +
@@ -54,7 +59,7 @@ class ApplicationDeploymentFeature : Feature {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         return adc.getDelimitedStringOrArrayAsSet(emailNotificationsField, " ").mapNotNull { email ->
             if (!emailRegex.matcher(email).matches()) {
@@ -65,7 +70,7 @@ class ApplicationDeploymentFeature : Feature {
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         return mapOf(
-            "applicationDeploymentCommand" to ApplicationDeploymentCommand(
+            APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY to ApplicationDeploymentCommand(
                 cmd.overrideFiles,
                 cmd.applicationDeploymentRef,
                 cmd.auroraConfigRef
@@ -73,7 +78,7 @@ class ApplicationDeploymentFeature : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val ttl = adc.ttl?.let {
             val removeInstant = Instants.now + it
@@ -87,7 +92,7 @@ class ApplicationDeploymentFeature : Feature {
                 message = adc.getOrNull("message"),
                 applicationDeploymentName = adc.name,
                 applicationDeploymentId = adc.applicationDeploymentId,
-                command = context["applicationDeploymentCommand"] as ApplicationDeploymentCommand,
+                command = context.applicationDeploymentCommand,
                 notifications = adc.findNotifications()
             ),
             _metadata = newObjectMeta {
@@ -113,7 +118,7 @@ class ApplicationDeploymentFeature : Feature {
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
 
         resources.addEnvVarsToMainContainers(

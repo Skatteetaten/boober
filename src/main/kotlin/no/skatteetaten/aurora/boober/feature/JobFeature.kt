@@ -79,7 +79,7 @@ class JobFeature(
         return handlers.addIfNotNull(cronJobHandlers)
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val jobSpec = newJobSpec {
             parallelism = 1
@@ -144,7 +144,7 @@ class JobFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         val name = adc.name
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")

@@ -32,6 +32,18 @@ import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
+private const val ROUTE_CONTEXT_KEY = "route"
+private const val APPLICATION_DEPLOYMENT_REF_CONTEXT_KEY = "applicationDeploymentRef"
+
+private val FeatureContext.routes: List<no.skatteetaten.aurora.boober.feature.Route>
+    get() = this.getContextKey(
+        ROUTE_CONTEXT_KEY
+    )
+private val FeatureContext.applicationDeploymentRef: ApplicationDeploymentRef
+    get() = this.getContextKey(
+        APPLICATION_DEPLOYMENT_REF_CONTEXT_KEY
+    )
+
 const val WEMBLEY_EXTERNAL_HOST_ANNOTATION_NAME = "wembley.sits.no|externalHost"
 const val WEBMLEY_API_PATHS_ANNOTATION_NAME = "wembley.sits.no|apiPaths"
 
@@ -69,19 +81,21 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             findRouteAnnotationHandlers("routeDefaults", cmd.applicationFiles)
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         return mapOf(
-            "route" to getRoute(spec),
-            "applicationDeploymentRef" to cmd.applicationDeploymentRef
+            ROUTE_CONTEXT_KEY to getRoute(spec),
+            APPLICATION_DEPLOYMENT_REF_CONTEXT_KEY to cmd.applicationDeploymentRef
 
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
-
-        return routes.map {
+        return context.routes.map {
             val resource = it.generateOpenShiftRoute(
                 routeNamespace = adc.namespace,
                 serviceName = adc.name,
@@ -151,11 +165,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
 
-        val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
-        routes.firstOrNull()?.let {
+        context.routes.firstOrNull()?.let {
             val url = it.url(routeSuffix)
             val routeVars = mapOf(
                 "ROUTE_NAME" to url,
@@ -196,16 +209,16 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
 
-        val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
+        val routes = context.routes
 
         if (routes.isNotEmpty() && adc.isJob) {
             throw AuroraDeploymentSpecValidationException("Routes are not supported for jobs/cronjobs")
         }
 
-        val applicationDeploymentRef = context["applicationDeploymentRef"] as ApplicationDeploymentRef
+        val applicationDeploymentRef = context.applicationDeploymentRef
         val tlsErrors = routes.mapNotNull {
             if (it.tls != null && it.host.contains('.') && !it.fullyQualifiedHost) {
                 AuroraConfigException(

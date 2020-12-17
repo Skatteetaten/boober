@@ -51,7 +51,7 @@ class StsDisabledFeature : Feature {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         adc.stsCommonName?.let {
             if (it.isNotEmpty()) {
@@ -83,7 +83,7 @@ class StsFeature(
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         return adc.stsCommonName?.let {
             val result = sts.generateCertificate(it, adc.name, adc.envName)
 
@@ -95,7 +95,7 @@ class StsFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         adc.stsCommonName?.let {
             StsSecretGenerator.attachSecret(
