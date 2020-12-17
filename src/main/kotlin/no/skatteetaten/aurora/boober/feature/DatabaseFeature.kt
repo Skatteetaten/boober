@@ -46,6 +46,10 @@ import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger { }
 
+private const val DATABASE_CONTEXT_KEY = "databases"
+
+private val FeatureContext.databases: List<Database> get() = this.getContextKey(DATABASE_CONTEXT_KEY)
+
 @ConditionalOnPropertyMissingOrEmpty("integrations.dbh.url")
 @Service
 class DatabaseDisabledFeature(
@@ -57,8 +61,7 @@ class DatabaseDisabledFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        val databases = context["databases"] as List<Database>
-        if (databases.isNotEmpty()) {
+        if (context.databases.isNotEmpty()) {
             return listOf(IllegalArgumentException("Databases are not supported in this cluster"))
         }
         return emptyList()
@@ -80,7 +83,7 @@ class DatabaseFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        val db = context["databases"] as List<Database>
+        val db = context.databases
         val databases = db.createSchemaRequests(adc)
         if (!fullValidation || adc.cluster != cluster || databases.isEmpty()) {
             return emptyList()
@@ -101,7 +104,7 @@ class DatabaseFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        val databases = context["databases"] as List<Database>
+        val databases = context.databases
 
         val schemaRequests = databases.createSchemaRequests(adc)
 
@@ -118,7 +121,8 @@ class DatabaseFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        val databases = context["databases"] as List<Database>
+
+        val databases = context.databases
         if (databases.isEmpty()) return
 
         resources.attachDbSecrets(databases, adc.name, this::class)

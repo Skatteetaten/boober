@@ -25,6 +25,11 @@ import java.util.regex.Pattern.compile
 
 val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
 
+private const val APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY = "applicationDeploymentCommand"
+
+private val FeatureContext.applicationDeploymentCommand: ApplicationDeploymentCommand get() = this.getContextKey(
+    APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY)
+
 val emailRegex: Pattern = compile(
     "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
         "\\@" +
@@ -65,7 +70,7 @@ class ApplicationDeploymentFeature : Feature {
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         return mapOf(
-            "applicationDeploymentCommand" to ApplicationDeploymentCommand(
+            APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY to ApplicationDeploymentCommand(
                 cmd.overrideFiles,
                 cmd.applicationDeploymentRef,
                 cmd.auroraConfigRef
@@ -87,7 +92,7 @@ class ApplicationDeploymentFeature : Feature {
                 message = adc.getOrNull("message"),
                 applicationDeploymentName = adc.name,
                 applicationDeploymentId = adc.applicationDeploymentId,
-                command = context["applicationDeploymentCommand"] as ApplicationDeploymentCommand,
+                command = context.applicationDeploymentCommand,
                 notifications = adc.findNotifications()
             ),
             _metadata = newObjectMeta {

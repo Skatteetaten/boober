@@ -37,6 +37,10 @@ import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
+private const val BUCKET_OBJECT_AREA_CONTEXT_KEY = "bucketObjectAreas"
+
+private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea> get() = this.getContextKey(BUCKET_OBJECT_AREA_CONTEXT_KEY)
+
 @ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
 @Service
 class S3DisabledFeature : S3FeatureTemplate() {
@@ -74,7 +78,7 @@ class S3Feature(
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
         val s3BucketObjectAreas = findS3Buckets(spec)
         return mapOf(
-            "bucketObjectAreas" to s3BucketObjectAreas
+            BUCKET_OBJECT_AREA_CONTEXT_KEY to s3BucketObjectAreas
         )
     }
 
@@ -83,7 +87,8 @@ class S3Feature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        val s3BucketObjectAreas = context["bucketObjectAreas"] as List<S3BucketObjectArea>
+
+        val s3BucketObjectAreas = context.bucketObjectArea
 
         val requiredFieldsExceptions = s3BucketObjectAreas.validateRequiredFieldsArePresent()
         if (requiredFieldsExceptions.isNotEmpty()) return requiredFieldsExceptions
@@ -98,7 +103,7 @@ class S3Feature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        val s3BucketObjectAreas = context["bucketObjectAreas"] as List<S3BucketObjectArea>
+        val s3BucketObjectAreas = context.bucketObjectArea
 
         if (s3BucketObjectAreas.isEmpty()) return emptySet()
 

@@ -27,6 +27,9 @@ import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
+private const val SECRETS_CONTEXT_KEY = "secrets"
+private val FeatureContext.secrets: List<AuroraSecret> get() = this.getContextKey(SECRETS_CONTEXT_KEY)
+
 @Service
 class SecretVaultFeature(
     val vaultProvider: VaultProvider
@@ -70,7 +73,7 @@ class SecretVaultFeature(
     }
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
-        return mapOf("secrets" to getSecretVaults(spec, cmd))
+        return mapOf(SECRETS_CONTEXT_KEY to getSecretVaults(spec, cmd))
     }
 
     // TODO: Room for lots of better refactorings here.
@@ -80,7 +83,7 @@ class SecretVaultFeature(
         context: FeatureContext
     ): List<Exception> {
 
-        val secrets = context["secrets"] as List<AuroraSecret>
+        val secrets = context.secrets
         val shallowValidation = validateSecretNames(secrets)
         if (!fullValidation) return shallowValidation
 
@@ -211,7 +214,7 @@ class SecretVaultFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        val secrets = context["secrets"] as List<AuroraSecret>
+        val secrets = context.secrets
         val secretEnvResult = handleSecretEnv(adc, secrets)
 
         return secretEnvResult.map {
@@ -256,7 +259,8 @@ class SecretVaultFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        val secrets = context["secrets"] as List<AuroraSecret>
+
+        val secrets = context.secrets
         val secretEnv: List<EnvVar> = handleSecretEnv(adc, secrets).flatMap { result ->
             result.secrets.map { secretValue ->
                 newEnvVar {

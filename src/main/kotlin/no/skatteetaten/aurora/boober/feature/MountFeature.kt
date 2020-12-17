@@ -29,6 +29,10 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
+private const val MOUNTS_CONTEXT_KEY = "mounts"
+
+private val FeatureContext.mounts: List<Mount> get() = this.getContextKey(MOUNTS_CONTEXT_KEY)
+
 @Service
 class MountFeature(
     val vaultProvider: VaultProvider,
@@ -69,14 +73,12 @@ class MountFeature(
     }
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
-        return mapOf("mounts" to getMounts(spec, cmd))
+        return mapOf(MOUNTS_CONTEXT_KEY to getMounts(spec, cmd))
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        val mounts = context["mounts"] as List<Mount>
-
-        val secrets = generateSecrets(mounts, adc)
+        val secrets = generateSecrets(context.mounts, adc)
 
         return secrets.map {
             generateResource(it)
@@ -114,7 +116,7 @@ class MountFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        val mounts = context["mounts"] as List<Mount>
+        val mounts = context.mounts
 
         if (mounts.isNotEmpty()) {
 
@@ -135,7 +137,7 @@ class MountFeature(
         context: FeatureContext
     ): List<Exception> {
 
-        val mounts = context["mounts"] as List<Mount>
+        val mounts = context.mounts
 
         val errors = validateExistinAndSecretVault(mounts)
         // .addIfNotNull(validatePVCMounts(mounts))

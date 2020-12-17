@@ -8,6 +8,10 @@ import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import org.springframework.stereotype.Service
 
+private const val CONFIG_CONTEXT_KEY = "config"
+
+private val FeatureContext.configFieldHandlers: List<AuroraConfigFieldHandler> get() = this.getContextKey(CONFIG_CONTEXT_KEY)
+
 @Service
 class ConfigFeature : Feature {
 
@@ -19,7 +23,7 @@ class ConfigFeature : Feature {
     }
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
-        return mapOf("config" to configHandlers(cmd))
+        return mapOf(CONFIG_CONTEXT_KEY to configHandlers(cmd))
     }
 
     override fun modify(
@@ -27,7 +31,7 @@ class ConfigFeature : Feature {
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        val configHandlers = context["config"] as List<AuroraConfigFieldHandler>
+        val configHandlers = context.configFieldHandlers
         val env = adc.getConfigEnv(configHandlers).toEnvVars()
         resources.addEnvVarsToMainContainers(env, this::class.java)
     }
