@@ -72,7 +72,7 @@ class MountFeature(
         return mapOf("mounts" to getMounts(spec, cmd))
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val mounts = context["mounts"] as List<Mount>
 
@@ -112,7 +112,7 @@ class MountFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         val mounts = context["mounts"] as List<Mount>
 
@@ -132,7 +132,7 @@ class MountFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
 
         val mounts = context["mounts"] as List<Mount>

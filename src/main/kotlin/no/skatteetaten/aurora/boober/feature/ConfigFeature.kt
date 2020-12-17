@@ -25,7 +25,7 @@ class ConfigFeature : Feature {
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         val configHandlers = context["config"] as List<AuroraConfigFieldHandler>
         val env = adc.getConfigEnv(configHandlers).toEnvVars()

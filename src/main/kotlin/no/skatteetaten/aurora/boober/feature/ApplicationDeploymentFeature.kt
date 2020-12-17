@@ -54,7 +54,7 @@ class ApplicationDeploymentFeature : Feature {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         return adc.getDelimitedStringOrArrayAsSet(emailNotificationsField, " ").mapNotNull { email ->
             if (!emailRegex.matcher(email).matches()) {
@@ -73,7 +73,7 @@ class ApplicationDeploymentFeature : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val ttl = adc.ttl?.let {
             val removeInstant = Instants.now + it
@@ -113,7 +113,7 @@ class ApplicationDeploymentFeature : Feature {
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
 
         resources.addEnvVarsToMainContainers(

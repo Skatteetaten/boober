@@ -42,7 +42,7 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         resources.forEach {
             if (it.resource.kind == "BuildConfig") {

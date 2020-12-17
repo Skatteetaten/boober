@@ -55,7 +55,7 @@ class DatabaseDisabledFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         val databases = context["databases"] as List<Database>
         if (databases.isNotEmpty()) {
@@ -78,7 +78,7 @@ class DatabaseFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         val db = context["databases"] as List<Database>
         val databases = db.createSchemaRequests(adc)
@@ -100,7 +100,7 @@ class DatabaseFeature(
             }
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val databases = context["databases"] as List<Database>
 
         val schemaRequests = databases.createSchemaRequests(adc)
@@ -116,7 +116,7 @@ class DatabaseFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         val databases = context["databases"] as List<Database>
         if (databases.isEmpty()) return

@@ -77,7 +77,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
 
@@ -151,7 +151,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
 
         val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>
@@ -196,7 +196,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
 
         val routes = context["route"] as List<no.skatteetaten.aurora.boober.feature.Route>

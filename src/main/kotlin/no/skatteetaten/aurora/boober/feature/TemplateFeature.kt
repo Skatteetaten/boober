@@ -36,6 +36,6 @@ class TemplateFeature(
         if (validationContext) {
             return mapOf()
         }
-        return mapOf("template" to templateService.findTemplate(spec["template"]))
+        return mapOf(TEMPLATE_CONTEXT_KEY to templateService.findTemplate(spec["template"]))
     }
 }

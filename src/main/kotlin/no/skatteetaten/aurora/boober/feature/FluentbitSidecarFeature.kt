@@ -77,7 +77,7 @@ class FluentbitSidecarFeature(
             .toSet()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val index = adc.loggingIndex ?: return emptySet()
         val loggerIndexes = getLoggingIndexes(adc, index)
 
@@ -114,7 +114,7 @@ class FluentbitSidecarFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         if (adc.loggingIndex == null) return
 

@@ -44,7 +44,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         val isS3Enabled = adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) ||
             adc.getSubKeys(FEATURE_FIELD_NAME).isNotEmpty()
@@ -81,7 +81,7 @@ class S3Feature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         val s3BucketObjectAreas = context["bucketObjectAreas"] as List<S3BucketObjectArea>
 
@@ -97,7 +97,7 @@ class S3Feature(
         return bucketExistsExceptions + bucketObjectAreaAlreadyClaimedException
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val s3BucketObjectAreas = context["bucketObjectAreas"] as List<S3BucketObjectArea>
 
         if (s3BucketObjectAreas.isEmpty()) return emptySet()
@@ -109,7 +109,7 @@ class S3Feature(
         return s3Secret.map { it.generateAuroraResource() }.toSet()
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: Map<String, Any>) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
         val envVars = resources.extractS3EnvVarsFromSecrets()
 
         resources.addEnvVarsToMainContainers(envVars, javaClass)

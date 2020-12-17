@@ -12,6 +12,29 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 
+class FeatureKeyMissingException(
+    key: String,
+    keys: Set<String>
+) : RuntimeException("The feature context key=$key was not found in the context. keys=$keys")
+
+class FeatureWrongTypeException(
+    key: String,
+    throwable: Throwable
+) : RuntimeException("The feature context key=$key was not the expected type ${throwable.localizedMessage}", throwable)
+
+typealias FeatureContext = Map<String, Any>
+
+@Suppress("UNCHECKED_CAST")
+inline fun <reified T> FeatureContext.getContextKey(key: String): T {
+
+    val value = try {
+        this[key] as T?
+    } catch (e: Exception) {
+        throw FeatureWrongTypeException(key, e)
+    }
+    return value ?: throw FeatureKeyMissingException(key, this.keys)
+}
+
 interface Feature {
 
     fun List<HasMetadata>.generateAuroraResources() = this.map { it.generateAuroraResource() }
@@ -49,7 +72,7 @@ interface Feature {
 
       You can throw an exception here and it will be registered as a validation error if you like
      */
-    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> = emptyMap()
+    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): FeatureContext = emptyMap()
 
     /*
     Perform validation of this feature.
@@ -59,7 +82,7 @@ interface Feature {
     fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> =
         emptyList()
 
@@ -76,7 +99,7 @@ interface Feature {
 
        If you have more then one error throw an ExceptionList
     */
-    fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> = emptySet()
+    fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> = emptySet()
 
     /*
         Modify generated resources
@@ -94,7 +117,7 @@ interface Feature {
     fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) = Unit
 }
 

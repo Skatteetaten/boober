@@ -77,7 +77,7 @@ class SecretVaultFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
 
         val secrets = context["secrets"] as List<AuroraSecret>
@@ -209,7 +209,7 @@ class SecretVaultFeature(
         } else null
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val secrets = context["secrets"] as List<AuroraSecret>
         val secretEnvResult = handleSecretEnv(adc, secrets)
@@ -254,7 +254,7 @@ class SecretVaultFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         val secrets = context["secrets"] as List<AuroraSecret>
         val secretEnv: List<EnvVar> = handleSecretEnv(adc, secrets).flatMap { result ->

@@ -22,6 +22,10 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
 
+const val TEMPLATE_CONTEXT_KEY = "template"
+
+val FeatureContext.template: JsonNode get() = this.getContextKey(TEMPLATE_CONTEXT_KEY)
+
 abstract class AbstractTemplateFeature(
     val cluster: String
 ) : Feature {
@@ -30,8 +34,6 @@ abstract class AbstractTemplateFeature(
         files: List<AuroraConfigFile>,
         auroraConfig: AuroraConfig
     ): Set<AuroraConfigFieldHandler>
-
-    fun findTemplate(context: Map<String, Any>): JsonNode = context["template"] as JsonNode
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
@@ -59,10 +61,10 @@ abstract class AbstractTemplateFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         val type = adc.type
-        val template = findTemplate(context)
+        val template = context.template
         val name = template.openshiftName
         val id = DigestUtils.sha1Hex("${type.name.toLowerCase()}-$name")
         resources.forEach {
@@ -81,14 +83,14 @@ abstract class AbstractTemplateFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
 
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
 
-        val templateJson = findTemplate(context)
+        val templateJson = context.template
 
         val errorMessages = validateTemplateParameters(
             templateJson,
@@ -103,11 +105,11 @@ abstract class AbstractTemplateFeature(
         return emptyList()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val parameters = findParametersFromAuroraConfig(adc) + adc.getParameters().filterNullValues()
 
-        val templateJson = findTemplate(context)
+        val templateJson = context.template
         val templateResult = processTemplate(templateJson, parameters)
 
         return templateResult.map {

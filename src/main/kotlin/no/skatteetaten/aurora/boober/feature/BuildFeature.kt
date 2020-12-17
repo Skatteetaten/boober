@@ -28,7 +28,7 @@ class BuildFeature : Feature {
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        context: Map<String, Any>
+        context: FeatureContext
     ): List<Exception> {
         if (adc.deployState == DeploymentState.deployment) {
             throw AuroraDeploymentSpecValidationException("Development type is not supported for deployState=deployment")
@@ -53,14 +53,14 @@ class BuildFeature : Feature {
         )
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: Map<String, Any>): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         return setOf(generateResource(createBuild(adc)))
     }
 
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
         resources.forEach {
             if (it.resource.kind == "ImageStream") {

@@ -20,7 +20,7 @@ class OperationScopeFeature(
     override fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: Map<String, Any>
+        context: FeatureContext
     ) {
 
         if (operationScopeConfiguration.isBlank()) {
