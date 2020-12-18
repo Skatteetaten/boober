@@ -108,7 +108,7 @@ class HerkimerVaultFeature(
 
         val configuredHerkimerVaultResources = context.configuredHerkimerVaultResources
 
-        //TODO: Multiple respones with same key and more then 1 are single
+        // TODO: Multiple respones with same key and more then 1 are single
         val errors = validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources)
 
         if (!fullValidation) return errors
@@ -184,7 +184,7 @@ class HerkimerVaultFeature(
             val resourcesWithoutMultiple = vaultResource.filter { !it.multiple }
 
             if (resourcesWithMultiple.isNotEmpty() && resourcesWithoutMultiple.isNotEmpty()) {
-                //TODO: Fix better error message
+                // TODO: Fix better error message
                 IllegalArgumentException(
                     """
                         |The configurations with prefix=$prefix has both some configurations 
@@ -192,7 +192,7 @@ class HerkimerVaultFeature(
                         |This is not possible. Resources with multiple=true is ${resourcesWithMultiple.map{ it.key}} 
                         |and with multiple=false is ${resourcesWithoutMultiple.map{it.key} }""".trimMargin()
                 )
-            } else if(resourcesWithoutMultiple.size > 1) {
+            } else if (resourcesWithoutMultiple.size > 1) {
                 IllegalArgumentException("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=${resourcesWithoutMultiple.map{ it.key}}")
             } else null
         }
