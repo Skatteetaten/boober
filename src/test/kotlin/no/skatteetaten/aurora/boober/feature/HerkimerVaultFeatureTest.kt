@@ -40,7 +40,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "herkimer": {
+                "credential": {
                     "ski" : {
                         "serviceClass": "PostgresDatabaseInstance",
                         "multiple" : false
@@ -68,7 +68,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "herkimer": {
+                "credential": {
                     "ski" : {
                         "serviceClass": "PostgresDatabaseInstance"
                     }
@@ -90,7 +90,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "herkimer": {
+                "credential": {
                     "ski" : {
                         "serviceClass": "PostgresDatabaseInstance",
                         "multiple" : true
@@ -116,7 +116,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret) = generateResources(
             """{ 
-                "herkimer": {
+                "credential": {
                     "ski" : {
                         "serviceClass": "PostgresDatabaseInstance",
                         "multiple" : true
@@ -140,7 +140,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret1, secret2) = generateResources(
             """{ 
-                "herkimer": {
+                "credential": {
                     "ski" : {
                         "serviceClass": "PostgresDatabaseInstance",
                         "multiple" : true
@@ -164,7 +164,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret) = generateResources(
             """{ 
-                "herkimer": {
+                "credential": {
                     "ski" : {
                         "serviceClass": "PostgresDatabaseInstance"
                     }
