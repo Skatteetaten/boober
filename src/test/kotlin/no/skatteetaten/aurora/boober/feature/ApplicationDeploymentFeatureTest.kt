@@ -20,7 +20,26 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             "message" : "This is a note", 
                 "ttl" : "1d",
                 "notification" : {
-                    "email" : "foo@bar.no"
+                    "mattermost":{
+                      "channel1": true,
+                      "channel2": {
+                        "enabled": true
+                      },
+                      "channel3":{
+                        "enabled": false
+                      },
+                      "channel4": false
+                    },
+                    "email" : {
+                      "foo@bar.no": {
+                         "enabled": true
+                      },
+                      "bar@foo.no": true,
+                      "baz@skatt.no":{
+                        "enabled": false
+                      },
+                      "bat@skatt.no": false
+                    }
                 }
                 }""", createEmptyDeploymentConfig()
         )
@@ -45,7 +64,15 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     fun `get error with wrong email`() {
         assertThat {
             createAuroraConfigFieldHandlers(
-                """{ "notification" : { "email": "asd"  }}"""
+                """ {
+                  "notification" : { 
+                    "email": {
+                      "asd": {
+                        "enabled": true
+                      }
+                    }
+                  }
+                }"""
             )
         }.singleApplicationError("""Email address 'asd' is not a valid email address.""")
     }

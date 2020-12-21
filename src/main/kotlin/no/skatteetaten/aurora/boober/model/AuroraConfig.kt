@@ -162,7 +162,7 @@ data class AuroraConfig(
         }
     }
 
-    private fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
+    fun getApplicationFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
         val fileName = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
         val file = files.find { it.name.removeExtension() == fileName && !it.override }
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")

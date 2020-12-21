@@ -51,30 +51,72 @@
   },
   "notification": {
     "email": {
-      "source": "complex.json",
-      "value": "foo@bar.no ola@nordmann.net",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "foo@bar.no ola@nordmann.net"
-        }
-      ]
-    },
-    "mattermost": {
-      "source": "complex.json",
-      "value": [
-        "test",
-        "test2"
-      ],
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": [
-            "test",
-            "test2"
+      "foo@bar.no": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
           ]
         }
-      ]
+      },
+      "ola@nordmann.net": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
+          ]
+        }
+      }
+    },
+    "mattermost": {
+      "test": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
+          ]
+        }
+      },
+      "test2": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
+          ]
+        }
+      }
     }
   },
   "schemaVersion": {
