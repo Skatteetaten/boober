@@ -63,13 +63,7 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.fluentbit.image}") val fluentBitImage: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        val isOfType = header.type in listOf(
-            TemplateType.deploy,
-            TemplateType.development,
-            TemplateType.template,
-            TemplateType.localTemplate
-        )
-        return isOfType
+        return true
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
