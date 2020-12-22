@@ -62,15 +62,6 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.port}") val splunkPort: String,
     @Value("\${splunk.fluentbit.image}") val fluentBitImage: String
 ) : Feature {
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        val isOfType = header.type in listOf(
-            TemplateType.deploy,
-            TemplateType.development,
-            TemplateType.template,
-            TemplateType.localTemplate
-        )
-        return isOfType
-    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return knownLogs.map { log ->
