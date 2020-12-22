@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
+import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -26,17 +27,11 @@ import org.springframework.stereotype.Service
 private const val FEATURE_FIELD = "credential"
 
 private const val HERKIMER_RESOURCE_KEY = "resources"
-private const val HERKIMER_REPONSE_KEY = "herkimerResponse"
 private const val HERKIMER_SECRETS_KEY = "secrets"
 
 private val FeatureContext.configuredHerkimerVaultResources: List<HerkimerVaultResource>
     get() = this.getContextKey(
         HERKIMER_RESOURCE_KEY
-    )
-
-private val FeatureContext.herkimerResponse: Map<HerkimerVaultResource, List<ResourceHerkimer>>
-    get() = this.getContextKey(
-        HERKIMER_REPONSE_KEY
     )
 
 private val FeatureContext.herkimerVaultResources: Map<HerkimerVaultResource, List<Secret>>
@@ -79,24 +74,14 @@ class HerkimerVaultFeature(
             return resources
         }
 
-        val herkimerResources: Map<HerkimerVaultResource, List<ResourceHerkimer>> =
-            herkimerVaultResources.associateWith {
-                herkimerService.getClaimedResources(spec.applicationDeploymentId, it.serviceClass)
+        val secrets: Map<HerkimerVaultResource, List<Secret>> =
+            herkimerVaultResources.associateWith { vaultResource ->
+                // hent ned alle vaultressurser og gjør dem om til secrets
+                herkimerService.getClaimedResources(spec.applicationDeploymentId, vaultResource.serviceClass)
+                    .map { generateHerkimerSecret(it, spec) }
             }
-
-        val secrets: Map<HerkimerVaultResource, List<Secret>> = herkimerResources.map { (config, resources) ->
-            val secrets = if (!config.multiple) {
-                listOf(generateHerkimerSecret(resources.first(), spec))
-            } else {
-                resources.map {
-                    generateHerkimerSecret(it, spec)
-                }
-            }
-            config to secrets
-        }.toMap()
 
         return resources
-            .addIfNotNull(HERKIMER_REPONSE_KEY to herkimerResources)
             .addIfNotNull(HERKIMER_SECRETS_KEY to secrets)
     }
 
@@ -108,24 +93,22 @@ class HerkimerVaultFeature(
 
         val configuredHerkimerVaultResources = context.configuredHerkimerVaultResources
 
-        // TODO: Multiple respones with same key and more then 1 are single
         val errors = validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources)
 
         if (!fullValidation) return errors
 
-        val herkimerResponses = context.herkimerResponse
+        val herkimerResponses = context.herkimerVaultResources
 
-        val fullValidationErrors = herkimerResponses.filter { !it.key.multiple && it.value.size > 1 }.map {
-            IllegalStateException("Resource with key=${it.key.key} expects a single result but ${it.value.size} was returned")
-        }
+        val fullValidationErrors = herkimerResponses
+            .filter { !it.key.multiple && it.value.size > 1 }
+            .map { IllegalStateException("Resource with key=${it.key.key} expects a single result but ${it.value.size} was returned") }
+
         return errors.addIfNotNull(fullValidationErrors)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         return context.herkimerVaultResources.values.flatMap { secrets ->
-            secrets.map {
-                it.generateAuroraResource()
-            }
+            secrets.map { it.generateAuroraResource() }
         }.toSet()
     }
 
@@ -148,16 +131,20 @@ class HerkimerVaultFeature(
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
         val envVars = context.herkimerVaultResources.flatMap { (config, secrets) ->
             if (config.multiple) {
-                secrets.mapIndexed { index, secret ->
-                    secret.createEnvVarRefs(prefix = "${config.prefix}_${index}_")
-                }
+                secrets.generateEnvVarsForMultipleValues(config.prefix)
             } else {
-                listOf(secrets.first().createEnvVarRefs(prefix = "${config.prefix}_"))
+                secrets.generateEnvVarsForSingleValue(config.prefix)
             }
-        }.flatten()
+        }
 
         resources.addEnvVarsToMainContainers(envVars, javaClass)
     }
+
+    private fun List<Secret>.generateEnvVarsForSingleValue(prefix: String): List<EnvVar> =
+        this.first().createEnvVarRefs(prefix = "${prefix}_")
+
+    private fun List<Secret>.generateEnvVarsForMultipleValues(prefix: String): List<EnvVar> =
+        this.mapIndexed { index, secret -> secret.createEnvVarRefs(prefix = "${prefix}_${index}_") }.flatten()
 
     private fun AuroraDeploymentSpec.findAllConfiguredHerkimerResources() =
         this.getSubKeyValues(FEATURE_FIELD).mapNotNull {
@@ -189,11 +176,11 @@ class HerkimerVaultFeature(
                     """
                         |The configurations with prefix=$prefix has both some configurations 
                         |that expect multiple envvars and some other that does not expect multiple envvars. 
-                        |This is not possible. Resources with multiple=true is ${resourcesWithMultiple.map{ it.key}} 
-                        |and with multiple=false is ${resourcesWithoutMultiple.map{it.key} }""".trimMargin()
+                        |This is not possible. Resources with multiple=true is ${resourcesWithMultiple.map { it.key }} 
+                        |and with multiple=false is ${resourcesWithoutMultiple.map { it.key }}""".trimMargin()
                 )
             } else if (resourcesWithoutMultiple.size > 1) {
-                IllegalArgumentException("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=${resourcesWithoutMultiple.map{ it.key}}")
+                IllegalArgumentException("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=${resourcesWithoutMultiple.map { it.key }}")
             } else null
         }
 }

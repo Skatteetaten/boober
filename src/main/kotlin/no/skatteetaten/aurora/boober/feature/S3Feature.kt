@@ -37,7 +37,10 @@ private val logger = KotlinLogging.logger {}
 
 private const val BUCKET_OBJECT_AREA_CONTEXT_KEY = "bucketObjectAreas"
 
-private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea> get() = this.getContextKey(BUCKET_OBJECT_AREA_CONTEXT_KEY)
+private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea>
+    get() = this.getContextKey(
+        BUCKET_OBJECT_AREA_CONTEXT_KEY
+    )
 
 @ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
 @Service
@@ -73,7 +76,11 @@ class S3Feature(
         return !header.isJob
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         val s3BucketObjectAreas = findS3Buckets(spec)
         return mapOf(
             BUCKET_OBJECT_AREA_CONTEXT_KEY to s3BucketObjectAreas
@@ -125,10 +132,9 @@ class S3Feature(
             val claimsOwnedByOthers = herkimerService.getClaimedResources(
                 resourceKind = ResourceKind.MinioObjectArea,
                 name = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.area}"
-            ).flatMap { it.claims }
-                .filter {
-                    it.ownerId != applicationDeploymentId
-                }
+            )
+                .flatMap { it.claims }
+                .filter { it.ownerId != applicationDeploymentId }
 
             if (claimsOwnedByOthers.isNotEmpty()) {
                 logger.debug {
@@ -303,14 +309,6 @@ private data class BucketWithCredentials(
 private const val FEATURE_FIELD_NAME = "s3"
 private const val FEATURE_DEFAULTS_FIELD_NAME = "s3Defaults"
 private const val ANNOTATION_OBJECT_AREA = "minio.skatteetaten.no/objectArea"
-
-private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
-
-fun Feature.addEnvVarsToDcContainers(resources: Set<AuroraResource>, envVars: List<EnvVar>) {
-    resources.addEnvVarsToMainContainers(envVars, this.javaClass)
-}
-
-private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 
 private fun List<BucketWithCredentials>.createS3Secrets(nsName: String, appName: String) =
     this.map { (s3BucketObjectArea, provisionResult) ->
