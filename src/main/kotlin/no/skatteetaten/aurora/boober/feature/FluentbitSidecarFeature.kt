@@ -27,6 +27,7 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
+const val SPLUNK_CONNECT_INDEX_TAG = "splunk.com/index"
 
 val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
@@ -61,13 +62,6 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.port}") val splunkPort: String,
     @Value("\${splunk.fluentbit.image}") val fluentBitImage: String
 ) : Feature {
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        val isOfType = header.type in listOf(
-            TemplateType.deploy,
-            TemplateType.development
-        )
-        return isOfType && !header.isJob
-    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return knownLogs.map { log ->
@@ -79,6 +73,7 @@ class FluentbitSidecarFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val index = adc.loggingIndex ?: return emptySet()
+        if (! shouldGenerateAndModify(adc)) return emptySet()
         val loggerIndexes = getLoggingIndexes(adc, index)
 
         val fluentParserMap = newConfigMap {
@@ -116,33 +111,66 @@ class FluentbitSidecarFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        if (adc.loggingIndex == null) return
-
-        val configVolume = newVolume {
-            name = adc.fluentConfigName
-            configMap {
+        val index = adc.loggingIndex ?: return
+        if (index == "") return
+        if (! shouldGenerateAndModify(adc)) {
+            resources.forEach {
+                val template = getTemplate(it) ?: return@forEach
+                setTemplateAnnotation(template, SPLUNK_CONNECT_INDEX_TAG, index)
+            }
+        } else {
+            val configVolume = newVolume {
                 name = adc.fluentConfigName
+                configMap {
+                    name = adc.fluentConfigName
+                }
             }
-        }
-        val parserVolume = newVolume {
-            name = adc.fluentParserName
-            configMap {
+            val parserVolume = newVolume {
                 name = adc.fluentParserName
+                configMap {
+                    name = adc.fluentParserName
+                }
             }
-        }
 
-        val container = createFluentbitContainer(adc)
-        resources.forEach {
-            if (it.resource.kind == "DeploymentConfig") {
-                val dc: DeploymentConfig = it.resource as DeploymentConfig
-                val template = dc.spec.template
-                modifyAuroraResource(it, template, configVolume, parserVolume, container)
-            } else if (it.resource.kind == "Deployment") {
-                val dc: Deployment = it.resource as Deployment
-                val template = dc.spec.template
+            val container = createFluentbitContainer(adc)
+            resources.forEach {
+                val template = getTemplate(it) ?: return@forEach
                 modifyAuroraResource(it, template, configVolume, parserVolume, container)
             }
         }
+    }
+
+    private fun getTemplate(resource: AuroraResource): PodTemplateSpec? {
+        var template: PodTemplateSpec? = null
+        if (resource.resource.kind == "DeploymentConfig") {
+            val dc: DeploymentConfig = resource.resource as DeploymentConfig
+            template = dc.spec.template
+        } else if (resource.resource.kind == "Deployment") {
+            val dc: Deployment = resource.resource as Deployment
+            template = dc.spec.template
+        }
+        return template
+    }
+
+    private fun setTemplateAnnotation(template: PodTemplateSpec, annotationKey: String, annotationValue: String) {
+        if (template.metadata == null) {
+            template.metadata = ObjectMeta()
+        }
+        if (template.metadata.annotations == null) {
+            template.metadata.annotations = mutableMapOf(annotationKey to annotationValue)
+        } else {
+            template.metadata.annotations.put(
+                annotationKey, annotationValue
+            )
+        }
+    }
+
+    private fun shouldGenerateAndModify(adc: AuroraDeploymentSpec): Boolean {
+        val isOfType = adc.type in listOf(
+            TemplateType.deploy,
+            TemplateType.development
+        )
+        return (adc.loggingIndex != null && isOfType && !adc.isJob)
     }
 
     private fun modifyAuroraResource(
@@ -158,16 +186,7 @@ class FluentbitSidecarFeature(
         podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
         podSpec.containers = podSpec.containers.addIfNotNull(container)
         // Add annotation to exclude pods having fluentbit sidecar from being logged by node deployd splunk connect.
-        if (template.metadata == null) {
-            template.metadata = ObjectMeta()
-        }
-        if (template.metadata.annotations == null) {
-            template.metadata.annotations = mutableMapOf(SPLUNK_CONNECT_EXCLUDE_TAG to "true")
-        } else {
-            template.metadata.annotations.put(
-                SPLUNK_CONNECT_EXCLUDE_TAG, "true"
-            )
-        }
+        setTemplateAnnotation(template, SPLUNK_CONNECT_EXCLUDE_TAG, "true")
     }
 
     private fun createFluentbitContainer(adc: AuroraDeploymentSpec): Container {

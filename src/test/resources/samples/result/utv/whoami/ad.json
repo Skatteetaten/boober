@@ -43,6 +43,12 @@
         "refName": "master",
         "resolvedRef": "123abb"
       }
-    }
+    },
+    "notifications": [
+      {
+        "notificationLocation": "test100",
+        "type": "Mattermost"
+      }
+    ]
   }
 }

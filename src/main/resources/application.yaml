@@ -13,6 +13,9 @@ spring:
             cache-names: groups, templates
 
 integrations:
+    # TODO: add url to auroraConfig for ocp4
+    konsoll:
+        url: "http://konsoll.aurora.${openshift.cluster}.paas.skead.no"
     bitbucket:
         url: "https://git.aurora.skead.no/"
     cantus:
@@ -99,7 +102,7 @@ integrations:
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: https://herkimer-aurora.${openshift.cluster}.paas.skead.no
+        url: false
         fallback:
             applikasjonsnavn: "1234567890"
     openshift:

@@ -3,5 +3,12 @@
   "groupId": "org.test",
   "type": "deploy",
   "deployState": "deployment",
-  "database": true
+  "database": true,
+  "notification": {
+    "mattermost": {
+      "test100": {
+        "enabled": true
+      }
+    }
+  }
 }

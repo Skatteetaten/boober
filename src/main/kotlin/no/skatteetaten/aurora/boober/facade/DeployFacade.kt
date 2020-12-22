@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.Deployer
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.NotificationService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.utils.parallelMap
@@ -33,6 +34,7 @@ class DeployFacade(
     val openShiftDeployer: OpenShiftDeployer,
     val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
+    val notificationService: NotificationService,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
 
@@ -93,11 +95,15 @@ class DeployFacade(
         val deployResults = openShiftDeployer.performDeployCommands(deployCommands)
         watch.stop()
 
+        watch.start("send notification")
+        val deployResultsAfterNotifications = notificationService.sendDeployNotifications(deployResults)
+        watch.stop()
+
         watch.start("store result")
         val deployer = userDetailsProvider.getAuthenticatedUser().let {
             Deployer(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
-        return deployLogService.markRelease(deployResults.flatMap { it.value }, deployer).also {
+        return deployLogService.markRelease(deployResultsAfterNotifications, deployer).also {
             watch.stop()
             logger.info("Deploy: ${watch.prettyPrint()}")
         }

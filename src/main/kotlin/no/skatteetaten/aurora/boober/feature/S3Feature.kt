@@ -144,7 +144,7 @@ class S3Feature(
         val nameAndCredentials = getBucketCredentials()
 
         return this.mapNotNull {
-            val credentials = nameAndCredentials[it.bucketName]
+            val credentials = nameAndCredentials[it.bucketName.trim()]
 
             if (credentials == null) IllegalArgumentException("Could not find credentials for bucket with name=${it.bucketName}, please register the credentials")
             else null
@@ -303,6 +303,12 @@ private data class BucketWithCredentials(
 private const val FEATURE_FIELD_NAME = "s3"
 private const val FEATURE_DEFAULTS_FIELD_NAME = "s3Defaults"
 private const val ANNOTATION_OBJECT_AREA = "minio.skatteetaten.no/objectArea"
+
+private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
+
+fun Feature.addEnvVarsToDcContainers(resources: Set<AuroraResource>, envVars: List<EnvVar>) {
+    resources.addEnvVarsToMainContainers(envVars, this.javaClass)
+}
 
 private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
 

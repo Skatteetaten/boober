@@ -108,10 +108,21 @@
     }
   },
   "notification": {
-    "email": "foo@bar.no ola@nordmann.net",
-    "mattermost": [
-      "test",
-      "test2"
-    ]
+    "email": {
+      "foo@bar.no": {
+        "enabled": true
+      },
+      "ola@nordmann.net": {
+        "enabled": true
+      }
+    },
+    "mattermost": {
+      "test": {
+        "enabled": true
+      },
+      "test2": {
+        "enabled": true
+      }
+    }
   }
 }
