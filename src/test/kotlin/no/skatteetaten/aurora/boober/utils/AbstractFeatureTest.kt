@@ -357,7 +357,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val adc = createAuroraDeploymentContext(app, files = files)
 
         val generated = adc.features.flatMap {
-            it.key.generate(it.value, adc.cmd)
+            it.key.generate(it.value, adc.featureContext[it.key] ?: emptyMap())
         }.toSet()
 
         if (resources.isEmpty()) {
@@ -367,7 +367,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         resources.addAll(generated)
 
         adc.features.forEach {
-            it.key.modify(it.value, resources, adc.cmd)
+            it.key.modify(it.value, resources, adc.featureContext[it.key] ?: emptyMap())
         }
         assertThat(resources.size, "Number of resources").isEqualTo(numberOfEmptyResources + createdResources)
         return resources.toList()
@@ -375,9 +375,9 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
     fun createAuroraConfigFieldHandlers(
         app: String = """{}"""
-    ): Set<AuroraConfigFieldHandler> {
+    ): AuroraDeploymentSpec {
         val ctx = createAuroraDeploymentContext(app)
-        return ctx.featureHandlers.values.first()
+        return ctx.features.values.first()
     }
 
     fun Assert<AuroraResource>.auroraResourceMountsAttachment(

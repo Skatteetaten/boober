@@ -1171,6 +1171,28 @@
       }
     }
   },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    },
+    "objectArea": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    }
+  },
   "secretVaults": {
     "foo": {
       "name": {

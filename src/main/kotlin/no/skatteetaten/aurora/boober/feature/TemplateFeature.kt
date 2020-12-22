@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -33,6 +32,10 @@ class TemplateFeature(
         )
     }
 
-    override fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode =
-        templateService.findTemplate(adc["template"])
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+        if (validationContext) {
+            return mapOf()
+        }
+        return mapOf(TEMPLATE_CONTEXT_KEY to templateService.findTemplate(spec["template"]))
+    }
 }

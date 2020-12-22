@@ -209,6 +209,10 @@
       "value": "myBucket",
       "sources": [
         {
+          "name": "default",
+          "value": ""
+        },
+        {
           "name": "simple.json",
           "value": "myBucket"
         }
@@ -218,6 +222,10 @@
       "source": "simple.json",
       "value": "default",
       "sources": [
+        {
+          "name": "default",
+          "value": ""
+        },
         {
           "name": "simple.json",
           "value": "default"

@@ -12,8 +12,9 @@ private val logger = KotlinLogging.logger { }
 
 fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List<java.lang.Exception>> {
     return features.mapValues {
+        val ctx = featureContext[it.key] ?: emptyMap()
         try {
-            it.key.validate(it.value, fullValidation, this.cmd)
+            it.key.validate(it.value, fullValidation, ctx)
         } catch (e: Exception) {
             if (e is ExceptionList) {
                 e.exceptions
@@ -70,8 +71,10 @@ fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<Aur
 fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<AuroraResource>?> {
 
     val eitherErrorsOrFeatures: List<Pair<ContextErrors?, Set<AuroraResource>?>> = features.map {
+
+        val context = this.featureContext[it.key] ?: emptyMap()
         try {
-            null to it.key.generate(it.value, this.cmd)
+            null to it.key.generate(it.value, context)
         } catch (e: Throwable) {
             if (e is ExceptionList) {
                 ContextErrors(this.cmd, e.exceptions) to null
@@ -113,8 +116,9 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
 
     // Mutation!
     val modifyErrors = this.features.mapNotNull {
+        val context = this.featureContext[it.key] ?: emptyMap()
         try {
-            it.key.modify(it.value, featureResources, this.cmd)
+            it.key.modify(it.value, featureResources, context)
             null
         } catch (e: Throwable) {
             if (e is ExceptionList) {
@@ -134,6 +138,6 @@ data class AuroraDeploymentContext(
     val spec: AuroraDeploymentSpec,
     val cmd: AuroraContextCommand,
     val features: FeatureSpec,
-    val featureHandlers: Map<Feature, Set<AuroraConfigFieldHandler>>,
+    val featureContext: Map<Feature, Map<String, Any>>,
     val warnings: List<String> = emptyList()
 )

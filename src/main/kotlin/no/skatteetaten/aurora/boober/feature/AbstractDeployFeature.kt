@@ -256,7 +256,7 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler("liveness/timeout", defaultValue = 1)
         )
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         return if (adc.deployState == DeploymentState.deployment) {
             setOf(
@@ -272,7 +272,11 @@ abstract class AbstractDeployFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: FeatureContext
+    ) {
         val name = adc.artifactId
         val id = DigestUtils.sha1Hex("${adc.groupId}/$name")
         resources.forEach {

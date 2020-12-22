@@ -29,6 +29,10 @@ import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
+private const val MOUNTS_CONTEXT_KEY = "mounts"
+
+private val FeatureContext.mounts: List<Mount> get() = this.getContextKey(MOUNTS_CONTEXT_KEY)
+
 @Service
 class MountFeature(
     val vaultProvider: VaultProvider,
@@ -68,11 +72,13 @@ class MountFeature(
         }.toSet()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+        return mapOf(MOUNTS_CONTEXT_KEY to getMounts(spec, cmd))
+    }
 
-        val mounts = getMounts(adc, cmd)
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        val secrets = generateSecrets(mounts, adc)
+        val secrets = generateSecrets(context.mounts, adc)
 
         return secrets.map {
             generateResource(it)
@@ -105,9 +111,12 @@ class MountFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
-
-        val mounts = getMounts(adc, cmd)
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: FeatureContext
+    ) {
+        val mounts = context.mounts
 
         if (mounts.isNotEmpty()) {
 
@@ -125,9 +134,10 @@ class MountFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: FeatureContext
     ): List<Exception> {
-        val mounts = getMounts(adc, cmd)
+
+        val mounts = context.mounts
 
         val errors = validateExistinAndSecretVault(mounts)
         // .addIfNotNull(validatePVCMounts(mounts))
@@ -182,6 +192,7 @@ class MountFeature(
         }
     }
 
+    // TODO: Should be able to write this using only spec
     private fun getMounts(auroraDeploymentSpec: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<Mount> {
 
         val mountHandlers = handlers(auroraDeploymentSpec, cmd)

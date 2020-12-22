@@ -81,7 +81,7 @@ class MountFeatureTest : AbstractFeatureTest() {
     fun `Should generate handlers for no mounts`() {
         val handlers = createAuroraConfigFieldHandlers("{}")
 
-        val mountHandlers = handlers.filter { it.name.startsWith("mounts") }
+        val mountHandlers = handlers.fields.filter { it.key.startsWith("mounts") }
         assertThat(mountHandlers.size).isEqualTo(0)
     }
 
