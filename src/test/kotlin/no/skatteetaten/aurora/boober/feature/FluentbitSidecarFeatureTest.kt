@@ -57,6 +57,23 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should validate but not generate sidecar setup for cronjob`() {
+        val (dcResource) = generateResources(
+            """{
+             "type" : "cronjob",
+             "logging": {
+                "index": "test-index"
+             }
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 0)
+        assertThat(dcResource).isNotNull()
+        val config = dcResource.resource as DeploymentConfig
+        val annotations = config.spec.template.metadata.annotations
+        assertThat(annotations).isNotNull()
+        assertThat(annotations.get("splunk.com/index")).equals("test-index")
+    }
+
+    @Test
     fun `should validate and not generate sidecar setup for templates with empty index`() {
         val (dcResource) = generateResources(
             """{
