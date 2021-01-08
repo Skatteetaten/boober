@@ -234,8 +234,8 @@ class FluentbitSidecarFeature(
             resources {
                 limits = mapOf(
                     // TODO? Add as config parameter
-                    "memory" to Quantity("64Mi"),
-                    "cpu" to Quantity("100m")
+                    "memory" to Quantity("128Mi"),
+                    "cpu" to Quantity("300m")
                 )
                 requests = mapOf(
                     "memory" to Quantity("20Mi"),
@@ -251,7 +251,8 @@ data class LoggingConfig(
     val name: String,
     val sourceType: String,
     val index: String,
-    val filePattern: String
+    val filePattern: String,
+    val excludePattern: String
 )
 
 fun getLoggingIndexes(adc: AuroraDeploymentSpec, defaultIndex: String): List<LoggingConfig> {
@@ -259,7 +260,8 @@ fun getLoggingIndexes(adc: AuroraDeploymentSpec, defaultIndex: String): List<Log
     val loggers = getLoggingIndexNames(adc, defaultIndex)
 
     return loggers.map { (key, value) ->
-        LoggingConfig(key, getKnownSourceType(key), value, getKnownFilePattern(key))
+        val filePattern = getKnownFilePattern(key)
+        LoggingConfig(key, getKnownSourceType(key), value, filePattern, getLogRotationExcludePattern(filePattern))
     }
 }
 
@@ -306,17 +308,24 @@ fun getKnownFilePattern(logger: String): String {
     }
 }
 
+fun getLogRotationExcludePattern(logFilePattern: String): String {
+    return logFilePattern.replace("*", "*.[1-9]")
+}
+
 fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: String, cluster: String): String {
     val inputs = loggerIndexes.map { log ->
         var multiline = ""
-        if (log.sourceType.equals("log4j")) {
+        if (log.sourceType == "log4j") {
             multiline = "Multiline    On\n    Parser_Firstline   log4jMultilineParser"
         }
         """[INPUT]
     Name   tail
     Path   /u01/logs/${log.filePattern}
+    Path_Key source
+    Exclude_Path ${log.excludePattern}
     Tag    ${log.name}
-    Mem_Buf_Limit 10MB
+    DB     /u01/${log.name}.db
+    Mem_Buf_Limit 15MB
     Key    event
     $multiline"""
     }.joinToString("\n\n")
