@@ -30,7 +30,11 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
         return labels.normalizeLabels()
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: FeatureContext
+    ) {
         val commonLabels = createCommonLabels(adc)
         resources.addLabels(commonLabels, "Added commonLabels", this::class.java)
     }

@@ -27,6 +27,9 @@ import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
+private const val SECRETS_CONTEXT_KEY = "secrets"
+private val FeatureContext.secrets: List<AuroraSecret> get() = this.getContextKey(SECRETS_CONTEXT_KEY)
+
 @Service
 class SecretVaultFeature(
     val vaultProvider: VaultProvider
@@ -69,14 +72,18 @@ class SecretVaultFeature(
             .toSet()
     }
 
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+        return mapOf(SECRETS_CONTEXT_KEY to getSecretVaults(spec, cmd))
+    }
+
     // TODO: Room for lots of better refactorings here.
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: FeatureContext
     ): List<Exception> {
 
-        val secrets = getSecretVaults(adc, cmd)
+        val secrets = context.secrets
         val shallowValidation = validateSecretNames(secrets)
         if (!fullValidation) return shallowValidation
 
@@ -205,9 +212,10 @@ class SecretVaultFeature(
         } else null
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        val secretEnvResult = handleSecretEnv(adc, cmd)
+        val secrets = context.secrets
+        val secretEnvResult = handleSecretEnv(adc, secrets)
 
         return secretEnvResult.map {
             val secret = newSecret {
@@ -221,8 +229,7 @@ class SecretVaultFeature(
         }.toSet()
     }
 
-    private fun handleSecretEnv(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): List<VaultSecretEnvResult> {
-        val secrets = getSecretVaults(adc, cmd)
+    private fun handleSecretEnv(adc: AuroraDeploymentSpec, secrets: List<AuroraSecret>): List<VaultSecretEnvResult> {
         return secrets.mapNotNull { secret: AuroraSecret ->
             val request = VaultRequest(
                 collectionName = adc.affiliation,
@@ -247,9 +254,14 @@ class SecretVaultFeature(
         }
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: FeatureContext
+    ) {
 
-        val secretEnv: List<EnvVar> = handleSecretEnv(adc, cmd).flatMap { result ->
+        val secrets = context.secrets
+        val secretEnv: List<EnvVar> = handleSecretEnv(adc, secrets).flatMap { result ->
             result.secrets.map { secretValue ->
                 newEnvVar {
                     name = secretValue.key

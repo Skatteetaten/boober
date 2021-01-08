@@ -22,6 +22,10 @@ import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
 
+const val TEMPLATE_CONTEXT_KEY = "template"
+
+val FeatureContext.template: JsonNode get() = this.getContextKey(TEMPLATE_CONTEXT_KEY)
+
 abstract class AbstractTemplateFeature(
     val cluster: String
 ) : Feature {
@@ -30,8 +34,6 @@ abstract class AbstractTemplateFeature(
         files: List<AuroraConfigFile>,
         auroraConfig: AuroraConfig
     ): Set<AuroraConfigFieldHandler>
-
-    abstract fun findTemplate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): JsonNode
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
@@ -56,9 +58,13 @@ abstract class AbstractTemplateFeature(
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: FeatureContext
+    ) {
         val type = adc.type
-        val template = findTemplate(adc, cmd)
+        val template = context.template
         val name = template.openshiftName
         val id = DigestUtils.sha1Hex("${type.name.toLowerCase()}-$name")
         resources.forEach {
@@ -77,19 +83,14 @@ abstract class AbstractTemplateFeature(
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
-        cmd: AuroraContextCommand
+        context: FeatureContext
     ): List<Exception> {
 
-        // TODO: LocalTemplate could be in normal validation, but very few people us it.
         if (!fullValidation || adc.cluster != cluster) {
             return emptyList()
         }
 
-        val templateJson = try {
-            findTemplate(adc, cmd)
-        } catch (e: Exception) {
-            return listOf(e)
-        }
+        val templateJson = context.template
 
         val errorMessages = validateTemplateParameters(
             templateJson,
@@ -104,11 +105,11 @@ abstract class AbstractTemplateFeature(
         return emptyList()
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraResource> {
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val parameters = findParametersFromAuroraConfig(adc) + adc.getParameters().filterNullValues()
 
-        val templateJson = findTemplate(adc, cmd)
+        val templateJson = context.template
         val templateResult = processTemplate(templateJson, parameters)
 
         return templateResult.map {

@@ -93,7 +93,11 @@ class DeploymentConfigFeature : Feature {
         ).addIfNotNull(templateSpecificHeaders)
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: FeatureContext
+    ) {
         val dcLabels = createDcLabels(adc).normalizeLabels()
         val envVars = createEnvVars(adc).toEnvVars()
         resources.forEach {

@@ -49,6 +49,9 @@ utv/about.json | cluster: "utv"
        default |     insecurePolicy: "Redirect"
        default |     termination: "edge"
        default | s3: false
+               | s3Defaults:
+       default |   bucketName: ""
+       default |   objectArea: ""
        default | sts: false
       web.json | toxiproxy: true
                | deployStrategy:

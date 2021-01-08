@@ -28,7 +28,7 @@ class PreStopFeature : Feature {
         )
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
 
         val preStop: Duration = adc.preStop ?: return
 

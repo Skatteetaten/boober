@@ -4,7 +4,6 @@ import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.openshift.customStrategy
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.openshift.api.model.BuildConfig
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.binPath
@@ -40,7 +39,11 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
 
     override fun enable(platform: ApplicationPlatform) = platform == ApplicationPlatform.web
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, cmd: AuroraContextCommand) {
+    override fun modify(
+        adc: AuroraDeploymentSpec,
+        resources: Set<AuroraResource>,
+        context: FeatureContext
+    ) {
         resources.forEach {
             if (it.resource.kind == "BuildConfig") {
 
@@ -56,6 +59,6 @@ class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: 
                 }
             }
         }
-        super.modify(adc, resources, cmd)
+        super.modify(adc, resources, emptyMap())
     }
 }
