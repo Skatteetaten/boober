@@ -40,13 +40,13 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "credential": {
+                "credentials": {
                     "ski" : {
-                        "serviceClass": "PostgresDatabaseInstance",
+                        "resourceKind": "PostgresDatabaseInstance",
                         "multiple" : false
                     },
                     "ski2" : {
-                        "serviceClass": "PostgresDatabaseInstance",
+                        "resourceKind": "PostgresDatabaseInstance",
                         "prefix" : "ski",
                         "multiple" : false
                     }
@@ -68,16 +68,16 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "credential": {
+                "credentials": {
                     "ski" : {
-                        "serviceClass": "PostgresDatabaseInstance"
+                        "resourceKind": "PostgresDatabaseInstance"
                     }
                 }
            }""",
                 createdResources = 1,
                 resources = mutableSetOf(createEmptyDeploymentConfig())
             )
-        }.singleApplicationError("Resource with key=ski expects a single result but 2 was returned")
+        }.singleApplicationError("Configured credential=ski is configured as multiple=false, but 2 was returned")
     }
 
     @Test
@@ -90,13 +90,13 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
         assertThat {
             generateResources(
                 """{ 
-                "credential": {
+                "credentials": {
                     "ski" : {
-                        "serviceClass": "PostgresDatabaseInstance",
+                        "resourceKind": "PostgresDatabaseInstance",
                         "multiple" : true
                     },
                     "ski2" : {
-                        "serviceClass" : "PostgresDatabaseInstance",
+                        "resourceKind" : "PostgresDatabaseInstance",
                         "prefix" : "ski"
                     }
                 }
@@ -104,7 +104,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
                 createdResources = 1,
                 resources = mutableSetOf(createEmptyDeploymentConfig())
             )
-        }.singleApplicationError("that expect multiple envvars and some other that does not expect multiple envvars.")
+        }.singleApplicationError("The shared prefix=ski has been configured with both multiple=false and multiple=true.")
     }
 
     @Test
@@ -116,9 +116,9 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret) = generateResources(
             """{ 
-                "credential": {
+                "credentials": {
                     "ski" : {
-                        "serviceClass": "PostgresDatabaseInstance",
+                        "resourceKind": "PostgresDatabaseInstance",
                         "multiple" : true
                     }
                 }
@@ -140,9 +140,9 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret1, secret2) = generateResources(
             """{ 
-                "credential": {
+                "credentials": {
                     "ski" : {
-                        "serviceClass": "PostgresDatabaseInstance",
+                        "resourceKind": "PostgresDatabaseInstance",
                         "multiple" : true
                     }
                 }
@@ -164,9 +164,9 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
 
         val (dc, secret) = generateResources(
             """{ 
-                "credential": {
+                "credentials": {
                     "ski" : {
-                        "serviceClass": "PostgresDatabaseInstance"
+                        "resourceKind": "PostgresDatabaseInstance"
                     }
                 }
            }""",

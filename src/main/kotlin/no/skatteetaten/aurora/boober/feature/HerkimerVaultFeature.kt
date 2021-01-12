@@ -26,19 +26,21 @@ import org.springframework.stereotype.Service
 
 private const val FEATURE_FIELD = "credentials"
 
-private const val HERKIMER_RESOURCE_KEY = "resources"
 private const val HERKIMER_SECRETS_KEY = "secrets"
 
-private val FeatureContext.configuredHerkimerVaultResources: List<HerkimerVaultResource>
+private val FeatureContext.configuredHerkimerVaultCredentials: List<HerkimerVaultCredential>
     get() = this.getContextKey(
-        HERKIMER_RESOURCE_KEY
+        FEATURE_FIELD
     )
 
-private val FeatureContext.herkimerVaultResources: Map<HerkimerVaultResource, List<Secret>>
+private val FeatureContext.herkimerVaultCredentials: Map<HerkimerVaultCredential, List<Secret>>
     get() = this.getContextKey(
         HERKIMER_SECRETS_KEY
     )
 
+/*
+* Fetches credentials belonging to the application from herkimer. These are injected into PodSpec as SecretEnvVars
+*/
 @Service
 class HerkimerVaultFeature(
     val herkimerService: HerkimerService
@@ -66,21 +68,21 @@ class HerkimerVaultFeature(
         spec: AuroraDeploymentSpec,
         cmd: AuroraContextCommand,
         validationContext: Boolean
-    ): Map<String, Any> {
-        val herkimerVaultResources: List<HerkimerVaultResource> = spec.findAllConfiguredHerkimerResources()
-        val resources = mapOf(HERKIMER_RESOURCE_KEY to herkimerVaultResources)
+    ): FeatureContext {
+        val configuredHerkimerVaultCredentials: List<HerkimerVaultCredential> = spec.findAllConfiguredCredentials()
+        val featureContext = mapOf(FEATURE_FIELD to configuredHerkimerVaultCredentials)
 
         if (validationContext) {
-            return resources
+            return featureContext
         }
 
-        val secrets: Map<HerkimerVaultResource, List<Secret>> =
-            herkimerVaultResources.associateWith { vaultResource ->
-                herkimerService.getClaimedResources(spec.applicationDeploymentId, vaultResource.resourceKind)
+        val secrets: Map<HerkimerVaultCredential, List<Secret>> =
+            configuredHerkimerVaultCredentials.associateWith { vaultCredential ->
+                herkimerService.getClaimedResources(spec.applicationDeploymentId, vaultCredential.resourceKind)
                     .map { generateHerkimerSecret(it, spec) }
             }
 
-        return resources
+        return featureContext
             .addIfNotNull(HERKIMER_SECRETS_KEY to secrets)
     }
 
@@ -89,26 +91,25 @@ class HerkimerVaultFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
+        val configuredHerkimerVaultCredentials = context.configuredHerkimerVaultCredentials
 
-        val configuredHerkimerVaultResources = context.configuredHerkimerVaultResources
-
-        val errors = validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources)
+        val errors = configuredHerkimerVaultCredentials.validateSharedPrefixConstraints()
 
         if (!fullValidation) return errors
 
-        val herkimerResponses = context.herkimerVaultResources
+        val herkimerResponses = context.herkimerVaultCredentials
 
         val configuredMultiplesErrors = herkimerResponses
             .filter { !it.key.multiple && it.value.size > 1 }
-            .map { (vaultResource, secrets) ->
-                IllegalStateException("Configured credential=${vaultResource.key} is configured as multiple=false, but ${secrets.size} was returned")
+            .map { (vaultCredential, secrets) ->
+                IllegalStateException("Configured credential=${vaultCredential.key} is configured as multiple=false, but ${secrets.size} was returned")
             }
 
         return errors + configuredMultiplesErrors
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        return context.herkimerVaultResources.values.flatMap { secrets ->
+        return context.herkimerVaultCredentials.values.flatMap { secrets ->
             secrets.map { it.generateAuroraResource() }
         }.toSet()
     }
@@ -118,7 +119,7 @@ class HerkimerVaultFeature(
         return newSecret {
             metadata {
                 name = response.name.ensureStartWith(adc.name, "-")
-                    .ensureEndsWith(HERKIMER_RESOURCE_KEY, "-")
+                    .ensureEndsWith(FEATURE_FIELD, "-")
                     .toLowerCase().replace("_", "-")
                 namespace = adc.namespace
             }
@@ -127,11 +128,11 @@ class HerkimerVaultFeature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
-        val envVars = context.herkimerVaultResources.flatMap { (vaultResource, secrets) ->
-            if (vaultResource.multiple) {
-                secrets.generateEnvVarsForMultipleValues(vaultResource.prefix)
+        val envVars = context.herkimerVaultCredentials.flatMap { (vaultCredential, secrets) ->
+            if (vaultCredential.multiple) {
+                secrets.generateEnvVarsForMultipleValues(vaultCredential.prefix)
             } else {
-                secrets.generateEnvVarsForSingleValue(vaultResource.prefix)
+                secrets.generateEnvVarsForSingleValue(vaultCredential.prefix)
             }
         }
 
@@ -144,44 +145,46 @@ class HerkimerVaultFeature(
     private fun List<Secret>.generateEnvVarsForMultipleValues(prefix: String): List<EnvVar> =
         this.mapIndexed { index, secret -> secret.createEnvVarRefs(prefix = "${prefix}_${index}_") }.flatten()
 
-    private fun AuroraDeploymentSpec.findAllConfiguredHerkimerResources() =
+    private fun AuroraDeploymentSpec.findAllConfiguredCredentials() =
         this.getSubKeyValues(FEATURE_FIELD).mapNotNull {
-            this.findConfiguredHerkimerResource(it)
+            this.findConfiguredCredential(it)
         }
 
-    private fun AuroraDeploymentSpec.findConfiguredHerkimerResource(resourceKey: String): HerkimerVaultResource? {
-        val enabled: Boolean = this["$FEATURE_FIELD/$resourceKey/enabled"]
+    private fun AuroraDeploymentSpec.findConfiguredCredential(credentialKey: String): HerkimerVaultCredential? {
+        val enabled: Boolean = this["$FEATURE_FIELD/$credentialKey/enabled"]
         if (!enabled) return null
-        return HerkimerVaultResource(
-            key = resourceKey,
-            prefix = this.getOrNull<String>("$FEATURE_FIELD/$resourceKey/prefix") ?: resourceKey,
-            resourceKind = this["$FEATURE_FIELD/$resourceKey/resourceKind"],
-            multiple = this["$FEATURE_FIELD/$resourceKey/multiple"]
+        return HerkimerVaultCredential(
+            key = credentialKey,
+            prefix = this.getOrNull<String>("$FEATURE_FIELD/$credentialKey/prefix") ?: credentialKey,
+            resourceKind = this["$FEATURE_FIELD/$credentialKey/resourceKind"],
+            multiple = this["$FEATURE_FIELD/$credentialKey/multiple"]
 
         )
     }
 
-    private fun validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources: List<HerkimerVaultResource>): List<IllegalArgumentException> =
-        configuredHerkimerVaultResources.groupBy { it.prefix }.mapNotNull { (prefix, vaultResource) ->
-            val resourcesWithMultiple = vaultResource.filter { it.multiple }
-            val resourcesWithoutMultiple = vaultResource.filter { !it.multiple }
+    private fun List<HerkimerVaultCredential>.validateSharedPrefixConstraints(): List<IllegalArgumentException> =
+        this.groupBy { it.prefix }
+            .mapNotNull { (prefix, vaultCredentials) ->
 
-            if (resourcesWithMultiple.isNotEmpty() && resourcesWithoutMultiple.isNotEmpty()) {
-                // TODO: Fix better error message
-                IllegalArgumentException(
-                    """
-                        |The configurations with prefix=$prefix has both some configurations 
-                        |that expect multiple envvars and some other that does not expect multiple envvars. 
-                        |This is not possible. Resources with multiple=true is ${resourcesWithMultiple.map { it.key }} 
-                        |and with multiple=false is ${resourcesWithoutMultiple.map { it.key }}""".trimMargin()
-                )
-            } else if (resourcesWithoutMultiple.size > 1) {
-                IllegalArgumentException("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=${resourcesWithoutMultiple.map { it.key }}")
-            } else null
-        }
+                val credentialsConfiguredAsMultiple = vaultCredentials.filter { it.multiple }
+                val credentialsConfiguredAsSingle = vaultCredentials.filter { !it.multiple }
+
+                if (credentialsConfiguredAsMultiple.isNotEmpty() && credentialsConfiguredAsSingle.isNotEmpty()) {
+                    IllegalArgumentException(
+                        """
+                        |The shared prefix=$prefix has been configured with both multiple=false and multiple=true.
+                        |It is not feasible to generate EnvVars when both multiple and single is expected.
+                        |multiple=false is configured for ${credentialsConfiguredAsSingle.map { it.key }}
+                        |multiple=true is configured for ${credentialsConfiguredAsMultiple.map { it.key }}
+                    """.trimMargin()
+                    )
+                } else if (credentialsConfiguredAsSingle.size > 1) {
+                    IllegalArgumentException("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=${credentialsConfiguredAsSingle.map { it.key }}")
+                } else null
+            }
 }
 
-data class HerkimerVaultResource(
+data class HerkimerVaultCredential(
     val key: String,
     val prefix: String,
     val resourceKind: ResourceKind,

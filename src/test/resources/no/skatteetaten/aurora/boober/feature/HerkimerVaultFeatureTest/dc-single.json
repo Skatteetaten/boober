@@ -28,7 +28,7 @@
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "foo",
-                "name" : "simple-ski-postgres-resources",
+                "name" : "simple-ski-postgres-credentials",
                 "optional" : false
               }
             }
@@ -37,7 +37,7 @@
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "bar",
-                "name" : "simple-ski-postgres-resources",
+                "name" : "simple-ski-postgres-credentials",
                 "optional" : false
               }
             }
