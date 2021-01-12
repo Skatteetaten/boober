@@ -24,7 +24,7 @@ import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
 import org.springframework.stereotype.Service
 
-private const val FEATURE_FIELD = "credential"
+private const val FEATURE_FIELD = "credentials"
 
 private const val HERKIMER_RESOURCE_KEY = "resources"
 private const val HERKIMER_SECRETS_KEY = "secrets"
@@ -52,7 +52,7 @@ class HerkimerVaultFeature(
                     validator = { it.boolean() }),
                 AuroraConfigFieldHandler("$FEATURE_FIELD/$key/prefix"),
                 AuroraConfigFieldHandler(
-                    "$FEATURE_FIELD/$key/serviceClass",
+                    "$FEATURE_FIELD/$key/resourceKind",
                     validator = { node -> node.oneOf(ResourceKind.values().map { it.toString() }) }),
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/multiple",
@@ -76,8 +76,7 @@ class HerkimerVaultFeature(
 
         val secrets: Map<HerkimerVaultResource, List<Secret>> =
             herkimerVaultResources.associateWith { vaultResource ->
-                // hent ned alle vaultressurser og gjør dem om til secrets
-                herkimerService.getClaimedResources(spec.applicationDeploymentId, vaultResource.serviceClass)
+                herkimerService.getClaimedResources(spec.applicationDeploymentId, vaultResource.resourceKind)
                     .map { generateHerkimerSecret(it, spec) }
             }
 
@@ -99,11 +98,13 @@ class HerkimerVaultFeature(
 
         val herkimerResponses = context.herkimerVaultResources
 
-        val fullValidationErrors = herkimerResponses
+        val configuredMultiplesErrors = herkimerResponses
             .filter { !it.key.multiple && it.value.size > 1 }
-            .map { IllegalStateException("Resource with key=${it.key.key} expects a single result but ${it.value.size} was returned") }
+            .map { (vaultResource, secrets) ->
+                IllegalStateException("Configured credential=${vaultResource.key} is configured as multiple=false, but ${secrets.size} was returned")
+            }
 
-        return errors.addIfNotNull(fullValidationErrors)
+        return errors + configuredMultiplesErrors
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -113,9 +114,6 @@ class HerkimerVaultFeature(
     }
 
     private fun generateHerkimerSecret(response: ResourceHerkimer, adc: AuroraDeploymentSpec): Secret {
-
-        // TODO: Should this be first and should it be called credentials?
-        // TODO: What do we do if there are multiple claims?
         val values = jsonMapper().convertValue<Map<String, String>>(response.claims.first().credentials)
         return newSecret {
             metadata {
@@ -129,11 +127,11 @@ class HerkimerVaultFeature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
-        val envVars = context.herkimerVaultResources.flatMap { (config, secrets) ->
-            if (config.multiple) {
-                secrets.generateEnvVarsForMultipleValues(config.prefix)
+        val envVars = context.herkimerVaultResources.flatMap { (vaultResource, secrets) ->
+            if (vaultResource.multiple) {
+                secrets.generateEnvVarsForMultipleValues(vaultResource.prefix)
             } else {
-                secrets.generateEnvVarsForSingleValue(config.prefix)
+                secrets.generateEnvVarsForSingleValue(vaultResource.prefix)
             }
         }
 
@@ -157,13 +155,11 @@ class HerkimerVaultFeature(
         return HerkimerVaultResource(
             key = resourceKey,
             prefix = this.getOrNull<String>("$FEATURE_FIELD/$resourceKey/prefix") ?: resourceKey,
-            serviceClass = this["$FEATURE_FIELD/$resourceKey/serviceClass"],
+            resourceKind = this["$FEATURE_FIELD/$resourceKey/resourceKind"],
             multiple = this["$FEATURE_FIELD/$resourceKey/multiple"]
 
         )
     }
-
-    private fun AuroraDeploymentSpec.isFeatureEnabled(): Boolean = this.hasSubKeys(FEATURE_FIELD)
 
     private fun validateNotExistsResourcesWithMultipleTrueAndFalseWithSamePrefix(configuredHerkimerVaultResources: List<HerkimerVaultResource>): List<IllegalArgumentException> =
         configuredHerkimerVaultResources.groupBy { it.prefix }.mapNotNull { (prefix, vaultResource) ->
@@ -188,6 +184,6 @@ class HerkimerVaultFeature(
 data class HerkimerVaultResource(
     val key: String,
     val prefix: String,
-    val serviceClass: ResourceKind,
+    val resourceKind: ResourceKind,
     val multiple: Boolean
 )
