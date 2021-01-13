@@ -328,8 +328,9 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     Path_Key source
     Exclude_Path ${log.excludePattern}
     Tag    ${log.name}
-    DB     /u01/${log.name}.db
+    DB     /u01/logs/${log.name}.db
     Mem_Buf_Limit 15MB
+    Rotate_Wait 10
     Key    event
     $multiline"""
     }.joinToString("\n\n")
