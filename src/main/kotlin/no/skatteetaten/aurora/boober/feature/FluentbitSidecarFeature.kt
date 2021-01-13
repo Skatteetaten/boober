@@ -329,7 +329,7 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     Exclude_Path ${log.excludePattern}
     Tag    ${log.name}
     DB     /u01/logs/${log.name}.db
-    Mem_Buf_Limit 15MB
+    Mem_Buf_Limit 20MB
     Rotate_Wait 10
     Key    event
     $multiline"""
