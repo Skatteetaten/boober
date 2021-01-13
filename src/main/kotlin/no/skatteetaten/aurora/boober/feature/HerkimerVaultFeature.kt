@@ -22,6 +22,7 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 
 private const val FEATURE_FIELD = "credentials"
@@ -41,6 +42,7 @@ private val FeatureContext.herkimerVaultCredentials: Map<HerkimerVaultCredential
 /*
 * Fetches credentials belonging to the application from herkimer. These are injected into PodSpec as SecretEnvVars
 */
+@ConditionalOnBean(HerkimerService::class)
 @Service
 class HerkimerVaultFeature(
     val herkimerService: HerkimerService
@@ -93,19 +95,19 @@ class HerkimerVaultFeature(
     ): List<Exception> {
         val configuredHerkimerVaultCredentials = context.configuredHerkimerVaultCredentials
 
-        val errors = configuredHerkimerVaultCredentials.validateSharedPrefixConstraints()
+        val sharedPrefixConstraintViolations = configuredHerkimerVaultCredentials.validateSharedPrefixConstraints()
 
-        if (!fullValidation) return errors
+        if (!fullValidation) return sharedPrefixConstraintViolations
 
         val herkimerResponses = context.herkimerVaultCredentials
 
-        val configuredMultiplesErrors = herkimerResponses
+        val configuredSingleCredentialErrors = herkimerResponses
             .filter { !it.key.multiple && it.value.size > 1 }
             .map { (vaultCredential, secrets) ->
                 IllegalStateException("Configured credential=${vaultCredential.key} is configured as multiple=false, but ${secrets.size} was returned")
             }
 
-        return errors + configuredMultiplesErrors
+        return sharedPrefixConstraintViolations + configuredSingleCredentialErrors
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -166,20 +168,18 @@ class HerkimerVaultFeature(
         this.groupBy { it.prefix }
             .mapNotNull { (prefix, vaultCredentials) ->
 
-                val credentialsConfiguredAsMultiple = vaultCredentials.filter { it.multiple }
-                val credentialsConfiguredAsSingle = vaultCredentials.filter { !it.multiple }
+                val (credentialsConfiguredAsMultiple, credentialsConfiguredAsSingle) = vaultCredentials.partition { it.multiple }
 
                 if (credentialsConfiguredAsMultiple.isNotEmpty() && credentialsConfiguredAsSingle.isNotEmpty()) {
                     IllegalArgumentException(
-                        """
-                        |The shared prefix=$prefix has been configured with both multiple=false and multiple=true.
-                        |It is not feasible to generate EnvVars when both multiple and single is expected.
-                        |multiple=false is configured for ${credentialsConfiguredAsSingle.map { it.key }}
-                        |multiple=true is configured for ${credentialsConfiguredAsMultiple.map { it.key }}
-                    """.trimMargin()
+                        "The shared prefix=$prefix has been configured with both multiple=false and multiple=true." +
+                            " It is not feasible to generate EnvVars when both multiple and single is expected." +
+                            " multiple=false is configured for ${credentialsConfiguredAsSingle.map { it.key }}" +
+                            " multiple=true is configured for ${credentialsConfiguredAsMultiple.map { it.key }}"
                     )
                 } else if (credentialsConfiguredAsSingle.size > 1) {
-                    IllegalArgumentException("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=${credentialsConfiguredAsSingle.map { it.key }}")
+                    IllegalArgumentException("Multiple configurations cannot share the same prefix=$prefix if they expect a single result(multiple=false)." +
+                        " The affected configurations=${credentialsConfiguredAsSingle.map { it.key }}")
                 } else null
             }
 }
