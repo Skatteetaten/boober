@@ -24,7 +24,7 @@
       "spec" : {
         "containers" : [ {
           "env" : [ {
-            "name" : "SKI_0_FOO",
+            "name" : "SKI_0_foo",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "foo",
@@ -33,7 +33,7 @@
               }
             }
           }, {
-            "name" : "SKI_0_BAR",
+            "name" : "SKI_0_bar",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "bar",
@@ -42,7 +42,7 @@
               }
             }
           }, {
-            "name" : "SKI_1_FOO",
+            "name" : "SKI_1_foo",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "foo",
@@ -51,7 +51,7 @@
               }
             }
           }, {
-            "name" : "SKI_1_BAR",
+            "name" : "SKI_1_bar",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "bar",

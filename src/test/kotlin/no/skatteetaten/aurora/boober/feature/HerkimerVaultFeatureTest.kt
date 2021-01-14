@@ -55,8 +55,9 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
                 createdResources = 1,
                 resources = mutableSetOf(createEmptyDeploymentConfig())
             )
-        }.singleApplicationError("Multiple configurations cannot share the same prefix if they expect a single result. The affected configurations=[ski, ski2]")
+        }.singleApplicationError("Multiple configurations cannot share the same prefix=ski if they expect a single result(multiple=false).")
     }
+
     @Test
     fun `should get validation error if single and returns multiple responses`() {
 
@@ -156,6 +157,41 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `verify creating secret from herkimer with shared prefix`() {
+
+        mockHerkimerDatabase(
+            createResourceHerkimer("ski-postgres", mapOf("foo" to "bar", "bar" to "baz")),
+            createResourceHerkimer(
+                "fus-oracle",
+                mapOf("foo" to "baz", "bar" to "foo"),
+                kind = ResourceKind.OracleDatabaseInstance
+            )
+        )
+
+        val (dc, secret1, secret2) = generateResources(
+            """{ 
+                "credentials": {
+                    "ski" : {
+                        "prefix":"DATABASE_CONFIG",
+                        "resourceKind": "PostgresDatabaseInstance",
+                        "multiple" : true
+                    },
+                    "fus" : {
+                        "prefix":"DATABASE_CONFIG",
+                        "resourceKind": "OracleDatabaseInstance",
+                        "multiple" : true
+                    }
+                }
+           }""",
+            createdResources = 2,
+            resources = mutableSetOf(createEmptyDeploymentConfig())
+        )
+        assertThat(dc).auroraResourceMatchesFile("dc-sharedprefix-multiple.json")
+        assertThat(secret1).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("secret-ski.json")
+        assertThat(secret2).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("secret-fus.json")
+    }
+
+    @Test
     fun `verify creating secret from herkimer for single response`() {
 
         mockHerkimerDatabase(
@@ -180,18 +216,21 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     private fun mockHerkimerDatabase(
         vararg resourceHerkimer: ResourceHerkimer
     ) {
-        every {
-            herkimerService.getClaimedResources("1234567890", ResourceKind.PostgresDatabaseInstance)
-        } returns resourceHerkimer.toList()
+        resourceHerkimer.groupBy { it.kind }.forEach { (kind, groupedResourceHerkimer) ->
+            every {
+                herkimerService.getClaimedResources("1234567890", kind)
+            } returns groupedResourceHerkimer
+        }
     }
 
     private fun createResourceHerkimer(
         name: String,
-        data: Map<String, String>
+        data: Map<String, String>,
+        kind: ResourceKind = ResourceKind.PostgresDatabaseInstance
     ) = ResourceHerkimer(
         id = "0",
         name = name,
-        kind = ResourceKind.PostgresDatabaseInstance,
+        kind = kind,
         ownerId = "1234567890",
         claims = listOf(createResourceClaim(data = jacksonObjectMapper().convertValue(data))),
         createdDate = LocalDateTime.now(),
@@ -212,6 +251,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
             createdDate = LocalDateTime.now(),
             modifiedDate = LocalDateTime.now(),
             createdBy = "aurora",
-            modifiedBy = "aurora"
+            modifiedBy = "aurora",
+            name = "default"
         )
 }

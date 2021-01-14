@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.HerkimerService
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
@@ -34,10 +33,12 @@ private val FeatureContext.configuredHerkimerVaultCredentials: List<HerkimerVaul
         FEATURE_FIELD
     )
 
-private val FeatureContext.herkimerVaultCredentials: Map<HerkimerVaultCredential, List<Secret>>
+private val FeatureContext.herkimerVaultCredentials: Map<String, CredentialsAndSecretsWithSharedPrefix>
     get() = this.getContextKey(
         HERKIMER_SECRETS_KEY
     )
+
+typealias CredentialsAndSecretsWithSharedPrefix = List<Pair<HerkimerVaultCredential, List<Secret>>>
 
 /*
 * Fetches credentials belonging to the application from herkimer. These are injected into PodSpec as SecretEnvVars
@@ -78,14 +79,16 @@ class HerkimerVaultFeature(
             return featureContext
         }
 
-        val secrets: Map<HerkimerVaultCredential, List<Secret>> =
-            configuredHerkimerVaultCredentials.associateWith { vaultCredential ->
-                herkimerService.getClaimedResources(spec.applicationDeploymentId, vaultCredential.resourceKind)
+        val secrets: Map<String, CredentialsAndSecretsWithSharedPrefix> =
+            configuredHerkimerVaultCredentials.map { vaultCredential ->
+                vaultCredential to herkimerService.getClaimedResources(
+                    spec.applicationDeploymentId,
+                    vaultCredential.resourceKind
+                )
                     .map { generateHerkimerSecret(it, spec) }
-            }
+            }.groupBy { (vaultCredential, secrets) -> vaultCredential.prefix }
 
-        return featureContext
-            .addIfNotNull(HERKIMER_SECRETS_KEY to secrets)
+        return featureContext + mapOf(HERKIMER_SECRETS_KEY to secrets)
     }
 
     override fun validate(
@@ -99,10 +102,11 @@ class HerkimerVaultFeature(
 
         if (!fullValidation) return sharedPrefixConstraintViolations
 
-        val herkimerResponses = context.herkimerVaultCredentials
+        context.herkimerVaultCredentials
+        val herkimerResponses = context.herkimerVaultCredentials.values.flatten()
 
         val configuredSingleCredentialErrors = herkimerResponses
-            .filter { !it.key.multiple && it.value.size > 1 }
+            .filter { !it.first.multiple && it.second.size > 1 }
             .map { (vaultCredential, secrets) ->
                 IllegalStateException("Configured credential=${vaultCredential.key} is configured as multiple=false, but ${secrets.size} was returned")
             }
@@ -111,7 +115,7 @@ class HerkimerVaultFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        return context.herkimerVaultCredentials.values.flatMap { secrets ->
+        return context.herkimerVaultCredentials.values.flatten().flatMap { (vaultCredential, secrets) ->
             secrets.map { it.generateAuroraResource() }
         }.toSet()
     }
@@ -130,22 +134,34 @@ class HerkimerVaultFeature(
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
-        val envVars = context.herkimerVaultCredentials.flatMap { (vaultCredential, secrets) ->
-            if (vaultCredential.multiple) {
-                secrets.generateEnvVarsForMultipleValues(vaultCredential.prefix)
+        val envVars = context.herkimerVaultCredentials.flatMap { (prefix, credentialsAndSecretsWithSharedPrefix) ->
+            if (credentialsAndSecretsWithSharedPrefix.isMultiple()) {
+                credentialsAndSecretsWithSharedPrefix.generateEnvVarsForMultipleValues(prefix)
             } else {
-                secrets.generateEnvVarsForSingleValue(vaultCredential.prefix)
+                credentialsAndSecretsWithSharedPrefix.generateEnvVarsForSingleValue(prefix)
             }
         }
 
         resources.addEnvVarsToMainContainers(envVars, javaClass)
     }
 
-    private fun List<Secret>.generateEnvVarsForSingleValue(prefix: String): List<EnvVar> =
-        this.first().createEnvVarRefs(prefix = "${prefix}_")
+    private fun CredentialsAndSecretsWithSharedPrefix.isMultiple() =
+        this.any { (vaultCredential, _) -> vaultCredential.multiple }
 
-    private fun List<Secret>.generateEnvVarsForMultipleValues(prefix: String): List<EnvVar> =
-        this.mapIndexed { index, secret -> secret.createEnvVarRefs(prefix = "${prefix}_${index}_") }.flatten()
+    private fun CredentialsAndSecretsWithSharedPrefix.singleSecret() = this.first().second.first()
+
+    private fun CredentialsAndSecretsWithSharedPrefix.generateEnvVarsForSingleValue(prefix: String): List<EnvVar> =
+        this.singleSecret()
+            .createEnvVarRefs(prefix = "${prefix}_", propertyNameAsUpperCase = false)
+
+    private fun CredentialsAndSecretsWithSharedPrefix.generateEnvVarsForMultipleValues(prefix: String): List<EnvVar> =
+        this.flatMap { it.second }
+            .mapIndexed { index, secret ->
+                secret.createEnvVarRefs(
+                    prefix = "${prefix}_${index}_",
+                    propertyNameAsUpperCase = false
+                )
+            }.flatten()
 
     private fun AuroraDeploymentSpec.findAllConfiguredCredentials() =
         this.getSubKeyValues(FEATURE_FIELD).mapNotNull {
@@ -178,8 +194,10 @@ class HerkimerVaultFeature(
                             " multiple=true is configured for ${credentialsConfiguredAsMultiple.map { it.key }}"
                     )
                 } else if (credentialsConfiguredAsSingle.size > 1) {
-                    IllegalArgumentException("Multiple configurations cannot share the same prefix=$prefix if they expect a single result(multiple=false)." +
-                        " The affected configurations=${credentialsConfiguredAsSingle.map { it.key }}")
+                    IllegalArgumentException(
+                        "Multiple configurations cannot share the same prefix=$prefix if they expect a single result(multiple=false)." +
+                            " The affected configurations=${credentialsConfiguredAsSingle.map { it.key }}"
+                    )
                 } else null
             }
 }

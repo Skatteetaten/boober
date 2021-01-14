@@ -246,7 +246,8 @@ class HerkimerServiceTest {
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 "aurora",
-                "aurora"
+                "aurora",
+                "default"
             )
         ),
         createdDate = LocalDateTime.now(),

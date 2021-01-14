@@ -24,7 +24,7 @@
       "spec" : {
         "containers" : [ {
           "env" : [ {
-            "name" : "SKI_0_foo",
+            "name" : "DATABASE_CONFIG_0_foo",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "foo",
@@ -33,11 +33,29 @@
               }
             }
           }, {
-            "name" : "SKI_0_bar",
+            "name" : "DATABASE_CONFIG_0_bar",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "bar",
                 "name" : "simple-ski-postgres-credentials",
+                "optional" : false
+              }
+            }
+          }, {
+            "name" : "DATABASE_CONFIG_1_foo",
+            "valueFrom" : {
+              "secretKeyRef" : {
+                "key" : "foo",
+                "name" : "simple-fus-oracle-credentials",
+                "optional" : false
+              }
+            }
+          }, {
+            "name" : "DATABASE_CONFIG_1_bar",
+            "valueFrom" : {
+              "secretKeyRef" : {
+                "key" : "bar",
+                "name" : "simple-fus-oracle-credentials",
                 "optional" : false
               }
             }
