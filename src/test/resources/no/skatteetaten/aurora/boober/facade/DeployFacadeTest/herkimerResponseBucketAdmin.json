@@ -16,6 +16,7 @@
             "brukernavn": "bruker2",
             "passord": "pass123"
           },
+          "name": "ADMIN",
           "createdDate": "2020-09-29T16:04:53.687",
           "modifiedDate": "2020-09-29T16:04:53.687",
           "createdBy": "aurora",
@@ -41,6 +42,7 @@
             "brukernavn": "bruker2",
             "passord": "pass123"
           },
+          "name": "ADMIN",
           "createdDate": "2020-09-29T16:04:53.687",
           "modifiedDate": "2020-09-29T16:04:53.687",
           "createdBy": "aurora",
