@@ -157,6 +157,40 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `Verify sharedprefix violation when different uppercaseSuffix configured`() {
+        mockHerkimerDatabase(
+            createResourceHerkimer("ski-postgres", mapOf("foo" to "bar", "bar" to "baz")),
+            createResourceHerkimer(
+                "fus-oracle",
+                mapOf("foo" to "baz", "bar" to "foo"),
+                kind = ResourceKind.OracleDatabaseInstance
+            )
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "credentials": {
+                    "ski" : {
+                        "prefix":"DATABASE_CONFIG",
+                        "resourceKind": "PostgresDatabaseInstance",
+                        "multiple" : true
+                    },
+                    "fus" : {
+                        "prefix":"DATABASE_CONFIG",
+                        "resourceKind": "OracleDatabaseInstance",
+                        "multiple" : true,
+                        "uppercaseEnvVarsSuffix": false
+                    }
+                }
+           }""",
+                resources = mutableSetOf(createEmptyDeploymentConfig()),
+                createdResources = 2
+            )
+        }.singleApplicationError("The shared prefix=DATABASE_CONFIG has been configured with both uppercaseEnvVarSuffix=false and uppercaseEnvVarSuffix=true.")
+    }
+
+    @Test
     fun `verify creating secret from herkimer with shared prefix`() {
 
         mockHerkimerDatabase(
