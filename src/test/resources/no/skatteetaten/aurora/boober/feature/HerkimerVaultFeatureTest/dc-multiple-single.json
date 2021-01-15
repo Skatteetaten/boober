@@ -24,7 +24,7 @@
       "spec" : {
         "containers" : [ {
           "env" : [ {
-            "name" : "SKI_0_foo",
+            "name" : "SKI_0_FOO",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "foo",
@@ -33,7 +33,7 @@
               }
             }
           }, {
-            "name" : "SKI_0_bar",
+            "name" : "SKI_0_BAR",
             "valueFrom" : {
               "secretKeyRef" : {
                 "key" : "bar",

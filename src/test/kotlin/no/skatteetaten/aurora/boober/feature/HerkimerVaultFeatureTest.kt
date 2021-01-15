@@ -20,7 +20,8 @@ import java.time.LocalDateTime
 class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = HerkimerVaultFeature(
-            herkimerService = herkimerService
+            herkimerService = herkimerService,
+            booberApplicationdeploymentId = "1234567890"
         )
 
     private val herkimerService: HerkimerService = mockk()
@@ -187,7 +188,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
                 resources = mutableSetOf(createEmptyDeploymentConfig()),
                 createdResources = 2
             )
-        }.singleApplicationError("The shared prefix=DATABASE_CONFIG has been configured with both uppercaseEnvVarSuffix=false and uppercaseEnvVarSuffix=true.")
+        }.singleApplicationError("The shared prefix=DATABASE_CONFIG has been configured with both uppercaseEnvVarsSuffix=false and uppercaseEnvVarsSuffix=true.")
     }
 
     @Test
@@ -208,12 +209,14 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
                     "ski" : {
                         "prefix":"DATABASE_CONFIG",
                         "resourceKind": "PostgresDatabaseInstance",
-                        "multiple" : true
+                        "multiple" : true,
+                        "uppercaseEnvVarsSuffix": false
                     },
                     "fus" : {
                         "prefix":"DATABASE_CONFIG",
                         "resourceKind": "OracleDatabaseInstance",
-                        "multiple" : true
+                        "multiple" : true,
+                        "uppercaseEnvVarsSuffix": false
                     }
                 }
            }""",

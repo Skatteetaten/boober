@@ -204,7 +204,7 @@ class HerkimerVaultFeature(
 
                             val (uppercaseEnvVarsSuffix, notUppercaseEnvVarsSuffix) = vaultCredentials.partition { it.uppercaseEnvVarsSuffix }
 
-                            if (uppercaseEnvVarsSuffix.intersect(notUppercaseEnvVarsSuffix).isNotEmpty()) {
+                            if (uppercaseEnvVarsSuffix.isNotEmpty() && notUppercaseEnvVarsSuffix.isNotEmpty()) {
                                 IllegalArgumentException(
                                     "The shared prefix=$prefix has been configured with both uppercaseEnvVarsSuffix=false and uppercaseEnvVarsSuffix=true." +
                                         " This combination is not allowed." +
