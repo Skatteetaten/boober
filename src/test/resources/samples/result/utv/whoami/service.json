@@ -13,6 +13,7 @@
       "app": "whoami",
       "updatedBy": "hero",
       "updatedAt": "0",
+      "lastUpdatedYear" : "1970",
       "affiliation": "paas",
       "name": "whoami",
       "booberDeployId": "deploy1"

@@ -11,6 +11,7 @@
       "app": "web",
       "updatedBy": "hero",
       "updatedAt": "0",
+      "lastUpdatedYear" : "1970",
       "affiliation": "paas",
       "name": "web",
       "booberDeployId": "deploy1"
