@@ -198,34 +198,25 @@ class HerkimerVaultFeature(
 
                 val (credentialsConfiguredAsMultiple, credentialsConfiguredAsSingle) = vaultCredentials.partition { it.multiple }
 
+                val (uppercaseEnvVarsSuffix, notUppercaseEnvVarsSuffix) = vaultCredentials.partition { it.uppercaseEnvVarsSuffix }
+
+                val conflictingUpperCaseSuffixConfiguration =
+                    uppercaseEnvVarsSuffix.isNotEmpty() && notUppercaseEnvVarsSuffix.isNotEmpty()
+
                 when {
-                    credentialsConfiguredAsMultiple.isNotEmpty() -> {
-                        if (credentialsConfiguredAsSingle.isEmpty()) {
-
-                            val (uppercaseEnvVarsSuffix, notUppercaseEnvVarsSuffix) = vaultCredentials.partition { it.uppercaseEnvVarsSuffix }
-
-                            if (uppercaseEnvVarsSuffix.isNotEmpty() && notUppercaseEnvVarsSuffix.isNotEmpty()) {
-                                IllegalArgumentException(
-                                    "The shared prefix=$prefix has been configured with both uppercaseEnvVarsSuffix=false and uppercaseEnvVarsSuffix=true." +
-                                        " This combination is not allowed." +
-                                        " uppercaseEnvVarsSuffix=true is configured for ${uppercaseEnvVarsSuffix.map { it.key }}" +
-                                        " uppercaseEnvVarsSuffix=false is configured for ${notUppercaseEnvVarsSuffix.map { it.key }}"
-                                )
-                            } else null
-                        } else {
-                            IllegalArgumentException(
-                                "The shared prefix=$prefix has been configured with both multiple=false and multiple=true." +
-                                    " It is not feasible to generate EnvVars when both multiple and single is expected." +
-                                    " multiple=false is configured for ${credentialsConfiguredAsSingle.map { it.key }}" +
-                                    " multiple=true is configured for ${credentialsConfiguredAsMultiple.map { it.key }}"
-                            )
-                        }
+                    credentialsConfiguredAsMultiple.isNotEmpty() && credentialsConfiguredAsSingle.isNotEmpty() -> {
+                        IllegalArgumentException(
+                            "The shared prefix=$prefix has been configured with both multiple=false and multiple=true." +
+                                " It is not feasible to generate EnvVars when both multiple and single is expected."
+                        )
+                    }
+                    credentialsConfiguredAsMultiple.isNotEmpty() && conflictingUpperCaseSuffixConfiguration -> {
+                        IllegalArgumentException(
+                            "The shared prefix=$prefix has been configured with both uppercaseEnvVarsSuffix=false and uppercaseEnvVarsSuffix=true. This combination is not allowed."
+                        )
                     }
                     credentialsConfiguredAsSingle.size > 1 -> {
-                        IllegalArgumentException(
-                            "Multiple configurations cannot share the same prefix=$prefix if they expect a single result(multiple=false)." +
-                                " The affected configurations=${credentialsConfiguredAsSingle.map { it.key }}"
-                        )
+                        IllegalArgumentException("Multiple configurations cannot share the same prefix=$prefix if they expect a single result(multiple=false).")
                     }
                     else -> null
                 }
