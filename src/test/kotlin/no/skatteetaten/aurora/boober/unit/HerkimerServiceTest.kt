@@ -166,6 +166,7 @@ class HerkimerServiceTest {
                     "019234abac5",
                     ResourceKind.MinioPolicy,
                     "myResource",
+                    "ADMIN",
                     mapOf("username" to "1234")
                 )
             }.isSuccess()
@@ -188,6 +189,7 @@ class HerkimerServiceTest {
                     "019234abac5",
                     ResourceKind.MinioPolicy,
                     "myResource",
+                    "ADMIN",
                     mapOf("username" to "1234")
                 )
             }.isFailure()
@@ -216,6 +218,7 @@ class HerkimerServiceTest {
                     "019234abac5",
                     ResourceKind.MinioPolicy,
                     "myResource",
+                    "ADMIN",
                     mapOf("username" to "1234")
                 )
             }.isFailure()

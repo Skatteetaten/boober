@@ -195,7 +195,8 @@ class S3Feature(
             resourceKind = ResourceKind.MinioObjectArea,
             resourceName = objectAreaResourceName,
             credentials = s3Credentials,
-            parentId = bucketAdmin.id
+            parentId = bucketAdmin.id,
+            claimName = "ADMIN"
         )
 
         return s3Credentials

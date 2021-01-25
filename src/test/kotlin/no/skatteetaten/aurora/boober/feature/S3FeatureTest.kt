@@ -336,7 +336,7 @@ class S3FeatureTest : AbstractFeatureTest() {
 
         if (!claimExistsInHerkimer) {
             every {
-                herkimerService.createResourceAndClaim(any(), any(), any(), any(), any())
+                herkimerService.createResourceAndClaim(any(), any(), any(), any(), any(), any())
             } just Runs
         }
     }
