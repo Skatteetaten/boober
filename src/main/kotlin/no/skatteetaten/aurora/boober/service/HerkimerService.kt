@@ -75,6 +75,7 @@ data class ResourceClaimHerkimer(
     val ownerId: String,
     val resourceId: Long,
     val credentials: JsonNode,
+    val name: String,
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
     val createdBy: String,

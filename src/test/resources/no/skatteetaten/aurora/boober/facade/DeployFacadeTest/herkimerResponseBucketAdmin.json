@@ -12,6 +12,7 @@
           "id": "1",
           "ownerId": "e89b5acc24",
           "resourceId": 1,
+          "name": "ADMIN",
           "credentials": {
             "brukernavn": "bruker2",
             "passord": "pass123"
@@ -37,6 +38,7 @@
           "id": "1",
           "ownerId": "e89b5acc24",
           "resourceId": 1,
+          "name": "ADMIN",
           "credentials": {
             "brukernavn": "bruker2",
             "passord": "pass123"
