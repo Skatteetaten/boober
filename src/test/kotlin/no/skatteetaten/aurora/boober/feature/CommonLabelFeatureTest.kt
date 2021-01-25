@@ -27,6 +27,7 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
             "app" to "simple",
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
             "updatedAt" to "0",
+            "lastUpdatedYear" to "1970",
             "affiliation" to "paas",
             "name" to "simple"
         )

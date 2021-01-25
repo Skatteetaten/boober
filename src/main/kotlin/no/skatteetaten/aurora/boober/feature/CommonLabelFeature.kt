@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
+import java.time.ZoneId
 
 @Service
 class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature {
@@ -19,10 +20,12 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
     }
 
     fun createCommonLabels(adc: AuroraDeploymentSpec): Map<String, String> {
+        val now = Instants.now
         val labels = mapOf(
             "app" to adc.name,
             "updatedBy" to userDetailsProvider.getAuthenticatedUser().username.replace(":", "-"),
-            "updatedAt" to Instants.now.epochSecond.toString(),
+            "updatedAt" to now.epochSecond.toString(),
+            "lastUpdatedYear" to now.atZone(ZoneId.systemDefault()).year.toString(),
             "affiliation" to adc.affiliation,
             "name" to adc.name
         )
