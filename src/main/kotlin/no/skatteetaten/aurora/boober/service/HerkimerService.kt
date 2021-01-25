@@ -35,6 +35,7 @@ data class HerkimerResponse<T : Any>(
 data class ErrorResponse(val errorMessage: String)
 data class ResourceClaimPayload(
     val ownerId: String,
+    val name: String,
     val credentials: Any
 )
 
@@ -152,6 +153,7 @@ class HerkimerService(
         ownerId: String,
         resourceKind: ResourceKind,
         resourceName: String,
+        claimName: String,
         credentials: Any,
         parentId: String? = null
     ) {
@@ -174,8 +176,9 @@ class HerkimerService(
             type = HerkimerResponse::class,
             url = "/resource/$resourceId/claims",
             body = ResourceClaimPayload(
-                ownerId,
-                credentials
+                ownerId = ownerId,
+                name = claimName,
+                credentials = credentials
             )
         ).getBodyOrThrow()
 
