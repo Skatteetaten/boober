@@ -79,8 +79,7 @@ data class ResourceClaimHerkimer(
     val createdDate: LocalDateTime,
     val modifiedDate: LocalDateTime,
     val createdBy: String,
-    val modifiedBy: String,
-    val name: String
+    val modifiedBy: String
 )
 
 enum class ResourceKind {

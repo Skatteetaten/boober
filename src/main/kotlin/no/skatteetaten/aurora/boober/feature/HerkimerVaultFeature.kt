@@ -21,7 +21,6 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 
@@ -47,8 +46,7 @@ typealias CredentialsAndSecretsWithSharedPrefix = List<Pair<HerkimerVaultCredent
 @ConditionalOnBean(HerkimerService::class)
 @Service
 class HerkimerVaultFeature(
-    val herkimerService: HerkimerService,
-    @Value("\${application.deployment.id}") val booberApplicationdeploymentId: String
+    val herkimerService: HerkimerService
 ) : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return cmd.applicationFiles.findSubKeys(FEATURE_FIELD).flatMap { key ->
@@ -88,7 +86,7 @@ class HerkimerVaultFeature(
         val secrets: Map<String, CredentialsAndSecretsWithSharedPrefix> =
             configuredHerkimerVaultCredentials.map { vaultCredential ->
                 vaultCredential to herkimerService.getClaimedResources(
-                    booberApplicationdeploymentId,
+                    spec.applicationDeploymentId,
                     vaultCredential.resourceKind
                 )
                     .map { generateHerkimerSecret(it, spec) }

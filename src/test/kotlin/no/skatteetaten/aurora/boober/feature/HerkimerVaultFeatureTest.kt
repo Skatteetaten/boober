@@ -20,8 +20,7 @@ import java.time.LocalDateTime
 class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = HerkimerVaultFeature(
-            herkimerService = herkimerService,
-            booberApplicationdeploymentId = "1234567890"
+            herkimerService = herkimerService
         )
 
     private val herkimerService: HerkimerService = mockk()
@@ -289,6 +288,6 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
             modifiedDate = LocalDateTime.now(),
             createdBy = "aurora",
             modifiedBy = "aurora",
-            name = "default"
+            name = "ADMIN"
         )
 }

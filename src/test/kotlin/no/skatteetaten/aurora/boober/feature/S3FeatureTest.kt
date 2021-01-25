@@ -446,7 +446,6 @@ class S3FeatureTest : AbstractFeatureTest() {
             createdDate = LocalDateTime.now(),
             modifiedDate = LocalDateTime.now(),
             createdBy = "aurora",
-            modifiedBy = "aurora",
-            name = "default"
+            modifiedBy = "aurora"
         )
 }
