@@ -442,6 +442,7 @@ class S3FeatureTest : AbstractFeatureTest() {
             ownerId = adId,
             resourceId = 0L,
             credentials = s3Credentials,
+            name = "ADMIN",
             createdDate = LocalDateTime.now(),
             modifiedDate = LocalDateTime.now(),
             createdBy = "aurora",

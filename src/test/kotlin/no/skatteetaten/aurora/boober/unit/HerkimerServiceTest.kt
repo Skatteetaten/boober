@@ -243,6 +243,7 @@ class HerkimerServiceTest {
                 adId,
                 0L,
                 credentials,
+                "ADMIN",
                 LocalDateTime.now(),
                 LocalDateTime.now(),
                 "aurora",
