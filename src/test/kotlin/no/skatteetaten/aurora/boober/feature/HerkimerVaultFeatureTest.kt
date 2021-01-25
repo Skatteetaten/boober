@@ -55,7 +55,7 @@ class HerkimerVaultFeatureTest : AbstractFeatureTest() {
                 createdResources = 1,
                 resources = mutableSetOf(createEmptyDeploymentConfig())
             )
-        }.singleApplicationError("Multiple configurations cannot share the same prefix=ski if they expect a single result(multiple=false).")
+        }.singleApplicationError("More than one credential of type single(multiple=false) shares the same prefix=ski")
     }
 
     @Test

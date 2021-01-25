@@ -102,11 +102,13 @@ class HerkimerVaultFeature(
     ): List<Exception> {
         val configuredHerkimerVaultCredentials = context.configuredHerkimerVaultCredentials
 
-        val sharedPrefixConstraintViolations = configuredHerkimerVaultCredentials.validateSharedPrefixConstraints()
+        val sharedPrefixConstraintViolations = configuredHerkimerVaultCredentials.groupBy { it.prefix }
+            .mapNotNull { (prefix, vaultCredentials) ->
+                vaultCredentials.validateSharedPrefixConstraints(prefix)
+            }
 
         if (!fullValidation) return sharedPrefixConstraintViolations
 
-        context.herkimerVaultCredentials
         val herkimerResponses = context.herkimerVaultCredentials.values.flatten()
 
         val configuredSingleCredentialErrors = herkimerResponses
@@ -190,35 +192,32 @@ class HerkimerVaultFeature(
         )
     }
 
-    private fun List<HerkimerVaultCredential>.validateSharedPrefixConstraints(): List<IllegalArgumentException> =
-        this.groupBy { it.prefix }
-            .mapNotNull { (prefix, vaultCredentials) ->
+    // The error messages are deliberately a specific order and is ordered by precedence.
+    private fun List<HerkimerVaultCredential>.validateSharedPrefixConstraints(prefix: String): IllegalArgumentException? {
+        val hasMultipleCredentials = this.any { it.multiple }
+        val hasSingleCredentialCount = this.count { !it.multiple }
 
-                val (credentialsConfiguredAsMultiple, credentialsConfiguredAsSingle) = vaultCredentials.partition { it.multiple }
+        val hasUcEnvVarSuffix = this.any { it.uppercaseEnvVarsSuffix }
+        val hasLcEnvVarSuffix = this.any { !it.uppercaseEnvVarsSuffix }
 
-                val (uppercaseEnvVarsSuffix, notUppercaseEnvVarsSuffix) = vaultCredentials.partition { it.uppercaseEnvVarsSuffix }
+        if (hasMultipleCredentials && hasSingleCredentialCount > 0) {
+            return IllegalArgumentException(
+                "The shared prefix=$prefix has been configured with both multiple=false and multiple=true." +
+                    " It is not feasible to generate EnvVars when both multiple and single is expected."
+            )
+        }
+        if (hasMultipleCredentials && hasLcEnvVarSuffix && hasUcEnvVarSuffix) {
+            return IllegalArgumentException(
+                "The shared prefix=$prefix has been configured with both uppercaseEnvVarsSuffix=false and uppercaseEnvVarsSuffix=true. This combination is not allowed."
+            )
+        }
 
-                val conflictingUpperCaseSuffixConfiguration =
-                    uppercaseEnvVarsSuffix.isNotEmpty() && notUppercaseEnvVarsSuffix.isNotEmpty()
+        if (hasSingleCredentialCount > 1) {
+            return IllegalArgumentException("More than one credential of type single(multiple=false) shares the same prefix=$prefix. There can only be one credential with a given prefix when multiple=false.")
+        }
 
-                when {
-                    credentialsConfiguredAsMultiple.isNotEmpty() && credentialsConfiguredAsSingle.isNotEmpty() -> {
-                        IllegalArgumentException(
-                            "The shared prefix=$prefix has been configured with both multiple=false and multiple=true." +
-                                " It is not feasible to generate EnvVars when both multiple and single is expected."
-                        )
-                    }
-                    credentialsConfiguredAsMultiple.isNotEmpty() && conflictingUpperCaseSuffixConfiguration -> {
-                        IllegalArgumentException(
-                            "The shared prefix=$prefix has been configured with both uppercaseEnvVarsSuffix=false and uppercaseEnvVarsSuffix=true. This combination is not allowed."
-                        )
-                    }
-                    credentialsConfiguredAsSingle.size > 1 -> {
-                        IllegalArgumentException("Multiple configurations cannot share the same prefix=$prefix if they expect a single result(multiple=false).")
-                    }
-                    else -> null
-                }
-            }
+        return null
+    }
 }
 
 data class HerkimerVaultCredential(
