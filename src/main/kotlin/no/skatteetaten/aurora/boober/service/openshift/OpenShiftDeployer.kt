@@ -142,7 +142,7 @@ class OpenShiftDeployer(
 
         val ownerReferenceUid = appResponse.at("/metadata/uid").textValue()
 
-        // OVERFORING hvis tag filer applyer vi ikke objekter
+        // OVERFORING hvis tag feiler applyer vi ikke objekter
         val tagResult = context.spec.takeIf { it.releaseTo != null }?.let {
             cantusService.tag(
                 TagCommand(
