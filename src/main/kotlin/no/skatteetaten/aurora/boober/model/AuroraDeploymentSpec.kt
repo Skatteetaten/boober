@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.deepSet
 import no.skatteetaten.aurora.boober.utils.toMultiMap
 import org.apache.commons.text.StringSubstitutor
-import java.lang.RuntimeException
 
 data class AuroraDeploymentSpec(
     val fields: Map<String, AuroraConfigField>,
