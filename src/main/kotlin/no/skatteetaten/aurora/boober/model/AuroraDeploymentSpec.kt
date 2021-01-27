@@ -117,7 +117,7 @@ data class AuroraDeploymentSpec(
         }.distinct()
     }
 
-    inline operator fun <reified T> get(name: String): T = fields[name]?.value() ?: throw RuntimeException("Opps null value for key=$name")
+    inline operator fun <reified T> get(name: String): T = fields[name]!!.value()
 
     inline fun <reified T> getOrDefault(
         root: String,

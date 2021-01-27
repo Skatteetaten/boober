@@ -26,16 +26,17 @@ import org.springframework.stereotype.Service
 
 private const val FEATURE_FIELD = "credentials"
 
-private const val HERKIMER_SECRETS_KEY = "secrets"
+private const val CONTEXT_SECRETS_KEY = "generatedSecrets"
+private const val CONTEXT_CREDENTIALS_KEY = "configuredCredentials"
 
 private val FeatureContext.configuredHerkimerVaultCredentials: List<HerkimerVaultCredential>
     get() = this.getContextKey(
-        FEATURE_FIELD
+        CONTEXT_CREDENTIALS_KEY
     )
 
 private val FeatureContext.herkimerVaultCredentials: Map<String, CredentialsAndSecretsWithSharedPrefix>
     get() = this.getContextKey(
-        HERKIMER_SECRETS_KEY
+        CONTEXT_SECRETS_KEY
     )
 
 typealias CredentialsAndSecretsWithSharedPrefix = List<Pair<HerkimerVaultCredential, List<Secret>>>
@@ -77,7 +78,7 @@ class HerkimerVaultFeature(
         validationContext: Boolean
     ): FeatureContext {
         val configuredHerkimerVaultCredentials: List<HerkimerVaultCredential> = spec.findAllConfiguredCredentials()
-        val featureContext = mapOf(FEATURE_FIELD to configuredHerkimerVaultCredentials)
+        val featureContext = mapOf(CONTEXT_CREDENTIALS_KEY to configuredHerkimerVaultCredentials)
 
         if (validationContext) {
             return featureContext
@@ -89,10 +90,10 @@ class HerkimerVaultFeature(
                     spec.applicationDeploymentId,
                     vaultCredential.resourceKind
                 )
-                    .map { generateHerkimerSecret(it, spec) }
+                    .map { generateKubernetesSecret(it, spec) }
             }.groupBy { (vaultCredential, secrets) -> vaultCredential.prefix }
 
-        return featureContext + mapOf(HERKIMER_SECRETS_KEY to secrets)
+        return featureContext + mapOf(CONTEXT_SECRETS_KEY to secrets)
     }
 
     override fun validate(
@@ -126,7 +127,7 @@ class HerkimerVaultFeature(
         }.toSet()
     }
 
-    private fun generateHerkimerSecret(response: ResourceHerkimer, adc: AuroraDeploymentSpec): Secret {
+    private fun generateKubernetesSecret(response: ResourceHerkimer, adc: AuroraDeploymentSpec): Secret {
         val values = jsonMapper().convertValue<Map<String, String>>(response.claims.first().credentials)
         return newSecret {
             metadata {
