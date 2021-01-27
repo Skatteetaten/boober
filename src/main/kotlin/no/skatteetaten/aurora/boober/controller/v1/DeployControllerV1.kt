@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/v1/apply/{auroraConfigName}")
 class DeployControllerV1(private val deployFacade: DeployFacade) {
 
+    // OVERFORING her starter en deploy
+    // OVERFORING Bruker ikke samme konvolutt som de andre fraglene
+    // OVERFORING når kun gobo bruker boober bør man vurdere å lage en v2/apply som bruker samme konvolutt som annet
     @PutMapping
     fun apply(
         @PathVariable auroraConfigName: String,

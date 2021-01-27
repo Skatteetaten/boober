@@ -52,6 +52,8 @@ class OpenShiftCommandService(
         namespace: String,
         mergeWithExistingResource: Boolean
     ): List<JsonNode> {
+
+
         // we cannot asume any order of the commands.
         val objectsWithoutISAndDc: List<JsonNode> =
             objects.filter { it.openshiftKind != "imagestream" && it.openshiftKind != "deploymentconfig" }
@@ -67,6 +69,10 @@ class OpenShiftCommandService(
             createOpenShiftCommand(namespace, it, mergeWithExistingResource)
         }
 
+        /* OVERFORING
+        Man skal kun importere imagestream hvis det er en gammel deploy og IS finnes.
+         Har jeg sagt at jeg misliker IS?
+        */
         val imageStreamImport = when {
             dc == null || imageStream == null -> null
             templateType == TemplateType.development -> null
@@ -74,8 +80,15 @@ class OpenShiftCommandService(
             else -> importImageStreamCommand(dc, imageStream)
         }
 
+        /* OVERFORING:
+            Det har skjedd noe i nyere OCP som gjør at dette mulignes burde endres
+            Hvis man skalerer opp samtidig som man gjør en ny deploy vil gammel deploy få med endringene
+         */
+
         // if deployment was paused we need to update is and import it first
         dc?.previous?.takeIf { deploymentPaused(it) }?.let {
+            //OVERFORING: Hvis deploy er pauset må man først apply imagestream, så import og til slutt DC!
+            //OVERFORING: Ved Deployment bare funker dette!
             return listOfNotNull(imageStream?.payload)
                 .addIfNotNull(imageStreamImport)
                 .addIfNotNull(objectsWithoutISAndDc)

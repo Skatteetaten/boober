@@ -43,6 +43,7 @@ fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<Aur
                     headerResources = header.toSet(),
                     resources = normal.toSet(),
                     context = context,
+                    // OVERFORING etter at features ble implementert er det kanskje greit å lage deployId tidligere og legge den inn i en feature?
                     deployId = UUIDGenerator.deployId,
                     shouldDeploy = deploy
                 )
@@ -134,6 +135,7 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
 
 typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>
 
+// OVERFORING En AuroraDeploymentContext er et samle objekt for å samle samme mye relevant data som skal sendes til deploy prosessen
 data class AuroraDeploymentContext(
     val spec: AuroraDeploymentSpec,
     val cmd: AuroraContextCommand,

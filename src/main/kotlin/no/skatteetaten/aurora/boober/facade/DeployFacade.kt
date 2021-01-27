@@ -38,6 +38,14 @@ class DeployFacade(
     @Value("\${openshift.cluster}") val cluster: String
 ) {
 
+    /*
+    OVERFORING
+        Boober skiller ikke på deploy av env og deploy av applikasjon idag, det tror jeg var dumt
+        Man kunne laget config for app og env separat, og ao/gobo kunne vært smart og laget det hvis det manglet første gang
+        Da ville det kunne vært mye klarere hva som er config på env nivå og hva som er config på app nivå.
+        Noe config vil muligens være delt mellom alle apper i et env dog.
+
+     */
     fun executeDeploy(
         ref: AuroraConfigRef,
         applicationDeploymentRefs: List<ApplicationDeploymentRef>,
@@ -55,9 +63,12 @@ class DeployFacade(
         val commands = createContextCommands(ref, applicationDeploymentRefs, overrides)
         watch.stop()
 
+        // OVERFORING Vi må hente context for alle før vi deployer noe siden noen warnings kjøres på kryss av alle contexter
         watch.start("ADC")
         val validContexts = createAuroraDeploymentContexts(commands)
         watch.stop()
+
+        //OVERFORING kommentareren under her er fremdeles relevant
 
         /* Vurdere å endre algoritmen her, den er nå
    0. Finn ut hvilke prosjekter som skal lages og for hver av dem gjør:
@@ -87,6 +98,8 @@ class DeployFacade(
 
  */
         watch.start("deployCommand")
+        //OVERFORING: Her kjøres alle featurene og lager ressurser
+        // TODO: rename this method and the variable?
         val deployCommands = validContexts.createDeployCommand(deploy)
         watch.stop()
 

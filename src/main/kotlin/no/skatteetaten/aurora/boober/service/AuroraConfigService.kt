@@ -23,6 +23,13 @@ data class AuroraConfigRef(
     val resolvedRef: String? = null
 )
 
+/* OVERFORING
+    bruk av JGIT her gir store ulemper IMHO, hvis man bruker et mønster hvor mange resolver hash av gjeldende ref
+ og cacher ZIP innhold på den hashen vil man få markante fordeler IMHO
+ F.eks er det ikke mulig å referere til andre AuroarCOnfig filer eller ha flere refs av en AuroraConfig gjeldende på en gang idag.
+
+ */
+
 @Service
 class AuroraConfigService(
     @TargetDomain(AURORA_CONFIG) val gitService: GitService,
@@ -40,10 +47,18 @@ class AuroraConfigService(
     }
 
     fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
+        /* OVERFORING
+            1. Resolve hva gjeldende commit er for REF
+            2. sjekk i cache om man har hentet ned ZIP for den REF
+            3. Hvis ikke hent ned zip
+            4. bruk zip som AuroraConfig i minne
+         */
+
         val exactRef = updateLocalFilesFromGit(ref)
         return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName, exactRef)
     }
 
+    // OVERFORING Hvis vi fjerner JGIT kan vi bytte ut dette med en ZIP fil
     // This is called from tests to create AuroraConfig for integration tests
     fun save(auroraConfig: AuroraConfig): AuroraConfig {
         val checkoutDir = getAuroraConfigFolder(auroraConfig.name)
@@ -69,6 +84,10 @@ class AuroraConfigService(
         return auroraConfig
     }
 
+    /* OVERFORING
+        Her må man bruke http apiet til bitbucket slik vi gjør for DeploymentResult
+        NB! krever at man har forrige hash så resolve funksjonen nevnt i findAuroraConfig over må brukes
+     */
     fun saveFile(newFile: AuroraConfigFile, auroraConfig: AuroraConfig, ref: AuroraConfigRef): AuroraConfig {
 
         val watch = StopWatch()

@@ -43,11 +43,15 @@ class AuroraDeploymentContextService(
     val idServiceFallback: IdServiceFallback?
 ) {
 
+    // OVERFORING: I etterkant hadde det kanskje vært smart å krevd PR for endringer til AuroraConfig og kjørt disse sjekkene her i PR prosessen?
+    // OVERFORING: Da kunne man sagt at alt som var i master var OK!
+    // OVERFORING: man kan hente ut en AuroraDeploymentContext som kjører dyp/resource validering, dette blir ikke gjort under deploy
     fun createValidatedAuroraDeploymentContexts(
         commands: List<AuroraContextCommand>,
         resourceValidation: Boolean = true
     ): List<AuroraDeploymentContext> {
 
+        // OVERFORING: Her lager vi alle deploymentContextene i parallel
         val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.parallelMap { cmd ->
             try {
                 logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")
@@ -76,6 +80,7 @@ class AuroraDeploymentContextService(
 
         val contexts = result.mapNotNull { it.first }
 
+        // OVERFORING: Noen warnings må lages på kryss av flere Contexts, dette gjelder veldig få tilfeller
         val adcWithDuplicatedUrls: AuroraDeploymentContextUrlMultimap =
             findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts)
 

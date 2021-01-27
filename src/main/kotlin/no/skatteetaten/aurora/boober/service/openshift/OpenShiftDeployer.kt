@@ -123,6 +123,8 @@ class OpenShiftDeployer(
         val application = resources.first {
             it.resource.kind == "ApplicationDeployment"
         }.resource
+
+        // TODO: Denne burde bli lagt på i en feature, koden her er gammel
         application.metadata.labels = application.metadata.labels.addIfNotNull("booberDeployId" to cmd.deployId)
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(context.spec.namespace, application)
         val applicationResult = openShiftClient.performOpenShiftCommand(context.spec.namespace, applicationCommand)
@@ -140,12 +142,13 @@ class OpenShiftDeployer(
 
         val ownerReferenceUid = appResponse.at("/metadata/uid").textValue()
 
+        // OVERFORING hvis tag filer applyer vi ikke objekter
         val tagResult = context.spec.takeIf { it.releaseTo != null }?.let {
             cantusService.tag(
                 TagCommand(
                     name = it.dockerImagePath,
                     from = it.version,
-                    to = it.releaseTo!!,
+                    to = it.releaseTo!!, //TODO: Kateryna vil kunne tagge til flere, det burde være lett i cantus
                     fromRegistry = dockerRegistry,
                     toRegistry = releaseDockerRegistry
                 )
@@ -199,6 +202,7 @@ class OpenShiftDeployer(
             return result.copy(reason = "Deployment is paused and will be/remain scaled down.")
         }
 
+        // OVERFORING: nok en ting man må gjøre fordi man har ImageStream...
         val redeployResult =
             redeployService.triggerRedeploy(openShiftResponses, context.spec.type, context.spec.deployState)
 
@@ -216,6 +220,7 @@ class OpenShiftDeployer(
         )
     }
 
+    // OVERFORING flyten her er rimelig komplex, men vær varsom med endringer, der er subtile forskjeller her
     private fun applyOpenShiftApplicationObjects(
         deployCommand: AuroraDeployCommand,
         mergeWithExistingResource: Boolean,
@@ -234,6 +239,7 @@ class OpenShiftDeployer(
             resource.resource.metadata.ownerReferences.find {
                 it.kind == "ApplicationDeployment"
             }?.let {
+                //OVERFORING: usikker på om man faktisk trenger å sette dette hvis ikke kan man legge det i en feature, og forenkle veldig!
                 it.uid = ownerReferenceUid
             }
             jacksonObjectMapper().convertValue<JsonNode>(resource.resource)
@@ -249,6 +255,7 @@ class OpenShiftDeployer(
         val shouldSleepBeforeDc = objects.last().openshiftKind == "deploymentconfig"
         val openShiftApplicationResponses: List<OpenShiftResponse> = objects.flatMap {
 
+            // OVERFORING: Hvis pause, dvs dc er sist må man sove litt. Men må man sove mellom hver kommando? Husker Raymond?
             if (it.openshiftKind == "deploymentconfig" && shouldSleepBeforeDc) {
                 Thread.sleep(500)
             }
@@ -261,6 +268,7 @@ class OpenShiftDeployer(
             return openShiftApplicationResponses
         }
 
+        // OVERFORING: Her sletter vi objetker helt på slutten
         val deleteOldObjectResponses = openShiftCommandBuilder
             .createOpenShiftDeleteCommands(name, namespace, deployCommand.deployId)
             .map { openShiftClient.performOpenShiftCommand(namespace, it) }

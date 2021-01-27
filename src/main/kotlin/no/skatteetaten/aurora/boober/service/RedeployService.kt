@@ -83,6 +83,9 @@ class RedeployService(
             return RedeployResult(message = "New application version found.")
         }
         val imageChangeTriggerTagName = deploymentConfig.findImageChangeTriggerTagName()
+
+        // OVERFORING: hvis man ikke har ImageStream eller trigger name må man lage et manuelt DeploymentRequest siden vi har skrudd av configChangeTrigger
+        // OVERFORING: vi har skrudd av configChangeTrigger siden hvis ikke blir det 2 deploys ved endring av image og dc samtidig, igjen p.g.a IS
         if (imageStream == null || imageChangeTriggerTagName == null) {
             return triggerRedeploy(deploymentConfig)
         }
@@ -99,6 +102,7 @@ class RedeployService(
         if (!wasPaused && isNewVersion) {
             return RedeployResult(message = versionMessage)
         }
+        // OVERFORING: Hvis man _ikke_ har fått en ny versjon så må vi starte nytt deploy request manuelt
 
         val namespace = imageStream.metadata.namespace
         val deploymentRequestResponse = performDeploymentRequest(namespace, deploymentConfig.metadata.name)
