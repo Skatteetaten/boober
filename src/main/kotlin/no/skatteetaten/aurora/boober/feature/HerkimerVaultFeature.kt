@@ -43,6 +43,8 @@ typealias CredentialsAndSecretsWithSharedPrefix = List<Pair<HerkimerVaultCredent
 
 /*
 * Fetches credentials belonging to the application from herkimer. These are injected into PodSpec as SecretEnvVars
+* At the moment this is only for internal use.
+* Note: The fields multiple and prefix are only there, at this moment, to support configuration of dbh
 */
 @ConditionalOnBean(HerkimerService::class)
 @Service
