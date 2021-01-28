@@ -57,6 +57,7 @@ class AuroraDeploymentContextService(
                 logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")
                 val context = createAuroraDeploymentContext(cmd, resourceValidation)
 
+                // OVERFORING: her skjer steg 2 i valideringen vi kaller validate featren i hver feature
                 val errors = context.validate(resourceValidation).flatMap { it.value }
 
                 if (errors.isEmpty()) {
@@ -146,6 +147,7 @@ class AuroraDeploymentContextService(
     ): AuroraDeploymentContext {
 
         val headerHandlers = deployCommand.applicationDeploymentRef.headerHandlers
+        // OVERFORING Først henter vi en header som vi bruker til å replace inn verdier i den faktiske specen
         val headerSpec =
             AuroraDeploymentSpec.create(
                 handlers = headerHandlers,
@@ -187,6 +189,9 @@ class AuroraDeploymentContextService(
             ) ?: idServiceFallback?.generateOrFetchId(name, namespace)
             ?: throw RuntimeException("Unable to generate applicationDeploymentId, no idService available")
         }
+
+
+        // OVERFORING her laget vi faktisk spec med replacer fra header
         val spec = AuroraDeploymentSpec.create(
             applicationDeploymentId = applicationDeploymentId,
             handlers = allHandlers,
@@ -232,6 +237,7 @@ class AuroraDeploymentContextService(
         )
     }
 
+    // OVERFORING noe som er laget etter mye av det andre her. Den lager warnings på kryss av features
     private fun findWarnings(cmd: AuroraContextCommand, features: Map<Feature, AuroraDeploymentSpec>): List<String> {
 
         fun logWarning(warning: String) {

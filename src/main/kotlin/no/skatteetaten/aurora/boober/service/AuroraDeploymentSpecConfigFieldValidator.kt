@@ -19,10 +19,17 @@ class AuroraDeploymentSpecConfigFieldValidator(
 
     fun validate(fullValidation: Boolean = true): List<ConfigFieldErrorDetail> {
 
+        //OVERFORING det hadde vært bedre om hver peker sier om den selv er en env peker eller ikke
+        //OVERFORING eller om det å lage/oppdatere et miljø er helt separert fra det å lage en applikasjon
+        //OVERFORING det kan jo argumenteres for at noen har lov til å deploye en applikasjon i et navnerom men ikke endre hvem som kan deploye applikasjoner der f.eks
+
         val envPointers = listOf(
             "env/name", "env/ttl", "envName", "affiliation",
             "permissions/admin", "permissions/view", "permissions/adminServiceAccount"
         )
+
+        // OVERFORING dette er første steget i validering, den validerer alle validatorene som er rett i handlerene
+        // OVERFORING når man skrev dette hadde vi veldig få validatorer som ikke var i handlerne. Kanskje man bare burde samlet dette 1 plass i validate i featurene i steden for i handlerene og i featurenene?
 
         val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
             val rawField = fields[e.name]
@@ -66,6 +73,8 @@ class AuroraDeploymentSpecConfigFieldValidator(
         }
 
         // TODO test unmapped
+        // OVERFORING her lager vi da feil hvis man har en json peker i sin struktur som _ikke_ har en handler
+        // OVERFORING her burde vi vel egentlig returnert et objekt som inneholder disse feilene som en egen type så det er lettere å skipe dem eller ei?
         val unmappedErrors = if (fullValidation) {
             getUnmappedPointers().flatMap { pointerError ->
                 pointerError.value.map { ConfigFieldErrorDetail.invalid(pointerError.key, it) }

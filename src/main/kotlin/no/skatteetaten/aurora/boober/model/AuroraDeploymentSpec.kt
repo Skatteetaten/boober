@@ -159,6 +159,7 @@ data class AuroraDeploymentSpec(
 
             val mapper = jacksonObjectMapper()
 
+            // OVERFORING når vi skal gå over til gobo så tror jeg ikke vi trenger disse statiske feltene lengre for da kan man jo hente dette fra boober på annet vis
             val staticFields: List<Pair<String, AuroraConfigFieldSource>> =
                 listOf(
                     "applicationDeploymentRef" to
@@ -197,6 +198,7 @@ data class AuroraDeploymentSpec(
                     )
                 } ?: emptyList()
 
+                // OVERFORING her overskirver vi default verdiene med noe annet hvis det faktisk finnes
                 val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.name)?.let {
                         /*
@@ -205,7 +207,9 @@ data class AuroraDeploymentSpec(
 
                           The indidividual subKeys have their own handlers.
                          */
+                        // OVERFORING det at vi har simplified og complex config tror jeg var feil
                         if (handler.canBeSimplifiedConfig && it.isObject) {
+                            // OVERFORING dette valget her ser kanskje enkelt ut her men det har litt konsekvenser senere
                             null
                         } else {
                             handler.name to AuroraConfigFieldSource(
