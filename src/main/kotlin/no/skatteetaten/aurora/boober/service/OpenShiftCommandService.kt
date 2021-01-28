@@ -70,8 +70,8 @@ class OpenShiftCommandService(
         }
 
         /* OVERFORING
-        Man skal kun importere imagestream hvis det er en gammel deploy og IS finnes.
-         Har jeg sagt at jeg misliker IS?
+            Man skal kun importere imagestream hvis det er en gammel deploy og IS finnes.
+            Har jeg sagt at jeg misliker IS?
         */
         val imageStreamImport = when {
             dc == null || imageStream == null -> null

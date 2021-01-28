@@ -104,7 +104,6 @@ class DeployFacade(
         watch.stop()
 
         watch.start("deploy")
-
         val deployResults = openShiftDeployer.performDeployCommands(deployCommands)
         watch.stop()
 

@@ -198,7 +198,7 @@ data class AuroraDeploymentSpec(
                     )
                 } ?: emptyList()
 
-                // OVERFORING her overskirver vi default verdiene med noe annet hvis det faktisk finnes
+                // OVERFORING her appender vi verdier på toppen av default
                 val result = defaultValue + files.mapNotNull { file ->
                     file.asJsonNode.atNullable(handler.name)?.let {
                         /*

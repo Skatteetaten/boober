@@ -28,6 +28,14 @@ class AuroraDeploymentSpecConfigFieldValidator(
             "permissions/admin", "permissions/view", "permissions/adminServiceAccount"
         )
 
+        /*
+        Validering i boober
+         - for hver peker
+         - flere pekere i samme feature
+         - på kryss av features for samme ADR
+         - på kryss av alle ADR i en AuroraConfig
+         */
+
         // OVERFORING dette er første steget i validering, den validerer alle validatorene som er rett i handlerene
         // OVERFORING når man skrev dette hadde vi veldig få validatorer som ikke var i handlerne. Kanskje man bare burde samlet dette 1 plass i validate i featurene i steden for i handlerene og i featurenene?
 
