@@ -419,7 +419,7 @@ class S3FeatureTest : AbstractFeatureTest() {
         adId: String,
         kind: ResourceKind,
         name: String = "paas-bucket-u-default",
-        claims: List<ResourceClaimHerkimer>? = null
+        claims: List<ResourceClaimHerkimer> = emptyList()
     ) = ResourceHerkimer(
         id = "0",
         name = name,

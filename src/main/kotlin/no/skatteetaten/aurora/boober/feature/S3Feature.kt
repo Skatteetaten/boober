@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newSecret
-import com.fkorotkov.kubernetes.secretKeyRef
-import com.fkorotkov.kubernetes.valueFrom
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
 import mu.KotlinLogging
@@ -27,6 +24,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.pattern
 import org.apache.commons.codec.binary.Base64
@@ -39,7 +37,10 @@ private val logger = KotlinLogging.logger {}
 
 private const val BUCKET_OBJECT_AREA_CONTEXT_KEY = "bucketObjectAreas"
 
-private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea> get() = this.getContextKey(BUCKET_OBJECT_AREA_CONTEXT_KEY)
+private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea>
+    get() = this.getContextKey(
+        BUCKET_OBJECT_AREA_CONTEXT_KEY
+    )
 
 @ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
 @Service
@@ -75,7 +76,11 @@ class S3Feature(
         return !header.isJob
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         val s3BucketObjectAreas = findS3Buckets(spec)
         return mapOf(
             BUCKET_OBJECT_AREA_CONTEXT_KEY to s3BucketObjectAreas
@@ -127,11 +132,9 @@ class S3Feature(
             val claimsOwnedByOthers = herkimerService.getClaimedResources(
                 resourceKind = ResourceKind.MinioObjectArea,
                 name = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.area}"
-            ).flatMap {
-                it.claims.orEmpty()
-            }.filter {
-                it.ownerId != applicationDeploymentId
-            }
+            )
+                .flatMap { it.claims }
+                .filter { it.ownerId != applicationDeploymentId }
 
             if (claimsOwnedByOthers.isNotEmpty()) {
                 logger.debug {
@@ -156,7 +159,7 @@ class S3Feature(
 
     private fun Set<AuroraResource>.extractS3EnvVarsFromSecrets(): List<EnvVar> =
         findResourcesByType<Secret>("-s3")
-            .mapNotNull { secret ->
+            .map { secret ->
                 val objectArea = secret.metadata.annotations[ANNOTATION_OBJECT_AREA]
 
                 secret.createEnvVarRefs(prefix = "S3_BUCKETS_${objectArea}_")
@@ -167,7 +170,7 @@ class S3Feature(
             claimOwnerId = booberApplicationdeploymentId,
             resourceKind = ResourceKind.MinioPolicy
         ).associate {
-            it.name to it.claims?.singleOrNull()?.credentials
+            it.name to it.claims.singleOrNull()?.credentials
         }
 
     private fun provisionAndStoreS3Credentials(
@@ -307,28 +310,6 @@ private data class BucketWithCredentials(
 private const val FEATURE_FIELD_NAME = "s3"
 private const val FEATURE_DEFAULTS_FIELD_NAME = "s3Defaults"
 private const val ANNOTATION_OBJECT_AREA = "minio.skatteetaten.no/objectArea"
-
-private val AuroraDeploymentSpec.s3SecretName get() = "${this.name}-s3"
-
-fun Feature.addEnvVarsToDcContainers(resources: Set<AuroraResource>, envVars: List<EnvVar>) {
-    resources.addEnvVarsToMainContainers(envVars, this.javaClass)
-}
-
-private fun Secret.createEnvVarRefs(properties: List<String> = this.data.map { it.key }, prefix: String = "") =
-    properties.map { propertyName ->
-        val envVarName = "$prefix$propertyName".toUpperCase()
-        val secretName = this.metadata.name
-        newEnvVar {
-            name = envVarName
-            valueFrom {
-                secretKeyRef {
-                    key = propertyName
-                    name = secretName
-                    optional = false
-                }
-            }
-        }
-    }
 
 private fun List<BucketWithCredentials>.createS3Secrets(nsName: String, appName: String) =
     this.map { (s3BucketObjectArea, provisionResult) ->

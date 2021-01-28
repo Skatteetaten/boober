@@ -242,15 +242,15 @@ class HerkimerServiceTest {
         ownerId = adId,
         claims = listOf(
             ResourceClaimHerkimer(
-                "0",
-                adId,
-                0L,
-                credentials,
-                "ADMIN",
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                "aurora",
-                "aurora"
+                id = "0",
+                ownerId = adId,
+                resourceId = 0L,
+                credentials = credentials,
+                name = "ADMIN",
+                createdDate = LocalDateTime.now(),
+                modifiedDate = LocalDateTime.now(),
+                createdBy = "aurora",
+                modifiedBy = "aurora"
             )
         ),
         createdDate = LocalDateTime.now(),
@@ -261,9 +261,9 @@ class HerkimerServiceTest {
     )
 
     private fun createAdPayload() = ApplicationDeploymentCreateRequest(
-        "testApp",
-        "env",
-        "utv",
-        "aurora"
+        name = "testApp",
+        environmentName = "env",
+        cluster = "utv",
+        businessGroup = "aurora"
     )
 }
