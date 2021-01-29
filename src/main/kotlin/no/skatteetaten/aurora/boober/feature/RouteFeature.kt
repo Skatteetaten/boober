@@ -298,6 +298,7 @@ data class Route(
     val host: String,
     val path: String? = null,
     val annotations: Map<String, String> = emptyMap(),
+    val labels: Map<String, String>? = null,
     val tls: SecureRoute? = null,
     val fullyQualifiedHost: Boolean = false
 ) {
@@ -326,6 +327,7 @@ data class Route(
                 if (route.annotations.isNotEmpty()) {
                     annotations = route.annotations.mapKeys { kv -> kv.key.replace("|", "/") }
                 }
+                labels = route.labels
             }
             spec {
                 to {

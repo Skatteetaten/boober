@@ -7,6 +7,9 @@
       "marjory.sits.no/route.roles": "foo,bar,baz",
       "haproxy.router.openshift.io/timeout": "10s"
     },
+    "labels": {
+      "type": "webseal"
+    },
     "name": "simple-webseal",
     "namespace": "paas-utv"
   },
