@@ -1,13 +1,18 @@
 package no.skatteetaten.aurora.boober.utils
 
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
+import org.apache.commons.text.StringSubstitutor
+import org.springframework.util.ResourceUtils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -23,11 +28,6 @@ import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
-import org.apache.commons.text.StringSubstitutor
-import org.springframework.util.ResourceUtils
-import java.io.File
-import java.net.URL
-import java.nio.charset.Charset
 
 open class ResourceLoader {
 
@@ -298,6 +298,7 @@ fun ApplicationDeploymentRef.getResultFiles(): Map<String, JsonNode?> {
         }
 
         val file = json.at("/kind").textValue() + "/" + appName
-        file.toLowerCase() to json
+        it.absolutePath.substringAfter("test/") to json
+        // file.toLowerCase() to json
     }
 }
