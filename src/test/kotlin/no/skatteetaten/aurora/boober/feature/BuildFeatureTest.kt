@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.lang3.RandomStringUtils
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
@@ -7,12 +9,10 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.apache.commons.lang3.RandomStringUtils
-import org.junit.jupiter.api.Test
 
 class BuildFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = BuildFeature()
+        get() = BuildFeature("test.docker.com")
 
     @Test
     fun `should disable feature if deploy type`() {
