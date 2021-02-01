@@ -80,7 +80,7 @@ class OpenShiftCommandService(
             else -> importImageStreamCommand(dc, imageStream)
         }
 
-        /* OVERFORING:
+        /* OVERFORING
             Det har skjedd noe i nyere OCP som gjør at dette mulignes burde endres
             Hvis man skalerer opp samtidig som man gjør en ny deploy vil gammel deploy få med endringene
          */
