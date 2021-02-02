@@ -1,18 +1,14 @@
 package no.skatteetaten.aurora.boober.utils
 
-import java.io.File
-import java.net.URL
-import java.nio.charset.Charset
-import org.apache.commons.text.StringSubstitutor
-import org.springframework.util.ResourceUtils
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -28,6 +24,13 @@ import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
+import org.apache.commons.text.StringSubstitutor
+import org.springframework.util.ResourceUtils
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
+
+private val logger = KotlinLogging.logger {}
 
 open class ResourceLoader {
 
@@ -95,7 +98,7 @@ open class ResourceLoader {
     fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
         val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
         val expectedJson = loadJsonResource(fileName)
-        compareJson(expectedJson, actualJson)
+        compareJson(expectedJson, actualJson, fileName)
         ar
     }
 
@@ -116,7 +119,12 @@ fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boo
     val writer = jsonMapper().writerWithDefaultPrettyPrinter()
     val targetString = writer.writeValueAsString(actual)
     val nodeString = writer.writeValueAsString(expected)
-    assertThat(targetString, name).isEqualTo(nodeString)
+
+    name?.let {
+        logger.info { "Comparing file with name=$name" }
+    }
+
+    assertThat(targetString).isEqualTo(nodeString)
     return true
 }
 
@@ -283,7 +291,7 @@ class AuroraConfigSamples {
     }
 }
 
-fun ApplicationDeploymentRef.getResultFiles(): Map<String, JsonNode?> {
+fun ApplicationDeploymentRef.getResultFiles(): Map<String, TestFile?> {
     val baseFolder = File(
         ResourceLoader::class.java
             .getResource("/samples/result/${this.environment}/${this.application}").file
@@ -298,7 +306,16 @@ fun ApplicationDeploymentRef.getResultFiles(): Map<String, JsonNode?> {
         }
 
         val file = json.at("/kind").textValue() + "/" + appName
-        it.absolutePath.substringAfter("test/") to json
-        // file.toLowerCase() to json
+        val testFile = TestFile(
+            path = it.absolutePath.substringAfter("test/"),
+            content = json
+        )
+
+        file.toLowerCase() to testFile
     }
 }
+
+data class TestFile(
+    val path: String,
+    val content: JsonNode
+)

@@ -44,7 +44,7 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
                 RequestEntity<Any>(HttpMethod.GET, URI(resourceUrl)), true
             )
 
-            compareJson(resource, entity.body!!)
+            compareJson(resource, entity.body!!, "ResourceMergerTest/deploymentconfig.json")
         }
     }
 

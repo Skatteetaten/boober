@@ -94,9 +94,10 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
             val items = jsonMapper().createArrayNode()
 
             val kind = it.key.split("/")[0]
-            val kindList = it.value?.get("kind")?.textValue() + "List"
+            val json = it.value!!.content
+            val kindList = json.get("kind")?.textValue() + "List"
 
-            items.add(it.value)
+            items.add(json)
             responseBody.put("kind", kindList)
             responseBody.replace("items", items)
 

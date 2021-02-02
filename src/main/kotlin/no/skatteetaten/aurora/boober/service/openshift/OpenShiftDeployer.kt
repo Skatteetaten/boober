@@ -39,7 +39,8 @@ class OpenShiftDeployer(
     val redeployService: RedeployService,
     val userDetailsProvider: UserDetailsProvider,
     @Value("\${integrations.docker.registry}") val dockerRegistry: String,
-    @Value("\${integrations.docker.releases}") val releaseDockerRegistry: String
+    @Value("\${integrations.docker.releases}") val releaseDockerRegistry: String,
+    @Value("\${boober.projectrequest.sleep:2000}") val projectRequestSleep: Long
 ) {
     fun performDeployCommands(deployCommands: List<AuroraDeployCommand>): List<AuroraDeployResult> {
 
@@ -81,7 +82,7 @@ class OpenShiftDeployer(
                 retryGetResourceOnFailure = false
             ).let {
                 openShiftClient.performOpenShiftCommand(namespace, it)
-                    .also { Thread.sleep(2000) }
+                    .also { Thread.sleep(projectRequestSleep) }
             }
         }
         val otherEnvResources = resources.filter { it.resource.kind != "ProjectRequest" }.map {

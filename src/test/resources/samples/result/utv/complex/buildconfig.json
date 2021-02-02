@@ -7,7 +7,7 @@
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "komplex",
       "booberDeployId": "deploy1"
@@ -56,6 +56,10 @@
           {
             "name": "PUSH_EXTRA_TAGS",
             "value": "latest,major,minor,patch"
+          },
+          {
+            "name": "INTERNAL_PULL_REGISTRY",
+            "value": "docker.regstry:5000"
           }
         ],
         "exposeDockerSocket": true,

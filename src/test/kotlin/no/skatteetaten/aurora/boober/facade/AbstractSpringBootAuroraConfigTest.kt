@@ -1,16 +1,12 @@
 package no.skatteetaten.aurora.boober.facade
 
-import java.io.File
-import org.junit.jupiter.api.BeforeEach
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
+import assertk.Assert
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
-import assertk.Assert
-import assertk.assertions.isEqualTo
-import assertk.assertions.isTrue
-import assertk.assertions.matchesPredicate
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
@@ -23,6 +19,10 @@ import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.MockRules
+import org.junit.jupiter.api.BeforeEach
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import java.io.File
 
 /*
 
@@ -101,21 +101,21 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
     val resultFiles = auroraDeployResult.command.applicationDeploymentRef.getResultFiles()
     val keys = resultFiles.keys
 
-    generatedObjects.forEach {
-        val key: String = it.getKey()
-        assertThat(keys).matchesPredicate { expectedKeys ->
-            expectedKeys.any { expectedKey -> expectedKey.contains(key) }
-        }
-        if (it.openshiftKind == "secret") {
-            val data = it["data"] as ObjectNode
+    generatedObjects.forEach { generatedObject ->
+        val key = generatedObject.getKey()
+        assertThat(keys).contains(key)
+
+        if (generatedObject.openshiftKind == "secret") {
+            val data = generatedObject["data"] as ObjectNode
             data.fields().forEach { (key, _) ->
                 data.put(key, "REMOVED_IN_TEST")
             }
-        } else if (it.openshiftKind == "applicationdeployment") {
-            val auroraConfigField = it.at("/spec/command/auroraConfig") as ObjectNode
+        } else if (generatedObject.openshiftKind == "applicationdeployment") {
+            val auroraConfigField = generatedObject.at("/spec/command/auroraConfig") as ObjectNode
             auroraConfigField.replace("resolvedRef", TextNode("123abb"))
         }
-        compareJson(resultFiles[key]!!, it, key)
+        val resultFile = resultFiles[key]!!
+        compareJson(resultFile.content, generatedObject, resultFile.path)
     }
     assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
 }
