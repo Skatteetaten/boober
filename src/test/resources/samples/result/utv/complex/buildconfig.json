@@ -59,7 +59,7 @@
           },
           {
             "name": "INTERNAL_PULL_REGISTRY",
-            "value": "docker.regstry:5000"
+            "value": "docker.registry:5000"
           }
         ],
         "exposeDockerSocket": true,
