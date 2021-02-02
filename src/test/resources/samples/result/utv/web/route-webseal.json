@@ -11,9 +11,10 @@
       "app": "web",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "web",
+      "type": "webseal",
       "booberDeployId": "deploy1"
     },
     "name": "web-webseal",

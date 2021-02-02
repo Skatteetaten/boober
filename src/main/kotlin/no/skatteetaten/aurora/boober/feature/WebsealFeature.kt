@@ -54,10 +54,15 @@ class WebsealFeature(
 
             val routeName = "${adc.name}-webseal"
 
+            val labels = mapOf(
+                "type" to "webseal"
+            )
+
             val auroraRoute = Route(
                 objectName = routeName,
                 host = host,
-                annotations = annotations
+                annotations = annotations,
+                labels = labels
             )
 
             setOf(auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, webSealSuffix).generateAuroraResource())

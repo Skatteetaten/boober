@@ -6,6 +6,9 @@
       "marjory.sits.no/isOpen": "false",
       "marjory.sits.no/route.roles": "foo,bar,baz"
     },
+    "labels": {
+      "type": "webseal"
+    },
     "name": "simple-webseal",
     "namespace": "paas-utv"
   },
