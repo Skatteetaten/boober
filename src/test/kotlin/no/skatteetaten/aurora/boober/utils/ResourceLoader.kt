@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -28,6 +29,8 @@ import org.springframework.util.ResourceUtils
 import java.io.File
 import java.net.URL
 import java.nio.charset.Charset
+
+private val logger = KotlinLogging.logger {}
 
 open class ResourceLoader {
 
@@ -95,7 +98,7 @@ open class ResourceLoader {
     fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
         val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
         val expectedJson = loadJsonResource(fileName)
-        compareJson(expectedJson, actualJson)
+        compareJson(expectedJson, actualJson, fileName)
         ar
     }
 
@@ -116,7 +119,12 @@ fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boo
     val writer = jsonMapper().writerWithDefaultPrettyPrinter()
     val targetString = writer.writeValueAsString(actual)
     val nodeString = writer.writeValueAsString(expected)
-    assertThat(targetString, name).isEqualTo(nodeString)
+
+    name?.let {
+        logger.info { "Comparing file with name=$name" }
+    }
+
+    assertThat(targetString).isEqualTo(nodeString)
     return true
 }
 
@@ -283,7 +291,7 @@ class AuroraConfigSamples {
     }
 }
 
-fun ApplicationDeploymentRef.getResultFiles(): Map<String, JsonNode?> {
+fun ApplicationDeploymentRef.getResultFiles(): Map<String, TestFile?> {
     val baseFolder = File(
         ResourceLoader::class.java
             .getResource("/samples/result/${this.environment}/${this.application}").file
@@ -298,6 +306,16 @@ fun ApplicationDeploymentRef.getResultFiles(): Map<String, JsonNode?> {
         }
 
         val file = json.at("/kind").textValue() + "/" + appName
-        file.toLowerCase() to json
+        val testFile = TestFile(
+            path = it.absolutePath.substringAfter("test/"),
+            content = json
+        )
+
+        file.toLowerCase() to testFile
     }
 }
+
+data class TestFile(
+    val path: String,
+    val content: JsonNode
+)

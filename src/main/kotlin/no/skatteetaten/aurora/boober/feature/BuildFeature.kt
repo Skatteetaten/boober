@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.openshift.customStrategy
 import com.fkorotkov.openshift.from
@@ -17,10 +19,11 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
-import org.springframework.stereotype.Service
 
 @Service
-class BuildFeature : Feature {
+class BuildFeature(
+    @Value("\${integrations.docker.registry}") val dockerRegistryUrl: String
+) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type == TemplateType.development
     }
@@ -105,7 +108,8 @@ class BuildFeature : Feature {
                             "VERSION" to adc["version"],
                             "DOCKER_BASE_VERSION" to adc["baseImage/version"],
                             "DOCKER_BASE_IMAGE" to "aurora/${adc.get<String>("baseImage/name")}",
-                            "PUSH_EXTRA_TAGS" to "latest,major,minor,patch"
+                            "PUSH_EXTRA_TAGS" to "latest,major,minor,patch",
+                            "INTERNAL_PULL_REGISTRY" to dockerRegistryUrl
                         )
 
                         env = envMap.map {

@@ -101,19 +101,21 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
     val resultFiles = auroraDeployResult.command.applicationDeploymentRef.getResultFiles()
     val keys = resultFiles.keys
 
-    generatedObjects.forEach {
-        val key: String = it.getKey()
+    generatedObjects.forEach { generatedObject ->
+        val key = generatedObject.getKey()
         assertThat(keys).contains(key)
-        if (it.openshiftKind == "secret") {
-            val data = it["data"] as ObjectNode
+
+        if (generatedObject.openshiftKind == "secret") {
+            val data = generatedObject["data"] as ObjectNode
             data.fields().forEach { (key, _) ->
                 data.put(key, "REMOVED_IN_TEST")
             }
-        } else if (it.openshiftKind == "applicationdeployment") {
-            val auroraConfigField = it.at("/spec/command/auroraConfig") as ObjectNode
+        } else if (generatedObject.openshiftKind == "applicationdeployment") {
+            val auroraConfigField = generatedObject.at("/spec/command/auroraConfig") as ObjectNode
             auroraConfigField.replace("resolvedRef", TextNode("123abb"))
         }
-        compareJson(resultFiles[key]!!, it)
+        val resultFile = resultFiles[key]!!
+        compareJson(resultFile.content, generatedObject, resultFile.path)
     }
     assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
 }

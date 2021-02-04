@@ -78,6 +78,8 @@ integrations:
 
 application.deployment.id: abc4567890
 boober:
+    projectrequest:
+        sleep: 0
     encrypt:
         key: "komogsyngensang"
         token: "test"

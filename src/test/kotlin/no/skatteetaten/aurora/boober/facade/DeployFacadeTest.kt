@@ -130,13 +130,13 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
                             }
                         })
                     } else if (it.endsWith("/applicationdeployments/easy")) {
-                        val ad = resultFiles["applicationdeployment/easy"]!!
+                        val ad = resultFiles["applicationdeployment/easy"]!!.content
                         (ad.at("/metadata") as ObjectNode).replace("uid", TextNode("old-124"))
                         json(ad)
                     } else {
                         val fileName = it.split("/").takeLast(2).joinToString("/").replace("s/", "/")
-                        resultFiles[fileName]?.let { name ->
-                            json(name)
+                        resultFiles[fileName]?.let { file ->
+                            json(file.content)
                         } ?: MockResponse().setResponseCode(200)
                     }
                 }
