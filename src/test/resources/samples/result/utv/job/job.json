@@ -87,7 +87,7 @@
                     }
                   }
                 ],
-                "image": "docker.registry:5000/no_skatteetaten_demo/job:1",
+                "image": "docker.registry:5000/no_skatteetaten_demo/job:sha256:1234",
                 "imagePullPolicy": "Always",
                 "name": "job",
                 "resources": {

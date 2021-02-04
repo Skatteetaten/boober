@@ -1,10 +1,15 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.web.client.RestTemplate
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import assertk.assertThat
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -12,11 +17,6 @@ import no.skatteetaten.aurora.boober.service.CantusRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.TagCommand
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
-import org.springframework.web.client.RestTemplate
 
 class CantusServiceTest {
 
@@ -68,4 +68,14 @@ class CantusServiceTest {
 
         assertThat(response.success).isFalse()
     }
+
+    /*
+    @Test
+    fun `should receive manifest`() {
+
+        val response = service.getImageInformation("foo", "bar", "1.2.3")
+
+        assertThat(response).isNotEmpty()
+    }
+    */
 }

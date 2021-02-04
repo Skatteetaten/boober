@@ -82,7 +82,7 @@
                 }
               }
             ],
-            "image": "fluent/fluent-bit:latest",
+            "image": "docker.registry/fluent_fluent-bit:sha:3453453453bc5345345345345345",
             "name": "simple-fluent-sidecar",
             "resources": {
               "limits": {

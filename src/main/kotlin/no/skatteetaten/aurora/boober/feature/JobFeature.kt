@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.batch.jobTemplate
 import com.fkorotkov.kubernetes.batch.metadata
 import com.fkorotkov.kubernetes.batch.newCronJob
@@ -17,15 +20,13 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.int
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.validUnixCron
-import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 val AuroraDeploymentSpec.jobCommand: List<String>?
     get() = this.getDelimitedStringOrArrayAsSetOrNull("command")?.toList()
@@ -41,7 +42,8 @@ enum class ConcurrencyPolicies {
 
 @Service
 class JobFeature(
-    @Value("\${integrations.docker.registry}") val dockerRegistry: String
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
+    val cantusService: CantusService
 ) : Feature {
 
     val defaultHandlersForAllTypes = setOf(
@@ -81,6 +83,12 @@ class JobFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
+        val imageInformationResult = cantusService.getImageInformation(
+            adc.groupId, adc.artifactId, adc.dockerTag
+        )
+
+        val dockerDigest = imageInformationResult.map { it.dockerDigest }.single()
+
         val jobSpec = newJobSpec {
             parallelism = 1
             completions = 1
@@ -91,7 +99,7 @@ class JobFeature(
                 spec {
 
                     containers = listOf(newContainer {
-                        image = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+                        image = "$dockerRegistry/${adc.dockerImagePath}:$dockerDigest"
                         imagePullPolicy = "Always"
                         name = adc.name
                     })

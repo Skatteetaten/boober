@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newConfigMap
@@ -22,9 +24,8 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
 const val SPLUNK_CONNECT_INDEX_TAG = "splunk.com/index"
@@ -52,6 +53,9 @@ val knownLogs: Set<String> =
 const val parserMountPath = "/fluent-bit/parser"
 const val parsersFileName = "parsers.conf"
 
+const val fluentBitRepo = "fluent"
+const val fluentBitName = "fluent-bit"
+
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
@@ -60,7 +64,9 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.token}") val hecToken: String,
     @Value("\${splunk.hec.url}") val splunkUrl: String,
     @Value("\${splunk.hec.port}") val splunkPort: String,
-    @Value("\${splunk.fluentbit.image}") val fluentBitImage: String
+    @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String,
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
+    val cantusService: CantusService
 ) : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -73,7 +79,7 @@ class FluentbitSidecarFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val index = adc.loggingIndex ?: return emptySet()
-        if (! shouldGenerateAndModify(adc)) return emptySet()
+        if (!shouldGenerateAndModify(adc)) return emptySet()
         val loggerIndexes = getLoggingIndexes(adc, index)
 
         val fluentParserMap = newConfigMap {
@@ -113,7 +119,7 @@ class FluentbitSidecarFeature(
     ) {
         val index = adc.loggingIndex ?: return
         if (index == "") return
-        if (! shouldGenerateAndModify(adc)) {
+        if (!shouldGenerateAndModify(adc)) {
             resources.forEach {
                 val template = getTemplate(it) ?: return@forEach
                 setTemplateAnnotation(template, SPLUNK_CONNECT_INDEX_TAG, index)
@@ -223,6 +229,12 @@ class FluentbitSidecarFeature(
             }
         )
 
+        val imageInformationResult = cantusService.getImageInformation(
+            fluentBitRepo, fluentBitName, fluentBitTag
+        )
+
+        val dockerDigest = imageInformationResult.map { it.dockerDigest }.single()
+
         return newContainer {
             name = adc.fluentSideCarContainerName
             env = podEnvVariables.addIfNotNull(hecEnvVariables)
@@ -246,7 +258,7 @@ class FluentbitSidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = fluentBitImage
+            image = "$dockerRegistry/${fluentBitRepo}_$fluentBitName:$dockerDigest"
         }
     }
 }
