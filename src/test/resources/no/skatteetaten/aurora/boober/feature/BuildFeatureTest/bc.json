@@ -38,6 +38,10 @@
           {
             "name": "PUSH_EXTRA_TAGS",
             "value": "latest,major,minor,patch"
+          },
+          {
+            "name": "INTERNAL_PULL_REGISTRY",
+            "value": "test.docker.com"
           }
         ],
         "exposeDockerSocket": true,

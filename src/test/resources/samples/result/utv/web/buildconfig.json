@@ -58,6 +58,10 @@
             "value": "latest,major,minor,patch"
           },
           {
+            "name": "INTERNAL_PULL_REGISTRY",
+            "value": "docker.registry:5000"
+          },
+          {
             "name": "APPLICATION_TYPE",
             "value": "nodejs"
           }
