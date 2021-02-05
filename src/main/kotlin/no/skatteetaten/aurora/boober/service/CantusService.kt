@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
@@ -7,11 +11,8 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes.CANTUS
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
+import no.skatteetaten.aurora.boober.utils.getBodyOrThrow
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
 
 private val logger = KotlinLogging.logger {}
 
@@ -80,9 +81,9 @@ class CantusService(
             body = cantusManifestCommand,
             type = AuroraResponse::class,
             url = "/manifest"
-        ).body ?: TODO("No response")
+        ).getBodyOrThrow("Cantus")
 
-        if (!response.success) TODO("not successfull")
+        if (!response.success) throw CantusServiceException("Unable to receive manifest. cause=${response.message}")
 
         return response.items.map {
             jsonMapper().convertValue<ImageTagResource>(it)

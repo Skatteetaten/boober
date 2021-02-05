@@ -87,7 +87,7 @@ class JobFeature(
             adc.groupId, adc.artifactId, adc.dockerTag
         )
 
-        val dockerDigest = imageInformationResult.map { it.dockerDigest }.single()
+        val dockerDigest = imageInformationResult.single().dockerDigest
 
         val jobSpec = newJobSpec {
             parallelism = 1

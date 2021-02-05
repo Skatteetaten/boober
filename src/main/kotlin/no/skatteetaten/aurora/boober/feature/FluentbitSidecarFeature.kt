@@ -230,10 +230,12 @@ class FluentbitSidecarFeature(
         )
 
         val imageInformationResult = cantusService.getImageInformation(
-            fluentBitRepo, fluentBitName, fluentBitTag
+            repo = fluentBitRepo,
+            name = fluentBitName,
+            tag = fluentBitTag
         )
 
-        val dockerDigest = imageInformationResult.map { it.dockerDigest }.single()
+        val dockerDigest = imageInformationResult.single().dockerDigest
 
         return newContainer {
             name = adc.fluentSideCarContainerName
@@ -258,7 +260,7 @@ class FluentbitSidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "$dockerRegistry/${fluentBitRepo}_$fluentBitName:$dockerDigest"
+            image = "$dockerRegistry/$fluentBitRepo/$fluentBitName:$dockerDigest"
         }
     }
 }
