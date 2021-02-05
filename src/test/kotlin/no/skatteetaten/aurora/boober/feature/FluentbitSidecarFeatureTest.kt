@@ -38,7 +38,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                 "0-b6.32.2-wingnut11-2.5.2",
                 "0",
                 "1.2",
-                "sha:3453453453bc5345345345345345",
+                "sha:1234",
                 "lochalhost:8080/fluent/fluent-bit/0"
             )
         )

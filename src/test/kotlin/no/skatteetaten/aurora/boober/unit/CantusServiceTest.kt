@@ -68,14 +68,4 @@ class CantusServiceTest {
 
         assertThat(response.success).isFalse()
     }
-
-    /*
-    @Test
-    fun `should receive manifest`() {
-
-        val response = service.getImageInformation("foo", "bar", "1.2.3")
-
-        assertThat(response).isNotEmpty()
-    }
-    */
 }
