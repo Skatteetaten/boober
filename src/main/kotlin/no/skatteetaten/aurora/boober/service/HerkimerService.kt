@@ -19,7 +19,6 @@ import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import no.skatteetaten.aurora.boober.utils.getBodyOrThrow
 
 data class HerkimerResponse<T : Any>(
     val success: Boolean = true,
@@ -118,9 +117,9 @@ class HerkimerService(
             url = "/applicationDeployment",
             type = HerkimerResponse::class
         )
-        val herkimerResponse = response.getBodyOrThrow("Herkimer")
+        val herkimerResponse = response.body
 
-        if (!herkimerResponse.success) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.message}")
+        if (herkimerResponse?.success != true) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.messageOrDefault}")
 
         return herkimerObjectMapper.convertValue(herkimerResponse.items.single())
     }
@@ -139,9 +138,9 @@ class HerkimerService(
         val herkimerResponse = client.get(
             HerkimerResponse::class,
             getResourceUrl(claimOwnerId, resourceKind, name)
-        ).getBodyOrThrow("Herkimer")
+        ).body
 
-        if (!herkimerResponse.success) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.message}")
+        if (herkimerResponse?.success != true) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.messageOrDefault}")
 
         return herkimerObjectMapper.convertValue(herkimerResponse.items)
     }
@@ -163,9 +162,9 @@ class HerkimerService(
                 ownerId = ownerId,
                 parentId = parentId
             )
-        ).getBodyOrThrow("Herkimer")
+        ).body
 
-        if (!resourceResponse.success) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.message}")
+        if (resourceResponse?.success != true) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.messageOrDefault}")
 
         val resourceId = herkimerObjectMapper.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
 
@@ -177,9 +176,9 @@ class HerkimerService(
                 name = claimName,
                 credentials = credentials
             )
-        ).getBodyOrThrow("Herkimer")
+        ).body
 
-        if (!claimResponse.success) throw ProvisioningException("Unable to create claim for resource with id=$resourceId and ownerId=$ownerId. cause=${claimResponse.message}")
+        if (claimResponse?.success != true) throw ProvisioningException("Unable to create claim for resource with id=$resourceId and ownerId=$ownerId. cause=${claimResponse.messageOrDefault}")
     }
 }
 
@@ -191,3 +190,6 @@ internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(Jdk8Module())
     .registerModule(JavaTimeModule())
     .registerModule(ParameterNamesModule())
+
+private val HerkimerResponse<*>?.messageOrDefault: String
+    get() = this?.message ?: "empty body"

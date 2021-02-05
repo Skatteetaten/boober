@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
@@ -11,7 +12,6 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes.CANTUS
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import no.skatteetaten.aurora.boober.utils.getBodyOrThrow
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 
 private val logger = KotlinLogging.logger {}
@@ -61,8 +61,8 @@ data class ImageTagResource(
 )
 
 @Component
-class CantusRestTemplateWrapper(@TargetService(CANTUS) restTemplate: RestTemplate) :
-    RetryingRestTemplateWrapper(restTemplate)
+class CantusRestTemplateWrapper(@TargetService(CANTUS) restTemplate: RestTemplate, retries: Int = 3) :
+    RetryingRestTemplateWrapper(restTemplate, retries)
 
 @Service
 class CantusService(
@@ -77,13 +77,17 @@ class CantusService(
             )
         )
 
-        val response = client.post(
-            body = cantusManifestCommand,
-            type = AuroraResponse::class,
-            url = "/manifest"
-        ).getBodyOrThrow("Cantus")
+        val response = runCatching {
+            client.post(
+                body = cantusManifestCommand,
+                type = AuroraResponse::class,
+                url = "/manifest"
+            )
+        }.also(::logResult)
+            .getOrNull()
+            ?.body
 
-        if (!response.success) throw CantusServiceException("Unable to receive manifest. cause=${response.message}")
+        if (response?.success != true) throw CantusServiceException("Unable to receive manifest. cause=${response.messageOrDefault}")
 
         return response.items.map {
             jsonMapper().convertValue<ImageTagResource>(it)
@@ -95,8 +99,22 @@ class CantusService(
             "${cmd.fromRegistry}/${cmd.name}:${cmd.from}",
             "${cmd.toRegistry}/${cmd.name}:${cmd.to}"
         )
-        val resultEntity = client.post(body = cantusCmd, type = JsonNode::class, url = "/tag")
-        logger.info("Response from cantus code=${resultEntity.statusCode} body=${resultEntity.body}")
-        return TagResult(cmd, resultEntity.body, resultEntity.statusCode.is2xxSuccessful)
+        val response = runCatching {
+            client.post(body = cantusCmd, type = JsonNode::class, url = "/tag")
+        }.also(::logResult)
+            .getOrNull()
+
+        val success = response != null
+
+        return TagResult(cmd, response?.body, success)
     }
 }
+
+// TODO: should we log as error instead?
+private fun logResult(result: Result<ResponseEntity<*>>) {
+    result.onFailure { logger.warn(it) { "Received error from Cantus. Caused by ${it.cause}" } }
+        .onSuccess { logger.info("Response from Cantus code=${it.statusCode} body=${it.body}") }
+}
+
+private val AuroraResponse<*>?.messageOrDefault: String
+    get() = this?.message ?: "empty body"
