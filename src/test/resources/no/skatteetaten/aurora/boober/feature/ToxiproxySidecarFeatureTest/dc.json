@@ -41,7 +41,7 @@
                 "value": "8474"
               }
             ],
-            "image": "shopify/toxiproxy:2.1.3",
+            "image": "shopify/toxiproxy@sha:1234",
             "name": "simple-toxiproxy-sidecar",
             "ports": [
               {

@@ -24,6 +24,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 
@@ -34,7 +35,9 @@ val AuroraDeploymentSpec.toxiProxy: String?
         }
 
 @org.springframework.stereotype.Service
-class ToxiproxySidecarFeature : Feature {
+class ToxiproxySidecarFeature(
+    val cantusService: CantusService
+) : Feature {
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
@@ -112,6 +115,18 @@ class ToxiproxySidecarFeature : Feature {
             "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
             "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
         )
+
+        val toxiproxyRepo = "shopify"
+        val toxiproxyName = "toxiproxy"
+
+        val imageInformationResult = cantusService.getImageInformation(
+            repo = toxiproxyRepo,
+            name = toxiproxyName,
+            tag = toxiproxyVersion
+        )
+
+        val dockerDigest = imageInformationResult.single().dockerDigest
+
         return newContainer {
             name = "${adc.name}-toxiproxy-sidecar"
             ports = containerPorts.map {
@@ -141,7 +156,7 @@ class ToxiproxySidecarFeature : Feature {
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "shopify/toxiproxy:$toxiproxyVersion"
+            image = "$toxiproxyRepo/$toxiproxyName@$dockerDigest"
             readinessProbe = newProbe {
                 tcpSocket {
                     port = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
