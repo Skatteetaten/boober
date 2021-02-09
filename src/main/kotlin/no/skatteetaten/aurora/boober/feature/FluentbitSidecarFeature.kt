@@ -53,9 +53,6 @@ val knownLogs: Set<String> =
 const val parserMountPath = "/fluent-bit/parser"
 const val parsersFileName = "parsers.conf"
 
-const val fluentBitRepo = "fluent"
-const val fluentBitName = "fluent-bit"
-
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
@@ -228,6 +225,9 @@ class FluentbitSidecarFeature(
                 }
             }
         )
+
+        val fluentBitRepo = "fluent"
+        val fluentBitName = "fluent-bit"
 
         val imageInformationResult = cantusService.getImageInformation(
             repo = fluentBitRepo,
