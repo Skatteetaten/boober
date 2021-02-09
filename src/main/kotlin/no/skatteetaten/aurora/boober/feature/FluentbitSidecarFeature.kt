@@ -260,7 +260,7 @@ class FluentbitSidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "$dockerRegistry/$fluentBitRepo/$fluentBitName:$dockerDigest"
+            image = "$dockerRegistry/$fluentBitRepo/$fluentBitName@$dockerDigest"
         }
     }
 }

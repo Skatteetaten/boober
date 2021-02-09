@@ -84,7 +84,7 @@ class JobFeature(
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         val imageInformationResult = cantusService.getImageInformation(
-            adc.groupId, adc.artifactId, adc.dockerTag
+            adc.dockerGroup, adc.artifactId, adc.dockerTag
         )
 
         val dockerDigest = imageInformationResult.single().dockerDigest
@@ -99,7 +99,7 @@ class JobFeature(
                 spec {
 
                     containers = listOf(newContainer {
-                        image = "$dockerRegistry/${adc.dockerImagePath}:$dockerDigest"
+                        image = "$dockerRegistry/${adc.dockerImagePath}@$dockerDigest"
                         imagePullPolicy = "Always"
                         name = adc.name
                     })

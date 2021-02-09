@@ -123,7 +123,7 @@ splunk:
     hec:
         token: token
     fluentbit:
-        tag: "1.6.5"
+        tag: "1.6.10"
 
 aurora:
     token:
