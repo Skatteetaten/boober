@@ -50,7 +50,7 @@
                 {
                   "serviceAccountToken": {
                     "audience": "dummy-audience",
-                    "expirationSeconds": 120,
+                    "expirationSeconds": 600,
                     "path": "mount"
                   }
                 }

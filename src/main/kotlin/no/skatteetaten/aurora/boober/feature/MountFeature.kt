@@ -145,6 +145,7 @@ class MountFeature(
         val mounts = context.mounts
 
         val errors = validateExistinAndSecretVault(mounts)
+            .addIfNotNull(validatePSATMounts(mounts))
         // .addIfNotNull(validatePVCMounts(mounts))
         if (!fullValidation || adc.cluster != cluster) {
             return errors
@@ -152,6 +153,12 @@ class MountFeature(
         return errors
             .addIfNotNull(validateExistingMounts(mounts, adc))
             .addIfNotNull(validateVaultExistence(mounts, adc))
+    }
+
+    private fun validatePSATMounts(mounts: List<Mount>): List<Exception> {
+        return mounts.filter { it.exist && it.expirationSeconds != null && it.expirationSeconds < 600L }.map {
+            AuroraDeploymentSpecValidationException("PSAT mount=${it.volumeName} cannot have expirationSeconds less than 600s")
+        }
     }
 
     private fun validateExistinAndSecretVault(mounts: List<Mount>): List<Exception> {
