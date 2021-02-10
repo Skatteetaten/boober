@@ -5,6 +5,8 @@ import assertk.assertions.isEqualTo
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newPersistentVolumeClaim
 import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.newVolumeProjection
+import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
@@ -77,6 +79,18 @@ class MountFeatureTest : AbstractFeatureTest() {
               }  
              }"""
 
+    val existingPSATJson = """{
+              "mounts": {
+                "mount": {
+                  "type": "PSAT",
+                  "path": "/u01/foo",
+                  "audience": "dummy-audience",
+                  "expiration": 120,
+                  "exist" : true
+                }
+              }  
+             }"""
+
     @Test
     fun `Should generate handlers for no mounts`() {
         val handlers = createAuroraConfigFieldHandlers("{}")
@@ -100,7 +114,7 @@ class MountFeatureTest : AbstractFeatureTest() {
             "Secret mount=mount with vaultName set cannot be marked as existing"
         ),
         PATH_REQUIRED(""" "type" : "ConfigMap" """, "Path is required for mount"),
-        WRONG_MOUNT_TYPE(""" "type" : "Foo" """, "Must be one of [Secret, PVC]")
+        WRONG_MOUNT_TYPE(""" "type" : "Foo" """, "Must be one of [Secret, PVC, PSAT]")
     }
 
     @ParameterizedTest
@@ -195,5 +209,22 @@ class MountFeatureTest : AbstractFeatureTest() {
             }
         }
         assertThat(auroraResource).auroraResourceMountsAttachment(secret)
+    }
+
+    @Test
+    fun `should modify deploymentConfig and add existing psat`() {
+
+        every { openShiftClient.resourceExists("projectedserviceaccounttoken", "paas-utv", "mount") } returns true
+
+        val resource = modifyResources(existingPSATJson, createEmptyDeploymentConfig())
+
+        val auroraResource = resource.first()
+        val satp = ServiceAccountTokenProjection("dummy-audience", 120L, "psat")
+        val psat = newVolumeProjection {
+                serviceAccountToken = satp
+        }
+
+        assertThat(auroraResource).auroraResourceMountsPsat(psat)
+        assertThat(auroraResource).auroraResourceMatchesFile("dc-with-psat.json")
     }
 }

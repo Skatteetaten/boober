@@ -4,9 +4,12 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.newVolumeProjection
 import com.fkorotkov.kubernetes.persistentVolumeClaim
+import com.fkorotkov.kubernetes.projected
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
+import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -67,7 +70,9 @@ class MountFeature(
                     validator = { it.boolean() },
                     defaultValue = false
                 ),
-                AuroraConfigFieldHandler("mounts/$mountName/secretVault")
+                AuroraConfigFieldHandler("mounts/$mountName/secretVault"),
+                AuroraConfigFieldHandler("mounts/$mountName/audience"),
+                AuroraConfigFieldHandler("mounts/$mountName/expiration")
             )
         }.toSet()
     }
@@ -216,13 +221,17 @@ class MountFeature(
             val mountName: String = auroraDeploymentSpec["mounts/$mount/mountName"]
             val volumeName: String = auroraDeploymentSpec["mounts/$mount/volumeName"]
             val exist: Boolean = auroraDeploymentSpec["mounts/$mount/exist"]
+            val audience = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/audience")
+            val expiration = auroraDeploymentSpec.getOrNull<Long?>("mounts/$mount/expiration")
             Mount(
                 path = auroraDeploymentSpec["mounts/$mount/path"],
                 type = type,
                 mountName = mountName.ensureEndsWith("mount", "-"),
                 volumeName = if (exist) volumeName else volumeName.ensureEndsWith("mount", "-"),
                 exist = exist,
-                secretVaultName = secretVaultName
+                secretVaultName = secretVaultName,
+                audience = audience,
+                expiration = expiration
             )
         }
     }
@@ -249,6 +258,15 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                 MountType.PVC -> persistentVolumeClaim {
                     claimName = volumeName
                 }
+                MountType.PSAT -> {
+                    projected {
+                        name = volumeName
+                        defaultMode = 420
+                        sources = listOf(newVolumeProjection {
+                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expiration, "psat")
+                        })
+                    }
+                }
             }
         }
     }
@@ -256,7 +274,8 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
 
 enum class MountType(val kind: String) {
     Secret("secret"),
-    PVC("persistentvolumeclaim")
+    PVC("persistentvolumeclaim"),
+    PSAT("projectedserviceaccounttoken")
 }
 
 data class Mount(
@@ -266,7 +285,9 @@ data class Mount(
     val volumeName: String,
     val exist: Boolean,
     val secretVaultName: String? = null,
-    val targetContainer: String? = null
+    val targetContainer: String? = null,
+    val audience: String? = null,
+    val expiration: Long? = null
 ) {
     fun getNamespacedVolumeName(appName: String): String {
         val name = if (exist) {
