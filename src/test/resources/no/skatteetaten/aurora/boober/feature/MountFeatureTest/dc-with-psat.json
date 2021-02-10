@@ -51,7 +51,7 @@
                   "serviceAccountToken": {
                     "audience": "dummy-audience",
                     "expirationSeconds": 120,
-                    "path": "psat"
+                    "path": "mount"
                   }
                 }
               ]

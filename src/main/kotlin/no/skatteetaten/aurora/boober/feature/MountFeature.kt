@@ -72,7 +72,7 @@ class MountFeature(
                 ),
                 AuroraConfigFieldHandler("mounts/$mountName/secretVault"),
                 AuroraConfigFieldHandler("mounts/$mountName/audience"),
-                AuroraConfigFieldHandler("mounts/$mountName/expiration")
+                AuroraConfigFieldHandler("mounts/$mountName/expirationSeconds")
             )
         }.toSet()
     }
@@ -222,7 +222,7 @@ class MountFeature(
             val volumeName: String = auroraDeploymentSpec["mounts/$mount/volumeName"]
             val exist: Boolean = auroraDeploymentSpec["mounts/$mount/exist"]
             val audience = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/audience")
-            val expiration = auroraDeploymentSpec.getOrNull<Long?>("mounts/$mount/expiration")
+            val expirationSeconds = auroraDeploymentSpec.getOrNull<Long?>("mounts/$mount/expirationSeconds")
             Mount(
                 path = auroraDeploymentSpec["mounts/$mount/path"],
                 type = type,
@@ -231,7 +231,7 @@ class MountFeature(
                 exist = exist,
                 secretVaultName = secretVaultName,
                 audience = audience,
-                expiration = expiration
+                expirationSeconds = expirationSeconds
             )
         }
     }
@@ -263,7 +263,7 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                         name = volumeName
                         defaultMode = 420
                         sources = listOf(newVolumeProjection {
-                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expiration, "psat")
+                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
                         })
                     }
                 }
@@ -287,7 +287,7 @@ data class Mount(
     val secretVaultName: String? = null,
     val targetContainer: String? = null,
     val audience: String? = null,
-    val expiration: Long? = null
+    val expirationSeconds: Long? = null
 ) {
     fun getNamespacedVolumeName(appName: String): String {
         val name = if (exist) {

@@ -85,7 +85,7 @@ class MountFeatureTest : AbstractFeatureTest() {
                   "type": "PSAT",
                   "path": "/u01/foo",
                   "audience": "dummy-audience",
-                  "expiration": 120,
+                  "expirationSeconds": 120,
                   "exist" : true
                 }
               }  
