@@ -429,9 +429,8 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val expectedEnv = additionalEnv.addIfNotNull(volumeEnvName to volumeEnvValue)
 
         assertThat(volumeName).isEqualTo(podSpec.containers[0].volumeMounts[0].name)
-        assertThat("dummy-audience").isEqualTo(projection.serviceAccountToken.audience)
-        // TODO FIX
         assertThat(podSpec.volumes[0].projected.sources[0].serviceAccountToken.audience).isEqualTo(projection.serviceAccountToken.audience)
+
         val env: Map<String, String> = podSpec.containers[0].env.associate { it.name to it.value }
         assertThat(env, "Env vars").isEqualTo(expectedEnv)
         actual
