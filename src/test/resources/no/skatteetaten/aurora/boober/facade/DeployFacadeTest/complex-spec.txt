@@ -55,6 +55,8 @@ utv/about-alternate.json |   ttl: "1d"
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
+                         | logging:
+            complex.json |   index: "test-index"
                          | deployStrategy:
             complex.json |   type: "recreate"
             complex.json | serviceAccount: "aurora-fraggle"

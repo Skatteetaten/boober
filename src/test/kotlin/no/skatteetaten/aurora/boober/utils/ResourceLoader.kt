@@ -1,13 +1,18 @@
 package no.skatteetaten.aurora.boober.utils
 
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
+import org.apache.commons.text.StringSubstitutor
+import org.springframework.util.ResourceUtils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -24,11 +29,6 @@ import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
-import org.apache.commons.text.StringSubstitutor
-import org.springframework.util.ResourceUtils
-import java.io.File
-import java.net.URL
-import java.nio.charset.Charset
 
 private val logger = KotlinLogging.logger {}
 
@@ -69,12 +69,13 @@ open class ResourceLoader {
             val jsonDefaultName = "$prefix-default.json"
             val txtName = "$prefix.txt"
 
+            logger.info("comparing default text file=$txtDefaultName")
             assertThat(
-                renderJsonForAuroraDeploymentSpecPointers(spec, true),
-                txtDefaultName
+                renderJsonForAuroraDeploymentSpecPointers(spec, true)
             ).isEqualTo(loadResource(txtDefaultName))
 
-            assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false), txtName).isEqualTo(
+            logger.info("comparing text file=$txtName")
+            assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false)).isEqualTo(
                 loadResource(
                     txtName
                 )
@@ -285,7 +286,7 @@ class AuroraConfigSamples {
                 "${aid.application}.json",
                 "${aid.environment}/about.json",
                 "${aid.environment}/${aid.application}.json",
-                additionalFile?.let { it } ?: ""
+                additionalFile ?: ""
             )
         }
     }
@@ -300,10 +301,7 @@ fun ApplicationDeploymentRef.getResultFiles(): Map<String, TestFile?> {
     return baseFolder.listFiles().toHashSet().associate {
         val json = jsonMapper().readTree(it)
 
-        var appName = json.at("/metadata/name").textValue()
-        if ("".isNotBlank()) {
-            appName = ""
-        }
+        val appName = json.at("/metadata/name").textValue()
 
         val file = json.at("/kind").textValue() + "/" + appName
         val testFile = TestFile(

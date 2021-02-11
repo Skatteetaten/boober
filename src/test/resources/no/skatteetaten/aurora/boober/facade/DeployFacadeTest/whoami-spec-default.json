@@ -574,14 +574,28 @@
     ]
   },
   "toxiproxy": {
-    "source": "default",
-    "value": false,
+    "source": "whoami.json",
+    "value": true,
     "sources": [
       {
         "name": "default",
         "value": false
+      },
+      {
+        "name": "whoami.json",
+        "value": true
       }
-    ]
+    ],
+    "version": {
+      "source": "default",
+      "value": "2.1.3",
+      "sources": [
+        {
+          "name": "default",
+          "value": "2.1.3"
+        }
+      ]
+    }
   },
   "webseal": {
     "source": "default",

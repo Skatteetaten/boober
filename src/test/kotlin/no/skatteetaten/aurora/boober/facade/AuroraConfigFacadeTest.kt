@@ -1,5 +1,15 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType
+import org.springframework.test.annotation.DirtiesContext
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.assertThat
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
@@ -9,8 +19,6 @@ import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotZero
 import assertk.assertions.messageContains
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
@@ -22,14 +30,6 @@ import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuro
 import no.skatteetaten.aurora.boober.utils.configErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.MediaType
-import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
@@ -312,7 +312,7 @@ class AuroraConfigFacadeTest(
             auroraConfigRef = auroraConfigRef
         )
 
-        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isEqualTo(3)
+        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isEqualTo(4)
     }
 
     @Test
@@ -345,7 +345,7 @@ class AuroraConfigFacadeTest(
         )
 
         val warnings = validated[ApplicationDeploymentRef("utv", "complex")]
-        assertThat(warnings?.size).isEqualTo(4)
+        assertThat(warnings?.size).isEqualTo(5)
     }
 
     @Test
@@ -569,7 +569,6 @@ class AuroraConfigFacadeTest(
         }]"""
 
         val filename = "utv/simple.json"
-        val findAuroraConfigFile = facade.findAuroraConfigFile(auroraConfigRef, filename)
 
         val result = facade.patchAuroraConfigFile(
             ref = auroraConfigRef,

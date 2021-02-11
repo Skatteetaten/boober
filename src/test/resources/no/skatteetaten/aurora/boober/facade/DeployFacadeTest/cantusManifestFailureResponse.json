@@ -1,0 +1,20 @@
+{
+  "items": [],
+  "failure": [
+    {
+      "url": "container-registry-internal-private-pull.aurora.skead.no:443/fluent/fluent-bit/1.6.100",
+      "errorMessage": "Error in response, status=404 NOT_FOUND message=Not Found body=\"{\"errors\":[{\"code\":\"MANIFEST_UNKNOWN\",\"message\":\"manifest unknown\",\"detail\":[{\"Name\":\"fluent/fluent-bit\"},{\"Tag\":\"1.6.100\"}]}]}\" request_url=\"https://container-registry-internal-private-pull.aurora.skead.no:443/v2/fluent/fluent-bit/manifests/1.6.100\" request_method=\"GET\" operation=GET_IMAGE_MANIFEST registry=container-registry-internal-private-pull.aurora.skead.no:443/fluent/fluent-bit/1.6.100"
+    }
+  ],
+  "success": false,
+  "message": "Error in response, status=404 NOT_FOUND message=Not Found body=\"{\"errors\":[{\"code\":\"MANIFEST_UNKNOWN\",\"message\":\"manifest unknown\",\"detail\":[{\"Name\":\"fluent/fluent-bit\"},{\"Tag\":\"1.6.100\"}]}]}\" request_url=\"https://container-registry-internal-private-pull.aurora.skead.no:443/v2/fluent/fluent-bit/manifests/1.6.100\" request_method=\"GET\" operation=GET_IMAGE_MANIFEST registry=container-registry-internal-private-pull.aurora.skead.no:443/fluent/fluent-bit/1.6.100",
+  "failureCount": 1,
+  "successCount": 0,
+  "count": 1,
+  "_links": {
+    "self": {
+      "href": ""
+    }
+  },
+  "_embedded": {}
+}

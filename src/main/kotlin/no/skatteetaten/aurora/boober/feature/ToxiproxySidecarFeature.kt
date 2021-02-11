@@ -25,8 +25,16 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
+
+private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
+
+private val FeatureContext.imageMetadata: ImageMetadata
+    get() = this.getContextKey(
+        IMAGE_METADATA_CONTEXT_KEY
+    )
 
 val AuroraDeploymentSpec.toxiProxy: String?
     get() =
@@ -36,11 +44,32 @@ val AuroraDeploymentSpec.toxiProxy: String?
 
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
-    val cantusService: CantusService
-) : Feature {
+    cantusService: CantusService
+) : AbstractResolveTagFeature(cantusService) {
+
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        val toxiProxy = spec.toxiProxy
+
+        return toxiProxy != null
+    }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
+    }
+
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
+
+        val toxiProxyTag = spec.toxiProxy ?: return emptyMap()
+
+        return createImageMetadataContext(
+            repo = "shopify",
+            name = "toxiproxy",
+            tag = toxiProxyTag
+        )
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -57,16 +86,16 @@ class ToxiproxySidecarFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        return adc.toxiProxy?.let {
-            val resource = newConfigMap {
-                metadata {
-                    name = "${adc.name}-toxiproxy-config"
-                    namespace = adc.namespace
-                }
-                data = mapOf("config.json" to getToxiProxyConfig())
+        adc.toxiProxy ?: return emptySet()
+
+        val configMap = newConfigMap {
+            metadata {
+                name = "${adc.name}-toxiproxy-config"
+                namespace = adc.namespace
             }
-            setOf(generateResource(resource))
-        } ?: emptySet()
+            data = mapOf("config.json" to getToxiProxyConfig())
+        }
+        return setOf(generateResource(configMap))
     }
 
     override fun modify(
@@ -75,7 +104,7 @@ class ToxiproxySidecarFeature(
         context: FeatureContext
     ) {
 
-        val toxiProxy = adc.toxiProxy ?: return
+        adc.toxiProxy ?: return
 
         val volume = newVolume {
             name = "${adc.name}-toxiproxy-config"
@@ -84,7 +113,7 @@ class ToxiproxySidecarFeature(
             }
         }
 
-        val container = createToxiProxyContainer(adc, toxiProxy)
+        val container = createToxiProxyContainer(adc, context)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
@@ -110,22 +139,13 @@ class ToxiproxySidecarFeature(
         }
     }
 
-    private fun createToxiProxyContainer(adc: AuroraDeploymentSpec, toxiproxyVersion: String): Container {
+    private fun createToxiProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val containerPorts = mapOf(
             "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
             "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
         )
 
-        val toxiproxyRepo = "shopify"
-        val toxiproxyName = "toxiproxy"
-
-        val imageInformationResult = cantusService.getImageInformation(
-            repo = toxiproxyRepo,
-            name = toxiproxyName,
-            tag = toxiproxyVersion
-        )
-
-        val dockerDigest = imageInformationResult.single().dockerDigest
+        val imageMetadata = context.imageMetadata
 
         return newContainer {
             name = "${adc.name}-toxiproxy-sidecar"
@@ -156,7 +176,7 @@ class ToxiproxySidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "$toxiproxyRepo/$toxiproxyName@$dockerDigest"
+            image = imageMetadata.getFullImagePath()
             readinessProbe = newProbe {
                 tcpSocket {
                     port = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)

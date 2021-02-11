@@ -194,8 +194,10 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
         cantusMock {
             rule({ path.endsWith("/manifest") }) {
+                val cantusManifestResponseFile =
+                    if (app == "whoami") "cantusManifestResponse.json" else "cantusManifestFailureResponse.json"
                 MockResponse()
-                    .setBody(loadBufferResource("cantusManifestResponse.json"))
+                    .setBody(loadBufferResource(cantusManifestResponseFile))
                     .setResponseCode(200)
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
@@ -275,7 +277,8 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
                 listOf(
                     "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
                     "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service",
-                    "Config key=THIS.VALUE was normalized to THIS_VALUE"
+                    "Config key=THIS.VALUE was normalized to THIS_VALUE",
+                    "Was unable to resolve dockerDigest for image=docker.registry:5000/fluent/fluent-bit:1.6.10. Using tag instead."
                 )
             )
         } else {

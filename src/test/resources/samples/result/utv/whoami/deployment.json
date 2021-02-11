@@ -7,7 +7,7 @@
       "app": "whoami",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "whoami",
       "deployTag": "1",
@@ -49,7 +49,7 @@
           "app": "whoami",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "whoami",
           "deployTag": "1"
@@ -178,6 +178,59 @@
                 "name": "whoami-db"
               }
             ]
+          },
+          {
+            "args": [
+              "-config",
+              "/u01/config/toxiproxy/config.json"
+            ],
+            "env": [
+              {
+                "name": "HTTP_PORT",
+                "value": "8090"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8474"
+              }
+            ],
+            "image": "docker.registry:5000/shopify/toxiproxy@sha256:1234",
+            "name": "whoami-toxiproxy-sidecar",
+            "ports": [
+              {
+                "containerPort": 8090,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8474,
+                "name": "management",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8090
+              },
+              "timeoutSeconds": 1
+            },
+            "resources": {
+              "limits": {
+                "memory": "256Mi",
+                "cpu": "1"
+              },
+              "requests": {
+                "memory": "128Mi",
+                "cpu": "10m"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/config/toxiproxy",
+                "name": "whoami-toxiproxy-config"
+              }
+            ]
           }
         ],
         "dnsPolicy": "ClusterFirst",
@@ -192,6 +245,12 @@
             "secret": {
               "secretName": "whoami-db"
             }
+          },
+          {
+            "configMap": {
+              "name": "whoami-toxiproxy-config"
+            },
+            "name": "whoami-toxiproxy-config"
           }
         ]
       }

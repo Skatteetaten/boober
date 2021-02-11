@@ -7,7 +7,7 @@
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "komplex",
       "deployTag": "komplex",
@@ -39,14 +39,15 @@
     "template": {
       "metadata": {
         "annotations": {
-          "boober.skatteetaten.no/deployTag": "komplex"
+          "boober.skatteetaten.no/deployTag": "komplex",
+          "splunk.com/exclude": "true"
         },
         "labels": {
           "operationScope": "aos-4016",
           "app": "komplex",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "komplex",
           "deployTag": "komplex",
@@ -370,6 +371,84 @@
                 "name": "komplex-sts"
               }
             ]
+          },
+          {
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HEC_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "HEC_TOKEN",
+                    "name": "komplex-hec",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "SPLUNK_HOST",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "SPLUNK_HOST",
+                    "name": "komplex-hec",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "SPLUNK_PORT",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "SPLUNK_PORT",
+                    "name": "komplex-hec",
+                    "optional": false
+                  }
+                }
+              }
+            ],
+            "image": "docker.registry:5000/fluent/fluent-bit:1.6.10",
+            "name": "komplex-fluent-sidecar",
+            "resources": {
+              "limits": {
+                "memory": "128Mi",
+                "cpu": "300m"
+              },
+              "requests": {
+                "memory": "20Mi",
+                "cpu": "10m"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/fluent-bit/parser",
+                "name": "komplex-fluent-parser"
+              },
+              {
+                "mountPath": "/fluent-bit/etc",
+                "name": "komplex-fluent-config"
+              },
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ]
           }
         ],
         "dnsPolicy": "ClusterFirst",
@@ -397,6 +476,18 @@
             "secret": {
               "secretName": "komplex-foo-db"
             }
+          },
+          {
+            "configMap": {
+              "name": "komplex-fluent-config"
+            },
+            "name": "komplex-fluent-config"
+          },
+          {
+            "configMap": {
+              "name": "komplex-fluent-parser"
+            },
+            "name": "komplex-fluent-parser"
           },
           {
             "name": "aurora-token-mount",

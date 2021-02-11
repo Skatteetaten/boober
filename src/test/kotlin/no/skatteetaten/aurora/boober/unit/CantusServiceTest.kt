@@ -7,20 +7,15 @@ import org.springframework.boot.web.client.RestTemplateBuilder
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import assertk.assertThat
-import assertk.assertions.contains
 import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
 import assertk.assertions.isFalse
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotEmpty
-import assertk.assertions.isNotNull
+import assertk.assertions.isNull
 import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
 import io.mockk.clearAllMocks
 import no.skatteetaten.aurora.boober.service.AuroraResponse
 import no.skatteetaten.aurora.boober.service.CantusRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.CantusServiceException
 import no.skatteetaten.aurora.boober.service.ImageTagResource
 import no.skatteetaten.aurora.boober.service.TagCommand
 import no.skatteetaten.aurora.boober.utils.jsonMapper
@@ -84,48 +79,46 @@ class CantusServiceTest {
     fun `should receive manifest`() {
         server.execute(createImageTageResourceResponse()) {
             assertThat {
-                service.getImageInformation(
+                service.getImageMetadata(
                     "bar",
                     "foo",
                     "latest"
                 )
             }.isSuccess()
                 .given {
-                    assertThat(it).isNotEmpty()
-                    assertThat(it.first().dockerDigest).isEqualTo("sha256:1234")
+                    assertThat(it.dockerDigest).isEqualTo("sha256:1234")
                 }
         }
     }
 
     @Test
-    fun `should throw when failure in response`() {
+    fun `should return dockerDigest as null when failure in response`() {
         server.execute(createImageTageResourceResponse(success = false)) {
             assertThat {
-                service.getImageInformation(
+                service.getImageMetadata(
                     "bar",
                     "foo",
                     "latest"
                 )
-            }.isFailure()
+            }.isSuccess()
                 .given {
-                    assertThat(it).isInstanceOf(CantusServiceException::class)
+                    assertThat(it.dockerDigest).isNull()
                 }
         }
     }
 
     @Test
-    fun `should throw when body us empty`() {
+    fun `should return dockerDigest as null when body is empty`() {
         server.execute(MockResponse().setResponseCode(HttpStatus.SC_NO_CONTENT)) {
             assertThat {
-                service.getImageInformation(
+                service.getImageMetadata(
                     "bar",
                     "foo",
                     "latest"
                 )
-            }.isFailure()
+            }.isSuccess()
                 .given {
-                    assertThat(it).isInstanceOf(CantusServiceException::class)
-                    assertThat(it.message).isNotNull().contains("cause=empty body")
+                    assertThat(it.dockerDigest).isNull()
                 }
         }
     }

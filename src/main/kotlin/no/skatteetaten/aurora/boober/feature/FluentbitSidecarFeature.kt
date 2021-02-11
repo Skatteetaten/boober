@@ -25,6 +25,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
@@ -32,9 +33,9 @@ const val SPLUNK_CONNECT_INDEX_TAG = "splunk.com/index"
 
 val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
-val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
-val AuroraDeploymentSpec.fluentParserName: String? get() = "${this.name}-fluent-parser"
-val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
+val AuroraDeploymentSpec.fluentConfigName: String get() = "${this.name}-fluent-config"
+val AuroraDeploymentSpec.fluentParserName: String get() = "${this.name}-fluent-parser"
+val AuroraDeploymentSpec.hecSecretName: String get() = "${this.name}-hec"
 const val hecTokenKey: String = "HEC_TOKEN"
 const val splunkHostKey: String = "SPLUNK_HOST"
 const val splunkPortKey: String = "SPLUNK_PORT"
@@ -53,18 +54,45 @@ val knownLogs: Set<String> =
 const val parserMountPath = "/fluent-bit/parser"
 const val parsersFileName = "parsers.conf"
 
+private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
+
+private val FeatureContext.imageMetadata: ImageMetadata
+    get() = this.getContextKey(
+        IMAGE_METADATA_CONTEXT_KEY
+    )
+
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
 @org.springframework.stereotype.Service
 class FluentbitSidecarFeature(
+    cantusService: CantusService,
     @Value("\${splunk.hec.token}") val hecToken: String,
     @Value("\${splunk.hec.url}") val splunkUrl: String,
     @Value("\${splunk.hec.port}") val splunkPort: String,
-    @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String,
-    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
-    val cantusService: CantusService
-) : Feature {
+    @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String
+) : AbstractResolveTagFeature(cantusService) {
+
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        val loggingIndex = spec.loggingIndex
+
+        return loggingIndex != null
+    }
+
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
+
+        spec.loggingIndex ?: return emptyMap()
+
+        return createImageMetadataContext(
+            repo = "fluent",
+            name = "fluent-bit",
+            tag = fluentBitTag
+        )
+    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return knownLogs.map { log ->
@@ -135,7 +163,7 @@ class FluentbitSidecarFeature(
                 }
             }
 
-            val container = createFluentbitContainer(adc)
+            val container = createFluentbitContainer(adc, context)
             resources.forEach {
                 val template = getTemplate(it) ?: return@forEach
                 modifyAuroraResource(it, template, configVolume, parserVolume, container)
@@ -192,7 +220,7 @@ class FluentbitSidecarFeature(
         setTemplateAnnotation(template, SPLUNK_CONNECT_EXCLUDE_TAG, "true")
     }
 
-    private fun createFluentbitContainer(adc: AuroraDeploymentSpec): Container {
+    private fun createFluentbitContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val hecEnvVariables = listOf(
             newEnvVar {
                 name = hecTokenKey
@@ -225,17 +253,7 @@ class FluentbitSidecarFeature(
                 }
             }
         )
-
-        val fluentBitRepo = "fluent"
-        val fluentBitName = "fluent-bit"
-
-        val imageInformationResult = cantusService.getImageInformation(
-            repo = fluentBitRepo,
-            name = fluentBitName,
-            tag = fluentBitTag
-        )
-
-        val dockerDigest = imageInformationResult.single().dockerDigest
+        val imageMetadata = context.imageMetadata
 
         return newContainer {
             name = adc.fluentSideCarContainerName
@@ -260,7 +278,7 @@ class FluentbitSidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "$dockerRegistry/$fluentBitRepo/$fluentBitName@$dockerDigest"
+            image = imageMetadata.getFullImagePath()
         }
     }
 }

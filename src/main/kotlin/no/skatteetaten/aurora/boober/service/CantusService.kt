@@ -40,6 +40,16 @@ data class CantusFailure(
     val errorMessage: String
 )
 
+data class ImageMetadata(
+    val imagePath: String,
+    val imageTag: String,
+    val dockerDigest: String?
+) {
+    fun getFullImagePath(): String =
+        if (dockerDigest != null) "$imagePath@$dockerDigest"
+        else "$imagePath:$imageTag"
+}
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AuroraResponse<T : Any>(
     val items: List<T> = emptyList(),
@@ -70,7 +80,16 @@ class CantusService(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) {
 
-    fun getImageInformation(repo: String, name: String, tag: String): List<ImageTagResource> {
+    fun getImageMetadata(repo: String, name: String, tag: String): ImageMetadata {
+        val dockerDigest = getImageInformation(repo, name, tag)?.dockerDigest
+        return ImageMetadata(
+            imagePath = "$dockerRegistry/$repo/$name",
+            imageTag = tag,
+            dockerDigest = dockerDigest
+        )
+    }
+
+    fun getImageInformation(repo: String, name: String, tag: String): ImageTagResource? {
         val cantusManifestCommand = CantusManifestCommand(
             listOf(
                 "$dockerRegistry/$repo/$name/$tag"
@@ -87,10 +106,14 @@ class CantusService(
             .getOrNull()
             ?.body
 
-        if (response?.success != true) throw CantusServiceException("Unable to receive manifest. cause=${response.messageOrDefault}")
-
-        return response.items.map {
-            jsonMapper().convertValue<ImageTagResource>(it)
+        return if (response?.success != true) {
+            logger.warn("Unable to receive manifest. cause=${response.messageOrDefault}")
+            null
+        } else {
+            val imageTagResource = response.items.single()
+            runCatching {
+                jsonMapper().convertValue<ImageTagResource>(imageTagResource)
+            }.getOrNull()
         }
     }
 

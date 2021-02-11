@@ -11,7 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.ImageTagResource
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
@@ -24,18 +24,15 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
     @BeforeEach
     fun setupMock() {
         every {
-            cantusService.getImageInformation(
+            cantusService.getImageMetadata(
                 "shopify", "toxiproxy", "2.1.3"
             )
-        } returns listOf(
-            ImageTagResource(
-                "0-b6.32.2-wingnut11-2.5.2",
-                "0",
-                "1.2",
-                "sha:1234",
-                "lochalhost:8080/shopify/toxiproxy@sha:1234"
+        } returns
+            ImageMetadata(
+                "docker.registry/shopify/toxiproxy",
+                "2.1.3",
+                "sha:1234"
             )
-        )
     }
 
     @AfterEach

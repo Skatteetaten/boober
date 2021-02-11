@@ -7,7 +7,7 @@ import assertk.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.ImageTagResource
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
@@ -21,18 +21,15 @@ class JobFeatureTest : AbstractFeatureTest() {
     @BeforeEach
     fun setupMock() {
         every {
-            cantusService.getImageInformation(
+            cantusService.getImageMetadata(
                 "aurora", "turbo", "0"
             )
-        } returns listOf(
-            ImageTagResource(
-                "0-b6.32.2-wingnut11-2.5.2",
+        } returns
+            ImageMetadata(
+                "docker.registry/aurora/turbo",
                 "0",
-                "1.2",
-                "sha:1234",
-                "lochalhost:8080/aurora/turbo/0"
+                "sha:1234"
             )
-        )
     }
 
     @AfterEach

@@ -4,25 +4,25 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.ImageTagResource
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = FluentbitSidecarFeature(
+            cantusService,
             "test_hec",
             "splunk.url",
             "8080",
-            "0",
-            "docker.registry",
-            cantusService
+            "0"
         )
 
     private val cantusService: CantusService = mockk()
@@ -30,18 +30,15 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     @BeforeEach
     fun setupMock() {
         every {
-            cantusService.getImageInformation(
+            cantusService.getImageMetadata(
                 "fluent", "fluent-bit", "0"
             )
-        } returns listOf(
-            ImageTagResource(
-                "0-b6.32.2-wingnut11-2.5.2",
+        } returns
+            ImageMetadata(
+                "docker.registry/fluent/fluent-bit",
                 "0",
-                "1.2",
-                "sha:1234",
-                "lochalhost:8080/fluent/fluent-bit/0"
+                "sha:1234"
             )
-        )
     }
 
     @AfterEach
@@ -92,7 +89,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val config = dcResource.resource as DeploymentConfig
         val annotations = config.spec.template.metadata.annotations
         assertThat(annotations).isNotNull()
-        assertThat(annotations.get("splunk.com/index")).equals("test-index")
+        assertThat(annotations["splunk.com/index"]).isEqualTo("test-index")
     }
 
     @Test
@@ -110,7 +107,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val config = dcResource.resource as DeploymentConfig
         val annotations = config.spec.template.metadata.annotations
         assertThat(annotations).isNotNull()
-        assertThat(annotations.get("splunk.com/index")).equals("test-index")
+        assertThat(annotations["splunk.com/index"]).isEqualTo("test-index")
     }
 
     @Test

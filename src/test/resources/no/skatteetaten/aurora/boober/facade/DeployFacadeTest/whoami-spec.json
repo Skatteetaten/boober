@@ -196,5 +196,19 @@
         "value": "whoami"
       }
     ]
+  },
+  "toxiproxy": {
+    "source": "whoami.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "whoami.json",
+        "value": true
+      }
+    ]
   }
 }

@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.int
@@ -40,11 +41,35 @@ enum class ConcurrencyPolicies {
     Allow, Replace, Forbid
 }
 
+private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
+
+private val FeatureContext.imageMetadata: ImageMetadata
+    get() = this.getContextKey(
+        IMAGE_METADATA_CONTEXT_KEY
+    )
+
 @Service
 class JobFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String,
-    val cantusService: CantusService
-) : Feature {
+    cantusService: CantusService
+) : AbstractResolveTagFeature(cantusService) {
+
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        return spec.isJob
+    }
+
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
+
+        return createImageMetadataContext(
+            repo = spec.dockerGroup,
+            name = spec.artifactId,
+            tag = spec.dockerTag
+        )
+    }
 
     val defaultHandlersForAllTypes = setOf(
         AuroraConfigFieldHandler("serviceAccount"),
@@ -83,11 +108,7 @@ class JobFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        val imageInformationResult = cantusService.getImageInformation(
-            adc.dockerGroup, adc.artifactId, adc.dockerTag
-        )
-
-        val dockerDigest = imageInformationResult.single().dockerDigest
+        val imageMetadata = context.imageMetadata
 
         val jobSpec = newJobSpec {
             parallelism = 1
@@ -99,7 +120,7 @@ class JobFeature(
                 spec {
 
                     containers = listOf(newContainer {
-                        image = "$dockerRegistry/${adc.dockerImagePath}@$dockerDigest"
+                        image = imageMetadata.getFullImagePath()
                         imagePullPolicy = "Always"
                         name = adc.name
                     })
