@@ -6,12 +6,12 @@ import no.skatteetaten.aurora.boober.service.ImageMetadata
 
 private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
 
-private val FeatureContext.imageMetadata: ImageMetadata
-    get() = this.getContextKey(
-        IMAGE_METADATA_CONTEXT_KEY
-    )
-
 abstract class AbstractResolveTagFeature(open val cantusService: CantusService) : Feature {
+    internal val FeatureContext.imageMetadata: ImageMetadata
+        get() = this.getContextKey(
+            IMAGE_METADATA_CONTEXT_KEY
+        )
+
     abstract fun isActive(spec: AuroraDeploymentSpec): Boolean
 
     fun dockerDigestExistsWarning(context: FeatureContext): String? {

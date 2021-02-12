@@ -21,7 +21,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.int
@@ -41,13 +40,6 @@ enum class ConcurrencyPolicies {
     Allow, Replace, Forbid
 }
 
-private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
-
-private val FeatureContext.imageMetadata: ImageMetadata
-    get() = this.getContextKey(
-        IMAGE_METADATA_CONTEXT_KEY
-    )
-
 @Service
 class JobFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String,
@@ -63,6 +55,10 @@ class JobFeature(
         cmd: AuroraContextCommand,
         validationContext: Boolean
     ): Map<String, Any> {
+
+        if (validationContext) {
+            return emptyMap()
+        }
 
         return createImageMetadataContext(
             repo = spec.dockerGroup,

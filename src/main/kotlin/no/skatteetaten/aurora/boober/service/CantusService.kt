@@ -133,7 +133,6 @@ class CantusService(
     }
 }
 
-// TODO: should we log as error instead?
 private fun logResult(result: Result<ResponseEntity<*>>) {
     result.onFailure { logger.warn(it) { "Received error from Cantus. Caused by ${it.cause}" } }
         .onSuccess { logger.info("Response from Cantus code=${it.statusCode} body=${it.body}") }

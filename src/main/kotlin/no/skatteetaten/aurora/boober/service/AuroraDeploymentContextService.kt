@@ -225,14 +225,15 @@ class AuroraDeploymentContextService(
             cmd = deployCommand,
             features = featureAdc,
             featureContext = featureContext,
-            warnings = findWarnings(deployCommand, featureAdc, featureContext) + errorWarnings
+            warnings = findWarnings(deployCommand, featureAdc, featureContext, fullValidation) + errorWarnings
         )
     }
 
     private fun findWarnings(
         cmd: AuroraContextCommand,
         features: Map<Feature, AuroraDeploymentSpec>,
-        context: Map<Feature, FeatureContext>
+        context: Map<Feature, FeatureContext>,
+        fullValidation: Boolean
     ): List<String> {
 
         fun logWarning(warning: String) {
@@ -255,7 +256,7 @@ class AuroraDeploymentContextService(
                     }
                 }
                 is AbstractResolveTagFeature -> {
-                    if (feature.isActive(spec)) {
+                    if (feature.isActive(spec) && fullValidation) {
                         val warning = feature.dockerDigestExistsWarning(featureContext)
                         logWarning("dockerDigestDoesNotExist:${feature::class.simpleName}")
                         listOfNotNull(

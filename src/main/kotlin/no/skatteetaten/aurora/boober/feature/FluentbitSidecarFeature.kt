@@ -25,7 +25,6 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
@@ -54,13 +53,6 @@ val knownLogs: Set<String> =
 const val parserMountPath = "/fluent-bit/parser"
 const val parsersFileName = "parsers.conf"
 
-private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
-
-private val FeatureContext.imageMetadata: ImageMetadata
-    get() = this.getContextKey(
-        IMAGE_METADATA_CONTEXT_KEY
-    )
-
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
@@ -85,7 +77,9 @@ class FluentbitSidecarFeature(
         validationContext: Boolean
     ): Map<String, Any> {
 
-        spec.loggingIndex ?: return emptyMap()
+        if (validationContext || spec.loggingIndex == null) {
+            return emptyMap()
+        }
 
         return createImageMetadataContext(
             repo = "fluent",

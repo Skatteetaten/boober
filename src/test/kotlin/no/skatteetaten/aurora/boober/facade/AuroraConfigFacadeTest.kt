@@ -312,7 +312,7 @@ class AuroraConfigFacadeTest(
             auroraConfigRef = auroraConfigRef
         )
 
-        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isEqualTo(4)
+        assertThat(validated[ApplicationDeploymentRef("utv", "complex")]?.size).isEqualTo(3)
     }
 
     @Test
@@ -345,7 +345,7 @@ class AuroraConfigFacadeTest(
         )
 
         val warnings = validated[ApplicationDeploymentRef("utv", "complex")]
-        assertThat(warnings?.size).isEqualTo(5)
+        assertThat(warnings?.size).isEqualTo(4)
     }
 
     @Test

@@ -25,16 +25,8 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
-
-private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
-
-private val FeatureContext.imageMetadata: ImageMetadata
-    get() = this.getContextKey(
-        IMAGE_METADATA_CONTEXT_KEY
-    )
 
 val AuroraDeploymentSpec.toxiProxy: String?
     get() =
@@ -63,7 +55,11 @@ class ToxiproxySidecarFeature(
         validationContext: Boolean
     ): Map<String, Any> {
 
-        val toxiProxyTag = spec.toxiProxy ?: return emptyMap()
+        val toxiProxyTag = spec.toxiProxy
+
+        if (validationContext || toxiProxyTag == null) {
+            return emptyMap()
+        }
 
         return createImageMetadataContext(
             repo = "shopify",
