@@ -180,6 +180,14 @@ class OpenShiftClient(
         return OpenShiftGroups(groups)
     }
 
+    fun version(): String {
+        serviceAccountClient.get("/version", retry = false)?.body?.let {
+            val version = it.at("/gitVersion").textValue()
+            return version.substring(1, version.indexOf("+"))
+        }
+        throw java.lang.IllegalStateException("Unable to determine kubernetes version")
+    }
+
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
         val response = getClientForKind(kind).get(kind, namespace, name, false)
         return response?.statusCode?.is2xxSuccessful ?: false

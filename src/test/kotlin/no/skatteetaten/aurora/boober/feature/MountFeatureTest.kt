@@ -215,8 +215,8 @@ class MountFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should modify deploymentConfig and add psat`() {
-
         every { openShiftClient.resourceExists("projectedserviceaccounttoken", "paas-utv", "mount") } returns true
+        every { openShiftClient.version() } returns "1.18.3"
 
         val resource = modifyResources(existingPSATJson, createEmptyDeploymentConfig())
 
@@ -228,6 +228,21 @@ class MountFeatureTest : AbstractFeatureTest() {
 
         assertThat(auroraResource).auroraResourceMountsPsat(psat)
         assertThat(auroraResource).auroraResourceMatchesFile("dc-with-psat.json")
+    }
+
+    @Test
+    fun `psat is not supported in old k8s`() {
+        every { openShiftClient.resourceExists("projectedserviceaccounttoken", "paas-utv", "mount") } returns true
+        every { openShiftClient.version() } returns "1.11.4"
+
+        val exception = Assertions.assertThrows(MultiApplicationValidationException::class.java) {
+            modifyResources(existingPSATJson, createEmptyDeploymentConfig())
+        }
+        Assertions.assertEquals(
+            1,
+            exception.errors.size,
+            "Expecting exactly one exception, but got: " + exception.errors
+        )
     }
 
     /**
