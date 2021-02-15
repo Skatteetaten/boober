@@ -22,7 +22,7 @@
           "spec": {
             "containers": [
               {
-                "image": "docker.registry/aurora/turbo:0",
+                "image": "docker.registry/aurora/turbo@sha:1234",
                 "imagePullPolicy": "Always",
                 "name": "simple"
               }

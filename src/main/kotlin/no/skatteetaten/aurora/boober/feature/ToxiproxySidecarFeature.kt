@@ -24,6 +24,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 
@@ -34,10 +35,37 @@ val AuroraDeploymentSpec.toxiProxy: String?
         }
 
 @org.springframework.stereotype.Service
-class ToxiproxySidecarFeature : Feature {
+class ToxiproxySidecarFeature(
+    cantusService: CantusService
+) : AbstractResolveTagFeature(cantusService) {
+
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        val toxiProxy = spec.toxiProxy
+
+        return toxiProxy != null
+    }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
+    }
+
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
+
+        val toxiProxyTag = spec.toxiProxy
+
+        if (validationContext || toxiProxyTag == null) {
+            return emptyMap()
+        }
+
+        return createImageMetadataContext(
+            repo = "shopify",
+            name = "toxiproxy",
+            tag = toxiProxyTag
+        )
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -54,16 +82,16 @@ class ToxiproxySidecarFeature : Feature {
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        return adc.toxiProxy?.let {
-            val resource = newConfigMap {
-                metadata {
-                    name = "${adc.name}-toxiproxy-config"
-                    namespace = adc.namespace
-                }
-                data = mapOf("config.json" to getToxiProxyConfig())
+        adc.toxiProxy ?: return emptySet()
+
+        val configMap = newConfigMap {
+            metadata {
+                name = "${adc.name}-toxiproxy-config"
+                namespace = adc.namespace
             }
-            setOf(generateResource(resource))
-        } ?: emptySet()
+            data = mapOf("config.json" to getToxiProxyConfig())
+        }
+        return setOf(generateResource(configMap))
     }
 
     override fun modify(
@@ -72,7 +100,7 @@ class ToxiproxySidecarFeature : Feature {
         context: FeatureContext
     ) {
 
-        val toxiProxy = adc.toxiProxy ?: return
+        adc.toxiProxy ?: return
 
         val volume = newVolume {
             name = "${adc.name}-toxiproxy-config"
@@ -81,7 +109,7 @@ class ToxiproxySidecarFeature : Feature {
             }
         }
 
-        val container = createToxiProxyContainer(adc, toxiProxy)
+        val container = createToxiProxyContainer(adc, context)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
@@ -107,11 +135,14 @@ class ToxiproxySidecarFeature : Feature {
         }
     }
 
-    private fun createToxiProxyContainer(adc: AuroraDeploymentSpec, toxiproxyVersion: String): Container {
+    private fun createToxiProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val containerPorts = mapOf(
             "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
             "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
         )
+
+        val imageMetadata = context.imageMetadata
+
         return newContainer {
             name = "${adc.name}-toxiproxy-sidecar"
             ports = containerPorts.map {
@@ -141,7 +172,7 @@ class ToxiproxySidecarFeature : Feature {
                     "cpu" to Quantity("10m")
                 )
             }
-            image = "shopify/toxiproxy:$toxiproxyVersion"
+            image = imageMetadata.getFullImagePath()
             readinessProbe = newProbe {
                 tcpSocket {
                     port = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)

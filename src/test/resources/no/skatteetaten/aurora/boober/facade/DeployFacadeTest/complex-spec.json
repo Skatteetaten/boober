@@ -489,6 +489,18 @@
       }
     }
   },
+  "logging": {
+    "index": {
+      "source": "complex.json",
+      "value": "test-index",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "test-index"
+        }
+      ]
+    }
+  },
   "deployStrategy": {
     "type": {
       "source": "complex.json",

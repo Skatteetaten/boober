@@ -1,0 +1,29 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "komplex",
+      "booberDeployId": "deploy1"
+    },
+    "name": "komplex-fluent-parser",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "data": {
+    "parsers.conf": "[PARSER]\n    Name     log4jMultilineParser\n    Format   regex\n    Regex   ^(?<timestamp>\\d{4}-\\d{1,2}-\\d{1,2}T\\d{2}:\\d{2}:\\d{2},\\d*Z) (?<event>.*)\n    Time_Key    timestamp\n    Time_Format %Y-%m-%dT%H:%M:%S,%L%z\n    Time_Keep  Off"
+  }
+}

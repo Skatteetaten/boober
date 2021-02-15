@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.batch.jobTemplate
 import com.fkorotkov.kubernetes.batch.metadata
 import com.fkorotkov.kubernetes.batch.newCronJob
@@ -17,15 +20,13 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.int
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.validUnixCron
-import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 val AuroraDeploymentSpec.jobCommand: List<String>?
     get() = this.getDelimitedStringOrArrayAsSetOrNull("command")?.toList()
@@ -41,8 +42,30 @@ enum class ConcurrencyPolicies {
 
 @Service
 class JobFeature(
-    @Value("\${integrations.docker.registry}") val dockerRegistry: String
-) : Feature {
+    @Value("\${integrations.docker.registry}") val dockerRegistry: String,
+    cantusService: CantusService
+) : AbstractResolveTagFeature(cantusService) {
+
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        return spec.isJob
+    }
+
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
+
+        if (validationContext) {
+            return emptyMap()
+        }
+
+        return createImageMetadataContext(
+            repo = spec.dockerGroup,
+            name = spec.artifactId,
+            tag = spec.dockerTag
+        )
+    }
 
     val defaultHandlersForAllTypes = setOf(
         AuroraConfigFieldHandler("serviceAccount"),
@@ -81,6 +104,8 @@ class JobFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
+        val imageMetadata = context.imageMetadata
+
         val jobSpec = newJobSpec {
             parallelism = 1
             completions = 1
@@ -91,7 +116,7 @@ class JobFeature(
                 spec {
 
                     containers = listOf(newContainer {
-                        image = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+                        image = imageMetadata.getFullImagePath()
                         imagePullPolicy = "Always"
                         name = adc.name
                     })

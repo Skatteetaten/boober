@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
@@ -8,10 +13,6 @@ import no.skatteetaten.aurora.boober.ServiceTypes.CANTUS
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
 
 private val logger = KotlinLogging.logger {}
 
@@ -39,6 +40,16 @@ data class CantusFailure(
     val errorMessage: String
 )
 
+data class ImageMetadata(
+    val imagePath: String,
+    val imageTag: String,
+    val dockerDigest: String?
+) {
+    fun getFullImagePath(): String =
+        if (dockerDigest != null) "$imagePath@$dockerDigest"
+        else "$imagePath:$imageTag"
+}
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AuroraResponse<T : Any>(
     val items: List<T> = emptyList(),
@@ -60,8 +71,8 @@ data class ImageTagResource(
 )
 
 @Component
-class CantusRestTemplateWrapper(@TargetService(CANTUS) restTemplate: RestTemplate) :
-    RetryingRestTemplateWrapper(restTemplate)
+class CantusRestTemplateWrapper(@TargetService(CANTUS) restTemplate: RestTemplate, retries: Int = 3) :
+    RetryingRestTemplateWrapper(restTemplate, retries)
 
 @Service
 class CantusService(
@@ -69,23 +80,40 @@ class CantusService(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String
 ) {
 
-    fun getImageInformation(repo: String, name: String, tag: String): List<ImageTagResource> {
+    fun getImageMetadata(repo: String, name: String, tag: String): ImageMetadata {
+        val dockerDigest = getImageInformation(repo, name, tag)?.dockerDigest
+        return ImageMetadata(
+            imagePath = "$dockerRegistry/$repo/$name",
+            imageTag = tag,
+            dockerDigest = dockerDigest
+        )
+    }
+
+    fun getImageInformation(repo: String, name: String, tag: String): ImageTagResource? {
         val cantusManifestCommand = CantusManifestCommand(
             listOf(
                 "$dockerRegistry/$repo/$name/$tag"
             )
         )
 
-        val response = client.post(
-            body = cantusManifestCommand,
-            type = AuroraResponse::class,
-            url = "/manifest"
-        ).body ?: TODO("No response")
+        val response = runCatching {
+            client.post(
+                body = cantusManifestCommand,
+                type = AuroraResponse::class,
+                url = "/manifest"
+            )
+        }.also(::logResult)
+            .getOrNull()
+            ?.body
 
-        if (!response.success) TODO("not successfull")
-
-        return response.items.map {
-            jsonMapper().convertValue<ImageTagResource>(it)
+        return if (response?.success != true) {
+            logger.warn("Unable to receive manifest. cause=${response.messageOrDefault}")
+            null
+        } else {
+            val imageTagResource = response.items.single()
+            runCatching {
+                jsonMapper().convertValue<ImageTagResource>(imageTagResource)
+            }.getOrNull()
         }
     }
 
@@ -94,8 +122,21 @@ class CantusService(
             "${cmd.fromRegistry}/${cmd.name}:${cmd.from}",
             "${cmd.toRegistry}/${cmd.name}:${cmd.to}"
         )
-        val resultEntity = client.post(body = cantusCmd, type = JsonNode::class, url = "/tag")
-        logger.info("Response from cantus code=${resultEntity.statusCode} body=${resultEntity.body}")
-        return TagResult(cmd, resultEntity.body, resultEntity.statusCode.is2xxSuccessful)
+        val response = runCatching {
+            client.post(body = cantusCmd, type = JsonNode::class, url = "/tag")
+        }.also(::logResult)
+            .getOrNull()
+
+        val success = response != null
+
+        return TagResult(cmd, response?.body, success)
     }
 }
+
+private fun logResult(result: Result<ResponseEntity<*>>) {
+    result.onFailure { logger.warn(it) { "Received error from Cantus. Caused by ${it.cause}" } }
+        .onSuccess { logger.info("Response from Cantus code=${it.statusCode} body=${it.body}") }
+}
+
+private val AuroraResponse<*>?.messageOrDefault: String
+    get() = this?.message ?: "empty body"

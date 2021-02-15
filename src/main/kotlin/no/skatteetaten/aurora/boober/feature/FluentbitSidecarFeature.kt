@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newConfigMap
@@ -22,18 +24,17 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
 const val SPLUNK_CONNECT_INDEX_TAG = "splunk.com/index"
 
 val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
-val AuroraDeploymentSpec.fluentConfigName: String? get() = "${this.name}-fluent-config"
-val AuroraDeploymentSpec.fluentParserName: String? get() = "${this.name}-fluent-parser"
-val AuroraDeploymentSpec.hecSecretName: String? get() = "${this.name}-hec"
+val AuroraDeploymentSpec.fluentConfigName: String get() = "${this.name}-fluent-config"
+val AuroraDeploymentSpec.fluentParserName: String get() = "${this.name}-fluent-parser"
+val AuroraDeploymentSpec.hecSecretName: String get() = "${this.name}-hec"
 const val hecTokenKey: String = "HEC_TOKEN"
 const val splunkHostKey: String = "SPLUNK_HOST"
 const val splunkPortKey: String = "SPLUNK_PORT"
@@ -57,11 +58,35 @@ Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configur
  */
 @org.springframework.stereotype.Service
 class FluentbitSidecarFeature(
+    cantusService: CantusService,
     @Value("\${splunk.hec.token}") val hecToken: String,
     @Value("\${splunk.hec.url}") val splunkUrl: String,
     @Value("\${splunk.hec.port}") val splunkPort: String,
-    @Value("\${splunk.fluentbit.image}") val fluentBitImage: String
-) : Feature {
+    @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String
+) : AbstractResolveTagFeature(cantusService) {
+
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        val loggingIndex = spec.loggingIndex
+
+        return loggingIndex != null
+    }
+
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
+
+        if (validationContext || spec.loggingIndex == null) {
+            return emptyMap()
+        }
+
+        return createImageMetadataContext(
+            repo = "fluent",
+            name = "fluent-bit",
+            tag = fluentBitTag
+        )
+    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return knownLogs.map { log ->
@@ -73,7 +98,7 @@ class FluentbitSidecarFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val index = adc.loggingIndex ?: return emptySet()
-        if (! shouldGenerateAndModify(adc)) return emptySet()
+        if (!shouldGenerateAndModify(adc)) return emptySet()
         val loggerIndexes = getLoggingIndexes(adc, index)
 
         val fluentParserMap = newConfigMap {
@@ -113,7 +138,7 @@ class FluentbitSidecarFeature(
     ) {
         val index = adc.loggingIndex ?: return
         if (index == "") return
-        if (! shouldGenerateAndModify(adc)) {
+        if (!shouldGenerateAndModify(adc)) {
             resources.forEach {
                 val template = getTemplate(it) ?: return@forEach
                 setTemplateAnnotation(template, SPLUNK_CONNECT_INDEX_TAG, index)
@@ -132,7 +157,7 @@ class FluentbitSidecarFeature(
                 }
             }
 
-            val container = createFluentbitContainer(adc)
+            val container = createFluentbitContainer(adc, context)
             resources.forEach {
                 val template = getTemplate(it) ?: return@forEach
                 modifyAuroraResource(it, template, configVolume, parserVolume, container)
@@ -189,7 +214,7 @@ class FluentbitSidecarFeature(
         setTemplateAnnotation(template, SPLUNK_CONNECT_EXCLUDE_TAG, "true")
     }
 
-    private fun createFluentbitContainer(adc: AuroraDeploymentSpec): Container {
+    private fun createFluentbitContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val hecEnvVariables = listOf(
             newEnvVar {
                 name = hecTokenKey
@@ -222,6 +247,7 @@ class FluentbitSidecarFeature(
                 }
             }
         )
+        val imageMetadata = context.imageMetadata
 
         return newContainer {
             name = adc.fluentSideCarContainerName
@@ -246,7 +272,7 @@ class FluentbitSidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = fluentBitImage
+            image = imageMetadata.getFullImagePath()
         }
     }
 }

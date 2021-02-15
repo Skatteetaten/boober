@@ -56,5 +56,5 @@ utv/about.json | cluster: "utv"
        default |   bucketName: ""
        default |   objectArea: ""
        default | sts: false
-       default | toxiproxy: false
+   whoami.json | toxiproxy: true
        default | webseal: false

@@ -1,0 +1,35 @@
+{
+  "items": [
+    {
+      "auroraVersion": null,
+      "appVersion": null,
+      "timeline": {
+        "buildStarted": null,
+        "buildEnded": "2021-01-08T15:59:00.289294849Z"
+      },
+      "dockerVersion": "19.03.14",
+      "dockerDigest": "sha256:1234",
+      "java": null,
+      "node": null,
+      "requestUrl": "docker.registry/fluent/fluent-bit/1.6.10",
+      "_links": {
+        "self": {
+          "href": ""
+        }
+      },
+      "_embedded": {}
+    }
+  ],
+  "failure": [],
+  "success": true,
+  "message": "Success",
+  "failureCount": 0,
+  "successCount": 1,
+  "count": 1,
+  "_links": {
+    "self": {
+      "href": ""
+    }
+  },
+  "_embedded": {}
+}

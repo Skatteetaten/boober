@@ -1,10 +1,14 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.apache.commons.text.StringSubstitutor
+import org.springframework.stereotype.Service
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.BigIpFeature
 import no.skatteetaten.aurora.boober.feature.CertificateFeature
 import no.skatteetaten.aurora.boober.feature.ConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
+import no.skatteetaten.aurora.boober.feature.FeatureContext
 import no.skatteetaten.aurora.boober.feature.RouteFeature
 import no.skatteetaten.aurora.boober.feature.StsFeature
 import no.skatteetaten.aurora.boober.feature.WebsealFeature
@@ -25,8 +29,6 @@ import no.skatteetaten.aurora.boober.model.validate
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.toMultiMap
-import org.apache.commons.text.StringSubstitutor
-import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
@@ -223,11 +225,16 @@ class AuroraDeploymentContextService(
             cmd = deployCommand,
             features = featureAdc,
             featureContext = featureContext,
-            warnings = findWarnings(deployCommand, featureAdc) + errorWarnings
+            warnings = findWarnings(deployCommand, featureAdc, featureContext, fullValidation) + errorWarnings
         )
     }
 
-    private fun findWarnings(cmd: AuroraContextCommand, features: Map<Feature, AuroraDeploymentSpec>): List<String> {
+    private fun findWarnings(
+        cmd: AuroraContextCommand,
+        features: Map<Feature, AuroraDeploymentSpec>,
+        context: Map<Feature, FeatureContext>,
+        fullValidation: Boolean
+    ): List<String> {
 
         fun logWarning(warning: String) {
             val auroraConfigRef = cmd.auroraConfigRef
@@ -239,12 +246,26 @@ class AuroraDeploymentContextService(
         }.isNotEmpty()
 
         val configKeysWithSpecialCharacters = features.flatMap { (feature, spec) ->
-            if (feature is ConfigFeature) {
-                feature.envVarsKeysWithSpecialCharacters(spec).map {
-                    logWarning("configKeyWithSpecialChar")
-                    it
+            val featureContext = context[feature]
+                ?: throw RuntimeException("Could not fetch context for feature=${feature::class.qualifiedName}")
+            when (feature) {
+                is ConfigFeature -> {
+                    feature.envVarsKeysWithSpecialCharacters(spec).map {
+                        logWarning("configKeyWithSpecialChar")
+                        it
+                    }
                 }
-            } else emptyList()
+                is AbstractResolveTagFeature -> {
+                    if (feature.isActive(spec) && fullValidation) {
+                        val warning = feature.dockerDigestExistsWarning(featureContext)
+                        logWarning("dockerDigestDoesNotExist:${feature::class.simpleName}")
+                        listOfNotNull(
+                            warning
+                        )
+                    } else emptyList()
+                }
+                else -> emptyList()
+            }
         }
 
         val route = features.filter { (feature, spec) ->

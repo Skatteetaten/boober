@@ -1,5 +1,12 @@
 package no.skatteetaten.aurora.boober.unit
 
+import java.time.LocalDateTime
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.http.HttpStatus
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
@@ -8,12 +15,9 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.assertions.isSuccess
 import assertk.assertions.messageContains
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
 import io.mockk.clearAllMocks
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentCreateRequest
 import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
-import no.skatteetaten.aurora.boober.service.EmptyBodyException
 import no.skatteetaten.aurora.boober.service.HerkimerConfiguration
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.service.HerkimerRestTemplateWrapper
@@ -28,11 +32,6 @@ import no.skatteetaten.aurora.mockmvc.extensions.TestObjectMapperConfigurer
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.url
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.boot.web.client.RestTemplateBuilder
-import org.springframework.http.HttpStatus
-import java.time.LocalDateTime
 
 class HerkimerServiceTest {
 
@@ -57,8 +56,8 @@ class HerkimerServiceTest {
         server.execute(HttpStatus.NO_CONTENT.value() to response) {
             assertThat { service.getClaimedResources("id", ResourceKind.ManagedOracleSchema) }
                 .isFailure()
-                .isInstanceOf(EmptyBodyException::class)
-                .messageContains("empty body from Herkimer")
+                .isInstanceOf(ProvisioningException::class)
+                .messageContains("cause=empty body")
         }
     }
 

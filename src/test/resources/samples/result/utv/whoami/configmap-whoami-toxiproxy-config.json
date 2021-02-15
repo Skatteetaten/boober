@@ -1,0 +1,29 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "whoami",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "whoami",
+      "booberDeployId": "deploy1"
+    },
+    "name": "whoami-toxiproxy-config",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "whoami",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "data": {
+    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\"}]"
+  }
+}

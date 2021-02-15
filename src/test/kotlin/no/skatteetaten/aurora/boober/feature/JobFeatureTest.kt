@@ -1,13 +1,41 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import assertk.assertThat
+import io.mockk.every
+import io.mockk.mockk
+import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class JobFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = JobFeature("docker.registry")
+        get() = JobFeature("docker.registry", cantusService)
+
+    private val cantusService: CantusService = mockk()
+
+    @BeforeEach
+    fun setupMock() {
+        every {
+            cantusService.getImageMetadata(
+                "aurora", "turbo", "0"
+            )
+        } returns
+            ImageMetadata(
+                "docker.registry/aurora/turbo",
+                "0",
+                "sha:1234"
+            )
+    }
+
+    @AfterEach
+    fun clearMocks() {
+        HttpMock.clearAllHttpMocks()
+    }
 
     @Test
     fun `should not allow cronjob without schedule`() {

@@ -14,7 +14,7 @@ splunk:
         url: "splunk.hec"
         port: 8080
     fluentbit:
-        image: "fluent/fluent-bit:1.6.5"
+        tag: "1.6.10"
 
 integrations:
     operations:

@@ -1,15 +1,50 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import assertk.assertThat
+import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
+import io.mockk.every
+import io.mockk.mockk
+import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import org.junit.jupiter.api.Test
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = FluentbitSidecarFeature("test_hec", "splunk.url", "8080", "fluent/fluent-bit:latest")
+        get() = FluentbitSidecarFeature(
+            cantusService,
+            "test_hec",
+            "splunk.url",
+            "8080",
+            "0"
+        )
+
+    private val cantusService: CantusService = mockk()
+
+    @BeforeEach
+    fun setupMock() {
+        every {
+            cantusService.getImageMetadata(
+                "fluent", "fluent-bit", "0"
+            )
+        } returns
+            ImageMetadata(
+                "docker.registry/fluent/fluent-bit",
+                "0",
+                "sha:1234"
+            )
+    }
+
+    @AfterEach
+    fun clearMocks() {
+        HttpMock.clearAllHttpMocks()
+    }
 
     @Test
     fun `should add fluentbit to dc`() {
@@ -48,12 +83,13 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                 "index": "test-index"
              }
            }""",
-            createEmptyDeploymentConfig(), emptyList(), 0)
+            createEmptyDeploymentConfig(), emptyList(), 0
+        )
         assertThat(dcResource).isNotNull()
         val config = dcResource.resource as DeploymentConfig
         val annotations = config.spec.template.metadata.annotations
         assertThat(annotations).isNotNull()
-        assertThat(annotations.get("splunk.com/index")).equals("test-index")
+        assertThat(annotations["splunk.com/index"]).isEqualTo("test-index")
     }
 
     @Test
@@ -65,12 +101,13 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                 "index": "test-index"
              }
            }""",
-            createEmptyDeploymentConfig(), emptyList(), 0)
+            createEmptyDeploymentConfig(), emptyList(), 0
+        )
         assertThat(dcResource).isNotNull()
         val config = dcResource.resource as DeploymentConfig
         val annotations = config.spec.template.metadata.annotations
         assertThat(annotations).isNotNull()
-        assertThat(annotations.get("splunk.com/index")).equals("test-index")
+        assertThat(annotations["splunk.com/index"]).isEqualTo("test-index")
     }
 
     @Test
@@ -82,7 +119,8 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                 "index": ""
              }
            }""",
-            createEmptyDeploymentConfig(), emptyList(), 0)
+            createEmptyDeploymentConfig(), emptyList(), 0
+        )
         assertThat(dcResource).isNotNull()
         val config = dcResource.resource as DeploymentConfig
         assertThat(config.spec.template.metadata).isNull()

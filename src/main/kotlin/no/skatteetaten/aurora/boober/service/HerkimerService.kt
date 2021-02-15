@@ -1,5 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.time.LocalDateTime
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
+import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -9,20 +16,9 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
-import java.time.LocalDateTime
-
-private val logger = KotlinLogging.logger {}
 
 data class HerkimerResponse<T : Any>(
     val success: Boolean = true,
@@ -121,9 +117,9 @@ class HerkimerService(
             url = "/applicationDeployment",
             type = HerkimerResponse::class
         )
-        val herkimerResponse = response.getBodyOrThrow()
+        val herkimerResponse = response.body
 
-        if (!herkimerResponse.success) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.message}")
+        if (herkimerResponse?.success != true) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.messageOrDefault}")
 
         return herkimerObjectMapper.convertValue(herkimerResponse.items.single())
     }
@@ -142,9 +138,9 @@ class HerkimerService(
         val herkimerResponse = client.get(
             HerkimerResponse::class,
             getResourceUrl(claimOwnerId, resourceKind, name)
-        ).getBodyOrThrow()
+        ).body
 
-        if (!herkimerResponse.success) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.message}")
+        if (herkimerResponse?.success != true) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.messageOrDefault}")
 
         return herkimerObjectMapper.convertValue(herkimerResponse.items)
     }
@@ -166,9 +162,9 @@ class HerkimerService(
                 ownerId = ownerId,
                 parentId = parentId
             )
-        ).getBodyOrThrow()
+        ).body
 
-        if (!resourceResponse.success) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.message}")
+        if (resourceResponse?.success != true) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.messageOrDefault}")
 
         val resourceId = herkimerObjectMapper.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
 
@@ -180,16 +176,11 @@ class HerkimerService(
                 name = claimName,
                 credentials = credentials
             )
-        ).getBodyOrThrow()
+        ).body
 
-        if (!claimResponse.success) throw ProvisioningException("Unable to create claim for resource with id=$resourceId and ownerId=$ownerId. cause=${claimResponse.message}")
+        if (claimResponse?.success != true) throw ProvisioningException("Unable to create claim for resource with id=$resourceId and ownerId=$ownerId. cause=${claimResponse.messageOrDefault}")
     }
 }
-
-private fun <T> ResponseEntity<T>.getBodyOrThrow() =
-    this.body ?: throw EmptyBodyException("Fatal error happened. Received empty body from Herkimer").also {
-        logger.error(it) { "Null body happened in caller method=${it.stackTrace[2]} statusCode=${this.statusCode}" }
-    }
 
 internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
@@ -199,3 +190,6 @@ internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
     .registerModule(Jdk8Module())
     .registerModule(JavaTimeModule())
     .registerModule(ParameterNamesModule())
+
+private val HerkimerResponse<*>?.messageOrDefault: String
+    get() = this?.message ?: "empty body"

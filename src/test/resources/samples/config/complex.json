@@ -4,6 +4,9 @@
   "groupId": "org.test",
   "type": "development",
   "splunkIndex": "test-index",
+  "logging": {
+    "index": "test-index"
+  },
   "prometheus": {
     "path": "/prometheus",
     "port": "8082"
