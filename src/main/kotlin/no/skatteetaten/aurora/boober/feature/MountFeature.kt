@@ -286,7 +286,7 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                 }
                 MountType.PSAT -> {
                     projected {
-                        name = volumeName
+                        name = it.volumeName
                         defaultMode = 420
                         sources = listOf(newVolumeProjection {
                             serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
