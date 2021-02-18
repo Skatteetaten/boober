@@ -29,6 +29,7 @@ import com.fkorotkov.openshift.template
 import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.VolumeProjection
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -405,6 +406,31 @@ abstract class AbstractFeatureTest : ResourceLoader() {
                 attachment.metadata.name
             )
         }
+        val env: Map<String, String> = podSpec.containers[0].env.associate { it.name to it.value }
+        assertThat(env, "Env vars").isEqualTo(expectedEnv)
+        actual
+    }
+
+    fun Assert<AuroraResource>.auroraResourceMountsPsat(
+        projection: VolumeProjection,
+        additionalEnv: Map<String, String> = emptyMap()
+    ): Assert<AuroraResource> = transform { actual ->
+
+        assertThat(actual.resource).isInstanceOf(DeploymentConfig::class.java)
+        assertThat(actual).auroraResourceModifiedByThisFeatureWithComment("Added env vars, volume mount, volume")
+
+        val dc = actual.resource as DeploymentConfig
+        val podSpec = dc.spec.template.spec
+
+        val volumeName = podSpec.volumes[0].name
+        val volumeEnvName = "VOLUME_$volumeName".replace("-", "_").toUpperCase()
+        val volumeEnvValue = podSpec.containers[0].volumeMounts[0].mountPath
+
+        val expectedEnv = additionalEnv.addIfNotNull(volumeEnvName to volumeEnvValue)
+
+        assertThat(volumeName).isEqualTo(podSpec.containers[0].volumeMounts[0].name)
+        assertThat(podSpec.volumes[0].projected.sources[0].serviceAccountToken.audience).isEqualTo(projection.serviceAccountToken.audience)
+
         val env: Map<String, String> = podSpec.containers[0].env.associate { it.name to it.value }
         assertThat(env, "Env vars").isEqualTo(expectedEnv)
         actual

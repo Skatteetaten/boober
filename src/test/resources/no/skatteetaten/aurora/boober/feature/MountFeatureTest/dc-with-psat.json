@@ -1,0 +1,79 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
+    },
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "VOLUME_MOUNT",
+                "value": "/u01/foo"
+              }
+            ],
+            "name": "simple",
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/foo",
+                "name": "mount"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "volumes": [
+          {
+            "name": "mount",
+            "projected": {
+              "defaultMode": 420,
+              "sources": [
+                {
+                  "serviceAccountToken": {
+                    "audience": "dummy-audience",
+                    "expirationSeconds": 600,
+                    "path": "mount"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

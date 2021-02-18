@@ -4,9 +4,12 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.newVolumeProjection
 import com.fkorotkov.kubernetes.persistentVolumeClaim
+import com.fkorotkov.kubernetes.projected
 import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
+import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -67,7 +70,9 @@ class MountFeature(
                     validator = { it.boolean() },
                     defaultValue = false
                 ),
-                AuroraConfigFieldHandler("mounts/$mountName/secretVault")
+                AuroraConfigFieldHandler("mounts/$mountName/secretVault"),
+                AuroraConfigFieldHandler("mounts/$mountName/audience"),
+                AuroraConfigFieldHandler("mounts/$mountName/expirationSeconds")
             )
         }.toSet()
     }
@@ -140,6 +145,8 @@ class MountFeature(
         val mounts = context.mounts
 
         val errors = validateExistinAndSecretVault(mounts)
+            .addIfNotNull(validatePSATMounts(mounts))
+            .addIfNotNull(ensureCompatibleKuberntesForPSATMounts(mounts))
         // .addIfNotNull(validatePVCMounts(mounts))
         if (!fullValidation || adc.cluster != cluster) {
             return errors
@@ -147,6 +154,30 @@ class MountFeature(
         return errors
             .addIfNotNull(validateExistingMounts(mounts, adc))
             .addIfNotNull(validateVaultExistence(mounts, adc))
+    }
+
+    /**
+     * @return true if given semver version is found to be higher or equal to kubernetes semver version
+     */
+    private fun k8sVersionOfAtLeast(ensure: String): Boolean {
+        val k8s = openShiftClient.version().split(".")
+        val v = ensure.split(".")
+        for (index in 0 until Math.min(k8s.size, v.size)) {
+            if (k8s[index].toInt() < v[index].toInt()) return false
+        }
+        return true
+    }
+
+    private fun ensureCompatibleKuberntesForPSATMounts(mounts: List<Mount>): List<Exception> {
+        return mounts.filter() { it.type == MountType.PSAT && !k8sVersionOfAtLeast("1.16") }.map {
+            AuroraDeploymentSpecValidationException("PSAT mount=${it.volumeName} is not valid, as kubernetes version is below 1.16")
+        }
+    }
+
+    private fun validatePSATMounts(mounts: List<Mount>): List<Exception> {
+        return mounts.filter { it.type == MountType.PSAT && (it.expirationSeconds == null || it.expirationSeconds < 600L) }.map {
+            AuroraDeploymentSpecValidationException("PSAT mount=${it.volumeName} cannot have expirationSeconds less than 600s")
+        }
     }
 
     private fun validateExistinAndSecretVault(mounts: List<Mount>): List<Exception> {
@@ -216,13 +247,17 @@ class MountFeature(
             val mountName: String = auroraDeploymentSpec["mounts/$mount/mountName"]
             val volumeName: String = auroraDeploymentSpec["mounts/$mount/volumeName"]
             val exist: Boolean = auroraDeploymentSpec["mounts/$mount/exist"]
+            val audience = auroraDeploymentSpec.getOrNull<String?>("mounts/$mount/audience")
+            val expirationSeconds = auroraDeploymentSpec.getOrNull<Long?>("mounts/$mount/expirationSeconds")
             Mount(
                 path = auroraDeploymentSpec["mounts/$mount/path"],
                 type = type,
                 mountName = mountName.ensureEndsWith("mount", "-"),
                 volumeName = if (exist) volumeName else volumeName.ensureEndsWith("mount", "-"),
                 exist = exist,
-                secretVaultName = secretVaultName
+                secretVaultName = secretVaultName,
+                audience = audience,
+                expirationSeconds = expirationSeconds
             )
         }
     }
@@ -249,6 +284,15 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                 MountType.PVC -> persistentVolumeClaim {
                     claimName = volumeName
                 }
+                MountType.PSAT -> {
+                    projected {
+                        name = it.volumeName
+                        defaultMode = 420
+                        sources = listOf(newVolumeProjection {
+                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
+                        })
+                    }
+                }
             }
         }
     }
@@ -256,7 +300,8 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
 
 enum class MountType(val kind: String) {
     Secret("secret"),
-    PVC("persistentvolumeclaim")
+    PVC("persistentvolumeclaim"),
+    PSAT("projectedserviceaccounttoken")
 }
 
 data class Mount(
@@ -266,7 +311,9 @@ data class Mount(
     val volumeName: String,
     val exist: Boolean,
     val secretVaultName: String? = null,
-    val targetContainer: String? = null
+    val targetContainer: String? = null,
+    val audience: String? = null,
+    val expirationSeconds: Long? = null
 ) {
     fun getNamespacedVolumeName(appName: String): String {
         val name = if (exist) {

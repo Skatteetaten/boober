@@ -5,13 +5,17 @@ import assertk.assertions.isEqualTo
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newPersistentVolumeClaim
 import com.fkorotkov.kubernetes.newSecret
+import com.fkorotkov.kubernetes.newVolumeProjection
+import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.mockk.every
 import io.mockk.mockk
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
@@ -77,6 +81,17 @@ class MountFeatureTest : AbstractFeatureTest() {
               }  
              }"""
 
+    val existingPSATJson = """{
+              "mounts": {
+                "mount": {
+                  "type": "PSAT",
+                  "path": "/u01/foo",
+                  "audience": "dummy-audience",
+                  "expirationSeconds": 600
+                }
+              }  
+             }"""
+
     @Test
     fun `Should generate handlers for no mounts`() {
         val handlers = createAuroraConfigFieldHandlers("{}")
@@ -100,7 +115,7 @@ class MountFeatureTest : AbstractFeatureTest() {
             "Secret mount=mount with vaultName set cannot be marked as existing"
         ),
         PATH_REQUIRED(""" "type" : "ConfigMap" """, "Path is required for mount"),
-        WRONG_MOUNT_TYPE(""" "type" : "Foo" """, "Must be one of [Secret, PVC]")
+        WRONG_MOUNT_TYPE(""" "type" : "Foo" """, "Must be one of [Secret, PVC, PSAT]")
     }
 
     @ParameterizedTest
@@ -195,5 +210,63 @@ class MountFeatureTest : AbstractFeatureTest() {
             }
         }
         assertThat(auroraResource).auroraResourceMountsAttachment(secret)
+    }
+
+    @Test
+    fun `should modify deploymentConfig and add psat`() {
+        every { openShiftClient.version() } returns "1.18.3"
+
+        val resource = modifyResources(existingPSATJson, createEmptyDeploymentConfig())
+
+        val auroraResource = resource.first()
+        val satp = ServiceAccountTokenProjection("dummy-audience", 600L, "psat")
+        val psat = newVolumeProjection {
+                serviceAccountToken = satp
+        }
+
+        assertThat(auroraResource).auroraResourceMountsPsat(psat)
+        assertThat(auroraResource).auroraResourceMatchesFile("dc-with-psat.json")
+    }
+
+    @Test
+    fun `psat is not supported in old k8s`() {
+        every { openShiftClient.version() } returns "1.11.4"
+
+        val exception = Assertions.assertThrows(MultiApplicationValidationException::class.java) {
+            modifyResources(existingPSATJson, createEmptyDeploymentConfig())
+        }
+        Assertions.assertEquals(
+            1,
+            exception.errors.size,
+            "Expecting exactly one exception, but got: " + exception.errors
+        )
+    }
+
+    /**
+     * The reason for the minimal value of 10 minutes can be gleaned from the
+     * documentation:
+     * <a href="https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html/authentication_and_authorization/bound-service-account-tokens">https://access.redhat.com/documentation/en-us/openshift_container_platform/4.6/html/authentication_and_authorization/bound-service-account-tokens</a>
+     */
+    @Test
+    fun `should not allow expirationSeconds less than 10 minutes`() {
+        val exception = Assertions.assertThrows(MultiApplicationValidationException::class.java) {
+            modifyResources(
+                """{
+              "mounts": {
+                "mount": {
+                  "type": "PSAT",
+                  "path": "/u01/foo",
+                  "audience": "dummy-audience",
+                  "expirationSeconds": 599,
+                }
+              }  
+             }""", createEmptyDeploymentConfig()
+            )
+        }
+        Assertions.assertEquals(
+            1,
+            exception.errors.size,
+            "Expecting exactly one exception, but got: " + exception.errors
+        )
     }
 }

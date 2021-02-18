@@ -11,6 +11,7 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import junit.framework.TestCase.assertEquals
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
@@ -210,5 +212,14 @@ class OpenShiftClientTest : ResourceLoader() {
 
         assertThat(result.success).isFalse()
         assertThat(result.responseBody?.get("error")?.asText()).isEqualTo("failed")
+    }
+
+    @Test
+    fun `Should be able to call version endpoint`() {
+        val response = loadJsonResource("response_version.json")
+        every { serviceAccountClient.get("/version", any(), retry = any()) } returns ResponseEntity(response, OK)
+        every { serviceAccountClient.getAuthorizationHeaders() } returns HttpHeaders()
+        val result = openShiftClient.version()
+        assertEquals("1.18.3", result)
     }
 }
