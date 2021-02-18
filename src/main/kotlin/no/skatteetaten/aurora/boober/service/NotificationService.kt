@@ -75,7 +75,7 @@ class NotificationService(
         val listOfDeploys = this.asBulletlistOfDeploys(isSuccessful = isSuccessful)
 
         val headerMessage =
-            if (isSuccessful) "Successfully applied applications to cluster" else "Failed to apply applications to cluster \n For more information run `ao inspect <deployId>` in cli"
+            if (isSuccessful) "Applied applications to cluster" else "Failed to apply applications to cluster \n For more information run `ao inspect <deployId>` in cli"
         val color = if (isSuccessful) AttachmentColor.Green else AttachmentColor.Red
 
         val text = """
