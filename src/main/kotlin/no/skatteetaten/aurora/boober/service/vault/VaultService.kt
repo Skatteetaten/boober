@@ -109,10 +109,14 @@ class VaultService(
 
     fun deleteVault(vaultCollectionName: String, vaultName: String) {
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
-            findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
+            if (vaultName.isBlank()) {
+                throw IllegalArgumentException("Vault name can not be empty")
+            }
 
-            vaultCollection.deleteVault(vaultName)
-            gitService.commitAndPushChanges(repo)
+            val vault = findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
+
+            vault.vaultFolder.deleteRecursively()
+            gitService.commitAndPushChanges(repo = repo, rmFilePattern = vault.vaultFolder.name, addFilePattern = null)
         }
     }
 

@@ -135,9 +135,14 @@ open class GitService(
         }
     }
 
-    fun commitAndPushChanges(repo: Git, ref: String = "refs/heads/master", commitMessage: String? = null) {
+    fun commitAndPushChanges(repo: Git, ref: String = "refs/heads/master", commitMessage: String? = null, addFilePattern: String? = ".", rmFilePattern: String? = null) {
 
-        repo.add().addFilepattern(".").call()
+        if (addFilePattern != null) {
+            repo.add().addFilepattern(addFilePattern).call()
+        }
+        if (rmFilePattern != null) {
+            repo.rm().addFilepattern(rmFilePattern).call()
+        }
         val status = repo.status().call()
         val message = commitMessage
             ?: "Added: ${status.added.size}, Modified: ${status.changed.size}, Deleted: ${status.removed.size}"
