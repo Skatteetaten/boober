@@ -1,12 +1,5 @@
 package no.skatteetaten.aurora.boober.unit
 
-import com.fasterxml.jackson.databind.node.TextNode
-import io.mockk.clearMocks
-import io.mockk.every
-import io.mockk.mockk
-import no.skatteetaten.aurora.boober.controller.v1.UserAnnotationControllerV1
-import no.skatteetaten.aurora.boober.facade.UserAnnotationFacade
-import no.skatteetaten.aurora.boober.utils.toJson
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.MediaType
@@ -16,6 +9,13 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup
+import com.fasterxml.jackson.databind.node.TextNode
+import io.mockk.clearMocks
+import io.mockk.every
+import io.mockk.mockk
+import no.skatteetaten.aurora.boober.controller.v1.UserAnnotationControllerV1
+import no.skatteetaten.aurora.boober.facade.UserAnnotationFacade
+import no.skatteetaten.aurora.boober.utils.toJson
 
 class UserAnnotationControllerV1Test {
 

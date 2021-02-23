@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
 class OpenShiftObjectLabelServiceTest {
 

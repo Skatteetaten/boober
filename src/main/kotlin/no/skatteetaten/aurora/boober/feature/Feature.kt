@@ -72,7 +72,11 @@ interface Feature {
 
       You can throw an exception here and it will be registered as a validation error if you like
      */
-    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): FeatureContext = emptyMap()
+    fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): FeatureContext = emptyMap()
 
     /*
     Perform validation of this feature.

@@ -1,15 +1,15 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
 
 class TemplateFeatureTest : AbstractFeatureTest() {
 

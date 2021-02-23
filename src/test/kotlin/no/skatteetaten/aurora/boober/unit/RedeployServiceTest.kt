@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.NullNode
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasMessage
@@ -7,8 +10,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isTrue
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.NullNode
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.feature.TemplateType
@@ -20,7 +21,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.deploymentConfig
 import no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStream
 import no.skatteetaten.aurora.boober.utils.OpenShiftTestDataBuilders.imageStreamImportResponse
-import org.junit.jupiter.api.Test
 
 class RedeployServiceTest {
 

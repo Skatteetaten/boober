@@ -1,16 +1,16 @@
 package no.skatteetaten.aurora.boober.facade
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isNotEmpty
-import com.fkorotkov.kubernetes.newOwnerReference
-import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.test.annotation.DirtiesContext
+import com.fkorotkov.kubernetes.newOwnerReference
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEmpty
+import okhttp3.mockwebserver.MockResponse
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE

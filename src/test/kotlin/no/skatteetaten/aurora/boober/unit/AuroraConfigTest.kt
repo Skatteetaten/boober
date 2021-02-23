@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasMessage
@@ -18,7 +19,6 @@ import no.skatteetaten.aurora.boober.model.PreconditionFailureException
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
-import org.junit.jupiter.api.Test
 
 class AuroraConfigTest : ResourceLoader() {
 

@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isSuccess
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
 
 private val logger = KotlinLogging.logger { }
 

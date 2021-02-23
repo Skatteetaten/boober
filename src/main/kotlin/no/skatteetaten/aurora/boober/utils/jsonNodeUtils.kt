@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.utils
 
+import org.springframework.boot.convert.DurationStyle
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
@@ -15,7 +16,6 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import org.springframework.boot.convert.DurationStyle
 
 inline fun <reified T : Any> JsonNode.convert(): T = jacksonObjectMapper().convertValue(this)
 

@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
 
 class CertificateFeatureDisabledTest : AbstractFeatureTest() {
     override val feature: Feature

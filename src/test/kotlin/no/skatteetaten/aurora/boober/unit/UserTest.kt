@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.controller.security.User
-import org.junit.jupiter.api.Test
 
 class UserTest {
 

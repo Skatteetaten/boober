@@ -1,14 +1,14 @@
 package no.skatteetaten.aurora.boober.unit
 
+import java.util.Base64
+import org.encryptor4j.factory.AbsKeyFactory
+import org.encryptor4j.factory.KeyFactory
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.service.EncryptionService
-import org.encryptor4j.factory.AbsKeyFactory
-import org.encryptor4j.factory.KeyFactory
-import org.junit.jupiter.api.Test
-import java.util.Base64
 
 class EncryptionServiceTest {
 

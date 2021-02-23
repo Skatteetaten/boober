@@ -1,19 +1,5 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.ServiceTypes
-import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.service.ProvisioningException
-import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.core.io.Resource
-import org.springframework.http.HttpHeaders
-import org.springframework.http.MediaType
-import org.springframework.stereotype.Component
-import org.springframework.stereotype.Service
-import org.springframework.web.client.RestTemplate
-import org.springframework.web.util.UriComponentsBuilder
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -24,6 +10,20 @@ import java.security.cert.X509Certificate
 import java.time.Duration
 import java.time.Instant
 import java.util.Base64
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.core.io.Resource
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import org.springframework.stereotype.Component
+import org.springframework.stereotype.Service
+import org.springframework.web.client.RestTemplate
+import org.springframework.web.util.UriComponentsBuilder
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.ServiceTypes
+import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 
 private val logger = KotlinLogging.logger {}
 

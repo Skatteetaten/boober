@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RestController
+import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 
 @RestController
 class AuroraConfigNamesControllerV1(

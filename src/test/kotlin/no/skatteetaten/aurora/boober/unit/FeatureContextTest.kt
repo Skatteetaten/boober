@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isFailure
 import assertk.assertions.messageContains
 import no.skatteetaten.aurora.boober.feature.FeatureContext
 import no.skatteetaten.aurora.boober.feature.getContextKey
-import org.junit.jupiter.api.Test
 
 class FeatureContextTest {
 
@@ -24,6 +24,7 @@ class FeatureContextTest {
         val context: FeatureContext = mapOf("foo" to "bar")
         assertThat {
             context.getContextKey<Int>("foo")
-        }.isFailure().messageContains("The feature context key=foo was not the expected type class java.lang.String cannot be cast to class java.lang.Integer")
+        }.isFailure()
+            .messageContains("The feature context key=foo was not the expected type class java.lang.String cannot be cast to class java.lang.Integer")
     }
 }

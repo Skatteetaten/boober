@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.http.HttpHeaders
 import com.fasterxml.jackson.databind.node.TextNode
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.every
@@ -11,9 +14,6 @@ import no.skatteetaten.aurora.mockmvc.extensions.get
 import no.skatteetaten.aurora.mockmvc.extensions.patch
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.junit.jupiter.api.Test
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.HttpHeaders
 
 @WebMvcTest(controllers = [UserAnnotationControllerV1::class])
 class UserAnnotationControllerV1Test : AbstractControllerTest() {

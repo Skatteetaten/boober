@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -26,8 +28,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import no.skatteetaten.aurora.boober.utils.whenFalse
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger { }
 

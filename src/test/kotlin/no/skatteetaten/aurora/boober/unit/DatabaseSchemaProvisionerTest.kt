@@ -1,11 +1,16 @@
 package no.skatteetaten.aurora.boober.unit
 
+import java.util.UUID
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.springframework.boot.web.client.RestTemplateBuilder
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isSuccess
 import assertk.assertions.messageContains
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.facade.json
 import no.skatteetaten.aurora.boober.feature.DatabaseInstance
@@ -24,11 +29,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestD
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 import okhttp3.mockwebserver.MockResponse
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.springframework.boot.web.client.RestTemplateBuilder
-import java.util.UUID
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class DatabaseSchemaProvisionerTest {

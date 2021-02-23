@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.newObjectMeta
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -11,9 +14,6 @@ import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
-import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 @Service
 class BigIpFeature(

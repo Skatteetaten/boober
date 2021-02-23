@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.binary.Base64
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
@@ -20,9 +23,6 @@ import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.oneOf
-import org.apache.commons.codec.binary.Base64
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
-import org.springframework.stereotype.Service
 
 private const val FEATURE_FIELD = "credentials"
 

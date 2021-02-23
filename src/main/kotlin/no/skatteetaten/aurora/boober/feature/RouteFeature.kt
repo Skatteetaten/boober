@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newRoute
 import com.fkorotkov.openshift.port
@@ -27,8 +29,6 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 

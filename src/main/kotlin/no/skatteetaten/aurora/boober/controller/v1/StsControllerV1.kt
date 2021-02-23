@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.facade.RenewRequest
-import no.skatteetaten.aurora.boober.facade.StsRenewFacade
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.facade.RenewRequest
+import no.skatteetaten.aurora.boober.facade.StsRenewFacade
 
 // TODO: Should we have a conditional on missing property that just returns an error message here?
 @RestController

@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
+import com.fkorotkov.kubernetes.newOwnerReference
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isSuccess
-import com.fkorotkov.kubernetes.newOwnerReference
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
 
 class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature

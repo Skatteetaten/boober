@@ -1,5 +1,11 @@
 package no.skatteetaten.aurora.boober.unit
 
+import java.nio.charset.Charset
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import org.springframework.web.client.HttpClientErrorException
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
@@ -17,12 +23,6 @@ import no.skatteetaten.aurora.boober.service.Deployer
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.stubDeployResult
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
-import org.springframework.web.client.HttpClientErrorException
-import java.nio.charset.Charset
 
 class DeployLogServiceTest : ResourceLoader() {
 

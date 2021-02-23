@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
-import mu.KotlinLogging
-import no.skatteetaten.aurora.AuroraMetrics
+import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmptyCommitException
@@ -10,8 +10,8 @@ import org.eclipse.jgit.lib.PersonIdent
 import org.eclipse.jgit.lib.Ref
 import org.eclipse.jgit.revwalk.RevTag
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
-import java.io.File
-import java.util.concurrent.ConcurrentHashMap
+import mu.KotlinLogging
+import no.skatteetaten.aurora.AuroraMetrics
 
 private val logger = KotlinLogging.logger {}
 

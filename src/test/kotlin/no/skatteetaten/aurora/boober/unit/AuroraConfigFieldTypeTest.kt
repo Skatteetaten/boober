@@ -1,8 +1,11 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.apache.commons.text.StringSubstitutor
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import com.fasterxml.jackson.databind.ObjectMapper
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import com.fasterxml.jackson.databind.ObjectMapper
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldSource
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -16,9 +19,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV_OVERRIDE
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL_OVERRIDE
-import org.apache.commons.text.StringSubstitutor
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
 class AuroraConfigFieldTypeTest {
 

@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.text.StringSubstitutor
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.module.kotlin.convertValue
@@ -19,8 +21,6 @@ import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.getBoolean
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.text.StringSubstitutor
 
 const val TEMPLATE_CONTEXT_KEY = "template"
 

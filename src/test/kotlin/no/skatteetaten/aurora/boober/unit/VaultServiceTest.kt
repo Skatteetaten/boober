@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.unit
 
+import java.io.File
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsAll
@@ -26,10 +30,6 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import java.io.File
 
 class VaultServiceTest {
 

@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 @Service
 class JavaDeployFeature(@Value("\${integrations.docker.registry}") val registry: String) :

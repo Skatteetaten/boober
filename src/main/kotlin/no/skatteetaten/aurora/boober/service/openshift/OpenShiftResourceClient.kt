@@ -1,5 +1,13 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
+import java.net.URI
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
+import org.springframework.http.RequestEntity
+import org.springframework.http.ResponseEntity
+import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
@@ -8,14 +16,6 @@ import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import no.skatteetaten.aurora.boober.utils.findApiVersion
 import no.skatteetaten.aurora.boober.utils.findOpenShiftApiPrefix
 import no.skatteetaten.aurora.boober.utils.kindsWithoutNamespace
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.RequestEntity
-import org.springframework.http.ResponseEntity
-import org.springframework.web.client.HttpClientErrorException
-import java.net.URI
 
 private val logger = KotlinLogging.logger {}
 

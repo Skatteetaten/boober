@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.time.Duration
+import java.util.regex.Pattern
+import java.util.regex.Pattern.compile
+import org.springframework.boot.convert.DurationStyle.SIMPLE
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newOwnerReference
 import io.fabric8.kubernetes.api.model.EnvVar
@@ -22,18 +27,15 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.springframework.boot.convert.DurationStyle.SIMPLE
-import org.springframework.stereotype.Service
-import java.time.Duration
-import java.util.regex.Pattern
-import java.util.regex.Pattern.compile
 
 val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.let { SIMPLE.parse(it) }
 
 private const val APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY = "applicationDeploymentCommand"
 
-private val FeatureContext.applicationDeploymentCommand: ApplicationDeploymentCommand get() = this.getContextKey(
-    APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY)
+private val FeatureContext.applicationDeploymentCommand: ApplicationDeploymentCommand
+    get() = this.getContextKey(
+        APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY
+    )
 
 val emailRegex: Pattern = compile(
     "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
@@ -70,7 +72,11 @@ class ApplicationDeploymentFeature : Feature {
         }
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         return mapOf(
             APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY to ApplicationDeploymentCommand(
                 cmd.overrideFiles,

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -8,7 +9,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
-import org.springframework.stereotype.Service
 
 @Service
 class AuroraConfigFacade(

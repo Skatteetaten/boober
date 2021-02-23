@@ -1,13 +1,18 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isTrue
+import java.time.Instant
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fkorotkov.kubernetes.apps.newDeploymentList
 import com.fkorotkov.kubernetes.batch.newCronJobList
 import com.fkorotkov.kubernetes.batch.newJobList
 import com.fkorotkov.kubernetes.newConfigMapList
+import assertk.assertThat
+import assertk.assertions.isTrue
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -21,11 +26,6 @@ import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.http.HttpHeaders
-import org.springframework.http.ResponseEntity
-import java.time.Instant
 
 class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
 

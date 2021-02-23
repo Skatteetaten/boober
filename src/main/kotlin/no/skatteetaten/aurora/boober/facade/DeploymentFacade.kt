@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.apache.http.HttpStatus
+import org.springframework.stereotype.Service
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.ApplicationRef
@@ -11,8 +13,6 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import org.apache.http.HttpStatus
-import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger { }
 

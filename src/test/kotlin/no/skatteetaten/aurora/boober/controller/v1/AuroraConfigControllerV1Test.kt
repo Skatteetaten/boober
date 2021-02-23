@@ -1,9 +1,13 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import assertk.assertThat
-import assertk.assertions.isFailure
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ninjasquad.springmockk.MockkBean
+import assertk.assertThat
+import assertk.assertions.isFailure
 import io.mockk.every
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -18,10 +22,6 @@ import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.status
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.junit.jupiter.api.Test
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 
 @WebMvcTest(controllers = [AuroraConfigControllerV1::class])
 class AuroraConfigControllerV1Test : AbstractControllerTest() {

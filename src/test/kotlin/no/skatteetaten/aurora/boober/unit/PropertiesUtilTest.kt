@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsAll
@@ -8,7 +9,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import no.skatteetaten.aurora.boober.utils.filterProperties
-import org.junit.jupiter.api.Test
 
 class PropertiesUtilTest {
 

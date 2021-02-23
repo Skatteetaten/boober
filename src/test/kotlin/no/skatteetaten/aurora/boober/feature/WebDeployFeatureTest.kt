@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
+import com.fkorotkov.kubernetes.newEnvVar
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import com.fkorotkov.kubernetes.newEnvVar
 import io.fabric8.openshift.api.model.BuildConfig
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import org.junit.jupiter.api.Test
 
 class WebDeployFeatureTest : AbstractFeatureTest() {
     override val feature: Feature

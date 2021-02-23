@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.releaseTo
@@ -9,8 +11,6 @@ import no.skatteetaten.aurora.boober.model.openshift.Notification
 import no.skatteetaten.aurora.boober.model.openshift.NotificationType
 import no.skatteetaten.aurora.boober.utils.findResourceByType
 import no.skatteetaten.aurora.boober.utils.toMultiMap
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 @Service
 class NotificationService(

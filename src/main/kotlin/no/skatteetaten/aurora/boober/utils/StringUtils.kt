@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.utils
 
+import org.apache.commons.io.FilenameUtils
+import org.springframework.util.Base64Utils
 import com.fasterxml.jackson.core.JsonParseException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import org.apache.commons.io.FilenameUtils
-import org.springframework.util.Base64Utils
 
 fun String.ensureEndsWith(endsWith: String, seperator: String = ""): String {
     if (this.endsWith(endsWith)) {

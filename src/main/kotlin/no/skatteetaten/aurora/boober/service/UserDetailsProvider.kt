@@ -1,8 +1,8 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.controller.security.User
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.stereotype.Component
+import no.skatteetaten.aurora.boober.controller.security.User
 
 @Component
 class UserDetailsProvider {

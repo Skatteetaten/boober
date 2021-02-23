@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.feature
 
-import assertk.assertThat
-import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
+import assertk.assertThat
+import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 
 class WebSealFeatureTest : AbstractFeatureTest() {
     override val feature: Feature

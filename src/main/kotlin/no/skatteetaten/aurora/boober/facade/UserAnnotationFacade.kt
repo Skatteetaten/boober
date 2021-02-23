@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.MissingNode
 import com.fasterxml.jackson.module.kotlin.convertValue
@@ -13,8 +15,6 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.base64ToJsonNode
 import no.skatteetaten.aurora.boober.utils.toBase64
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
 
 @Service
 class UserAnnotationFacade(

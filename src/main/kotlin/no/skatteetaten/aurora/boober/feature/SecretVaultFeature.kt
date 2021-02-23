@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.binary.Base64
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.kubernetes.newSecret
@@ -24,8 +26,6 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterProperties
 import no.skatteetaten.aurora.boober.utils.normalizeKubernetesName
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
-import org.apache.commons.codec.binary.Base64
-import org.springframework.stereotype.Service
 
 private const val SECRETS_CONTEXT_KEY = "secrets"
 private val FeatureContext.secrets: List<AuroraSecret> get() = this.getContextKey(SECRETS_CONTEXT_KEY)
@@ -72,7 +72,11 @@ class SecretVaultFeature(
             .toSet()
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         return mapOf(SECRETS_CONTEXT_KEY to getSecretVaults(spec, cmd))
     }
 

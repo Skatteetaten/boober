@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.test.annotation.DirtiesContext
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
@@ -7,11 +12,6 @@ import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.ApplicationRef
 import okhttp3.mockwebserver.MockResponse
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,

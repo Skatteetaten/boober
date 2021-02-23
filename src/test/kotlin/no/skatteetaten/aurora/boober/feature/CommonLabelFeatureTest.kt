@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -8,7 +9,6 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import org.junit.jupiter.api.Test
 
 class CommonLabelFeatureTest : AbstractFeatureTest() {
     override val feature: Feature

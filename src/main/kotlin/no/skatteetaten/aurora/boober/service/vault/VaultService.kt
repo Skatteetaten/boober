@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.service.vault
 
+import org.eclipse.jgit.api.Git
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.support.PropertiesLoaderUtils
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.Domain.VAULT
 import no.skatteetaten.aurora.boober.TargetDomain
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -8,10 +12,6 @@ import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import org.eclipse.jgit.api.Git
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.support.PropertiesLoaderUtils
-import org.springframework.stereotype.Service
 
 data class VaultWithAccess(
     val vault: EncryptedFileVault?, // Will be null if the user does not have access

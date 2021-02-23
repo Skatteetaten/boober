@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import org.junit.jupiter.api.AfterEach
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.test.web.servlet.MockMvc
 import com.ninjasquad.springmockk.MockkBean
 import io.mockk.clearAllMocks
 import no.skatteetaten.aurora.boober.controller.security.BearerAuthenticationManager
@@ -10,11 +15,6 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import org.junit.jupiter.api.AfterEach
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs
-import org.springframework.security.test.context.support.WithMockUser
-import org.springframework.test.web.servlet.MockMvc
 
 @WithMockUser
 @AutoConfigureRestDocs

@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.feature
 
-import assertk.assertThat
+import java.time.LocalDateTime
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import assertk.assertThat
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.HerkimerService
@@ -13,9 +16,6 @@ import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 
 class HerkimerVaultFeatureTest : AbstractFeatureTest() {
     override val feature: Feature

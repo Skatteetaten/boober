@@ -1,12 +1,5 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isFailure
-import assertk.assertions.isNotEmpty
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTemplateWrapper
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,6 +10,13 @@ import org.springframework.test.web.client.MockRestServiceServer
 import org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo
 import org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess
 import org.springframework.web.client.RestTemplate
+import assertk.assertThat
+import assertk.assertions.isFailure
+import assertk.assertions.isNotEmpty
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.FionaRestTemplateWrapper
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
 
 @RestClientTest
 @AutoConfigureWebClient(registerRestTemplate = true)

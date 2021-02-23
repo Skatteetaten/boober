@@ -1,9 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
+import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 
 @Service
 @ConditionalOnProperty("integrations.herkimer.url")
