@@ -111,11 +111,11 @@ class VaultService(
     }
 
     fun deleteVault(vaultCollectionName: String, vaultName: String) {
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
-            if (vaultName.isBlank()) {
-                throw IllegalArgumentException("vault name can not be empty")
-            }
+        if (vaultName.isBlank()) {
+            throw IllegalArgumentException("vault name can not be empty")
+        }
 
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
             val vault =
                 findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
 
