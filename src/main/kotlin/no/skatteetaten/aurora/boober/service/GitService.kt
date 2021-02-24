@@ -135,7 +135,17 @@ open class GitService(
         }
     }
 
-    fun commitAndPushChanges(repo: Git, ref: String = "refs/heads/master", commitMessage: String? = null, addFilePattern: String? = ".", rmFilePattern: String? = null) {
+    /**
+     * When using addFilePattern or rmFilePattern there might be some changes that will not be committed.
+     * For removing unwanted changes use [cleanUpUnstagedCommits].
+     */
+    fun commitAndPushChanges(
+        repo: Git,
+        ref: String = "refs/heads/master",
+        commitMessage: String? = null,
+        addFilePattern: String? = ".",
+        rmFilePattern: String? = null
+    ) {
 
         if (addFilePattern != null) {
             repo.add().addFilepattern(addFilePattern).call()
@@ -164,6 +174,22 @@ open class GitService(
         } catch (e: Exception) {
             throw e
         }
+    }
+
+    /**
+     * This should be used to prevent unwanted changes being committed.
+     * @return true if clean up was successfully, false if not.
+     */
+    fun cleanUpUnstagedCommits(git: Git): Boolean {
+        val status = git.status().call()
+        if (status.isClean) {
+            return true
+        }
+
+        git.checkout().addPath(".").call()
+        val statusAfterCheckout = git.status().call()
+
+        return statusAfterCheckout.isClean
     }
 
     fun getTagHistory(git: Git): List<RevTag> {
