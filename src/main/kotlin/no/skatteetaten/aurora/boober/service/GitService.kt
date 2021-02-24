@@ -2,6 +2,8 @@ package no.skatteetaten.aurora.boober.service
 
 import mu.KotlinLogging
 import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.service.RemoveFileType.UNSTAGED
+import no.skatteetaten.aurora.boober.service.RemoveFileType.UNTRACKED
 import org.eclipse.jgit.api.CreateBranchCommand
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.api.errors.EmptyCommitException
@@ -137,7 +139,7 @@ open class GitService(
 
     /**
      * When using addFilePattern or rmFilePattern there might be some changes that will not be committed.
-     * For removing unwanted changes use [cleanUpUnstagedCommits].
+     * For removing unwanted changes use [cleanRepo].
      */
     fun commitAndPushChanges(
         repo: Git,
@@ -177,19 +179,29 @@ open class GitService(
     }
 
     /**
-     * This should be used to prevent unwanted changes being committed.
+     * This should be used to prevent unwanted changes from being committed.
      * @return true if clean up was successfully, false if not.
      */
-    fun cleanUpUnstagedCommits(git: Git): Boolean {
+    fun cleanRepo(git: Git, filesToRemove: List<RemoveFileType> = listOf(UNSTAGED, UNTRACKED)): Boolean {
         val status = git.status().call()
         if (status.isClean) {
             return true
         }
 
-        git.checkout().addPath(".").call()
+        filesToRemove.forEach {
+            cleanRepoForType(git, it)
+        }
+
         val statusAfterCheckout = git.status().call()
 
         return statusAfterCheckout.isClean
+    }
+
+    fun cleanRepoForType(git: Git, type: RemoveFileType) {
+        when (type) {
+            UNTRACKED -> git.clean().setPaths(setOf(".")).setCleanDirectories(true).call()
+            UNSTAGED -> git.checkout().addPath(".").call()
+        }
     }
 
     fun getTagHistory(git: Git): List<RevTag> {
@@ -205,4 +217,12 @@ open class GitService(
         userDetails.getAuthenticatedUser().let {
             PersonIdent(it.fullName ?: it.username, "${it.username}@skatteetaten.no")
         }
+}
+
+enum class RemoveFileType {
+    // New files
+    UNTRACKED,
+
+    // Changed files
+    UNSTAGED
 }

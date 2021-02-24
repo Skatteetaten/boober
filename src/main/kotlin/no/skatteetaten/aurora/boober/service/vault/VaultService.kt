@@ -121,9 +121,9 @@ class VaultService(
 
             vault.vaultFolder.deleteRecursively()
             gitService.commitAndPushChanges(repo = repo, rmFilePattern = vault.vaultFolder.name, addFilePattern = null)
-            val isClean = gitService.cleanUpUnstagedCommits(repo)
+            val isClean = gitService.cleanRepo(repo)
             if (!isClean) {
-                logger.warn("could not clean up unstaged commits")
+                logger.warn("could not clean repository")
             }
         }
     }
