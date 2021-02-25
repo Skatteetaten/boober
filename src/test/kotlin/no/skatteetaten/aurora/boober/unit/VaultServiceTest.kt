@@ -13,6 +13,7 @@ import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
+import assertk.assertions.messageContains
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -20,7 +21,6 @@ import io.mockk.mockk
 import io.mockk.slot
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
-import no.skatteetaten.aurora.boober.service.AuroraVaultServiceException
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
@@ -214,8 +214,8 @@ class VaultServiceTest {
         assertThat {
             vaultService.deleteVault(COLLECTION_NAME, "")
         }.isFailure().all {
-            isInstanceOf(AuroraVaultServiceException::class)
-            hasMessage("Could not update auroraVault underlying message=vault name can not be empty")
+            isInstanceOf(IllegalArgumentException::class)
+            messageContains("vault name can not be empty")
         }
     }
 
