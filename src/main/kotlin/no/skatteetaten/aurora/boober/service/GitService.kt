@@ -136,7 +136,8 @@ open class GitService(
     }
 
     /**
-     * When using addFilePattern or rmFilePattern there might be some changes that will not be committed.
+     * When using addFilePattern or rmFilePattern there might be some changes that will not be staged and committed.
+     * rmFilePattern will not delete files only stage them.
      * For removing unwanted changes use [cleanRepo].
      */
     fun commitAndPushChanges(
@@ -151,7 +152,7 @@ open class GitService(
             repo.add().addFilepattern(addFilePattern).call()
         }
         if (rmFilePattern != null) {
-            repo.rm().addFilepattern(rmFilePattern).call()
+            repo.rm().setCached(true).addFilepattern(rmFilePattern).call()
         }
         val status = repo.status().call()
         val message = commitMessage
@@ -178,28 +179,28 @@ open class GitService(
 
     /**
      * This should be used to prevent unwanted changes from being committed.
-     * @param git Git repository to preform clean operation
+     * @param repo Git repository to preform clean operation
      * @param removeUnstaged will remove changed files
      * @param removeUntracked will remove new files
      * @return true if clean up was successfully, false if not.
      */
-    fun cleanRepo(git: Git, removeUnstaged: Boolean = true, removeUntracked: Boolean = true): Boolean {
-        val status = git.status().call()
+    fun cleanRepo(repo: Git, removeUnstaged: Boolean = true, removeUntracked: Boolean = true): Boolean {
+        val status = repo.status().call()
         if (status.isClean) {
             return true
         }
 
         // Changed files
         if (removeUnstaged) {
-            git.checkout().addPath(".").call()
+            repo.checkout().addPath(".").call()
         }
 
         // New files
         if (removeUntracked) {
-            git.clean().setPaths(setOf(".")).setCleanDirectories(true).call()
+            repo.clean().setPaths(setOf(".")).setCleanDirectories(true).call()
         }
 
-        val statusAfterCheckout = git.status().call()
+        val statusAfterCheckout = repo.status().call()
 
         return statusAfterCheckout.isClean
     }
