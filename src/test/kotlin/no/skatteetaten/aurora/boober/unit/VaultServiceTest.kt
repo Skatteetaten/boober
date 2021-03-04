@@ -12,6 +12,8 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
+import assertk.assertions.isTrue
+import assertk.assertions.messageContains
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -197,6 +199,51 @@ class VaultServiceTest {
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
         }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
+    }
+
+    @Test
+    fun `deleteVault should fail when trying to delete vault with empty name`() {
+        val fileName = "passwords.properties"
+        val contents = "SERVICE_PASSWORD=FOO"
+
+        val vault =
+            vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.toByteArray())
+
+        assertThat(vault.secrets.size).isEqualTo(1)
+
+        assertThat {
+            vaultService.deleteVault(COLLECTION_NAME, "")
+        }.isFailure().all {
+            isInstanceOf(IllegalArgumentException::class)
+            messageContains("vault name can not be empty")
+        }
+    }
+
+    @Test
+    fun `After delete vault, git repo should be clean and git log should contain delete message`() {
+        val fileName = "passwords.properties"
+        val contents = "SERVICE_PASSWORD=FOO"
+
+        val vault =
+            vaultService.createOrUpdateFileInVault(COLLECTION_NAME, VAULT_NAME, fileName, contents.toByteArray())
+
+        assertThat(vault.secrets.size).isEqualTo(1)
+        vaultService.deleteVault(COLLECTION_NAME, VAULT_NAME)
+
+        assertThat {
+            vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
+        }.isFailure().all {
+            isInstanceOf(IllegalArgumentException::class)
+            hasMessage("Vault not found name=test")
+        }
+
+        val git = gitService.checkoutRepository(COLLECTION_NAME, refName = "master")
+        val gitLog = git.log().call().firstOrNull()
+
+        assertThat(gitLog?.shortMessage).isEqualTo("Added: 0, Modified: 0, Deleted: 1")
+
+        val gitStatus = git.status().call()
+        assertThat(gitStatus.isClean).isTrue()
     }
 
     @Test

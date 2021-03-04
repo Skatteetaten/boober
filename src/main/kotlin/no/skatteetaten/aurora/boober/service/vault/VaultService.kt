@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service.vault
 
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.Domain.VAULT
 import no.skatteetaten.aurora.boober.TargetDomain
 import no.skatteetaten.aurora.boober.controller.security.User
@@ -12,6 +13,8 @@ import org.eclipse.jgit.api.Git
 import org.springframework.core.io.ByteArrayResource
 import org.springframework.core.io.support.PropertiesLoaderUtils
 import org.springframework.stereotype.Service
+
+private val logger = KotlinLogging.logger {}
 
 data class VaultWithAccess(
     val vault: EncryptedFileVault?, // Will be null if the user does not have access
@@ -108,11 +111,20 @@ class VaultService(
     }
 
     fun deleteVault(vaultCollectionName: String, vaultName: String) {
-        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
-            findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
+        if (vaultName.isBlank()) {
+            throw IllegalArgumentException("vault name can not be empty")
+        }
 
-            vaultCollection.deleteVault(vaultName)
-            gitService.commitAndPushChanges(repo)
+        return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, repo ->
+            val vault =
+                findVaultByNameIfAllowed(vaultCollection, vaultName) ?: return@withVaultCollectionAndRepoForUpdate
+
+            vault.vaultFolder.deleteRecursively()
+            gitService.commitAndPushChanges(repo = repo, rmFilePattern = vault.vaultFolder.name, addFilePattern = null)
+            val isClean = gitService.cleanRepo(repo)
+            if (!isClean) {
+                logger.warn("could not clean repository")
+            }
         }
     }
 
