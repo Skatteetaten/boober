@@ -35,6 +35,7 @@ val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("l
 val AuroraDeploymentSpec.fluentConfigName: String get() = "${this.name}-fluent-config"
 val AuroraDeploymentSpec.fluentParserName: String get() = "${this.name}-fluent-parser"
 val AuroraDeploymentSpec.hecSecretName: String get() = "${this.name}-hec"
+val AuroraDeploymentSpec.bufferSize: Int get() = this.getOrNull<Int>("logging/bufferSize") ?: 20
 const val hecTokenKey: String = "HEC_TOKEN"
 const val splunkHostKey: String = "SPLUNK_HOST"
 const val splunkPortKey: String = "SPLUNK_PORT"
@@ -93,6 +94,7 @@ class FluentbitSidecarFeature(
             AuroraConfigFieldHandler("logging/loggers/$log")
         }
             .addIfNotNull(AuroraConfigFieldHandler("logging/index"))
+            .addIfNotNull(AuroraConfigFieldHandler("logging/bufferSize"))
             .toSet()
     }
 
@@ -114,7 +116,7 @@ class FluentbitSidecarFeature(
                 name = adc.fluentConfigName
                 namespace = adc.namespace
             }
-            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(loggerIndexes, adc.name, adc.cluster))
+            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(loggerIndexes, adc.name, adc.cluster, adc.bufferSize))
         }
 
         val hecSecret = newSecret {
@@ -264,11 +266,11 @@ class FluentbitSidecarFeature(
             resources {
                 limits = mapOf(
                     // TODO? Add as config parameter
-                    "memory" to Quantity("128Mi"),
+                    "memory" to Quantity("${adc.bufferSize * 5}Mi"),
                     "cpu" to Quantity("300m")
                 )
                 requests = mapOf(
-                    "memory" to Quantity("20Mi"),
+                    "memory" to Quantity("${adc.bufferSize}Mi"),
                     "cpu" to Quantity("10m")
                 )
             }
@@ -342,7 +344,7 @@ fun getLogRotationExcludePattern(logFilePattern: String): String {
     return logFilePattern.replace("*", "*.[1-9]")
 }
 
-fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: String, cluster: String): String {
+fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: String, cluster: String, bufferSize: Int): String {
     val inputs = loggerIndexes.map { log ->
         var multiline = ""
         if (log.sourceType == "log4j") {
@@ -355,7 +357,9 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     Exclude_Path ${log.excludePattern}
     Tag    ${log.name}
     DB     /u01/logs/${log.name}.db
-    Mem_Buf_Limit 20MB
+    Buffer_Max_Size 512k
+    Skip_Long_Lines On
+    Mem_Buf_Limit ${bufferSize}MB
     Rotate_Wait 10
     Key    event
     $multiline"""
