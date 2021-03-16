@@ -377,24 +377,24 @@ fun generateFluentBitConfig(defaultIndex: String, loggerIndexes: List<LoggingCon
     Flush        1
     Daemon       Off
     Log_Level    info
-    Log_File     /var/log/fluentbit.log
+    Log_File     /u01/logs/fluentbit
     Parsers_File $parserMountPath/$parsersFileName
 
 $inputs
 
 [INPUT]
     Name    tail
-    Path    /var/log/fluentbit.log
+    Path    /u01/logs/fluentbit
     Tag     fluentbit
     Refresh_Interval 5
     Read_from_Head true
     Key     event
 
-$filters
-
 [FILTER]
     Name stdout
     Match fluentbit
+
+$filters
     
 [FILTER]
     Name modify
