@@ -116,7 +116,7 @@ class FluentbitSidecarFeature(
                 name = adc.fluentConfigName
                 namespace = adc.namespace
             }
-            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(loggerIndexes, adc.name, adc.cluster, adc.bufferSize))
+            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(index, loggerIndexes, adc.name, adc.cluster, adc.bufferSize))
         }
 
         val hecSecret = newSecret {
@@ -344,7 +344,7 @@ fun getLogRotationExcludePattern(logFilePattern: String): String {
     return logFilePattern.replace("*", "*.[1-9]")
 }
 
-fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: String, cluster: String, bufferSize: Int): String {
+fun generateFluentBitConfig(defaultIndex: String, loggerIndexes: List<LoggingConfig>, application: String, cluster: String, bufferSize: Int): String {
     val inputs = loggerIndexes.map { log ->
         var multiline = ""
         if (log.sourceType == "log4j") {
@@ -377,11 +377,30 @@ fun generateFluentBitConfig(loggerIndexes: List<LoggingConfig>, application: Str
     Flush        1
     Daemon       Off
     Log_Level    info
+    Log_File     /var/log/fluentbit.log
     Parsers_File $parserMountPath/$parsersFileName
 
 $inputs
 
+[INPUT]
+    Name    tail
+    Path    /var/log/fluentbit.log
+    Tag     fluentbit
+    Refresh_Interval 5
+    Read_from_Head true
+    Key     event
+
 $filters
+
+[FILTER]
+    Name stdout
+    Match fluentbit
+    
+[FILTER]
+    Name modify
+    Match fluentbit
+    Set sourcetype fluentbit
+    Set index $defaultIndex
 
 [FILTER]
     Name modify
