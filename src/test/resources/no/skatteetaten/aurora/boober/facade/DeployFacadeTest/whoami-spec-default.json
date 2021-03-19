@@ -529,6 +529,26 @@
           }
         ]
       }
+    },
+    "cname": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ttl" : {
+        "source" : "default",
+        "value" : 300,
+        "sources" : [ {
+          "name" : "default",
+          "value" : 300
+        } ]
+      }
     }
   },
   "s3": {

@@ -42,6 +42,9 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
+               |   cname:
+       default |     enabled: false
+       default |     ttl: 300
                | secretVaults:
                |   foo:
        default |     name: "foo"

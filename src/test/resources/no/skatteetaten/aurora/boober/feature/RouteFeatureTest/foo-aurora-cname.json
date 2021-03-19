@@ -1,0 +1,13 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "AuroraCname",
+  "metadata": {
+    "name": "simple-foo",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "cname": "simple-foo-specific-cname",
+    "host": "simple-foo",
+    "ttl": 300
+  }
+}

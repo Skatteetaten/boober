@@ -47,6 +47,9 @@ utv/python.json | route: true
         default |     enabled: false
         default |     insecurePolicy: "None"
         default |     termination: "edge"
+                |   cname:
+        default |     enabled: false
+        default |     ttl: 300
 utv/python.json | s3: true
                 | s3Defaults:
 utv/python.json |   bucketName: "myBucket"

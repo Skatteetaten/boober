@@ -127,6 +127,9 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     enabled: false
                  default |     insecurePolicy: "None"
                  default |     termination: "edge"
+                         |   cname:
+                 default |     enabled: false
+                 default |     ttl: 300
                          | s3:
                          |   default:
             complex.json |     bucketName: "minYndlingsBucket"
