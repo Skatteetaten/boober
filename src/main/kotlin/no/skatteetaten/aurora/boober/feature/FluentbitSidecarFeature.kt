@@ -35,7 +35,7 @@ val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("l
 val AuroraDeploymentSpec.fluentConfigName: String get() = "${this.name}-fluent-config"
 val AuroraDeploymentSpec.fluentParserName: String get() = "${this.name}-fluent-parser"
 val AuroraDeploymentSpec.hecSecretName: String get() = "${this.name}-hec"
-val AuroraDeploymentSpec.bufferSize: Int get() = this.getOrNull<Int>("logging/bufferSize") ?: 20
+val AuroraDeploymentSpec.bufferSize: Int get() = this.get<Int>("logging/bufferSize")
 const val hecTokenKey: String = "HEC_TOKEN"
 const val splunkHostKey: String = "SPLUNK_HOST"
 const val splunkPortKey: String = "SPLUNK_PORT"
@@ -94,7 +94,7 @@ class FluentbitSidecarFeature(
             AuroraConfigFieldHandler("logging/loggers/$log")
         }
             .addIfNotNull(AuroraConfigFieldHandler("logging/index"))
-            .addIfNotNull(AuroraConfigFieldHandler("logging/bufferSize"))
+            .addIfNotNull(AuroraConfigFieldHandler("logging/bufferSize", defaultValue = 20))
             .toSet()
     }
 
@@ -116,7 +116,15 @@ class FluentbitSidecarFeature(
                 name = adc.fluentConfigName
                 namespace = adc.namespace
             }
-            data = mapOf("fluent-bit.conf" to generateFluentBitConfig(index, loggerIndexes, adc.name, adc.cluster, adc.bufferSize))
+            data = mapOf(
+                "fluent-bit.conf" to generateFluentBitConfig(
+                    index,
+                    loggerIndexes,
+                    adc.name,
+                    adc.cluster,
+                    adc.bufferSize
+                )
+            )
         }
 
         val hecSecret = newSecret {
@@ -344,13 +352,75 @@ fun getLogRotationExcludePattern(logFilePattern: String): String {
     return logFilePattern.replace("*", "*.[1-9]")
 }
 
-fun generateFluentBitConfig(defaultIndex: String, loggerIndexes: List<LoggingConfig>, application: String, cluster: String, bufferSize: Int): String {
-    val inputs = loggerIndexes.map { log ->
-        var multiline = ""
-        if (log.sourceType == "log4j") {
-            multiline = "Multiline    On\n    Parser_Firstline   log4jMultilineParser"
-        }
-        """[INPUT]
+/**
+ * Fluentbit parser config. Used for parsing multiline logs.
+ */
+fun generateParserConf(): String {
+    return """[PARSER]
+    Name     log4jMultilineParser
+    Format   regex
+    Regex   ^(?<timestamp>\d{4}-\d{1,2}-\d{1,2}T\d{2}:\d{2}:\d{2},\d*Z) (?<event>.*)
+    Time_Key    timestamp
+    Time_Format %Y-%m-%dT%H:%M:%S,%L%z
+    Time_Keep  Off"""
+}
+
+/**
+ * Fluentbit config
+ */
+fun generateFluentBitConfig(
+    defaultIndex: String,
+    loggerIndexes: List<LoggingConfig>,
+    application: String,
+    cluster: String,
+    bufferSize: Int
+): String {
+    val logInputList = getLoggInputList(loggerIndexes, bufferSize)
+    val filters = getLogIndexFilters(loggerIndexes)
+
+    return arrayListOf<String>(
+        fluentbitService,
+        logInputList,
+        fluentbitLogInputAndFilter,
+        filters,
+        getFluentBitSlefLogFilter(defaultIndex),
+        getModifyFilter(application, cluster),
+        nestFilter,
+        splunkOutput
+    ).joinToString("\n\n")
+        .replace("$ {", "\${") // Fluentbit uses $(variable) but so does kotling multiline string, so space between $ and ( is used in config and must be replaced here.
+}
+
+// Fluentbit filter for adding splunk fields for application, cluster, environment, host and nodetype.
+private fun getModifyFilter(application: String, cluster: String) = """[FILTER]
+    Name modify
+    Match *
+    Add host $ {POD_NAME}
+    Add environment $ {POD_NAMESPACE}
+    Add nodetype openshift
+    Add application $application
+    Add cluster $cluster"""
+
+// Fluentbit filter for setting source type and index for each logging config
+private fun getLogIndexFilters(loggerIndexes: List<LoggingConfig>) =
+    loggerIndexes.map { log ->
+        """[FILTER]
+    Name modify
+    Match ${log.name}
+    Set sourcetype ${log.sourceType}
+    Set index ${log.index}"""
+    }.joinToString("\n\n")
+
+// Fluentibt input for each logging config
+private fun getLoggInputList(
+    loggerIndexes: List<LoggingConfig>,
+    bufferSize: Int
+) = loggerIndexes.map { log ->
+    var multiline = ""
+    if (log.sourceType == "log4j") {
+        multiline = "\n    Multiline    On\n    Parser_Firstline   log4jMultilineParser"
+    }
+    """[INPUT]
     Name   tail
     Path   /u01/logs/${log.filePattern}
     Path_Key source
@@ -361,28 +431,44 @@ fun generateFluentBitConfig(defaultIndex: String, loggerIndexes: List<LoggingCon
     Skip_Long_Lines On
     Mem_Buf_Limit ${bufferSize}MB
     Rotate_Wait 10
-    Key    event
-    $multiline"""
-    }.joinToString("\n\n")
+    Key    event""".plus(multiline)
+}.joinToString("\n\n")
 
-    val filters = loggerIndexes.map { log ->
-        """[FILTER]
-    Name modify
-    Match ${log.name}
-    Set sourcetype ${log.sourceType}
-    Set index ${log.index}"""
-    }.joinToString("\n\n")
+// Fluentbit filter for nesting splunk search fields under "fields" json element required for splunk to parse them correctly
+const val nestFilter: String =
+    """[FILTER]
+    Name nest
+    Match *
+    Operation nest
+    Wildcard environment
+    Wildcard application
+    Wildcard cluster
+    Wildcard nodetype
+    Nest_under fields"""
 
-    return """[SERVICE]
+// splunk output plugin for fluentbit. This is the configuration for sending logs to splunk.
+const val splunkOutput: String =
+    """[OUTPUT]
+    Name splunk
+    Match *
+    Host $ {SPLUNK_HOST}
+    Port $ {SPLUNK_PORT}
+    Splunk_Token $ {HEC_TOKEN}
+    Splunk_Send_Raw On
+    TLS         On
+    TLS.Verify  Off"""
+
+const val fluentbitService: String =
+    """[SERVICE]
     Flush        1
     Daemon       Off
     Log_Level    info
     Log_File     /u01/logs/fluentbit
-    Parsers_File $parserMountPath/$parsersFileName
+    Parsers_File $parserMountPath/$parsersFileName"""
 
-$inputs
-
-[INPUT]
+// Input for the log file produced by fluentbit
+const val fluentbitLogInputAndFilter: String =
+    """[INPUT]
     Name    tail
     Path    /u01/logs/fluentbit
     Tag     fluentbit
@@ -392,53 +478,12 @@ $inputs
 
 [FILTER]
     Name stdout
-    Match fluentbit
+    Match fluentbit"""
 
-$filters
-    
-[FILTER]
+fun getFluentBitSlefLogFilter(defaultIndex: String): String {
+    return """[FILTER]
     Name modify
     Match fluentbit
     Set sourcetype fluentbit
-    Set index $defaultIndex
-
-[FILTER]
-    Name modify
-    Match *
-    Add host $ {POD_NAME}
-    Add environment $ {POD_NAMESPACE}
-    Add nodetype openshift
-    Add application $application
-    Add cluster $cluster
-
-[FILTER]
-    Name nest
-    Match *
-    Operation nest
-    Wildcard environment
-    Wildcard application
-    Wildcard cluster
-    Wildcard nodetype
-    Nest_under fields
-
-[OUTPUT]
-    Name splunk
-    Match *
-    Host $ {SPLUNK_HOST}
-    Port $ {SPLUNK_PORT}
-    Splunk_Token $ {HEC_TOKEN}
-    Splunk_Send_Raw On
-    TLS         On
-    TLS.Verify  Off
-    """.replace("$ {", "\${")
-}
-
-fun generateParserConf(): String {
-    return """[PARSER]
-    Name     log4jMultilineParser
-    Format   regex
-    Regex   ^(?<timestamp>\d{4}-\d{1,2}-\d{1,2}T\d{2}:\d{2}:\d{2},\d*Z) (?<event>.*)
-    Time_Key    timestamp
-    Time_Format %Y-%m-%dT%H:%M:%S,%L%z
-    Time_Keep  Off"""
+    Set index $defaultIndex"""
 }
