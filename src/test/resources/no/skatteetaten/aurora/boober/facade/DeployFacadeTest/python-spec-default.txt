@@ -32,6 +32,8 @@ utv/python.json | version: "1"
                 |   memory:
         default |     min: "128Mi"
         default |     max: "512Mi"
+                | logging:
+        default |   bufferSize: 20
        fileName | artifactId: "python"
                 | deployStrategy:
         default |   type: "rolling"
