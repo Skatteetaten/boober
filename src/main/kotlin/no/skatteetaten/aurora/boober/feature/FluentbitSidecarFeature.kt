@@ -378,12 +378,12 @@ fun generateFluentBitConfig(
     val logInputList = getLoggInputList(loggerIndexes, bufferSize)
     val filters = getLogIndexFilters(loggerIndexes)
 
-    return arrayListOf<String>(
+    return listOf(
         fluentbitService,
         logInputList,
         fluentbitLogInputAndFilter,
         filters,
-        getFluentBitSlefLogFilter(defaultIndex),
+        getFluentBitSelfLogFilter(defaultIndex),
         getModifyFilter(application, cluster),
         nestFilter,
         splunkOutput
@@ -480,7 +480,8 @@ const val fluentbitLogInputAndFilter: String =
     Name stdout
     Match fluentbit"""
 
-fun getFluentBitSlefLogFilter(defaultIndex: String): String {
+// Log filter for the fluent bit produced logs to also be sendt to splunk
+fun getFluentBitSelfLogFilter(defaultIndex: String): String {
     return """[FILTER]
     Name modify
     Match fluentbit
