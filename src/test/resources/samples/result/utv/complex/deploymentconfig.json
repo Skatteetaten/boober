@@ -427,7 +427,7 @@
             "name": "komplex-fluent-sidecar",
             "resources": {
               "limits": {
-                "memory": "128Mi",
+                "memory": "100Mi",
                 "cpu": "300m"
               },
               "requests": {

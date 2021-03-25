@@ -397,6 +397,16 @@
       }
     }
   },
+  "logging" : {
+    "bufferSize" : {
+      "source" : "default",
+      "value" : 20,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 20
+      } ]
+    }
+  },
   "route": {
     "source": "web.json",
     "value": true,
