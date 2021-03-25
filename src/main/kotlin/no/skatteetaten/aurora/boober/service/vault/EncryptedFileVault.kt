@@ -42,11 +42,6 @@ class VaultCollection private constructor(
         return EncryptedFileVault.createFromFolder(vaultFolder, encryptor, decryptor)
     }
 
-    fun deleteVault(vaultName: String) {
-
-        File(folder, vaultName).deleteRecursively()
-    }
-
     private fun findAllVaultFolders(): List<File> {
 
         return folder.listFiles()

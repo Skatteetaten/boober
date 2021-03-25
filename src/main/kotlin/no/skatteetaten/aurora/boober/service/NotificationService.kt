@@ -56,7 +56,7 @@ class NotificationService(
     private fun Map<Notification, List<AuroraDeployResult>>.sendMattermostNotification(): List<AuroraDeployResult> {
         val user = userDetailsProvider.getAuthenticatedUser().username
 
-        val headerMessage = "@$user has deployed to cluster [$cluster]($openshiftUrl)"
+        val headerMessage = "@$user has applied application(s) to cluster [$cluster]($openshiftUrl)"
 
         return this.flatMap { (notification, deployResults) ->
             val attachments = deployResults.createMattermostMessage()
@@ -75,7 +75,7 @@ class NotificationService(
         val listOfDeploys = this.asBulletlistOfDeploys(isSuccessful = isSuccessful)
 
         val headerMessage =
-            if (isSuccessful) "Successful deploys" else "Failed deploys \n For more information run `ao inspect <deployId>` in cli"
+            if (isSuccessful) "Applied application(s) to cluster" else "Failed to apply application(s) to cluster \n For more information run `ao inspect <deployId>` in cli"
         val color = if (isSuccessful) AttachmentColor.Green else AttachmentColor.Red
 
         val text = """

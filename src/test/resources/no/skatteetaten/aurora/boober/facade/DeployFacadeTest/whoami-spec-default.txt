@@ -36,6 +36,8 @@ utv/about.json | cluster: "utv"
                |   memory:
        default |     min: "128Mi"
        default |     max: "512Mi"
+               | logging:
+       default |   bufferSize: 20
       fileName | artifactId: "whoami"
                | deployStrategy:
        default |   type: "rolling"
