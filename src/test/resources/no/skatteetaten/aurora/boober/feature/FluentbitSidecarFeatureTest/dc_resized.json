@@ -86,11 +86,11 @@
             "name": "simple-fluent-sidecar",
             "resources": {
               "limits": {
-                "memory": "100Mi",
+                "memory": "50Mi",
                 "cpu": "300m"
               },
               "requests": {
-                "memory": "20Mi",
+                "memory": "10Mi",
                 "cpu": "10m"
               }
             },

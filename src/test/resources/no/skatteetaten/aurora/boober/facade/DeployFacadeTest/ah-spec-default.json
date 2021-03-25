@@ -267,6 +267,16 @@
       }
     ]
   },
+  "logging" : {
+    "bufferSize" : {
+      "source" : "default",
+      "value" : 20,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 20
+      } ]
+    }
+  },
   "parameters": {
     "FEED_NAME": {
       "source": "ah.json",
