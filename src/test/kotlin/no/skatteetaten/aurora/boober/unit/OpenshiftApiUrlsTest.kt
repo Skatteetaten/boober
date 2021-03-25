@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.hasMessage
@@ -7,9 +10,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
 class OpenshiftApiUrlsTest {
 

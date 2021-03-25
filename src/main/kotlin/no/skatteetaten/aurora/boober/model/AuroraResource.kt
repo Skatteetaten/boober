@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import java.time.Instant
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.ObjectMeta
@@ -14,7 +15,6 @@ import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
-import java.time.Instant
 
 private val logger = KotlinLogging.logger {}
 

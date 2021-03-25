@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isFailure
 import assertk.assertions.messageContains
@@ -8,7 +9,6 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
-import org.junit.jupiter.api.Test
 
 class AuroraTemplatesServiceTest : ResourceLoader() {
 

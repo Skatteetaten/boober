@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
+import java.io.File
+import java.nio.charset.Charset
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
@@ -7,8 +9,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
-import java.io.File
-import java.nio.charset.Charset
 
 data class AuroraConfig(
     val files: List<AuroraConfigFile>,

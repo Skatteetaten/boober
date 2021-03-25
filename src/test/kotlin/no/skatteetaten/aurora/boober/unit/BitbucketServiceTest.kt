@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
+import org.springframework.boot.web.client.RestTemplateBuilder
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.service.BitbucketRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.Test
-import org.springframework.boot.web.client.RestTemplateBuilder
 
 class BitbucketServiceTest {
 

@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.time.Duration
+import org.springframework.boot.convert.DurationStyle
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.exec
 import com.fkorotkov.kubernetes.newLifecycle
 import com.fkorotkov.kubernetes.preStop
@@ -10,9 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.containersWithName
 import no.skatteetaten.aurora.boober.utils.durationString
-import org.springframework.boot.convert.DurationStyle
-import org.springframework.stereotype.Service
-import java.time.Duration
 
 const val PRE_STOP_DURATION: String = "lifecycle/preStopDuration"
 

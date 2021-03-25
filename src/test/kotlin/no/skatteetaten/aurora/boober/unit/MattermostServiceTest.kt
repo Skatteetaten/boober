@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.http.HttpStatus
 import assertk.assertThat
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
@@ -13,10 +17,6 @@ import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.url
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.boot.web.client.RestTemplateBuilder
-import org.springframework.http.HttpStatus
 
 class MattermostServiceTest {
 

@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.model
 
+import org.apache.commons.text.StringSubstitutor
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.deepSet
 import no.skatteetaten.aurora.boober.utils.toMultiMap
-import org.apache.commons.text.StringSubstitutor
 
 data class AuroraDeploymentSpec(
     val fields: Map<String, AuroraConfigField>,

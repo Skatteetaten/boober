@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -19,9 +22,6 @@ import no.skatteetaten.aurora.boober.service.NotificationService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.utils.parallelMap
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 
 private val logger = KotlinLogging.logger {}
 

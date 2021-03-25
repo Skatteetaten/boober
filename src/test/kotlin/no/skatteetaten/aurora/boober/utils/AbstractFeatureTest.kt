@@ -1,11 +1,8 @@
 package no.skatteetaten.aurora.boober.utils
 
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isInstanceOf
-import assertk.assertions.support.expected
-import assertk.assertions.support.show
+import java.time.Instant
+import kotlin.reflect.KClass
+import org.junit.jupiter.api.BeforeEach
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newEnvVar
@@ -27,6 +24,12 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
 import com.fkorotkov.openshift.to
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.VolumeProjection
@@ -55,9 +58,6 @@ import no.skatteetaten.aurora.boober.service.IdServiceFallback
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
-import org.junit.jupiter.api.BeforeEach
-import java.time.Instant
-import kotlin.reflect.KClass
 
 /*
   Abstract class to test a single feature

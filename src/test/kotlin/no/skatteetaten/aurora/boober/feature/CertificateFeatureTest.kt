@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.io.ByteArrayInputStream
+import java.time.Duration
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.Secret
@@ -11,9 +14,6 @@ import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.time.Duration
 
 class CertificateFeatureTest : AbstractFeatureTest() {
     override val feature: Feature

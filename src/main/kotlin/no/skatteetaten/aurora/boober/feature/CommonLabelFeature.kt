@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.time.ZoneId
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -8,8 +10,6 @@ import no.skatteetaten.aurora.boober.model.addLabels
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.springframework.stereotype.Service
-import java.time.ZoneId
 
 @Service
 class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature {

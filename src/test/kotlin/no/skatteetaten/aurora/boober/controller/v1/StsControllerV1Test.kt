@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
+import org.junit.jupiter.api.Test
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
+import org.springframework.http.HttpHeaders
 import com.ninjasquad.springmockk.MockkBean
 import io.fabric8.kubernetes.api.model.OwnerReference
 import io.mockk.every
@@ -13,9 +16,6 @@ import no.skatteetaten.aurora.mockmvc.extensions.contentTypeJson
 import no.skatteetaten.aurora.mockmvc.extensions.post
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
-import org.junit.jupiter.api.Test
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
-import org.springframework.http.HttpHeaders
 
 @WebMvcTest(controllers = [StsControllerV1::class])
 class StsControllerV1Test : AbstractControllerTest() {

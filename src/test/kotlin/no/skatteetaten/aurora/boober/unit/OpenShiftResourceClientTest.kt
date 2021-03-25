@@ -1,9 +1,12 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
+import org.springframework.boot.web.client.RestTemplateBuilder
+import org.springframework.http.HttpHeaders
+import com.fasterxml.jackson.databind.node.TextNode
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
-import com.fasterxml.jackson.databind.node.TextNode
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -11,9 +14,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrap
 import no.skatteetaten.aurora.boober.service.openshift.token.TokenProvider
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.jupiter.api.Test
-import org.springframework.boot.web.client.RestTemplateBuilder
-import org.springframework.http.HttpHeaders
 
 class OpenShiftResourceClientTest {
 

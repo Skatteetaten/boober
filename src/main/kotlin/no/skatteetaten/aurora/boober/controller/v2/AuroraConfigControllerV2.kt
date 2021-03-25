@@ -1,5 +1,15 @@
 package no.skatteetaten.aurora.boober.controller.v2
 
+import javax.servlet.http.HttpServletRequest
+import javax.validation.Valid
+import org.springframework.http.HttpHeaders
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestHeader
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import com.fasterxml.jackson.annotation.JsonRawValue
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.internal.Response
@@ -9,16 +19,6 @@ import no.skatteetaten.aurora.boober.controller.v1.clearQuotes
 import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import org.springframework.http.HttpHeaders
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
-import javax.servlet.http.HttpServletRequest
-import javax.validation.Valid
 
 private val logger = KotlinLogging.logger {}
 

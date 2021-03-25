@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.service.vault
 
+import java.io.File
+import org.apache.commons.io.FileUtils
+import org.springframework.util.DigestUtils
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import no.skatteetaten.aurora.boober.model.PreconditionFailureException
-import org.apache.commons.io.FileUtils
-import org.springframework.util.DigestUtils
-import java.io.File
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class AuroraPermissions(

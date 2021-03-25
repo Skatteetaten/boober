@@ -1,10 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import com.fasterxml.jackson.databind.JsonNode
-import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.service.OpenShiftException
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.utils.openshiftName
+import java.util.regex.Pattern
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.CredentialsExpiredException
@@ -12,7 +8,11 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
+import com.fasterxml.jackson.databind.JsonNode
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.utils.openshiftName
 
 private val logger = KotlinLogging.logger {}
 

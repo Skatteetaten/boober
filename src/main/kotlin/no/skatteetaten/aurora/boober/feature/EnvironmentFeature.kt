@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.time.Duration
+import org.springframework.boot.convert.DurationStyle
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
 import com.fkorotkov.kubernetes.newObjectReference
@@ -21,9 +24,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.springframework.boot.convert.DurationStyle
-import org.springframework.stereotype.Service
-import java.time.Duration
 
 val AuroraDeploymentSpec.envTTL: Duration?
     get() = this.getOrNull<String>("env/ttl")?.let {

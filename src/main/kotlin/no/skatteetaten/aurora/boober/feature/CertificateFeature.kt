@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.io.ByteArrayOutputStream
+import java.util.Properties
+import org.apache.commons.codec.binary.Base64
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolume
@@ -20,11 +25,6 @@ import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.apache.commons.codec.binary.Base64
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import java.io.ByteArrayOutputStream
-import java.util.Properties
 
 val AuroraDeploymentSpec.certificateCommonName: String?
     get() {

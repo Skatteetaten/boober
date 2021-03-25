@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.apps.metadata
 import com.fkorotkov.kubernetes.apps.newDeployment
 import com.fkorotkov.kubernetes.apps.rollingUpdate
@@ -62,8 +64,6 @@ import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
-import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: this["envName"]
 val AuroraDeploymentSpec.name get(): String = this["name"]

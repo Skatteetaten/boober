@@ -1,15 +1,15 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.facade.DeploymentFacade
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.ApplicationRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.facade.DeploymentFacade
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.ApplicationRef
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 
 /*
    Controller: Teste grensesnittet. Mocke fasaden

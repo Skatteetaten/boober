@@ -1,11 +1,11 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
-import no.skatteetaten.aurora.boober.ServiceTypes
-import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestTemplate
+import no.skatteetaten.aurora.boober.ServiceTypes
+import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 
 @Component
 class OpenShiftRestTemplateWrapper(

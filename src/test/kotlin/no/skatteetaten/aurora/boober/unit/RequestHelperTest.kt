@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.mock.web.MockHttpServletRequest
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 
 class RequestHelperTest {
 

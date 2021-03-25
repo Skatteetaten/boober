@@ -1,5 +1,12 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.io.ByteArrayOutputStream
+import java.util.Properties
+import kotlin.reflect.KClass
+import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
@@ -36,13 +43,6 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.oneOf
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import java.io.ByteArrayOutputStream
-import java.util.Properties
-import kotlin.reflect.KClass
 
 private val logger = KotlinLogging.logger { }
 
@@ -224,7 +224,11 @@ class DatabaseFeature(
 
 abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         return mapOf("databases" to findDatabases(spec))
     }
 

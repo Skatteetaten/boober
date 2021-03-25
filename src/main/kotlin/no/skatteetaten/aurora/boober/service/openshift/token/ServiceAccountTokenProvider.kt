@@ -1,13 +1,13 @@
 package no.skatteetaten.aurora.boober.service.openshift.token
 
+import java.io.File
+import java.io.IOException
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 import com.google.common.base.Supplier
 import com.google.common.base.Suppliers
 import com.google.common.io.Files
 import mu.KotlinLogging
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
-import java.io.File
-import java.io.IOException
 
 private val logger = KotlinLogging.logger {}
 

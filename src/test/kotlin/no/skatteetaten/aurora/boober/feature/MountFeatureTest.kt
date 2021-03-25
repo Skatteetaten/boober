@@ -1,11 +1,15 @@
 package no.skatteetaten.aurora.boober.feature
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newPersistentVolumeClaim
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolumeProjection
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.mockk.every
 import io.mockk.mockk
@@ -15,10 +19,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
 
 class MountFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -221,7 +221,7 @@ class MountFeatureTest : AbstractFeatureTest() {
         val auroraResource = resource.first()
         val satp = ServiceAccountTokenProjection("dummy-audience", 600L, "psat")
         val psat = newVolumeProjection {
-                serviceAccountToken = satp
+            serviceAccountToken = satp
         }
 
         assertThat(auroraResource).auroraResourceMountsPsat(psat)

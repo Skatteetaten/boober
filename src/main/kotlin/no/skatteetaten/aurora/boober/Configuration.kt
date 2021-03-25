@@ -1,15 +1,10 @@
 package no.skatteetaten.aurora.boober
 
-import no.skatteetaten.aurora.AuroraMetrics
-import no.skatteetaten.aurora.boober.service.GitService
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
-import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
-import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
-import no.skatteetaten.aurora.boober.utils.SharedSecretReader
-import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
-import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
+import java.io.FileInputStream
+import java.security.KeyStore
+import java.security.cert.CertificateFactory
+import java.security.cert.X509Certificate
+import java.util.UUID
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
@@ -31,11 +26,16 @@ import org.springframework.http.client.ClientHttpRequestInterceptor
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory
 import org.springframework.retry.annotation.EnableRetry
 import org.springframework.web.client.RestTemplate
-import java.io.FileInputStream
-import java.security.KeyStore
-import java.security.cert.CertificateFactory
-import java.security.cert.X509Certificate
-import java.util.UUID
+import no.skatteetaten.aurora.AuroraMetrics
+import no.skatteetaten.aurora.boober.service.GitService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
+import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
+import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
+import no.skatteetaten.aurora.boober.utils.SharedSecretReader
+import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
+import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
 
 @Configuration
 @EnableRetry

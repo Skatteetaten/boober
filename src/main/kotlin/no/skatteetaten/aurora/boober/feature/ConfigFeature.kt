@@ -1,16 +1,19 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
-import org.springframework.stereotype.Service
 
 private const val CONFIG_CONTEXT_KEY = "config"
 
-private val FeatureContext.configFieldHandlers: List<AuroraConfigFieldHandler> get() = this.getContextKey(CONFIG_CONTEXT_KEY)
+private val FeatureContext.configFieldHandlers: List<AuroraConfigFieldHandler>
+    get() = this.getContextKey(
+        CONFIG_CONTEXT_KEY
+    )
 
 @Service
 class ConfigFeature : Feature {
@@ -22,7 +25,11 @@ class ConfigFeature : Feature {
         return configHandlers(cmd).toSet()
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         return mapOf(CONFIG_CONTEXT_KEY to configHandlers(cmd))
     }
 

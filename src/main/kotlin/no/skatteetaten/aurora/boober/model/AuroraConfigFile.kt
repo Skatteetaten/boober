@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import org.springframework.util.DigestUtils
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
@@ -16,7 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL_OVERRIDE
 import no.skatteetaten.aurora.boober.model.ErrorType.INVALID
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
-import org.springframework.util.DigestUtils
 
 enum class AuroraConfigFileType {
     DEFAULT,

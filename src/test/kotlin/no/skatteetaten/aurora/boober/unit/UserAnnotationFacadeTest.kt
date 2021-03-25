@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.ResponseEntity
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
@@ -14,9 +17,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.utils.base64Prefix
 import no.skatteetaten.aurora.boober.utils.toBase64
 import no.skatteetaten.aurora.boober.utils.toJson
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
-import org.springframework.http.ResponseEntity
 
 class UserAnnotationFacadeTest {
 

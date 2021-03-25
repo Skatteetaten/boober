@@ -1,15 +1,9 @@
 package no.skatteetaten.aurora.boober.controller.v1
 
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import no.skatteetaten.aurora.boober.controller.internal.Response
-import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
-import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
-import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromVaultWithAccess
-import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
-import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
-import no.skatteetaten.aurora.boober.service.vault.VaultService
-import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
+import java.util.Base64
+import javax.servlet.http.HttpServletRequest
+import javax.servlet.http.HttpServletResponse
+import javax.validation.Valid
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -24,10 +18,16 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import java.util.Base64
-import javax.servlet.http.HttpServletRequest
-import javax.servlet.http.HttpServletResponse
-import javax.validation.Valid
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.controller.v1.VaultOperation.reencrypt
+import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromEncryptedFileVault
+import no.skatteetaten.aurora.boober.controller.v1.VaultWithAccessResource.Companion.fromVaultWithAccess
+import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
+import no.skatteetaten.aurora.boober.service.vault.EncryptedFileVault
+import no.skatteetaten.aurora.boober.service.vault.VaultService
+import no.skatteetaten.aurora.boober.service.vault.VaultWithAccess
 
 // TODO: Should we have a seperate controller that handles the case where vault is turned off?
 @RestController

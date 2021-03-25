@@ -1,9 +1,5 @@
 package no.skatteetaten.aurora.boober.service
 
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
@@ -11,6 +7,10 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.client.RestTemplate
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 
 @Component
 class BitbucketRestTemplateWrapper(@Qualifier("bitbucket") restTemplate: RestTemplate) :

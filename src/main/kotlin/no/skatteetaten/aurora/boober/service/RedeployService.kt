@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -20,7 +21,6 @@ import no.skatteetaten.aurora.boober.utils.apiBaseUrl
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.findCurrentImageHash
 import no.skatteetaten.aurora.boober.utils.findImageChangeTriggerTagName
-import org.springframework.stereotype.Service
 
 @Service
 class RedeployService(

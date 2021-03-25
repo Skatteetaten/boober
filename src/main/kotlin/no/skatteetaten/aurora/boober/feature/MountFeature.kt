@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
 import com.fkorotkov.kubernetes.newVolume
@@ -28,9 +31,6 @@ import no.skatteetaten.aurora.boober.utils.ensureEndsWith
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.required
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 private const val MOUNTS_CONTEXT_KEY = "mounts"
 
@@ -77,7 +77,11 @@ class MountFeature(
         }.toSet()
     }
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         return mapOf(MOUNTS_CONTEXT_KEY to getMounts(spec, cmd))
     }
 
@@ -175,9 +179,10 @@ class MountFeature(
     }
 
     private fun validatePSATMounts(mounts: List<Mount>): List<Exception> {
-        return mounts.filter { it.type == MountType.PSAT && (it.expirationSeconds == null || it.expirationSeconds < 600L) }.map {
-            AuroraDeploymentSpecValidationException("PSAT mount=${it.volumeName} cannot have expirationSeconds less than 600s")
-        }
+        return mounts.filter { it.type == MountType.PSAT && (it.expirationSeconds == null || it.expirationSeconds < 600L) }
+            .map {
+                AuroraDeploymentSpecValidationException("PSAT mount=${it.volumeName} cannot have expirationSeconds less than 600s")
+            }
     }
 
     private fun validateExistinAndSecretVault(mounts: List<Mount>): List<Exception> {
@@ -289,7 +294,8 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                         name = it.volumeName
                         defaultMode = 420
                         sources = listOf(newVolumeProjection {
-                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
+                            serviceAccountToken =
+                                ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
                         })
                     }
                 }

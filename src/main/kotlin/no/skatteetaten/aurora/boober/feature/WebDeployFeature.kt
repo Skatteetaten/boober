@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.newEnvVar
 import com.fkorotkov.openshift.customStrategy
 import io.fabric8.kubernetes.api.model.Container
@@ -8,8 +10,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.binPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 @Service
 class WebDeployFeature(@Value("\${integrations.docker.registry}") val registry: String) :
