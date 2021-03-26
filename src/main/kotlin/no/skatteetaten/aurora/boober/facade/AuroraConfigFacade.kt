@@ -17,6 +17,47 @@ class AuroraConfigFacade(
 
 ) {
 
+    fun auroraConfigHasEnvironmentWithName(ref: AuroraConfigRef, environmentName: String): Boolean {
+        val auroraConfig = auroraConfigService.findAuroraConfig(ref, true)
+
+        try {
+
+            val existsAsEnvName =
+                auroraConfig.files.filter { it.name.split("/").last().startsWith("about.") }
+                    .map { it.asJsonNode.get("envName")?.textValue() }
+                    .contains(environmentName)
+                    .and(auroraConfig.files.filter { it.name.split("/").last().startsWith("about.") }
+                        .map { it.asJsonNode.get("testEnvironment")?.booleanValue() }.contains(true))
+
+            return if (existsAsEnvName) {
+                true
+            } else {
+                val configFileExistsForName = auroraConfig.files.any { it.name.startsWith("$environmentName/") }
+
+                if (configFileExistsForName) {
+                    val environmentNameHasOverrideEnvName = auroraConfig.files
+                        .filter { it.name.startsWith(environmentName) }
+                        .filter { it.name.split("/").last().startsWith("about.") }
+                        .filter { it.asJsonNode.get("testEnvironment").booleanValue() }
+                        .map { it.asJsonNode.get("envName")?.textValue() }
+                        .filterNotNull()
+                        .isNotEmpty()
+
+                    if (environmentNameHasOverrideEnvName) {
+                        return false
+                    }
+                }
+
+                configFileExistsForName
+                    .and(auroraConfig.files.filter { it.name.split("/").last().startsWith("about.") }
+                        .map { it.asJsonNode.get("testEnvironment")?.booleanValue() }.contains(true))
+            }
+        } catch (e: Exception) {
+            println("Error in config files for affiliation: ${ref.name}")
+            return false
+        }
+    }
+
     fun findAuroraDeploymentSpec(
         ref: AuroraConfigRef,
         adrList: List<ApplicationDeploymentRef>

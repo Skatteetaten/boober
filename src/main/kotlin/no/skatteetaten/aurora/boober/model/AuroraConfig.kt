@@ -22,15 +22,31 @@ data class AuroraConfig(
         val yamlMapper = jacksonYamlObjectMapper()
         val jsonMapper = jsonMapper()
 
-        fun fromFolder(folderName: String, ref: String, resolvedRef: String): AuroraConfig {
-
+        fun fromFolder(
+            folderName: String,
+            ref: String,
+            resolvedRef: String,
+            filterAboutFiles: Boolean = false
+        ): AuroraConfig {
             val folder = File(folderName)
-            return fromFolder(folder, ref, resolvedRef)
+            return fromFolder(folder, ref, resolvedRef, filterAboutFiles)
         }
 
-        fun fromFolder(folder: File, ref: String, resolvedRef: String): AuroraConfig {
+        fun fromFolder(
+            folder: File,
+            ref: String,
+            resolvedRef: String,
+            filterAboutFiles: Boolean = false
+        ): AuroraConfig {
             val files = folder.walkBottomUp()
                 .onEnter { !setOf(".secret", ".git").contains(it.name) }
+                .let { fileTreeWalk ->
+                    if (filterAboutFiles) {
+                        fileTreeWalk.filter { it.isFile && it.name.startsWith("about") }
+                    } else {
+                        fileTreeWalk
+                    }
+                }
                 .filter { it.isFile && listOf("json", "yaml").contains(it.extension) }
                 .associate { it.relativeTo(folder).path to it }
 

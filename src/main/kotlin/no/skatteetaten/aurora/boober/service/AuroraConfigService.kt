@@ -39,9 +39,14 @@ class AuroraConfigService(
         return bitbucketProjectService.getRepoNames(project)
     }
 
-    fun findAuroraConfig(ref: AuroraConfigRef): AuroraConfig {
+    fun findAuroraConfig(ref: AuroraConfigRef, filterAboutFiles: Boolean = false): AuroraConfig {
         val exactRef = updateLocalFilesFromGit(ref)
-        return AuroraConfig.fromFolder("${gitService.checkoutPath}/${ref.name}", ref.refName, exactRef)
+        return AuroraConfig.fromFolder(
+            "${gitService.checkoutPath}/${ref.name}",
+            ref.refName,
+            exactRef,
+            filterAboutFiles
+        )
     }
 
     // This is called from tests to create AuroraConfig for integration tests
