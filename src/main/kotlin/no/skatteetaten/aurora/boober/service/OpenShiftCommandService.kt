@@ -167,7 +167,7 @@ class OpenShiftCommandService(
         "Secret",
         "Service",
         "Route",
-        // TODO We want cname to be deletable: "Cname",
+        // TODO AOT-1208 "Cname", should be deletable
         "ImageStream",
         "BigIp",
         "CronJob",

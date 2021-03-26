@@ -10,7 +10,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder(value = ["apiVersion", "kind", "metadata", "spec"])
-data class AuroraCname (
+data class AuroraCname(
     val spec: CnameSpec,
     @JsonIgnore
     var _metadata: ObjectMeta?,
@@ -42,7 +42,7 @@ data class AuroraCname (
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class CnameSpec (
+data class CnameSpec(
     val cname: String,
     val host: String,
     val ttl: Int

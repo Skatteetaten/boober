@@ -120,9 +120,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 serviceName = adc.name,
                 routeSuffix = it.suffix(routeSuffix)
             )
-            val auroraCname = it.generateOpenShiftCname( adc.namespace )
-            if ( auroraCname != null ) {
-                cnames.add( generateResource(auroraCname))
+            val auroraCname = it.generateOpenShiftCname(adc.namespace)
+            if (auroraCname != null) {
+                cnames.add(generateResource(auroraCname))
             }
             generateResource(resource)
         }.toMutableSet()
@@ -184,7 +184,12 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 val annotations = adc.getRouteAnnotations("$route/$it/annotations/")
                 val allAnnotations = defaultAnnotations.addIfNotNull(annotations)
                 val cname =
-                    if ((adc.hasSubKeys("$route/$it/cname") && adc.getOrDefault(route, it,"cname/enabled")) || adc["routeDefaults/cname/enabled"]) {
+                    if ((adc.hasSubKeys("$route/$it/cname") && adc.getOrDefault(
+                            route,
+                            it,
+                            "cname/enabled"
+                        )) || adc["routeDefaults/cname/enabled"]
+                    ) {
                         Cname(
                             cname = adc.getOrDefault(route, it, "cname/host"),
                             host = adc.getOrDefault(route, it, "host"),
@@ -364,9 +369,7 @@ data class Cname(
     val cname: String,
     val host: String,
     val ttl: Int
-) {
-
-}
+)
 
 data class Route(
     val objectName: String,

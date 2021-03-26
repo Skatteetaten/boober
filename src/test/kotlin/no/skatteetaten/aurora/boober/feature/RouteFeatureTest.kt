@@ -578,6 +578,4 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
         assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
     }
-
-
 }
