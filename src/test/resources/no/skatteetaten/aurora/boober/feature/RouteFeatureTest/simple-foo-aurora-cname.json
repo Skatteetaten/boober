@@ -7,7 +7,7 @@
   },
   "spec": {
     "cname": "not-just-default.utv.apps.paas.skead.no",
-    "host": "simple-foo",
+    "host": "simple-foo.test.foo",
     "ttl": 150
   }
 }

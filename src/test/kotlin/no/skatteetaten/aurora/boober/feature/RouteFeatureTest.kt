@@ -10,9 +10,11 @@ import assertk.assertions.support.show
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -577,5 +579,47 @@ class RouteFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("foo-aurora-cname.json")
 
         assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
+    }
+
+    @Test
+    fun `that cname host value is used as cname target`() {
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
+            "route" : "true",
+            "routeDefaults" : {
+              "cname" : {
+                "enabled" : "true",
+                "host": "@name@-specific-cname"
+              }
+            }
+            }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
+    }
+
+    @Test
+    fun `cname reference cannot just be set for simple route`() {
+        val ex: MultiApplicationValidationException = assertThrows {
+            val (dcResource, routeResource) = generateResources(
+                """{
+            "route" : "true",
+            "simple" : {
+              "cname" : {
+                 "enabled": "true"
+              }
+            }
+        }""", createEmptyDeploymentConfig()
+            )
+        }
+        assertThat { ex.message?.contains("not a valid config field pointer") }
     }
 }
