@@ -167,7 +167,7 @@ class OpenShiftCommandService(
         "Secret",
         "Service",
         "Route",
-        // TODO AOT-1208 "Cname", should be deletable
+        "AuroraCname",
         "ImageStream",
         "BigIp",
         "CronJob",

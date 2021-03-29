@@ -168,8 +168,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         }
         val routes = adc.findSubKeysRaw(route)
 
-        val auroraRoutes = routes.mapNotNull {
-
+        return routes.mapNotNull {
             if (!adc.get<Boolean>("$route/$it/enabled")) {
                 null
             } else {
@@ -208,7 +207,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 )
             }
         }
-        return auroraRoutes
     }
 
     override fun modify(
