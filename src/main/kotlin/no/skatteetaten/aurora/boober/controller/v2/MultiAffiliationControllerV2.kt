@@ -26,7 +26,7 @@ class MultiAffiliationControllerV2(
         val refName = getRefNameFromRequest()
         // val refName = "feature/AOS-5477_hente_miljo_paa_tvers"
 
-        val flatten: List<String> = auroraConfigFacade.findAllAuroraConfigNames().parallelMap { aff ->
+        val allApplications: List<String> = auroraConfigFacade.findAllAuroraConfigNames().parallelMap { aff ->
             try {
                 logger.info("Searching {}", aff)
                 val ref = AuroraConfigRef(aff, refName)
@@ -39,8 +39,8 @@ class MultiAffiliationControllerV2(
             }
         }.flatten()
 
-        val items = flatten.filter { s -> !s.startsWith("Error:") }
-        val errors = flatten.filter { s -> s.startsWith("Error:") }
+        val items = allApplications.filter { s -> !s.startsWith("Error:") }
+        val errors = allApplications.filter { s -> s.startsWith("Error:") }
 
         return MultiAffiliationResponse(items, errors)
     }
