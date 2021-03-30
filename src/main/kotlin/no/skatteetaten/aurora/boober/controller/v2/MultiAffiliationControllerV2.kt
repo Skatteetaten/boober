@@ -34,7 +34,7 @@ class MultiAffiliationControllerV2(
                     .filter { it.cluster == "utv" && it.envName == environment } // && it.testEnvironment
                     .map { "$aff/${it.applicationDeploymentRef}" }
             } catch (e: Exception) {
-                logger.error(e.message)
+                logger.info(e.message)
                 listOf("Error: $aff message: ${e.message}")
             }
         }.flatten()
