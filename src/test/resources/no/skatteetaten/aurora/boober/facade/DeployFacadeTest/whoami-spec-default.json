@@ -571,6 +571,14 @@
           "value": ""
         }
       ]
+    },
+    "tenant" : {
+      "source" : "default",
+      "value" : "paas-utv",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "paas-utv"
+      } ]
     }
   },
   "sts": {

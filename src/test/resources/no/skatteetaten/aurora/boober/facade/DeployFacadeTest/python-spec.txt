@@ -22,4 +22,5 @@ utv/python.json | s3: true
                 | s3Defaults:
 utv/python.json |   bucketName: "myBucket"
 utv/python.json |   objectArea: "default"
+utv/python.json |   tenant: "aurora-utv"
 utv/python.json | sts: true

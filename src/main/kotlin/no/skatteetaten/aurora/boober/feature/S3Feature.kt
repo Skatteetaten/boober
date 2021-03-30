@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.util.UUID
+import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -27,11 +32,7 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.pattern
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import java.util.UUID
+import no.skatteetaten.aurora.boober.utils.startsWith
 
 private val logger = KotlinLogging.logger {}
 
@@ -337,8 +338,8 @@ private fun List<BucketWithCredentials>.createS3Secrets(nsName: String, appName:
 abstract class S3FeatureTemplate : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        val s3Handlers = findS3Handlers(cmd.applicationFiles)
-        val s3DefaultHandlers = findS3DefaultHandlers()
+        val s3Handlers = findS3Handlers(cmd.applicationFiles, header)
+        val s3DefaultHandlers = findS3DefaultHandlers(header)
         return setOf(
             AuroraConfigFieldHandler(
                 FEATURE_FIELD_NAME,
@@ -349,7 +350,7 @@ abstract class S3FeatureTemplate : Feature {
         ) + s3Handlers + s3DefaultHandlers
     }
 
-    private fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+    private fun findS3Handlers(applicationFiles: List<AuroraConfigFile>, header: AuroraDeploymentSpec): List<AuroraConfigFieldHandler> =
         applicationFiles.findSubKeys(FEATURE_FIELD_NAME)
             .flatMap { s3BucketObjectArea ->
                 if (s3BucketObjectArea.isEmpty()) emptyList()
@@ -363,17 +364,25 @@ abstract class S3FeatureTemplate : Feature {
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/enabled",
                         validator = { it.boolean() },
                         defaultValue = true
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$FEATURE_FIELD_NAME/$s3BucketObjectArea/tenant"
                     )
                 )
             }
 
-    private fun findS3DefaultHandlers(): List<AuroraConfigFieldHandler> =
+    private fun findS3DefaultHandlers(header: AuroraDeploymentSpec): List<AuroraConfigFieldHandler> =
         listOf(
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName", defaultValue = ""),
             AuroraConfigFieldHandler(
                 "$FEATURE_DEFAULTS_FIELD_NAME/objectArea",
                 { objectAreaPatternValidation(it, allowEmpty = true) },
                 defaultValue = ""
+            ),
+            AuroraConfigFieldHandler(
+                "$FEATURE_DEFAULTS_FIELD_NAME/tenant",
+                { tenantStartsWithValidation(it, header); tenantPatternValidation(it) },
+                defaultValue = "${header.affiliation}-${header.cluster}"
             )
         )
 
@@ -383,6 +392,20 @@ abstract class S3FeatureTemplate : Feature {
             pattern = "$allowEmptyRegex[a-z0-9-.]+",
             message = "s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it?.toPrettyString()}",
             required = false
+        )
+    }
+
+    private fun tenantStartsWithValidation(it: JsonNode?, header: AuroraDeploymentSpec): Exception? {
+        return it.startsWith(
+            pattern = header.affiliation,
+            message = "s3 tenant must contain current affiliation as a prefix, specified value was: ${it?.toPrettyString()}"
+        )
+    }
+
+    private fun tenantPatternValidation(it: JsonNode?): Exception? {
+        return it.pattern(
+            pattern = "([a-zA-Z0-9]+)-{1}([a-zA-Z0-9]+)",
+            message = "s3 tenant must be on the form affiliation-cluster, specified value was: ${it?.toPrettyString()}"
         )
     }
 }

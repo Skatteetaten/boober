@@ -267,14 +267,16 @@
       }
     ]
   },
-  "logging" : {
-    "bufferSize" : {
-      "source" : "default",
-      "value" : 20,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 20
-      } ]
+  "logging": {
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
     }
   },
   "parameters": {
@@ -401,6 +403,16 @@
         {
           "name": "default",
           "value": ""
+        }
+      ]
+    },
+    "tenant": {
+      "source": "default",
+      "value": "paas-utv",
+      "sources": [
+        {
+          "name": "default",
+          "value": "paas-utv"
         }
       ]
     }
