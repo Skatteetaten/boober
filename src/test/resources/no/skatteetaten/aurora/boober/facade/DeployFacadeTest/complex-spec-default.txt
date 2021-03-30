@@ -27,6 +27,7 @@ utv/about-alternate.json | cluster: "utv"
             complex.json | name: "komplex"
                          | env:
 utv/about-alternate.json |   ttl: "1d"
+                 default | testEnvironment: false
         utv/complex.json | envFile: "about-alternate.json"
                          | bigip:
             complex.json |   service: "simple-utv"

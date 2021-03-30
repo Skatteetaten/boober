@@ -1,15 +1,5 @@
 package no.skatteetaten.aurora.boober.facade
 
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.http.MediaType
-import org.springframework.test.annotation.DirtiesContext
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.assertThat
 import assertk.assertions.hasMessage
 import assertk.assertions.isEqualTo
@@ -19,6 +9,8 @@ import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotZero
 import assertk.assertions.messageContains
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
@@ -30,6 +22,14 @@ import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuro
 import no.skatteetaten.aurora.boober.utils.configErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.http.MediaType
+import org.springframework.test.annotation.DirtiesContext
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE

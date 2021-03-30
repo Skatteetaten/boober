@@ -1,13 +1,19 @@
 package no.skatteetaten.aurora.boober.controller.v2
 
-import no.skatteetaten.aurora.boober.controller.internal.Response
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
+import no.skatteetaten.aurora.boober.feature.applicationDeploymentRef
+import no.skatteetaten.aurora.boober.feature.cluster
+import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+
+private val logger = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping("/v2/multiaffiliation")
@@ -16,23 +22,31 @@ class MultiAffiliationControllerV2(
 ) {
 
     @GetMapping("/{environment}")
-    fun get(@PathVariable environment: String): Response {
+    fun findAll(@PathVariable environment: String): MultiAffiliationResponse {
+        val refName = getRefNameFromRequest()
+        // val refName = "feature/AOS-5477_hente_miljo_paa_tvers"
 
-        val affiliationsWithEnviroment = auroraConfigFacade.findAllAuroraConfigNames()
-            .filter { it.equals("aurora") } // remove this
-            .parallelMap {
-                println("""affiliation:$it and environment:$environment""")
+        val flatten: List<String> = auroraConfigFacade.findAllAuroraConfigNames().parallelMap { aff ->
+            try {
+                logger.info("Searching {}", aff)
+                val ref = AuroraConfigRef(aff, refName)
+                auroraConfigFacade.findAllApplicationDeploymentSpecs(ref)
+                    .filter { it.cluster == "utv" && it.envName == environment } // && it.testEnvironment
+                    .map { "$aff/${it.applicationDeploymentRef}" }
+            } catch (e: Exception) {
+                logger.error(e.message)
+                listOf("Error: $aff message: ${e.message}")
+            }
+        }.flatten()
 
-                val envName =
-                    auroraConfigFacade.auroraConfigHasEnvironmentWithName(AuroraConfigRef(it, "feature/AOS-5477_hente_miljo_paa_tvers"), environment)
+        val items = flatten.filter { s -> !s.startsWith("Error:") }
+        val errors = flatten.filter { s -> s.startsWith("Error:") }
 
-                if (envName) {
-                    it
-                } else {
-                    null
-                }
-            }.filterNotNull()
-
-        return Response(affiliationsWithEnviroment)
+        return MultiAffiliationResponse(items, errors)
     }
 }
+
+data class MultiAffiliationResponse(
+    val items: List<String> = emptyList(),
+    val itemsWithErrors: List<String> = emptyList()
+)

@@ -245,6 +245,16 @@
       ]
     }
   },
+  "testEnvironment": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
   "envFile": {
     "source": "utv/complex.json",
     "value": "about-alternate.json",

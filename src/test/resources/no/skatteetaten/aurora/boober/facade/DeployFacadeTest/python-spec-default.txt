@@ -12,6 +12,7 @@ utv/python.json | applicationPlatform: "python"
      about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
      folderName | envName: "utv"
        fileName | name: "python"
+        default | testEnvironment: false
         default | certificate: false
 utv/python.json | groupId: "org.test"
                 | databaseDefaults:

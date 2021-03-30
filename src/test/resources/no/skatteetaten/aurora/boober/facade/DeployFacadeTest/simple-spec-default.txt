@@ -12,6 +12,7 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "simple"
+       default | testEnvironment: false
        default | certificate: false
    simple.json | groupId: "org.test"
                | databaseDefaults:
