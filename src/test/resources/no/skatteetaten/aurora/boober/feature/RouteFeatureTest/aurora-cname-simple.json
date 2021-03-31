@@ -6,7 +6,7 @@
     "namespace": "paas-utv"
   },
   "spec": {
-    "cname": "simple-specific-cname",
+    "cname": "simple-paas-utv",
     "host": "test.foo",
     "ttl": 300
   }

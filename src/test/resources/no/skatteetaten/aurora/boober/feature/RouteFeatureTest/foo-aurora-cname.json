@@ -7,7 +7,7 @@
   },
   "spec": {
     "cname": "simple-foo-specific-cname",
-    "host": "simple-foo.test.foo",
+    "host": "test.foo",
     "ttl": 300
   }
 }

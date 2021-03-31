@@ -452,9 +452,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
             """{
             "route" : {
                "foo" : {
-                 "host" : "simple-foo",
+                 "host" : "simple-foo-specific-cname",
                  "cname": {
-                   "host": "simple-foo-specific-cname",
                    "enabled": true                    
                  }
                }
@@ -466,11 +465,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
         // There shall be 2 resource created by this
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("foo-route.json")
+            .auroraResourceMatchesFile("foo-route-with-cname.json")
         assertThat(cnameResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("foo-aurora-cname.json")
 
-        assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
+        assertThat(dcResource).auroraRouteEnvAdded("simple-foo-specific-cname")
     }
 
     @Test
@@ -479,10 +478,9 @@ class RouteFeatureTest : AbstractFeatureTest() {
             """{
             "route" : {
                "foo" : {
-                 "host" : "simple-foo",
+                 "host": "not-just-default.utv.apps.paas.skead.no",
                  "cname": {
                    "enabled": "true",
-                   "host": "not-just-default.utv.apps.paas.skead.no",
                    "ttl": 150
                  }
                }
@@ -493,11 +491,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("foo-route.json")
+            .auroraResourceMatchesFile("foo-route-with-not-default-cname.json")
         assertThat(cnameResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("simple-foo-aurora-cname.json")
+            .auroraResourceMatchesFile("not-just-default-aurora-cname.json")
 
-        assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
+        assertThat(dcResource).auroraRouteEnvAdded("not-just-default.utv.apps.paas.skead.no")
     }
 
     @Test
@@ -527,16 +525,13 @@ class RouteFeatureTest : AbstractFeatureTest() {
             """{
             "route" : { 
                "foo" : {
-                 "host" : "simple-foo",
-                 "cname" : {
-                    "host": "simple-foo-specific-cname"
-                 }
+                 "host" : "simple-foo-specific-cname"
                }
             },
             "routeDefaults" : {
+              "host": "this-cname-alias-target-gets-overwritten",
               "cname" : {
-                "enabled" : "true",
-                "host": "this-cname-alias-target-gets-overwritten"
+                "enabled" : "true"
               }
              }
         }""",
@@ -545,11 +540,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("foo-route.json")
+            .auroraResourceMatchesFile("foo-route-with-cname.json")
         assertThat(cnameResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("foo-aurora-cname.json")
 
-        assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
+        assertThat(dcResource).auroraRouteEnvAdded("simple-foo-specific-cname")
     }
 
     @Test
@@ -562,10 +557,9 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 }
             },
             "routeDefaults" : {
-              "host" : "simple-foo",
+              "host": "simple-foo-specific-cname",
               "cname" : {
-                "enabled" : "true",
-                "host": "simple-foo-specific-cname"
+                "enabled" : "true"
               }
             }
             }""",
@@ -574,11 +568,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("foo-route.json")
+            .auroraResourceMatchesFile("foo-route-with-cname.json")
         assertThat(cnameResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("foo-aurora-cname.json")
 
-        assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
+        assertThat(dcResource).auroraRouteEnvAdded("simple-foo-specific-cname")
     }
 
     @Test
@@ -587,9 +581,9 @@ class RouteFeatureTest : AbstractFeatureTest() {
             """{
             "route" : "true",
             "routeDefaults" : {
+              "host": "simple-specific-cname",
               "cname" : {
-                "enabled" : "true",
-                "host": "@name@-specific-cname"
+                "enabled" : "true"
               }
             }
             }""",
@@ -598,28 +592,58 @@ class RouteFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("route.json")
+            .auroraResourceMatchesFile("route-with-cname.json")
 
         assertThat(cnameResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("aurora-cname.json")
 
-        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
+        assertThat(dcResource).auroraRouteEnvAdded("simple-specific-cname")
     }
 
     @Test
-    fun `cname reference cannot just be set for simple route`() {
+    fun `cname and fullyQualifiedHost cannot be set simultaneously`() {
         val ex: MultiApplicationValidationException = assertThrows {
-            val (dcResource, routeResource) = generateResources(
+            generateResources(
                 """{
+            "route" : { 
+                "foo" : {
+                    "enabled" : "true",
+                    "fullyQualifiedHost": "true",
+                    "host": "simple-foo-specific-cname",
+                    "cname" : {
+                      "enabled" : "true"
+                    }
+                }
+            }
+            }""",
+                resource = createEmptyDeploymentConfig(),
+                createdResources = 2
+            )
+        }
+        assertThat { ex.message?.contains("configurations simultaneously") }
+    }
+
+    @Test
+    fun `cname reference cannot just be set for simple route, as it needs fqdn host`() {
+        /* val ex: MultiApplicationValidationException = assertThrows {
+        } */
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
             "route" : "true",
-            "simple" : {
+            "routeDefaults" : {
               "cname" : {
                  "enabled": "true"
               }
             }
-        }""", createEmptyDeploymentConfig()
-            )
-        }
-        assertThat { ex.message?.contains("not a valid config field pointer") }
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 2
+        ) // TODO This might not be wrong
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-cname-simple.json")
+
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-simple.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv")
     }
 }

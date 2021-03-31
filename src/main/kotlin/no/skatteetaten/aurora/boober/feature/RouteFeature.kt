@@ -149,8 +149,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 } else null
                 val cname = if (adc["routeDefaults/cname/enabled"]) {
                     Cname(
-                        cname = adc["routeDefaults/cname/host"],
-                        host = adc["routeDefaults/host"],
                         ttl = adc["routeDefaults/cname/ttl"]
                     )
                 } else null
@@ -190,8 +188,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                         )) || adc["routeDefaults/cname/enabled"]
                     ) {
                         Cname(
-                            cname = adc.getOrDefault(route, it, "cname/host"),
-                            host = adc.getOrDefault(route, it, "host"),
                             ttl = adc.getOrDefault(route, it, "cname/ttl")
                         )
                     } else null
@@ -216,7 +212,11 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     ) {
 
         context.routes.firstOrNull()?.let {
-            val url = it.url(routeSuffix)
+            val url = if (it.cname == null) {
+                it.url(routeSuffix)
+            } else {
+                it.url("")
+            }
             val routeVars = mapOf(
                 "ROUTE_NAME" to url,
                 "ROUTE_URL" to "${it.protocol}$url"
@@ -319,7 +319,20 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             )
         } else null
 
-        return tlsErrors.addIfNotNull(duplicateRouteErrors).addIfNotNull(duplicateHostError)
+        val cnameAndFqdnHost = routes.filter { it.fullyQualifiedHost && it.cname != null }
+        val cnameAndFqdnHostSimultaneously = if (cnameAndFqdnHost.isNotEmpty()) {
+            AuroraConfigException(
+                "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} has cname and fullyQualifiedHost configurations simultaneously",
+                errors = cnameAndFqdnHost.map { route ->
+                    ConfigFieldErrorDetail.illegal(message = "host=${route.objectName} needs to either be used as a bigIp config, or as a cname config. It cannot be both.")
+                }
+            )
+        } else null
+
+        return tlsErrors
+            .addIfNotNull(duplicateRouteErrors)
+            .addIfNotNull(duplicateHostError)
+            .addIfNotNull(cnameAndFqdnHostSimultaneously)
     }
 
     fun willCreateResource(
@@ -360,12 +373,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
 /**
  * @property cname General identification of the application, for instance `foo.bar.utv.paas.skead.no`
- * @property host this is what the cname is going to point at, i.e. the ocp4 route: `appnavn-aup.apps.utv04.paas.skead.no`
  * @property ttl A default value if not overridden
  */
 data class Cname(
-    val cname: String,
-    val host: String,
     val ttl: Int
 )
 
@@ -420,7 +430,12 @@ data class Route(
                 port {
                     targetPort = IntOrString("http")
                 }
-                host = "${route.host}$routeSuffix"
+                host = if (cname != null) {
+                    // When having cname the host must be FQDN
+                    route.host
+                } else {
+                    "${route.host}$routeSuffix"
+                }
                 route.path?.let {
                     path = it
                 }
@@ -438,12 +453,20 @@ data class Route(
                     namespace = routeNamespace
                 },
                 spec = CnameSpec(
-                    cname = route.cname.cname,
-                    host = "${route.cname.host}$routeSuffix",
+                    cname = route.host,
+                    host = withoutInitialPeriod("$routeSuffix"),
                     ttl = route.cname.ttl
                 )
             )
         } else null
+    }
+
+    private fun withoutInitialPeriod(str: String): String {
+        return if (str.startsWith(".")) {
+            str.substring(1)
+        } else {
+            str
+        }
     }
 }
 
