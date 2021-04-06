@@ -327,7 +327,7 @@ private fun List<BucketWithCredentials>.createS3Secrets(nsName: String, appName:
 abstract class S3FeatureTemplate : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        val s3Handlers = findS3Handlers(cmd.applicationFiles, header)
+        val s3Handlers = findS3Handlers(cmd.applicationFiles)
         val s3DefaultHandlers = findS3DefaultHandlers(header)
         return setOf(
             AuroraConfigFieldHandler(
@@ -340,8 +340,7 @@ abstract class S3FeatureTemplate : Feature {
     }
 
     private fun findS3Handlers(
-        applicationFiles: List<AuroraConfigFile>,
-        header: AuroraDeploymentSpec
+        applicationFiles: List<AuroraConfigFile>
     ): List<AuroraConfigFieldHandler> =
         applicationFiles.findSubKeys(FEATURE_FIELD_NAME)
             .flatMap { s3BucketObjectArea ->
