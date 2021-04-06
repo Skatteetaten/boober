@@ -389,8 +389,7 @@ abstract class S3FeatureTemplate : Feature {
     }
 
     private fun tenantPatternValidation(it: JsonNode?): Exception? {
-        if (it == null) return null
-        return it.pattern(
+        return it?.pattern(
             pattern = "([a-zA-Z0-9]+)-{1}([a-zA-Z0-9-]+)",
             message = "s3 tenant must be on the form affiliation-cluster, specified value was: ${it.toPrettyString()}"
         )
