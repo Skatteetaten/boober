@@ -473,7 +473,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `specified cname has deterministic content`() {
+    fun `specified cname ttl is overridden correctly`() {
         val (dcResource, routeResource, cnameResource) = generateResources(
             """{
             "route" : {
@@ -508,7 +508,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
                  "enabled": "false",
                  "cname": {
                    "enabled": "true",
-                   "host": "not-just-default.utv.apps.paas.skead.no",
                    "ttl": 300
                  }
                }
@@ -576,7 +575,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `that cname host value is used as cname target`() {
+    fun `that enabled route gets cname if set as default`() {
         val (dcResource, routeResource, cnameResource) = generateResources(
             """{
             "route" : "true",
@@ -624,9 +623,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `cname reference cannot just be set for simple route, as it needs fqdn host`() {
-        /* val ex: MultiApplicationValidationException = assertThrows {
-        } */
+    fun `cname gets generated just enabling it`() {
         val (dcResource, routeResource, cnameResource) = generateResources(
             """{
             "route" : "true",
@@ -637,7 +634,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }""", createEmptyDeploymentConfig(),
             createdResources = 2
-        ) // TODO This might not be wrong
+        )
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-with-cname-simple.json")
 

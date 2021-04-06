@@ -29,7 +29,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.int
-import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
 import org.springframework.beans.factory.annotation.Value
@@ -80,9 +79,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 defaultValue = false
             ),
             AuroraConfigFieldHandler(
-                "routeDefaults/cname/host"
-            ),
-            AuroraConfigFieldHandler(
                 "routeDefaults/cname/ttl",
                 validator = { it.int() },
                 defaultValue = 300
@@ -120,7 +116,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 serviceName = adc.name,
                 routeSuffix = it.suffix(routeSuffix)
             )
-            val auroraCname = it.generateOpenShiftCname(routeNamespace = adc.namespace, routeSuffix = it.suffix(routeSuffix))
+            val auroraCname =
+                it.generateOpenShiftCname(routeNamespace = adc.namespace, routeSuffix = it.suffix(routeSuffix))
             if (auroraCname != null) {
                 cnames.add(generateResource(auroraCname))
             }
@@ -240,16 +237,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 AuroraConfigFieldHandler(
                     "$key/cname/enabled",
                     validator = { it.boolean(false) }
-                ),
-                AuroraConfigFieldHandler(
-                    "$key/cname/host",
-                    validator = {
-                        it.length(
-                            length = 253,
-                            message = "Cannot exceed dns field length restrictions",
-                            required = false
-                        )
-                    }
                 ),
                 AuroraConfigFieldHandler(
                     "$key/cname/ttl",
@@ -372,8 +359,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 }
 
 /**
- * @property cname General identification of the application, for instance `foo.bar.utv.paas.skead.no`
- * @property ttl A default value if not overridden
+ * @property ttl Time to live on the cname entry: A default value if not overridden
  */
 data class Cname(
     val ttl: Int
