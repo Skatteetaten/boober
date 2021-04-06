@@ -9,7 +9,7 @@
   "s3Defaults": {
     "bucketName": "myBucket",
     "objectArea": "default",
-    "tenant": "aurora-utv"
+    "tenant": "paas-utv"
   },
   "s3": true,
   "sts": true,

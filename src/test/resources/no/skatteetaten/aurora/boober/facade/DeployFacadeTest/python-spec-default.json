@@ -608,7 +608,7 @@
     },
     "tenant": {
       "source": "utv/python.json",
-      "value": "aurora-utv",
+      "value": "paas-utv",
       "sources": [
         {
           "name": "default",
@@ -616,7 +616,7 @@
         },
         {
           "name": "utv/python.json",
-          "value": "aurora-utv"
+          "value": "paas-utv"
         }
       ]
     }
