@@ -110,7 +110,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val cnames: MutableSet<AuroraResource> = HashSet()
 
-        val ars = context.routes.map {
+        return context.routes.map {
             val resource = it.generateOpenShiftRoute(
                 routeNamespace = adc.namespace,
                 serviceName = adc.name,
@@ -122,9 +122,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 cnames.add(generateResource(auroraCname))
             }
             generateResource(resource)
-        }.toMutableSet()
-        ars.addAll(cnames)
-        return ars
+        }.toMutableSet().apply {
+            addAll(cnames)
+        }
     }
 
     fun getRoute(
