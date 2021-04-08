@@ -210,6 +210,14 @@ fun stubAuroraDeploymentSpec(): AuroraDeploymentSpec {
                         TextNode("simple")
                     )
                 )
+            ),
+            "applicationDeploymentRef" to AuroraConfigField(
+                sources = setOf(
+                    AuroraConfigFieldSource(
+                        AuroraConfigFile("utv/simple.json", "{}"),
+                        TextNode("fk1-utv/someApp")
+                    )
+                )
             )
         ),
         replacer = StringSubstitutor()
