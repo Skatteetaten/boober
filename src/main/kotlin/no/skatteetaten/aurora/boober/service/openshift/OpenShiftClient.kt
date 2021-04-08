@@ -180,12 +180,25 @@ class OpenShiftClient(
         return OpenShiftGroups(groups)
     }
 
+    @Cacheable("version")
     fun version(): String {
         serviceAccountClient.get("/version", retry = false)?.body?.let {
             val version = it.at("/gitVersion").textValue()
             return version.substring(1, version.indexOf("+"))
         }
         throw java.lang.IllegalStateException("Unable to determine kubernetes version")
+    }
+
+    /**
+     * @return true if given semver version is found to be higher or equal to kubernetes semver version
+     */
+    fun k8sVersionOfAtLeast(ensure: String): Boolean {
+        val k8s = version().split(".")
+        val v = ensure.split(".")
+        for (index in 0 until Math.min(k8s.size, v.size)) {
+            if (k8s[index].toInt() < v[index].toInt()) return false
+        }
+        return true
     }
 
     fun resourceExists(kind: String, namespace: String, name: String): Boolean {
@@ -234,7 +247,7 @@ class OpenShiftClient(
      * the request.
      */
     private fun getClientForKind(kind: String): OpenShiftResourceClient {
-        return if (listOf("namespace", "route").contains(kind.toLowerCase())) {
+        return if (listOf("namespace", "route", "auroracname").contains(kind.toLowerCase())) {
             serviceAccountClient
         } else {
             userClient

@@ -109,6 +109,10 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
                 mockJsonFromFile("groups.json")
             }
 
+            rule({ path?.endsWith("/version") }) {
+                mockJsonFromFile("response_version.json")
+            }
+
             // Should it be able to reuse rules?
             rule(mockOpenShiftUsers)
 
@@ -213,6 +217,10 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
             rule({ path?.endsWith("/groups") }) {
                 mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/version") }) {
+                mockJsonFromFile("response_version.json")
             }
 
             // Should it be able to reuse rules?

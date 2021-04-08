@@ -43,6 +43,10 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         } returns HttpHeaders()
 
         every {
+            saClient.get("/version", retry = false)
+        } returns ResponseEntity.ok(loadJsonResource("response_version.json"))
+
+        every {
             userClient.getAuthorizationHeaders()
         } returns HttpHeaders()
         Instants.determineNow = { Instant.EPOCH }
