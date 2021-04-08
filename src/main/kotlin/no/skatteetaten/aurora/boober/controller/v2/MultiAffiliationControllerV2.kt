@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.controller.v2
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.internal.ErrorsResponse
 import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
@@ -7,6 +8,7 @@ import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.feature.applicationDeploymentRef
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.envName
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.toAdr
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.utils.parallelMap
@@ -38,10 +40,12 @@ class MultiAffiliationControllerV2(
                             it.cluster == "utv" // && it.testEnvironment
                         }
                         .map {
+                            val applicationDeploymentRef = it.applicationDeploymentRef.toAdr()
+
                             MultiAffiliationResponse(
                                 affiliation = aff,
-                                applicationDeploymentRef = it.applicationDeploymentRef,
-                                warningMessage = if (it.applicationDeploymentRef.toAdr().environment != it.envName) {
+                                applicationDeploymentRef = applicationDeploymentRef,
+                                warningMessage = if (applicationDeploymentRef.environment != it.envName) {
                                     "Divergent envName: ${it.envName}"
                                 } else {
                                     null
@@ -61,15 +65,16 @@ class MultiAffiliationControllerV2(
             success = true,
             message = "OK.",
             items = successList,
-            count = successList.size,
+            count = successList.size + errorsList.size,
             errors = errorsList
         )
     }
 }
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class MultiAffiliationResponse(
-    var affiliation: String,
-    var applicationDeploymentRef: String? = null,
-    var errorMessage: String? = null,
-    var warningMessage: String? = null
+    val affiliation: String,
+    val applicationDeploymentRef: ApplicationDeploymentRef? = null,
+    val errorMessage: String? = null,
+    val warningMessage: String? = null
 )
