@@ -36,8 +36,7 @@ class OpenShiftDeployer(
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         return envDeploys.flatMap { (ns, commands) ->
-            val env = environmentResults[ns]
-                ?: throw RuntimeException("Unable to find environment result for namespace $ns")
+            val env = environmentResults[ns] ?: throw Exception("Unable to find environment result for namespace $ns")
 
             if (!env.success) {
                 commands.map {
@@ -170,9 +169,9 @@ class OpenShiftDeployer(
 
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
-            applyOpenShiftApplicationObjects(
-                cmd, projectExist, ownerReferenceUid
-            )
+                applyOpenShiftApplicationObjects(
+                    cmd, projectExist, ownerReferenceUid
+                )
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }

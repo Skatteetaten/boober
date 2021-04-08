@@ -4,11 +4,7 @@ import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.EnvironmentFeature
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.namespace
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.model.createDeployCommand
+import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.utils.parallelMap
@@ -109,13 +105,15 @@ class DeployFacade(
 
     private fun createNamespaces(validContexts: List<AuroraDeploymentContext>): Map<String, AuroraEnvironmentResult> {
 
-        val namespacesAndSampleSpecs = validContexts
+        fun List<AuroraDeploymentContext>.extractNamespacesWithSampleSpec() = this
             .groupBy { it.spec.namespace }
             .map { (namespace, adcList) -> namespace to adcList.first().spec }
 
+        val namespacesAndSampleSpecs = validContexts.extractNamespacesWithSampleSpec()
+
         val environmentFeature = EnvironmentFeature(openShiftDeployer.openShiftClient, userDetailsProvider)
-        return namespacesAndSampleSpecs.associate { (namespace, spec) ->
-            val envResources = environmentFeature.generate(spec, emptyMap())
+        return namespacesAndSampleSpecs.associate { (namespace, sampleSpecFromNamespace) ->
+            val envResources = environmentFeature.generate(sampleSpecFromNamespace, emptyMap())
             namespace to openShiftDeployer.prepareDeployEnvironment(namespace, envResources)
         }
     }
