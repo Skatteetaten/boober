@@ -167,6 +167,7 @@ class OpenShiftCommandService(
         "Secret",
         "Service",
         "Route",
+        "AuroraCname",
         "ImageStream",
         "BigIp",
         "CronJob",
