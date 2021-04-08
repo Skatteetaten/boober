@@ -117,7 +117,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 routeSuffix = it.suffix(routeSuffix)
             )
 
-            it.generateOpenShiftCname(routeNamespace = adc.namespace, routeSuffix = it.suffix(routeSuffix))
+            it.generateAuroraCname(routeNamespace = adc.namespace, routeSuffix = it.suffix(routeSuffix))
                 ?.let { cname -> cnames.add(generateResource(cname)) }
 
             generateResource(resource)
@@ -428,7 +428,7 @@ data class Route(
         }
     }
 
-    fun generateOpenShiftCname(routeNamespace: String, routeSuffix: String): AuroraCname? {
+    fun generateAuroraCname(routeNamespace: String, routeSuffix: String): AuroraCname? {
         val route = this
 
         return if (route.cname != null) {
