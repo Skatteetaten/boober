@@ -33,15 +33,14 @@ class MultiAffiliationControllerV2(
                 try {
                     logger.info("Searching {}", aff)
                     val ref = AuroraConfigRef(aff, refName)
-                    auroraConfigFacade.findAllApplicationDeploymentSpecs(ref)
+                    auroraConfigFacade.findAllApplicationDeploymentSpecs(ref, environment)
                         .filter {
-                            it.cluster == "utv" &&
-                                it.applicationDeploymentRef.toAdr().environment == environment
-                        } // && it.testEnvironment
+                            it.cluster == "utv" // && it.testEnvironment
+                        }
                         .map {
                             MultiAffiliationResponse(
                                 affiliation = aff,
-                                applicationDeplymentRef = it.applicationDeploymentRef,
+                                applicationDeploymentRef = it.applicationDeploymentRef,
                                 warningMessage = if (it.applicationDeploymentRef.toAdr().environment != it.envName) {
                                     "Divergent envName: ${it.envName}"
                                 } else {
@@ -70,7 +69,7 @@ class MultiAffiliationControllerV2(
 
 data class MultiAffiliationResponse(
     var affiliation: String,
-    var applicationDeplymentRef: String? = null,
+    var applicationDeploymentRef: String? = null,
     var errorMessage: String? = null,
     var warningMessage: String? = null
 )

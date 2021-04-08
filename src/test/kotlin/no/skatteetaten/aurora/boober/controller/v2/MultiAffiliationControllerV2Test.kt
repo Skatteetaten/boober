@@ -24,7 +24,7 @@ class MultiAffiliationControllerV2Test : AbstractControllerTest() {
         } returns arrayListOf("a/fk-1", "a/sit", "c/abc")
 
         every {
-            facade.findAllApplicationDeploymentSpecs(any())
+            facade.findAllApplicationDeploymentSpecs(any(), any())
         } returns emptyList()
 
         mockMvc.get(

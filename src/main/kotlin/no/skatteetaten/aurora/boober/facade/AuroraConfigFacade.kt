@@ -16,12 +16,13 @@ class AuroraConfigFacade(
     private val auroraDeploymentContextService: AuroraDeploymentContextService
 
 ) {
-
     fun findAllApplicationDeploymentSpecs(
-        ref: AuroraConfigRef
+        ref: AuroraConfigRef,
+        environment: String
     ): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return auroraConfig.getApplicationDeploymentRefs()
+            .filter { it.environment == environment }
             .map {
                 auroraDeploymentContextService.findApplicationDeploymentSpec(
                     AuroraContextCommand(auroraConfig, it, ref, emptyList(), true)
