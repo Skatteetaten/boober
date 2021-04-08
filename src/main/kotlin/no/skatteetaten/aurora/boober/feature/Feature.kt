@@ -206,7 +206,7 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
                 "env/name",
                 validator = { it.pattern(envNamePattern, envNameMessage, false) }),
             AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
-            AuroraConfigFieldHandler("testEnvironment", validator = { it.boolean() }, defaultValue = false),
+            AuroraConfigFieldHandler("env/autoDeploy", validator = { it.boolean() }, defaultValue = false),
             AuroraConfigFieldHandler("baseFile"),
             AuroraConfigFieldHandler("envFile"),
             AuroraConfigFieldHandler("includeEnvFile")

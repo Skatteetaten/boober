@@ -243,17 +243,15 @@
           "value": "1d"
         }
       ]
+    },
+    "autoDeploy" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
     }
-  },
-  "testEnvironment": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
   },
   "envFile": {
     "source": "utv/complex.json",

@@ -33,11 +33,10 @@ class MultiAffiliationControllerV2(
         val allApplications: List<MultiAffiliationResponse> =
             auroraConfigFacade.findAllAuroraConfigNames().parallelMap { aff ->
                 try {
-                    logger.info("Searching {}", aff)
                     val ref = AuroraConfigRef(aff, refName)
                     auroraConfigFacade.findAllApplicationDeploymentSpecs(ref, environment)
                         .filter {
-                            it.cluster == "utv" // && it.testEnvironment
+                            it.cluster == "utv" // && it.envAutoDeploy
                         }
                         .map {
                             val applicationDeploymentRef = it.applicationDeploymentRef.toAdr()
@@ -46,7 +45,7 @@ class MultiAffiliationControllerV2(
                                 affiliation = aff,
                                 applicationDeploymentRef = applicationDeploymentRef,
                                 warningMessage = if (applicationDeploymentRef.environment != it.envName) {
-                                    "Divergent envName: ${it.envName}"
+                                    "Environment name is overwritten in config file. ApplicationDeploymentRef.environment: ${applicationDeploymentRef.environment}, AuroraDeploymentSpec.envName: ${it.envName}"
                                 } else {
                                     null
                                 }

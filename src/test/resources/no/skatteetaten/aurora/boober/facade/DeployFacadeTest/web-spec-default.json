@@ -142,13 +142,15 @@
         "value": "web"
       }
     ]
-  },"testEnvironment" : {
-  "source" : "default",
-  "value" : false,
-  "sources" : [ {
-    "name" : "default",
-    "value" : false
-  } ]
+  },  "env" : {
+  "autoDeploy" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  }
 },
   "artifactId": {
     "source": "fileName",

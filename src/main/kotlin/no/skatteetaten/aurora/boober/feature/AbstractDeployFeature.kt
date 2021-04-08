@@ -86,7 +86,7 @@ val AuroraDeploymentSpec.namespace
 val AuroraDeploymentSpec.releaseTo: String? get() = this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
 val AuroraDeploymentSpec.groupId: String get() = this["groupId"]
 val AuroraDeploymentSpec.artifactId: String get() = this["artifactId"]
-val AuroraDeploymentSpec.testEnvironment: Boolean get() = this["testEnvironment"] ?: false
+val AuroraDeploymentSpec.envAutoDeploy: Boolean get() = this["env/autoDeploy"] ?: false
 val AuroraDeploymentSpec.dockerGroup get() = groupId.replace(".", "_")
 
 val AuroraDeploymentSpec.dockerImagePath: String get() = "$dockerGroup/${this.artifactId}"
