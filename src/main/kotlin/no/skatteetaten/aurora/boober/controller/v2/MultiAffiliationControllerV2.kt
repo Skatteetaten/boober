@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.controller.v2
 
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.controller.internal.Response
+import no.skatteetaten.aurora.boober.controller.internal.ErrorsResponse
 import no.skatteetaten.aurora.boober.controller.v1.getRefNameFromRequest
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.feature.applicationDeploymentRef
@@ -24,7 +24,7 @@ class MultiAffiliationControllerV2(
 ) {
 
     @GetMapping("/{environment}")
-    fun findAll(@PathVariable environment: String): Response {
+    fun findAll(@PathVariable environment: String): ErrorsResponse {
         val refName = getRefNameFromRequest()
         // val refName = "feature/AOS-5477_hente_miljo_paa_tvers"
 
@@ -51,18 +51,26 @@ class MultiAffiliationControllerV2(
                         }
                 } catch (e: Exception) {
                     logger.info(e.message)
-                    listOf(MultiAffiliationResponse(affiliation = aff, success = false, errorMessage = e.message))
+                    listOf(MultiAffiliationResponse(affiliation = aff, errorMessage = e.message))
                 }
             }.flatten()
 
-        return Response(success = true, message = "OK.", items = allApplications, count = allApplications.size)
+        val successList = allApplications.filter { it.errorMessage == null }
+        val errorsList = allApplications.filter { it.errorMessage != null }
+
+        return ErrorsResponse(
+            success = true,
+            message = "OK.",
+            items = successList,
+            count = successList.size,
+            errors = errorsList
+        )
     }
 }
 
 data class MultiAffiliationResponse(
     var affiliation: String,
     var applicationDeplymentRef: String? = null,
-    val success: Boolean = true,
     var errorMessage: String? = null,
     var warningMessage: String? = null
 )
