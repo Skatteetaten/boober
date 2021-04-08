@@ -100,8 +100,11 @@ class S3Feature(
         val notCurrentAffilationException =
             s3BucketObjectAreas.validateTenantContainsCurrentAffiliationPrefix(adc.affiliation)
 
-        if (requiredFieldsExceptions.isNotEmpty() || duplicateObjectAreaInSameBucketExceptions.isNotEmpty() || notCurrentAffilationException.isNotEmpty())
-            return requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions + notCurrentAffilationException
+        val validationConfigExceptions =
+            requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions + notCurrentAffilationException
+        if (validationConfigExceptions.isNotEmpty()) {
+            return validationConfigExceptions
+        }
 
         if (!fullValidation || adc.cluster != cluster || s3BucketObjectAreas.isEmpty()) return emptyList()
 
@@ -282,14 +285,11 @@ private fun List<S3BucketObjectArea>.verifyObjectAreaAndBucketAreUnique(): List<
 }
 
 private fun List<S3BucketObjectArea>.validateTenantContainsCurrentAffiliationPrefix(affiliation: String): List<IllegalArgumentException> {
-    return this.flatMap {
-        val tenantException =
-            if (!it.tenant.startsWith(affiliation)) IllegalArgumentException("tenant must contain current affiliation=$affiliation as a prefix, specified value was: ${it.tenant}") else null
-
-        listOf(
-            tenantException
-        )
-    }.filterNotNull()
+    return this.filterNot {
+        it.tenant.startsWith(affiliation)
+    }.map {
+        IllegalArgumentException("tenant must contain current affiliation=$affiliation as a prefix, specified value was: ${it.tenant}")
+    }
 }
 
 private data class BucketWithCredentials(
@@ -389,7 +389,7 @@ abstract class S3FeatureTemplate : Feature {
 
     private fun tenantPatternValidation(it: JsonNode?): Exception? {
         return it?.pattern(
-            pattern = "([a-zA-Z0-9]+)-{1}([a-zA-Z0-9-]+)",
+            pattern = "([a-z]+)-([a-zA-Z0-9-]+)",
             message = "s3 tenant must be on the form affiliation-cluster, specified value was: ${it.toPrettyString()}"
         )
     }
