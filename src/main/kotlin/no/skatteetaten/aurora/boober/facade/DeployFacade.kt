@@ -1,22 +1,15 @@
 package no.skatteetaten.aurora.boober.facade
 
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.EnvironmentFeature
 import no.skatteetaten.aurora.boober.feature.cluster
+import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.createDeployCommand
-import no.skatteetaten.aurora.boober.service.AuroraConfigRef
-import no.skatteetaten.aurora.boober.service.AuroraConfigService
-import no.skatteetaten.aurora.boober.service.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
-import no.skatteetaten.aurora.boober.service.ContextErrors
-import no.skatteetaten.aurora.boober.service.DeployLogService
-import no.skatteetaten.aurora.boober.service.Deployer
-import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
-import no.skatteetaten.aurora.boober.service.NotificationService
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.utils.parallelMap
 import org.springframework.beans.factory.annotation.Value
@@ -86,13 +79,18 @@ class DeployFacade(
     Kanskje kunne styre det med et flag.
 
  */
+
+        watch.start("createNamespaces")
+        val environmentResults = createNamespaces(validContexts)
+        watch.stop()
+
         watch.start("deployCommand")
         val deployCommands = validContexts.createDeployCommand(deploy)
         watch.stop()
 
         watch.start("deploy")
 
-        val deployResults = openShiftDeployer.performDeployCommands(deployCommands)
+        val deployResults = openShiftDeployer.performDeployCommands(environmentResults, deployCommands)
         watch.stop()
 
         watch.start("send notification")
@@ -106,6 +104,19 @@ class DeployFacade(
         return deployLogService.markRelease(deployResultsAfterNotifications, deployer).also {
             watch.stop()
             logger.info("Deploy: ${watch.prettyPrint()}")
+        }
+    }
+
+    private fun createNamespaces(validContexts: List<AuroraDeploymentContext>): Map<String, AuroraEnvironmentResult> {
+
+        val namespacesAndSampleSpecs = validContexts
+            .groupBy { it.spec.namespace }
+            .map { (namespace, adcList) -> namespace to adcList.first().spec }
+
+        val environmentFeature = EnvironmentFeature(openShiftDeployer.openShiftClient, userDetailsProvider)
+        return namespacesAndSampleSpecs.associate { (namespace, spec) ->
+            val envResources = environmentFeature.generate(spec, emptyMap())
+            namespace to openShiftDeployer.prepareDeployEnvironment(namespace, envResources)
         }
     }
 

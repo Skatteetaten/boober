@@ -4,24 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
-import no.skatteetaten.aurora.boober.feature.deployState
-import no.skatteetaten.aurora.boober.feature.dockerImagePath
-import no.skatteetaten.aurora.boober.feature.name
-import no.skatteetaten.aurora.boober.feature.namespace
-import no.skatteetaten.aurora.boober.feature.pause
-import no.skatteetaten.aurora.boober.feature.releaseTo
-import no.skatteetaten.aurora.boober.feature.type
-import no.skatteetaten.aurora.boober.feature.version
+import no.skatteetaten.aurora.boober.feature.*
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.service.AuroraDeployResult
-import no.skatteetaten.aurora.boober.service.AuroraEnvironmentResult
-import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
-import no.skatteetaten.aurora.boober.service.RedeployService
-import no.skatteetaten.aurora.boober.service.TagCommand
-import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.parallelMap
@@ -42,12 +28,16 @@ class OpenShiftDeployer(
     @Value("\${integrations.docker.releases}") val releaseDockerRegistry: String,
     @Value("\${boober.projectrequest.sleep:2000}") val projectRequestSleep: Long
 ) {
-    fun performDeployCommands(deployCommands: List<AuroraDeployCommand>): List<AuroraDeployResult> {
+    fun performDeployCommands(
+        environmentResults: Map<String, AuroraEnvironmentResult>,
+        deployCommands: List<AuroraDeployCommand>
+    ): List<AuroraDeployResult> {
 
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         return envDeploys.flatMap { (ns, commands) ->
-            val env = prepareDeployEnvironment(ns, commands.first().headerResources)
+            val env = environmentResults[ns]
+                ?: throw RuntimeException("Unable to find environment result for namespace $ns")
 
             if (!env.success) {
                 commands.map {
@@ -61,23 +51,28 @@ class OpenShiftDeployer(
                 }
             } else {
                 commands.parallelMap {
-                    val result = deployFromSpec(it, env)
+                    val result = deployFromSpec(it, env.projectExist)
                     result.copy(openShiftResponses = env.openShiftResponses.addIfNotNull(result.openShiftResponses))
                 }
             }
         }
     }
 
-    private fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
+    /**
+     * @param resources the AuroraResource objects required to create and set up the Kubernetes namespace. This is
+     * typically ProjectRequest, Namespace and RoleBinding resources.
+     */
+    fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
 
         logger.debug { "Create env with name $namespace" }
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         val projectExist = openShiftClient.projectExists(namespace)
         val projectResponse = projectExist.whenFalse {
+            val projectRequest = (resources.find { it.resource.kind == "ProjectRequest" }?.resource
+                ?: throw Exception("Could not find project request"))
             openShiftCommandBuilder.createOpenShiftCommand(
-                newResource = resources.find { it.resource.kind == "ProjectRequest" }?.resource
-                    ?: throw Exception("Could not find project request"),
+                newResource = projectRequest,
                 mergeWithExistingResource = false,
                 retryGetResourceOnFailure = false
             ).let {
@@ -113,12 +108,11 @@ class OpenShiftDeployer(
 
     private fun deployFromSpec(
         cmd: AuroraDeployCommand,
-        env: AuroraEnvironmentResult
+        projectExist: Boolean
     ): AuroraDeployResult {
 
         val warnings = cmd.context.warnings
         logger.debug { "Apply application ${cmd.context.cmd.applicationDeploymentRef}" }
-        val projectExist = env.projectExist
         val context = cmd.context
         val resources = cmd.resources
         val application = resources.first {
@@ -156,7 +150,7 @@ class OpenShiftDeployer(
         val rawResult = AuroraDeployResult(
             tagResponse = tagResult,
             deployCommand = cmd,
-            projectExist = env.projectExist,
+            projectExist = projectExist,
             warnings = warnings
         )
 

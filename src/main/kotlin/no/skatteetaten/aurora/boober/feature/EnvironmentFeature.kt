@@ -42,7 +42,7 @@ data class Permission(
     val users: Set<String> = emptySet()
 )
 
-@Service
+//@Service
 class EnvironmentFeature(
     val openShiftClient: OpenShiftClient,
     val userDetailsProvider: UserDetailsProvider
@@ -53,9 +53,9 @@ class EnvironmentFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        val rolebindings = generateRolebindings(adc).map {
-            generateResource(it, header = true)
-        }.toSet()
+        val rolebindings = generateRolebindings(adc)
+            .map { generateResource(it, header = true) }
+            .toSet()
         return setOf(
             generateResource(
                 generateProjectRequest(adc),
