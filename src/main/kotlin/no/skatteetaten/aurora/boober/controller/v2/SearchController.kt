@@ -22,7 +22,7 @@ private val logger = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping("/v2/search")
-class SearchControllerV2(
+class SearchController(
     private val auroraConfigFacade: AuroraConfigFacade
 ) {
 

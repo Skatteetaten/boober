@@ -13,8 +13,8 @@ import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 
-@WebMvcTest(controllers = [SearchControllerV2::class])
-class SearchControllerV2Test : AbstractControllerTest() {
+@WebMvcTest(controllers = [SearchController::class])
+class SearchControllerTest : AbstractControllerTest() {
 
     @MockkBean
     private lateinit var facade: AuroraConfigFacade
