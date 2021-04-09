@@ -56,6 +56,7 @@ utv/python.json | s3: true
                 | s3Defaults:
 utv/python.json |   bucketName: "myBucket"
 utv/python.json |   objectArea: "default"
+utv/python.json |   tenant: "paas-utv"
 utv/python.json | sts: true
         default | toxiproxy: false
         default | webseal: false

@@ -139,6 +139,7 @@ utv/about-alternate.json |   ttl: "1d"
                          | s3Defaults:
                  default |   bucketName: ""
                  default |   objectArea: ""
+                 default |   tenant: "paas-utv"
                          | secretVaults:
                          |   foo:
                  default |     name: "foo"

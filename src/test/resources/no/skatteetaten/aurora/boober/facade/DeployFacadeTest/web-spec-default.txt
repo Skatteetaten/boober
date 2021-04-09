@@ -57,6 +57,7 @@ utv/about.json | cluster: "utv"
                | s3Defaults:
        default |   bucketName: ""
        default |   objectArea: ""
+       default |   tenant: "paas-utv"
        default | sts: false
       web.json | toxiproxy: true
                | deployStrategy:

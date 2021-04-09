@@ -137,7 +137,8 @@ class S3FeatureTest : AbstractFeatureTest() {
         val resources = generateResources(
             """{ 
                 "s3Defaults": {
-                    "bucketName": "anotherId"
+                    "bucketName": "anotherId",
+                    "tenant": "paas-utv"
                 },
                 "s3": {
                     "default": {
@@ -201,6 +202,62 @@ class S3FeatureTest : AbstractFeatureTest() {
                 resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
             )
         }.singleApplicationError("Duplicated objectArea=default in same bucket=bucket1")
+    }
+
+    @Test
+    fun `verify fails when tenant is not prefixed with current affiliation`() {
+        val s3Credentials = listOf(
+            createS3Credentials(bucketName = "anotherId", objectArea = "default")
+        )
+
+        mockHerkimer(
+            booberAdId = booberAdId,
+            claimExistsInHerkimer = true,
+            s3Credentials = s3Credentials
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName" : "anotherId",
+                        "tenant": "demo-utv"
+                    }
+                }
+           }""",
+                createdResources = 0,
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("tenant must contain current affiliation=paas as a prefix, specified value was: demo-utv")
+    }
+
+    @Test
+    fun `verify fails when tenant is not on required form`() {
+        val s3Credentials = listOf(
+            createS3Credentials(bucketName = "anotherId", objectArea = "default")
+        )
+
+        mockHerkimer(
+            booberAdId = booberAdId,
+            claimExistsInHerkimer = true,
+            s3Credentials = s3Credentials
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName" : "anotherId",
+                        "tenant": "paas"
+                    }
+                }
+           }""",
+                createdResources = 0,
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("Config for application simple in environment utv contains errors. s3 tenant must be on the form affiliation-cluster, specified value was: \"paas\".")
     }
 
     @Test

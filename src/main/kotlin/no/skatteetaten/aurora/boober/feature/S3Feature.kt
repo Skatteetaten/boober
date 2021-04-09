@@ -97,9 +97,14 @@ class S3Feature(
 
         val requiredFieldsExceptions = s3BucketObjectAreas.validateRequiredFieldsArePresent()
         val duplicateObjectAreaInSameBucketExceptions = s3BucketObjectAreas.verifyObjectAreaAndBucketAreUnique()
+        val notCurrentAffilationException =
+            s3BucketObjectAreas.validateTenantContainsCurrentAffiliationPrefix(adc.affiliation)
 
-        if (requiredFieldsExceptions.isNotEmpty() || duplicateObjectAreaInSameBucketExceptions.isNotEmpty())
-            return requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions
+        val validationConfigExceptions =
+            requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions + notCurrentAffilationException
+        if (validationConfigExceptions.isNotEmpty()) {
+            return validationConfigExceptions
+        }
 
         if (!fullValidation || adc.cluster != cluster || s3BucketObjectAreas.isEmpty()) return emptyList()
 
@@ -230,7 +235,8 @@ class S3Feature(
         return if (adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME)) {
             val defaultS3Bucket = S3BucketObjectArea(
                 bucketName = adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
-                area = adc["$FEATURE_DEFAULTS_FIELD_NAME/objectArea"]
+                area = adc["$FEATURE_DEFAULTS_FIELD_NAME/objectArea"],
+                tenant = adc["$FEATURE_DEFAULTS_FIELD_NAME/tenant"]
             )
 
             listOf(defaultS3Bucket)
@@ -249,7 +255,9 @@ class S3Feature(
         return S3BucketObjectArea(
             bucketName = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/bucketName")
                 ?: adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
-            area = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"]
+            area = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"],
+            tenant = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/tenant")
+                ?: adc["$FEATURE_DEFAULTS_FIELD_NAME/tenant"]
         )
     }
 
@@ -274,6 +282,14 @@ private fun List<S3BucketObjectArea>.verifyObjectAreaAndBucketAreUnique(): List<
         .map { (s3BucketObjectArea, duplicatedEntries) ->
             IllegalArgumentException("Duplicated objectArea=${s3BucketObjectArea.area} in same bucket=${s3BucketObjectArea.bucketName}")
         }
+}
+
+private fun List<S3BucketObjectArea>.validateTenantContainsCurrentAffiliationPrefix(affiliation: String): List<IllegalArgumentException> {
+    return this.filterNot {
+        it.tenant.startsWith(affiliation)
+    }.map {
+        IllegalArgumentException("tenant must contain current affiliation=$affiliation as a prefix, specified value was: ${it.tenant}")
+    }
 }
 
 private data class BucketWithCredentials(
@@ -312,7 +328,7 @@ abstract class S3FeatureTemplate : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val s3Handlers = findS3Handlers(cmd.applicationFiles)
-        val s3DefaultHandlers = findS3DefaultHandlers()
+        val s3DefaultHandlers = findS3DefaultHandlers(header)
         return setOf(
             AuroraConfigFieldHandler(
                 FEATURE_FIELD_NAME,
@@ -323,7 +339,9 @@ abstract class S3FeatureTemplate : Feature {
         ) + s3Handlers + s3DefaultHandlers
     }
 
-    private fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+    private fun findS3Handlers(
+        applicationFiles: List<AuroraConfigFile>
+    ): List<AuroraConfigFieldHandler> =
         applicationFiles.findSubKeys(FEATURE_FIELD_NAME)
             .flatMap { s3BucketObjectArea ->
                 if (s3BucketObjectArea.isEmpty()) emptyList()
@@ -337,17 +355,26 @@ abstract class S3FeatureTemplate : Feature {
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/enabled",
                         validator = { it.boolean() },
                         defaultValue = true
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$FEATURE_FIELD_NAME/$s3BucketObjectArea/tenant",
+                        { tenantPatternValidation(it) }
                     )
                 )
             }
 
-    private fun findS3DefaultHandlers(): List<AuroraConfigFieldHandler> =
+    private fun findS3DefaultHandlers(header: AuroraDeploymentSpec): List<AuroraConfigFieldHandler> =
         listOf(
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName", defaultValue = ""),
             AuroraConfigFieldHandler(
                 "$FEATURE_DEFAULTS_FIELD_NAME/objectArea",
                 { objectAreaPatternValidation(it, allowEmpty = true) },
                 defaultValue = ""
+            ),
+            AuroraConfigFieldHandler(
+                "$FEATURE_DEFAULTS_FIELD_NAME/tenant",
+                { tenantPatternValidation(it) },
+                defaultValue = "${header.affiliation}-${header.cluster}"
             )
         )
 
@@ -359,11 +386,19 @@ abstract class S3FeatureTemplate : Feature {
             required = false
         )
     }
+
+    private fun tenantPatternValidation(it: JsonNode?): Exception? {
+        return it?.pattern(
+            pattern = "([a-z]+)-([a-zA-Z0-9-]+)",
+            message = "s3 tenant must be on the form affiliation-cluster, specified value was: ${it.toPrettyString()}"
+        )
+    }
 }
 
 private data class S3BucketObjectArea(
     val bucketName: String,
-    val area: String
+    val area: String,
+    val tenant: String
 )
 
 data class S3Credentials(

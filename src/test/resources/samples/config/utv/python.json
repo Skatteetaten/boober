@@ -8,7 +8,8 @@
   "database": true,
   "s3Defaults": {
     "bucketName": "myBucket",
-    "objectArea": "default"
+    "objectArea": "default",
+    "tenant": "paas-utv"
   },
   "s3": true,
   "sts": true,
