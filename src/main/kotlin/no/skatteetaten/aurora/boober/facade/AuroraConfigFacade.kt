@@ -1,14 +1,24 @@
 package no.skatteetaten.aurora.boober.facade
 
+import org.springframework.stereotype.Service
+import com.fasterxml.jackson.annotation.JsonInclude
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.feature.applicationDeploymentRef
+import no.skatteetaten.aurora.boober.feature.cluster
+import no.skatteetaten.aurora.boober.feature.envAutoDeploy
+import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.toAdr
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
-import org.springframework.stereotype.Service
+import no.skatteetaten.aurora.boober.utils.parallelMap
+
+private val logger = KotlinLogging.logger {}
 
 @Service
 class AuroraConfigFacade(
@@ -16,19 +26,6 @@ class AuroraConfigFacade(
     private val auroraDeploymentContextService: AuroraDeploymentContextService
 
 ) {
-    fun findAllApplicationDeploymentSpecs(
-        ref: AuroraConfigRef,
-        environment: String
-    ): List<AuroraDeploymentSpec> {
-        val auroraConfig = auroraConfigService.findAuroraConfig(ref)
-        return auroraConfig.getApplicationDeploymentRefs()
-            .filter { it.environment == environment }
-            .map {
-                auroraDeploymentContextService.findApplicationDeploymentSpec(
-                    AuroraContextCommand(auroraConfig, it, ref, emptyList(), true)
-                )
-            }
-    }
 
     fun findAuroraDeploymentSpec(
         ref: AuroraConfigRef,
@@ -42,14 +39,15 @@ class AuroraConfigFacade(
 
     fun findAuroraDeploymentSpecForEnvironment(
         ref: AuroraConfigRef,
-        environment: String
+        environment: String,
+        errorsAsWarnings: Boolean = false
     ): List<AuroraDeploymentSpec> {
         val auroraConfig = auroraConfigService.findAuroraConfig(ref)
         return auroraConfig.getApplicationDeploymentRefs()
             .filter { it.environment == environment }
             .map {
                 auroraDeploymentContextService.findApplicationDeploymentSpec(
-                    AuroraContextCommand(auroraConfig, it, ref)
+                    AuroraContextCommand(auroraConfig, it, ref, emptyList(), errorsAsWarnings)
                 )
             }
     }
@@ -153,4 +151,44 @@ class AuroraConfigFacade(
     }
 
     fun findAllAuroraConfigNames() = auroraConfigService.findAllAuroraConfigNames()
+
+    fun searchForApplications(refName: String, environment: String): List<ApplicationSearchResult> {
+        return this.findAllAuroraConfigNames().parallelMap { aff ->
+            try {
+                val ref = AuroraConfigRef(aff, refName)
+                this.findAuroraDeploymentSpecForEnvironment(ref, environment)
+                    .filter {
+                        it.cluster == "utv"
+                    }
+                    .map {
+                        val applicationDeploymentRef = it.applicationDeploymentRef.toAdr()
+
+                        ApplicationSearchResult(
+                            affiliation = aff,
+                            autoDeploy = it.envAutoDeploy,
+                            applicationDeploymentRef = applicationDeploymentRef,
+                            warningMessage = if (applicationDeploymentRef.environment != it.envName) {
+                                "Environment name is overwritten in config file. " +
+                                    "ApplicationDeploymentRef.environment: ${applicationDeploymentRef.environment}, " +
+                                    "AuroraDeploymentSpec.envName: ${it.envName}"
+                            } else {
+                                null
+                            }
+                        )
+                    }
+            } catch (e: Exception) {
+                logger.info(e.message)
+                listOf(ApplicationSearchResult(affiliation = aff, errorMessage = e.message))
+            }
+        }.flatten()
+    }
 }
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ApplicationSearchResult(
+    val affiliation: String,
+    val autoDeploy: Boolean? = null,
+    val applicationDeploymentRef: ApplicationDeploymentRef? = null,
+    val errorMessage: String? = null,
+    val warningMessage: String? = null
+)
