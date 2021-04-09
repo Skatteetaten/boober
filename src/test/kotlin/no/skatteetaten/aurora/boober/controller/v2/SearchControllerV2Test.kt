@@ -13,8 +13,8 @@ import no.skatteetaten.aurora.mockmvc.extensions.statusIsOk
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest
 
-@WebMvcTest(controllers = [MultiAffiliationControllerV2::class])
-class MultiAffiliationControllerV2Test : AbstractControllerTest() {
+@WebMvcTest(controllers = [SearchControllerV2::class])
+class SearchControllerV2Test : AbstractControllerTest() {
 
     @MockkBean
     private lateinit var facade: AuroraConfigFacade
@@ -30,7 +30,7 @@ class MultiAffiliationControllerV2Test : AbstractControllerTest() {
             facade.findAllApplicationDeploymentSpecs(any(), any())
         } returns listOf(stubAuroraDeploymentSpec())
 
-        mockMvc.get(path = Path("/v2/multiaffiliation/{environment}", "fk1-utv")) {
+        mockMvc.get(path = Path("/v2/search?environment={name}", "fk1-utv")) {
             printResponseBody()
             statusIsOk().responseJsonPath("$.success").isTrue()
             statusIsOk().responseJsonPath("$.count").equalsValue(2)
