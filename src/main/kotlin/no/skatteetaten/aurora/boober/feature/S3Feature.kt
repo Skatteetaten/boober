@@ -42,7 +42,7 @@ private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea>
         BUCKET_OBJECT_AREA_CONTEXT_KEY
     )
 
-@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
+@ConditionalOnPropertyMissingOrEmpty("integrations.herkimer.url")
 @Service
 class S3DisabledFeature : S3FeatureTemplate() {
 
@@ -387,7 +387,7 @@ abstract class S3FeatureTemplate : Feature {
     }
 }
 
-private data class S3BucketObjectArea(
+data class S3BucketObjectArea(
     val bucketName: String,
     val area: String,
     val specifiedAreaKey: String = area

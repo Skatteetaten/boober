@@ -77,7 +77,7 @@ class DeployFacade(
  */
 
         watch.start("createNamespaces")
-        val environmentResults = createNamespaces(validContexts)
+        val environmentResults = if (deploy) createNamespaces(validContexts) else emptyMap()
         watch.stop()
 
         watch.start("deployCommand")
@@ -85,7 +85,6 @@ class DeployFacade(
         watch.stop()
 
         watch.start("deploy")
-
         val deployResults = openShiftDeployer.performDeployCommands(environmentResults, deployCommands)
         watch.stop()
 

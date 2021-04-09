@@ -99,10 +99,10 @@ integrations:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
     skap:
         url: https://skap-aurora.${openshift.cluster}.paas.skead.no
-    fiona:
-        url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
+    #fiona:
+        #url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: false
+        url: https://m96405-herkimer-aurora-dev.utv.paas.skead.no
         fallback:
             applikasjonsnavn: "1234567890"
     openshift:

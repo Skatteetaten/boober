@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import io.fabric8.kubernetes.api.model.HasMetadata
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.*
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
@@ -118,8 +119,7 @@ class OpenShiftDeployer(
             it.resource.kind == "ApplicationDeployment"
         }.resource
         application.metadata.labels = application.metadata.labels.addIfNotNull("booberDeployId" to cmd.deployId)
-        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(context.spec.namespace, application)
-        val applicationResult = openShiftClient.performOpenShiftCommand(context.spec.namespace, applicationCommand)
+        val applicationResult = applyResource(context.spec.namespace, application)
         val appResponse = applicationResult.responseBody
 
         if (appResponse == null) {
@@ -208,6 +208,11 @@ class OpenShiftDeployer(
             tagResponse = tagResult,
             reason = redeployResult.message
         )
+    }
+
+    fun applyResource(namespace: String, resource: HasMetadata): OpenShiftResponse {
+        val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(namespace, resource)
+        return openShiftClient.performOpenShiftCommand(namespace, applicationCommand)
     }
 
     private fun applyOpenShiftApplicationObjects(
