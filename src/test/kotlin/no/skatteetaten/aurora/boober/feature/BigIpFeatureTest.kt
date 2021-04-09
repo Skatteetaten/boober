@@ -24,7 +24,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                }"""
             )
         }.singleApplicationError(
-            "bigip/service is required if any other bigip flags are set"
+            "bigip/<host>/service is required if any other bigip flags are set"
         )
     }
 
@@ -84,5 +84,48 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(spec).auroraDeploymentSpecMatches("spec-default.json")
+    }
+
+    @Test
+    fun `should generate several big ip cr and route`() {
+
+        val resources = generateResources(
+            """
+        {
+           "bigip" : {
+             "simple": {
+               "service": "simple",
+                "routeAnnotations" : {
+                  "haproxy.router.openshift.io|timeout" : "30s"
+                 }
+             },
+             "simple-2": {
+               "service": "simple-2",
+                "routeAnnotations" : {
+                  "haproxy.router.openshift.io|timeout" : "30s"
+                 }
+             }
+           }
+        }
+        """, createdResources = 4
+        )
+
+        assertThat(resources[0]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
+        assertThat(resources[1]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("bigip.json")
+
+        val bigIpSpec: BigIpSpec = (resources[1].resource as BigIp).spec
+        assertThat(resources[0].resource.metadata.name).isEqualTo(bigIpSpec.routeName)
+
+        // assertThat(resources[2]).auroraResourceCreatedByThisFeature()
+        //     .auroraResourceMatchesFile("route.json")
+        //
+        // assertThat(resources[3]).auroraResourceCreatedByThisFeature()
+        //     .auroraResourceMatchesFile("bigip.json")
+
+        val bigIpSpec2: BigIpSpec = (resources[3].resource as BigIp).spec
+        assertThat(resources[2].resource.metadata.name).isEqualTo(bigIpSpec2.routeName)
     }
 }
