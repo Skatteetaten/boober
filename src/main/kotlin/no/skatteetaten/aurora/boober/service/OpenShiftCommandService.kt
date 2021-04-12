@@ -184,6 +184,7 @@ class OpenShiftCommandService(
 
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
+            .filter { kind -> !kind.toLowerCase().equals("auroracname") || openShiftClient.k8sVersionOfAtLeast("1.16") }
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
             .map {
                 try {
