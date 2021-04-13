@@ -125,4 +125,22 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val config = dcResource.resource as DeploymentConfig
         assertThat(config.spec.template.metadata).isNull()
     }
+
+    @Test
+    fun `setting buffer size should be reflected in deployment config and fluent bit config`() {
+        val (dcResource, parserResource, configResource, secretResource) = generateResources(
+            """{
+             "logging" : {
+                "index": "test-index",
+                "bufferSize": "10"
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 3
+        )
+
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume, sidecar container and annotation")
+            .auroraResourceMatchesFile("dc_resized.json")
+
+        assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config_resized.json")
+    }
 }

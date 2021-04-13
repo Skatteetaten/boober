@@ -1,12 +1,16 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.time.LocalDateTime
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
+import org.springframework.web.client.RestTemplate
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsAll
 import assertk.assertions.isEqualTo
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.Runs
@@ -26,11 +30,6 @@ import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
-import org.springframework.web.client.RestTemplate
-import java.time.LocalDateTime
-import java.util.UUID
 
 class S3FeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -100,7 +99,7 @@ class S3FeatureTest : AbstractFeatureTest() {
     @Test
     fun `verify two objectareas with different bucketnames`() {
         val s3Credentials = listOf(
-            createS3Credentials(bucketName = "minBucket", objectArea = "default"),
+            createS3Credentials(bucketName = "minBucket", objectArea = "not-default"),
             createS3Credentials(bucketName = "anotherId", objectArea = "default")
         )
 
@@ -114,8 +113,7 @@ class S3FeatureTest : AbstractFeatureTest() {
             """{ 
                 "s3": {
                     "not-default" : {
-                        "bucketName": "minBucket",
-                        "objectArea": "default" 
+                        "bucketName": "minBucket"
                     },
                     "default" : {
                         "bucketName" : "anotherId"
@@ -139,7 +137,8 @@ class S3FeatureTest : AbstractFeatureTest() {
         val resources = generateResources(
             """{ 
                 "s3Defaults": {
-                    "bucketName": "anotherId"
+                    "bucketName": "anotherId",
+                    "tenant": "paas-utv"
                 },
                 "s3": {
                     "default": {
@@ -178,23 +177,87 @@ class S3FeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `verify fails on validate when someone has claimed the bucketObjectArea`() {
+    fun `verify fails on validate when two identical objectareas in same bucket`() {
         mockFiona()
-        mockHerkimer(booberAdId = booberAdId, claimExistsInHerkimer = true, objectAreaIsAlreadyClaimed = true)
+        val s3Credentials = listOf(
+            createS3Credentials(bucketName = "anotherId", objectArea = "default"),
+            createS3Credentials(bucketName = "anotherId", objectArea = "default")
+        )
+        mockHerkimer(booberAdId = booberAdId, claimExistsInHerkimer = true, s3Credentials = s3Credentials)
 
         assertThat {
             generateResources(
                 """{ 
                 "s3": {
                     "default" : {
-                        "bucketName": "anotherId"
+                        "bucketName": "bucket1"
+                    },
+                    "another":{
+                        "objectArea": "default",
+                        "bucketName": "bucket1"
                     }
                 }
            }""",
                 createdResources = 0,
                 resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
             )
-        }.singleApplicationError("is already claimed")
+        }.singleApplicationError("Duplicated objectArea=default in same bucket=bucket1")
+    }
+
+    @Test
+    fun `verify fails when tenant is not prefixed with current affiliation`() {
+        val s3Credentials = listOf(
+            createS3Credentials(bucketName = "anotherId", objectArea = "default")
+        )
+
+        mockHerkimer(
+            booberAdId = booberAdId,
+            claimExistsInHerkimer = true,
+            s3Credentials = s3Credentials
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName" : "anotherId",
+                        "tenant": "demo-utv"
+                    }
+                }
+           }""",
+                createdResources = 0,
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("tenant must contain current affiliation=paas as a prefix, specified value was: demo-utv")
+    }
+
+    @Test
+    fun `verify fails when tenant is not on required form`() {
+        val s3Credentials = listOf(
+            createS3Credentials(bucketName = "anotherId", objectArea = "default")
+        )
+
+        mockHerkimer(
+            booberAdId = booberAdId,
+            claimExistsInHerkimer = true,
+            s3Credentials = s3Credentials
+        )
+
+        assertThat {
+            generateResources(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName" : "anotherId",
+                        "tenant": "paas"
+                    }
+                }
+           }""",
+                createdResources = 0,
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+            )
+        }.singleApplicationError("Config for application simple in environment utv contains errors. s3 tenant must be on the form affiliation-cluster, specified value was: \"paas\".")
     }
 
     @Test
@@ -280,7 +343,6 @@ class S3FeatureTest : AbstractFeatureTest() {
         booberAdId: String,
         claimExistsInHerkimer: Boolean,
         s3Credentials: List<S3Credentials> = listOf(createS3Credentials()),
-        objectAreaIsAlreadyClaimed: Boolean = false,
         bucketIsRegisteredInHerkimer: Boolean = true
     ) {
         val adId = "1234567890"
@@ -300,25 +362,6 @@ class S3FeatureTest : AbstractFeatureTest() {
                 )
             }
         } else emptyList()
-
-        s3Credentials.forEach {
-            val s3BucketObjectAreaResourceName = "${it.bucketName}/${it.objectArea}"
-
-            every {
-                herkimerService.getClaimedResources(
-                    claimOwnerId = null,
-                    resourceKind = ResourceKind.MinioObjectArea,
-                    name = s3BucketObjectAreaResourceName
-                )
-            } returns if (objectAreaIsAlreadyClaimed) listOf(
-                createS3BucketObjectAreaResourceForCredentials(
-                    adId = adId,
-                    s3BucketObjectAreaResourceName = s3BucketObjectAreaResourceName,
-                    credentials = it,
-                    claimOwnerId = UUID.randomUUID().toString()
-                )
-            ) else emptyList()
-        }
 
         every {
             herkimerService.getClaimedResources(

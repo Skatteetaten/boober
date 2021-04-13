@@ -11,7 +11,6 @@ import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import junit.framework.TestCase.assertEquals
 import no.skatteetaten.aurora.boober.service.OpenShiftException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
@@ -19,6 +18,9 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -221,5 +223,9 @@ class OpenShiftClientTest : ResourceLoader() {
         every { serviceAccountClient.getAuthorizationHeaders() } returns HttpHeaders()
         val result = openShiftClient.version()
         assertEquals("1.18.3", result)
+        assertTrue(openShiftClient.k8sVersionOfAtLeast("1.16"))
+        assertTrue(openShiftClient.k8sVersionOfAtLeast("1.18.3"))
+        assertFalse(openShiftClient.k8sVersionOfAtLeast("1.19"))
+        assertFalse(openShiftClient.k8sVersionOfAtLeast("1.18.4"))
     }
 }

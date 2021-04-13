@@ -365,6 +365,16 @@
       }
     }
   },
+  "logging" : {
+    "bufferSize" : {
+      "source" : "default",
+      "value" : 20,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 20
+      } ]
+    }
+  },
   "artifactId": {
     "source": "fileName",
     "value": "whoami",
@@ -539,6 +549,26 @@
           }
         ]
       }
+    },
+    "cname": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ttl" : {
+        "source" : "default",
+        "value" : 300,
+        "sources" : [ {
+          "name" : "default",
+          "value" : 300
+        } ]
+      }
     }
   },
   "s3": {
@@ -571,6 +601,14 @@
           "value": ""
         }
       ]
+    },
+    "tenant" : {
+      "source" : "default",
+      "value" : "paas-utv",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "paas-utv"
+      } ]
     }
   },
   "sts": {

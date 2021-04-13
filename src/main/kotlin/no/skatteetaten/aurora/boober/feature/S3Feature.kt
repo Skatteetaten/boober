@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.util.UUID
+import org.apache.commons.codec.binary.Base64
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -27,11 +32,6 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.pattern
-import org.apache.commons.codec.binary.Base64
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
-import java.util.UUID
 
 private val logger = KotlinLogging.logger {}
 
@@ -96,15 +96,19 @@ class S3Feature(
         val s3BucketObjectAreas = context.bucketObjectArea
 
         val requiredFieldsExceptions = s3BucketObjectAreas.validateRequiredFieldsArePresent()
-        if (requiredFieldsExceptions.isNotEmpty()) return requiredFieldsExceptions
+        val duplicateObjectAreaInSameBucketExceptions = s3BucketObjectAreas.verifyObjectAreaAndBucketAreUnique()
+        val notCurrentAffilationException =
+            s3BucketObjectAreas.validateTenantContainsCurrentAffiliationPrefix(adc.affiliation)
+
+        val validationConfigExceptions =
+            requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions + notCurrentAffilationException
+        if (validationConfigExceptions.isNotEmpty()) {
+            return validationConfigExceptions
+        }
 
         if (!fullValidation || adc.cluster != cluster || s3BucketObjectAreas.isEmpty()) return emptyList()
 
-        val bucketExistsExceptions = s3BucketObjectAreas.verifyBucketCredentialsExistOrElseException()
-        val bucketObjectAreaAlreadyClaimedException =
-            s3BucketObjectAreas.verifyBucketObjectAreaIsNotClaimedByOthersOrElseException(adc.applicationDeploymentId)
-
-        return bucketExistsExceptions + bucketObjectAreaAlreadyClaimedException
+        return s3BucketObjectAreas.verifyBucketCredentialsExistOrElseException()
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -123,27 +127,6 @@ class S3Feature(
         val envVars = resources.extractS3EnvVarsFromSecrets()
 
         resources.addEnvVarsToMainContainers(envVars, javaClass)
-    }
-
-    private fun List<S3BucketObjectArea>.verifyBucketObjectAreaIsNotClaimedByOthersOrElseException(
-        applicationDeploymentId: String
-    ): List<IllegalArgumentException> {
-        return mapNotNull { s3BucketObjectArea ->
-            val claimsOwnedByOthers = herkimerService.getClaimedResources(
-                resourceKind = ResourceKind.MinioObjectArea,
-                name = "${s3BucketObjectArea.bucketName}/${s3BucketObjectArea.area}"
-            )
-                .flatMap { it.claims }
-                .filter { it.ownerId != applicationDeploymentId }
-
-            if (claimsOwnedByOthers.isNotEmpty()) {
-                logger.debug {
-                    "The objectArea=${s3BucketObjectArea.area} in bucket=${s3BucketObjectArea.bucketName}. Claimed by: \n" +
-                        claimsOwnedByOthers.joinToString { "ApplicationDeploymentId=${it.ownerId}" }
-                }
-                IllegalArgumentException("The objectarea=${s3BucketObjectArea.area} in bucket=${s3BucketObjectArea.bucketName} is already claimed.")
-            } else null
-        }
     }
 
     private fun List<S3BucketObjectArea>.verifyBucketCredentialsExistOrElseException(): List<IllegalArgumentException> {
@@ -252,24 +235,14 @@ class S3Feature(
         return if (adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME)) {
             val defaultS3Bucket = S3BucketObjectArea(
                 bucketName = adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
-                area = adc["$FEATURE_DEFAULTS_FIELD_NAME/objectArea"]
+                area = adc["$FEATURE_DEFAULTS_FIELD_NAME/objectArea"],
+                tenant = adc["$FEATURE_DEFAULTS_FIELD_NAME/tenant"]
             )
 
             listOf(defaultS3Bucket)
         } else {
             adc.getSubKeyValues(FEATURE_FIELD_NAME)
                 .mapNotNull { findS3Bucket(it, adc) }
-        }
-    }
-
-    private fun List<S3BucketObjectArea>.validateObjectAreasPattern(): List<IllegalArgumentException> {
-        return this.mapNotNull {
-            val objectAreaPattern = Regex("[a-z0-9-.]+")
-            if (!it.area.matches(objectAreaPattern)) {
-                IllegalArgumentException("s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it.area}")
-            } else {
-                null
-            }
         }
     }
 
@@ -283,7 +256,8 @@ class S3Feature(
             bucketName = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/bucketName")
                 ?: adc["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"],
             area = adc["$FEATURE_FIELD_NAME/$s3ObjectAreaKey/objectArea"],
-            specifiedAreaKey = s3ObjectAreaKey
+            tenant = adc.getOrNull("$FEATURE_FIELD_NAME/$s3ObjectAreaKey/tenant")
+                ?: adc["$FEATURE_DEFAULTS_FIELD_NAME/tenant"]
         )
     }
 
@@ -302,6 +276,22 @@ class S3Feature(
     }
 }
 
+private fun List<S3BucketObjectArea>.verifyObjectAreaAndBucketAreUnique(): List<IllegalArgumentException> {
+    val s3BucketObjectAreaGroupedByArea = this.groupBy { it }
+    return s3BucketObjectAreaGroupedByArea.filter { it.value.size > 1 }
+        .map { (s3BucketObjectArea, duplicatedEntries) ->
+            IllegalArgumentException("Duplicated objectArea=${s3BucketObjectArea.area} in same bucket=${s3BucketObjectArea.bucketName}")
+        }
+}
+
+private fun List<S3BucketObjectArea>.validateTenantContainsCurrentAffiliationPrefix(affiliation: String): List<IllegalArgumentException> {
+    return this.filterNot {
+        it.tenant.startsWith(affiliation)
+    }.map {
+        IllegalArgumentException("tenant must contain current affiliation=$affiliation as a prefix, specified value was: ${it.tenant}")
+    }
+}
+
 private data class BucketWithCredentials(
     val s3BucketObjectArea: S3BucketObjectArea,
     val s3Credentials: S3Credentials
@@ -315,10 +305,10 @@ private fun List<BucketWithCredentials>.createS3Secrets(nsName: String, appName:
     this.map { (s3BucketObjectArea, provisionResult) ->
         newSecret {
             metadata {
-                name = "$appName-${s3BucketObjectArea.specifiedAreaKey}-s3"
+                name = "$appName-${s3BucketObjectArea.area}-s3"
                 namespace = nsName
                 annotations = mapOf(
-                    ANNOTATION_OBJECT_AREA to s3BucketObjectArea.specifiedAreaKey
+                    ANNOTATION_OBJECT_AREA to s3BucketObjectArea.area
                 )
             }
             data = provisionResult.run {
@@ -338,7 +328,7 @@ abstract class S3FeatureTemplate : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val s3Handlers = findS3Handlers(cmd.applicationFiles)
-        val s3DefaultHandlers = findS3DefaultHandlers()
+        val s3DefaultHandlers = findS3DefaultHandlers(header)
         return setOf(
             AuroraConfigFieldHandler(
                 FEATURE_FIELD_NAME,
@@ -349,7 +339,9 @@ abstract class S3FeatureTemplate : Feature {
         ) + s3Handlers + s3DefaultHandlers
     }
 
-    private fun findS3Handlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+    private fun findS3Handlers(
+        applicationFiles: List<AuroraConfigFile>
+    ): List<AuroraConfigFieldHandler> =
         applicationFiles.findSubKeys(FEATURE_FIELD_NAME)
             .flatMap { s3BucketObjectArea ->
                 if (s3BucketObjectArea.isEmpty()) emptyList()
@@ -363,17 +355,26 @@ abstract class S3FeatureTemplate : Feature {
                         "$FEATURE_FIELD_NAME/$s3BucketObjectArea/enabled",
                         validator = { it.boolean() },
                         defaultValue = true
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$FEATURE_FIELD_NAME/$s3BucketObjectArea/tenant",
+                        { tenantPatternValidation(it) }
                     )
                 )
             }
 
-    private fun findS3DefaultHandlers(): List<AuroraConfigFieldHandler> =
+    private fun findS3DefaultHandlers(header: AuroraDeploymentSpec): List<AuroraConfigFieldHandler> =
         listOf(
             AuroraConfigFieldHandler("$FEATURE_DEFAULTS_FIELD_NAME/bucketName", defaultValue = ""),
             AuroraConfigFieldHandler(
                 "$FEATURE_DEFAULTS_FIELD_NAME/objectArea",
                 { objectAreaPatternValidation(it, allowEmpty = true) },
                 defaultValue = ""
+            ),
+            AuroraConfigFieldHandler(
+                "$FEATURE_DEFAULTS_FIELD_NAME/tenant",
+                { tenantPatternValidation(it) },
+                defaultValue = "${header.affiliation}-${header.cluster}"
             )
         )
 
@@ -385,12 +386,19 @@ abstract class S3FeatureTemplate : Feature {
             required = false
         )
     }
+
+    private fun tenantPatternValidation(it: JsonNode?): Exception? {
+        return it?.pattern(
+            pattern = "([a-z]+)-([a-zA-Z0-9-]+)",
+            message = "s3 tenant must be on the form affiliation-cluster, specified value was: ${it.toPrettyString()}"
+        )
+    }
 }
 
 private data class S3BucketObjectArea(
     val bucketName: String,
     val area: String,
-    val specifiedAreaKey: String = area
+    val tenant: String
 )
 
 data class S3Credentials(

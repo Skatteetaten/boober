@@ -1,5 +1,25 @@
 package no.skatteetaten.aurora.boober.facade
 
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.doesNotContain
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
+import assertk.assertions.messageContains
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newProject
+import com.fkorotkov.openshift.status
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.HerkimerResponse
+import no.skatteetaten.aurora.boober.utils.getResultFiles
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -10,26 +30,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.fkorotkov.openshift.metadata
-import com.fkorotkov.openshift.newProject
-import com.fkorotkov.openshift.status
-import assertk.assertThat
-import assertk.assertions.contains
-import assertk.assertions.doesNotContain
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotNull
-import assertk.assertions.messageContains
-import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.HerkimerResponse
-import no.skatteetaten.aurora.boober.utils.getResultFiles
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import okhttp3.mockwebserver.MockResponse
 
 private val logger = KotlinLogging.logger { }
 
@@ -107,6 +107,10 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
             rule({ path?.endsWith("/groups") }) {
                 mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/version") }) {
+                mockJsonFromFile("response_version.json")
             }
 
             // Should it be able to reuse rules?
@@ -213,6 +217,10 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
             rule({ path?.endsWith("/groups") }) {
                 mockJsonFromFile("groups.json")
+            }
+
+            rule({ path?.endsWith("/version") }) {
+                mockJsonFromFile("response_version.json")
             }
 
             // Should it be able to reuse rules?

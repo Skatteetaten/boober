@@ -72,6 +72,7 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |     max: "128Mi"
                          | logging:
             complex.json |   index: "test-index"
+                 default |   bufferSize: 20
                          | deployStrategy:
             complex.json |   type: "recreate"
                  default |   timeout: 180
@@ -128,6 +129,9 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     enabled: false
                  default |     insecurePolicy: "None"
                  default |     termination: "edge"
+                         |   cname:
+                 default |     enabled: false
+                 default |     ttl: 300
                          | s3:
                          |   default:
             complex.json |     bucketName: "minYndlingsBucket"
@@ -136,6 +140,7 @@ utv/about-alternate.json |   ttl: "1d"
                          | s3Defaults:
                  default |   bucketName: ""
                  default |   objectArea: ""
+                 default |   tenant: "paas-utv"
                          | secretVaults:
                          |   foo:
                  default |     name: "foo"

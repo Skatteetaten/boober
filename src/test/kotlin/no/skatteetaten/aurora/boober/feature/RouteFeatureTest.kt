@@ -10,9 +10,11 @@ import assertk.assertions.support.show
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -419,5 +421,226 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
         val routeFeature: RouteFeature = feature as RouteFeature
         assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isFalse()
+    }
+
+    @Test
+    fun `that a disabled cname does not make any difference to configuration`() {
+        val (dcResource, routeResource) = generateResources(
+            """{
+            "route" : {
+               "foo" : {
+                 "host" : "simple-foo",
+                 "cname": {
+                   "enabled": false
+                 }
+               }
+            }
+        }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 1
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-route.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo")
+    }
+
+    @Test
+    fun `that enabled cname generates an auroracname entry`() {
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
+            "route" : {
+               "foo" : {
+                 "host" : "simple-foo-specific-cname",
+                 "cname": {
+                   "enabled": true                    
+                 }
+               }
+            }
+        }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+        // There shall be 2 resource created by this
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-route-with-cname.json")
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-aurora-cname.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-foo-specific-cname")
+    }
+
+    @Test
+    fun `specified cname ttl is overridden correctly`() {
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
+            "route" : {
+               "foo" : {
+                 "host": "not-just-default.utv.apps.paas.skead.no",
+                 "cname": {
+                   "enabled": "true",
+                   "ttl": 150
+                 }
+               }
+            }
+        }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-route-with-not-default-cname.json")
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("not-just-default-aurora-cname.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("not-just-default.utv.apps.paas.skead.no")
+    }
+
+    @Test
+    fun `that disabled route and enabled cname will not generate resources`() {
+        generateResources(
+            """{
+            "route" : {
+               "foo" : {
+                 "host" : "simple-foo",
+                 "enabled": "false",
+                 "cname": {
+                   "enabled": "true",
+                   "ttl": 300
+                 }
+               }
+            }
+        }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 0
+        )
+    }
+
+    @Test
+    fun `should generate cname after overriding default value`() {
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
+            "route" : { 
+               "foo" : {
+                 "host" : "simple-foo-specific-cname"
+               }
+            },
+            "routeDefaults" : {
+              "host": "this-cname-alias-target-gets-overwritten",
+              "cname" : {
+                "enabled" : "true"
+              }
+             }
+        }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-route-with-cname.json")
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-aurora-cname.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-foo-specific-cname")
+    }
+
+    @Test
+    fun `default cname host value is used as cname target`() {
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
+            "route" : { 
+                "foo" : {
+                    "enabled" : "true"
+                }
+            },
+            "routeDefaults" : {
+              "host": "simple-foo-specific-cname",
+              "cname" : {
+                "enabled" : "true"
+              }
+            }
+            }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-route-with-cname.json")
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("foo-aurora-cname.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-foo-specific-cname")
+    }
+
+    @Test
+    fun `that enabled route gets cname if set as default`() {
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
+            "route" : "true",
+            "routeDefaults" : {
+              "host": "simple-specific-cname",
+              "cname" : {
+                "enabled" : "true"
+              }
+            }
+            }""",
+            resource = createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-cname.json")
+
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-specific-cname")
+    }
+
+    @Test
+    fun `cname and fullyQualifiedHost cannot be set simultaneously`() {
+        val ex: MultiApplicationValidationException = assertThrows {
+            generateResources(
+                """{
+            "route" : { 
+                "foo" : {
+                    "enabled" : "true",
+                    "fullyQualifiedHost": "true",
+                    "host": "simple-foo-specific-cname",
+                    "cname" : {
+                      "enabled" : "true"
+                    }
+                }
+            }
+            }""",
+                resource = createEmptyDeploymentConfig(),
+                createdResources = 2
+            )
+        }
+        assertThat { ex.message?.contains("configurations simultaneously") }
+    }
+
+    @Test
+    fun `cname gets generated just enabling it`() {
+        val (dcResource, routeResource, cnameResource) = generateResources(
+            """{
+            "route" : "true",
+            "routeDefaults" : {
+              "cname" : {
+                 "enabled": "true"
+              }
+            }
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-cname-simple.json")
+
+        assertThat(cnameResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-simple.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv")
     }
 }

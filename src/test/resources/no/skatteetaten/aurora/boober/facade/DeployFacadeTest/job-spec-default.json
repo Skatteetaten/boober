@@ -283,6 +283,16 @@
       }
     ]
   },
+  "logging" : {
+    "bufferSize" : {
+      "source" : "default",
+      "value" : 20,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 20
+      } ]
+    }
+  },
   "artifactId": {
     "source": "fileName",
     "value": "job",
@@ -414,6 +424,26 @@
             "value": "edge"
           }
         ]
+      }
+    },
+    "cname": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ttl" : {
+        "source" : "default",
+        "value" : 300,
+        "sources" : [ {
+          "name" : "default",
+          "value" : 300
+        } ]
       }
     }
   },
