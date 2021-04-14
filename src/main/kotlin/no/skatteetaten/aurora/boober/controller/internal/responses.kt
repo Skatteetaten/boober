@@ -13,6 +13,14 @@ data class Response(
     constructor(item: Any) : this(items = listOf(item))
 }
 
+data class ErrorsResponse(
+    val success: Boolean = true,
+    val message: String = "OK",
+    val items: List<Any> = emptyList(),
+    val errors: List<Any> = emptyList(),
+    val count: Int = items.size
+)
+
 data class KeyValueResponse<T>(
     val success: Boolean = true,
     val message: String = "OK",

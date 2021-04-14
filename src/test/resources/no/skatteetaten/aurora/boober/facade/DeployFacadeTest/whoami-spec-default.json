@@ -163,6 +163,16 @@
       }
     ]
   },
+  "env" : {
+    "autoDeploy" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
+    }
+  },
   "certificate": {
     "source": "default",
     "value": false,

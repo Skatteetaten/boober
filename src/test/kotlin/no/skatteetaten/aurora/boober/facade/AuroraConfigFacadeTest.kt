@@ -600,4 +600,25 @@ class AuroraConfigFacadeTest(
         val names = facade.findAllAuroraConfigNames()
         assertThat(names.first()).isEqualTo("paas")
     }
+
+    @Test
+    fun `search for applications`() {
+
+        bitbucketMock {
+            rule {
+
+                val json = mapOf("values" to listOf(mapOf("slug" to "paas")))
+                MockResponse()
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .setResponseCode(200)
+                    .setBody(
+                        jacksonObjectMapper()
+                            .writeValueAsString(json)
+                    )
+            }
+        }
+
+        val searchForApplications = facade.searchForApplications("master", "utv")
+        assertThat(searchForApplications.size).isEqualTo(8)
+    }
 }

@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -205,6 +206,7 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
                 "env/name",
                 validator = { it.pattern(envNamePattern, envNameMessage, false) }),
             AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
+            AuroraConfigFieldHandler("env/autoDeploy", validator = { it.boolean() }, defaultValue = false),
             AuroraConfigFieldHandler("baseFile"),
             AuroraConfigFieldHandler("envFile"),
             AuroraConfigFieldHandler("includeEnvFile")

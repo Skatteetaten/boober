@@ -243,6 +243,14 @@
           "value": "1d"
         }
       ]
+    },
+    "autoDeploy" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
     }
   },
   "envFile": {

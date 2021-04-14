@@ -16,6 +16,8 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "whoami"
+               | env:
+       default |   autoDeploy: false
        default | certificate: false
    whoami.json | groupId: "org.test"
                | databaseDefaults:

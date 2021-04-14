@@ -88,7 +88,8 @@ class AuroraDeploymentSpecControllerV1Test : AbstractControllerTest() {
      about.json | affiliation: "paas"
  utv/about.json | envName: "utv"
          static | applicationDeploymentId: "1234567890"
-utv/simple.json | name: "simple""""
+utv/simple.json | name: "simple"
+utv/simple.json | applicationDeploymentRef: "fk1-utv/someApp""""
             )
         }
     }
