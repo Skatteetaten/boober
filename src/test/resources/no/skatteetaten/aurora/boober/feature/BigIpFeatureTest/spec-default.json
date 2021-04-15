@@ -10,26 +10,46 @@
     ]
   },
   "bigip": {
-    "service": {
+    "simple": {
       "source": "utv/simple.json",
-      "value": "simple",
+      "value": {
+        "service": "simple",
+        "routeAnnotations": {
+          "haproxy.router.openshift.io|timeout": "30s"
+        }
+      },
       "sources": [
         {
           "name": "utv/simple.json",
-          "value": "simple"
+          "value": {
+            "service": "simple",
+            "routeAnnotations": {
+              "haproxy.router.openshift.io|timeout": "30s"
+            }
+          }
         }
-      ]
-    },
-    "routeAnnotations": {
-      "haproxy.router.openshift.io|timeout": {
+      ],
+      "service": {
         "source": "utv/simple.json",
-        "value": "30s",
+        "value": "simple",
         "sources": [
           {
             "name": "utv/simple.json",
-            "value": "30s"
+            "value": "simple"
           }
         ]
+      },
+      "routeAnnotations": {
+        "haproxy.router.openshift.io|timeout": {
+          "source": "utv/simple.json",
+          "value": "30s",
+          "sources": [
+            {
+              "name": "utv/simple.json",
+              "value": "30s"
+            }
+          ]
+        }
       }
     }
   }

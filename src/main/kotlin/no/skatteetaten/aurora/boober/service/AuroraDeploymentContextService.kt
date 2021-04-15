@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.BigIpFeature
+import no.skatteetaten.aurora.boober.feature.BigIpLegacyFeature
 import no.skatteetaten.aurora.boober.feature.CertificateFeature
 import no.skatteetaten.aurora.boober.feature.ConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
@@ -116,6 +117,7 @@ class AuroraDeploymentContextService(
                 when (feature) {
                     is RouteFeature -> feature.fetchExternalHostsAndPaths(spec)
                     is BigIpFeature -> feature.fetchExternalHostsAndPaths(spec)
+                    is BigIpLegacyFeature -> feature.fetchExternalHostsAndPaths(spec)
                     else -> emptyList()
                 }
             }.map { it to adc }

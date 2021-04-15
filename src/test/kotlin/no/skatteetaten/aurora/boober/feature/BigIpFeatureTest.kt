@@ -19,13 +19,29 @@ class BigIpFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 """{
                  "bigip" : {
-                   "asmPolicy" : "public"
+                   "simple" : {
+                     "asmPolicy" : "public"
+                   }
                  }
                }"""
             )
-        }.singleApplicationError(
-            "bigip/<host>/service is required if any other bigip flags are set"
-        )
+        }.singleApplicationError(BigIpFeature.Errors.MissingMultipleService.message)
+    }
+
+    @Test
+    fun `should get error if bigip legacy config and multiple config is set`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                 "bigip" : {
+                   "service": "legacy",
+                   "simple" : {
+                     "service": "simple"
+                   }
+                 }
+               }"""
+            )
+        }.singleApplicationError(BigIpFeature.Errors.BothLegacyAndMultipleConfigIsSet.message)
     }
 
     @Test
@@ -33,11 +49,13 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         val generatedResource = generateResources(
             """{
              "bigip" : {
-                  "service": "simple", 
-                  "routeAnnotations" : {
-                    "haproxy.router.openshift.io|timeout" : "30s"
-                   },
-                   "enabled": false
+               "simple": {
+                 "service": "simple", 
+                 "routeAnnotations" : {
+                   "haproxy.router.openshift.io|timeout" : "30s"
+                 },
+                 "enabled": false
+               }
              }
            }"""
         )
@@ -51,10 +69,12 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         val (routeResource, bigIpResource) = generateResources(
             """{
             "bigip" : {
-              "service" : "simple",
-              "routeAnnotations" : {
-                "haproxy.router.openshift.io|timeout" : "30s"
-               }
+              "simple": {
+                "service" : "simple",
+                "routeAnnotations" : {
+                  "haproxy.router.openshift.io|timeout" : "30s"
+                }
+              }
             }
         }""", createdResources = 2
         )
@@ -75,10 +95,12 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         val spec = createAuroraDeploymentSpecForFeature(
             """{
             "bigip" : {
-              "service" : "simple",
-              "routeAnnotations" : {
-                "haproxy.router.openshift.io|timeout" : "30s"
-               }
+              "simple": {
+                "service" : "simple",
+                "routeAnnotations" : {
+                  "haproxy.router.openshift.io|timeout" : "30s"
+                }
+              }
             }
         }"""
         )

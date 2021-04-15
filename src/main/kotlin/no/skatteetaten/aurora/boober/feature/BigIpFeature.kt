@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.kubernetes.newObjectMeta
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
@@ -21,61 +22,51 @@ class BigIpFeature(
     @Value("\${boober.route.suffix}") val routeSuffix: String
 ) : Feature {
 
+    enum class Errors(val message: String) {
+        MissingLegacyService("bigip/service is required if other bigip flags are set. bigip/service is deprecated and you should move that configuration to bigip/<host>/service."),
+        MissingMultipleService("bigip/<host>/service is required if any other bigip flags are set"),
+        BothLegacyAndMultipleConfigIsSet("specifying both bigip/service and bigip/<host>/service is not allowed. bigip/service is deprecated and you should move that configuration to bigip/<host>/service.")
+    }
+
+    val bigIpLegacyConfigKeys: List<String> = listOf(
+        "enabled",
+        "service",
+        "asmPolicy",
+        "externalHost",
+        "oauthScopes",
+        "apiPaths",
+        "routeAnnotations"
+    )
+
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
     }
 
-    fun isBigIPMultipleConfigKey(key: String, withBigIPPrefix: Boolean): Boolean {
-        val bigIpSubKeys: List<String> = listOf(
-            "enabled",
-            "service",
-            "asmPolicy",
-            "externalHost",
-            "oauthScopes",
-            "apiPaths",
-            "routeAnnotations"
-        )
-
-        if (withBigIPPrefix && key.split("/").size > 2) {
-            return false
-        }
-
-        val subkeys = if (withBigIPPrefix) {
-            bigIpSubKeys.map { "bigip/$it" }
-        } else bigIpSubKeys
-
-        return !subkeys.contains(key)
-    }
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        // Enables or disables all bigIp routes.
-        // TODO: Should this be added for each route?
-        val bigipEnabledHandler = AuroraConfigFieldHandler("bigip/enabled", { it.boolean() })
-
-        val multipleBigIPHandlers = cmd.applicationFiles.findSubKeys("bigip")
-            .filter { isBigIPMultipleConfigKey(it, false) }
+        val multipleConfigs = cmd.applicationFiles.getBigIPHosts()
             .flatMap { host ->
                 setOf(
                     // host == host in OpenShift Route resource
                     AuroraConfigFieldHandler("bigip/$host"),
+                    AuroraConfigFieldHandler("bigip/$host/enabled", { it.boolean() }),
                     AuroraConfigFieldHandler("bigip/$host/service"),
                     AuroraConfigFieldHandler("bigip/$host/asmPolicy"),
                     AuroraConfigFieldHandler("bigip/$host/externalHost"),
                     AuroraConfigFieldHandler("bigip/$host/oauthScopes"),
                     AuroraConfigFieldHandler("bigip/$host/apiPaths")
                 ) + findRouteAnnotationHandlers("bigip/$host", cmd.applicationFiles, "routeAnnotations")
-            }
+            }.toSet()
 
-        // This type of configuration only supports one BigIP route. This is now deprecated in favor of multipleBigIPHandlers.
-        val legacyHandlers = setOf(
+        val legacyConfig = setOf(
             AuroraConfigFieldHandler("bigip/service"),
             AuroraConfigFieldHandler("bigip/asmPolicy"),
             AuroraConfigFieldHandler("bigip/externalHost"),
             AuroraConfigFieldHandler("bigip/oauthScopes"),
-            AuroraConfigFieldHandler("bigip/apiPaths")
+            AuroraConfigFieldHandler("bigip/apiPaths"),
+            AuroraConfigFieldHandler("bigip/enabled", { it.boolean() })
         ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles, "routeAnnotations")
 
-        return setOf(bigipEnabledHandler) + multipleBigIPHandlers + legacyHandlers
+        return multipleConfigs + legacyConfig
     }
 
     override fun validate(
@@ -83,47 +74,43 @@ class BigIpFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        val multipleBigIPConfig = adc.getSubKeys("bigip").filter {
-            isBigIPMultipleConfigKey(it.key, true)
-        }
+        val hosts = adc.getBigIPHosts()
+        val isMultipleConfig = hosts.isNotEmpty()
 
         val isMissingLegacyServiceConfig =
             adc.hasSubKeys("bigip") && adc.getOrNull<String>("bigip/service").isNullOrEmpty()
-        val isMissingMultipleConfig = multipleBigIPConfig.isEmpty() ||
-            multipleBigIPConfig.any { adc.getOrNull<String>("${it.key}/service").isNullOrEmpty() }
 
-        if (isMissingLegacyServiceConfig && isMissingMultipleConfig) {
-            throw AuroraDeploymentSpecValidationException("bigip/<host>/service is required if any other bigip flags are set")
+        val isMissingMultipleServiceConfig = hosts.any {
+            adc.getOrNull<String>("bigip/$it/service").isNullOrEmpty()
         }
 
-        val hasConfiguredBothLegacyAndMultipleConfig = !isMissingLegacyServiceConfig && !isMissingMultipleConfig
+        val hasConfiguredBothLegacyAndMultipleConfig = !isMissingLegacyServiceConfig && isMultipleConfig
         if (hasConfiguredBothLegacyAndMultipleConfig) {
-            throw AuroraDeploymentSpecValidationException("specifying both bigip/service and bigip/<host>/service is not allowed. bigip/service is deprecated and you should move that configuration to bigip/<host>/service.")
+            throw AuroraDeploymentSpecValidationException(Errors.BothLegacyAndMultipleConfigIsSet.message)
+        }
+
+        if (!isMultipleConfig && isMissingLegacyServiceConfig) {
+            throw AuroraDeploymentSpecValidationException(Errors.MissingLegacyService.message)
+        }
+
+        if (isMissingMultipleServiceConfig) {
+            throw AuroraDeploymentSpecValidationException(Errors.MissingMultipleService.message)
         }
 
         return emptyList()
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        val enabled = adc.isFeatureEnabled()
-        if (!enabled) {
-            return emptySet()
-        }
-
-        val hasLegacyConfig = adc.getOrNull<String>("bigip/service") != null
-
-        if (hasLegacyConfig) {
-            return generateBigIPResourcesWithLegacyConfig(adc)
-        }
-
-        return adc.getSubKeys("bigip")
-            .filter { isBigIPMultipleConfigKey(it.key, true) }
-            .map { it.key.split("/").last() }
+        return adc.getBigIPHosts()
             .flatMap { generateBigIPResources(it, adc) }
             .toSet()
     }
 
     fun generateBigIPResources(host: String, adc: AuroraDeploymentSpec): Set<AuroraResource> {
+        if (!adc.isBigIPHostEnabled(host)) {
+            return emptySet()
+        }
+
         // This is used to preserve legacy configuration
         val isApplicationHost = host == adc.name
 
@@ -163,66 +150,36 @@ class BigIpFeature(
         )
     }
 
-    // Deprecated
-    // Code in this function could be merged with generateBigIPResources, but keeping it separate will make it easier
-    // to delete legacy config.
-    fun generateBigIPResourcesWithLegacyConfig(adc: AuroraDeploymentSpec): Set<AuroraResource> {
-        val routeName = "${adc.name}-bigip"
-
-        // dette var den gamle applicationDeploymentId som må nå være hostname
-        val routeHost = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
-
-        val auroraRoute = Route(
-            objectName = routeName,
-            host = routeHost,
-            annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
-        )
-
-        val bigIp = BigIp(
-            _metadata = newObjectMeta {
-                name = adc.name
-                namespace = adc.namespace
-            },
-            spec = BigIpSpec(
-                routeName, BigIpKonfigurasjonstjenesten(
-                    service = adc["bigip/service"],
-                    asmPolicy = adc.getOrNull("bigip/asmPolicy"),
-                    oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/oauthScopes"),
-                    apiPaths = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/apiPaths"),
-                    externalHost = adc.getOrNull("bigip/externalHost")
-                )
-            )
-        )
-
-        return setOf(
-            auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, routeSuffix).generateAuroraResource(),
-            bigIp.generateAuroraResource()
-        )
-    }
-
-    private fun AuroraDeploymentSpec.isFeatureEnabled(): Boolean {
-        val hasSubkeys = this.hasSubKeys("bigip")
-        return getOrNull<Boolean>("bigip/enabled") ?: hasSubkeys
-    }
-
     fun fetchExternalHostsAndPaths(adc: AuroraDeploymentSpec): List<String> {
-        val enabled = adc.isFeatureEnabled()
-        if (!enabled) return emptyList()
-
-        val host: String = adc.getOrNull("bigip/externalHost") ?: return emptyList()
-        val legacyExternalHostsAndPaths = adc.getDelimitedStringOrArrayAsSet("bigip/apiPaths").map {
-            "$host$it"
-        }
-
-        val multipleHostsAndPaths = adc.getSubKeys("bigip")
-            .filter { isBigIPMultipleConfigKey(it.key, true) }
+        return adc.getBigIPHosts()
+            .filter { adc.isBigIPHostEnabled(it) }
             .mapNotNull { host -> adc.getOrNull<String>("bigip/$host/externalHost") }
             .flatMap { externalHost ->
-                adc.getDelimitedStringOrArrayAsSet("bigip/$host/apiPaths").map {
+                adc.getDelimitedStringOrArrayAsSet("bigip/$externalHost/apiPaths").map {
                     "$externalHost$it"
                 }
             }
+    }
 
-        return legacyExternalHostsAndPaths + multipleHostsAndPaths
+    private fun List<AuroraConfigFile>.getBigIPHosts(): Set<String> {
+        return this.findSubKeys("bigip").filter { !bigIpLegacyConfigKeys.contains(it) }.toSet()
+    }
+
+    private fun AuroraDeploymentSpec.getBigIPHosts(): Set<String> {
+        return this.getSubKeys("bigip")
+            .filter {
+                val isSubKeyToHost = it.key.split("/").size > 2
+                when {
+                    isSubKeyToHost -> false
+                    else -> !bigIpLegacyConfigKeys.map { "bigip/$it" }.contains(it.key)
+                }
+            }
+            .map { it.key.split("/").last() }
+            .toSet()
+    }
+
+    private fun AuroraDeploymentSpec.isBigIPHostEnabled(host: String): Boolean {
+        val hasSubKeys = this.hasSubKeys("bigip/$host")
+        return getOrNull<Boolean>("bigip/$host/enabled") ?: hasSubKeys
     }
 }
