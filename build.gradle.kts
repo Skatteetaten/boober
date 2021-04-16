@@ -7,7 +7,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "9.2.1"
     id("org.sonarqube") version "2.8"
 
-    id("org.springframework.boot") version "2.2.6.RELEASE"
+    id("org.springframework.boot") version "2.2.13.RELEASE"
     id("org.asciidoctor.convert") version "2.4.0"
 
     id("com.gorylenko.gradle-git-properties") version "2.2.2"
@@ -42,7 +42,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.retry:spring-retry")
-    implementation("com.cronutils:cron-utils:9.0.2")
+    implementation("com.cronutils:cron-utils:9.1.5")
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
