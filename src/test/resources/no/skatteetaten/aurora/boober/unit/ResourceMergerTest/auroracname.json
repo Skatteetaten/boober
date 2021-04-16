@@ -1,0 +1,20 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "AuroraCname",
+  "metadata": {
+    "annotations": {
+      "judge.sits.no/notified": "true"
+    },
+    "labels": {
+      "affiliation": "demo",
+      "app": "cname-demo"
+    },
+    "name": "cname-demo",
+    "namespace": "demo-psat-poc"
+  },
+  "spec": {
+    "cname": "gavel-poc-10.cname-poc10.utv.paas.skead.no",
+    "host": "apps.utv04.paas.skead.no",
+    "ttl": 300
+  }
+}
