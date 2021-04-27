@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
+import io.fabric8.kubernetes.api.model.VolumeProjection
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -31,6 +32,7 @@ import no.skatteetaten.aurora.boober.utils.required
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import kotlin.streams.toList
 
 private const val MOUNTS_CONTEXT_KEY = "mounts"
 
@@ -276,13 +278,27 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                     projected {
                         name = it.volumeName
                         defaultMode = 420
-                        sources = listOf(newVolumeProjection {
-                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
-                        })
+                        sources = createPsatSources(it)
                     }
                 }
             }
         }
+    }
+}
+
+private fun createPsatSources(psat: Mount): List<VolumeProjection> {
+    return if (psat.audience == null) {
+        emptyList()
+    } else {
+        psat.audience
+            .split(",")
+            .stream()
+            .map { aud ->
+                newVolumeProjection {
+                    serviceAccountToken = ServiceAccountTokenProjection(aud, psat.expirationSeconds, aud)
+                }
+            }
+            .toList()
     }
 }
 
