@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
+import io.fabric8.kubernetes.api.model.VolumeProjection
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -276,14 +277,20 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                     projected {
                         name = it.volumeName
                         defaultMode = 420
-                        sources = listOf(newVolumeProjection {
-                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
-                        })
+                        sources = createPsatSources(it)
                     }
                 }
             }
         }
     }
+}
+
+private fun createPsatSources(psat: Mount): List<VolumeProjection> {
+    return psat.audience?.split(",")?.map { aud ->
+        newVolumeProjection {
+            serviceAccountToken = ServiceAccountTokenProjection(aud, psat.expirationSeconds, aud)
+        }
+    }?.toList() ?: emptyList()
 }
 
 enum class MountType(val kind: String) {

@@ -49,9 +49,23 @@
               "sources": [
                 {
                   "serviceAccountToken": {
-                    "audience": "dummy-audience",
+                    "audience": "first",
                     "expirationSeconds": 600,
-                    "path": "dummy-audience"
+                    "path": "first"
+                  }
+                },
+                {
+                  "serviceAccountToken": {
+                    "audience": "second",
+                    "expirationSeconds": 600,
+                    "path": "second"
+                  }
+                },
+                {
+                  "serviceAccountToken": {
+                    "audience": "third",
+                    "expirationSeconds": 600,
+                    "path": "third"
                   }
                 }
               ]
