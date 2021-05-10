@@ -1,0 +1,14 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "BigIp",
+  "metadata": {
+    "name": "simple-2",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "routeName": "simple-2-bigip",
+    "konfigtjenesten": {
+      "service": "simple-2"
+    }
+  }
+}

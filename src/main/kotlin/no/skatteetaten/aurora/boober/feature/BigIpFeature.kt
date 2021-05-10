@@ -114,13 +114,13 @@ class BigIpFeature(
         // This is used to preserve legacy configuration
         val isApplicationHost = host == adc.name
 
-        val routeName = if (isApplicationHost) "${adc.name}-bigip" else "$host-bigip"
-
         val routeHost = if (isApplicationHost) {
             DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
         } else {
             "$host-${adc.namespace}"
         }
+
+        val routeName = "$host-bigip"
 
         val route = Route(
             objectName = routeName,
@@ -130,7 +130,7 @@ class BigIpFeature(
 
         val bigIp = BigIp(
             _metadata = newObjectMeta {
-                name = adc.name
+                name = host
                 namespace = adc.namespace
             },
             spec = BigIpSpec(

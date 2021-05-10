@@ -132,22 +132,57 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         """, createdResources = 4
         )
 
-        assertThat(resources[0]).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("route.json")
-
-        assertThat(resources[1]).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("bigip.json")
-
-        val bigIpSpec: BigIpSpec = (resources[1].resource as BigIp).spec
-        assertThat(resources[0].resource.metadata.name).isEqualTo(bigIpSpec.routeName)
-
-        // assertThat(resources[2]).auroraResourceCreatedByThisFeature()
-        //     .auroraResourceMatchesFile("route.json")
-        //
-        // assertThat(resources[3]).auroraResourceCreatedByThisFeature()
-        //     .auroraResourceMatchesFile("bigip.json")
+        val bigIpSpec1: BigIpSpec = (resources[1].resource as BigIp).spec
+        assertThat(resources[0].resource.metadata.name).isEqualTo(bigIpSpec1.routeName)
 
         val bigIpSpec2: BigIpSpec = (resources[3].resource as BigIp).spec
         assertThat(resources[2].resource.metadata.name).isEqualTo(bigIpSpec2.routeName)
+
+        assertThat(resources[0]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("MultipleRoutes/route-1.json")
+
+        assertThat(resources[1]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("MultipleRoutes/bigip-1.json")
+
+        assertThat(resources[2]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("MultipleRoutes/route-2.json")
+
+        assertThat(resources[3]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("MultipleRoutes/bigip-2.json")
+    }
+
+    @Test
+    fun `should only generate simple-2 route when simple is disabled`() {
+
+        val resources = generateResources(
+            """
+        {
+           "bigip" : {
+             "simple": {
+               "enabled": false,
+               "service": "simple",
+                "routeAnnotations" : {
+                  "haproxy.router.openshift.io|timeout" : "30s"
+                 }
+             },
+             "simple-2": {
+               "service": "simple-2",
+                "routeAnnotations" : {
+                  "haproxy.router.openshift.io|timeout" : "30s"
+                 }
+             }
+           }
+        }
+        """, createdResources = 2
+        )
+
+        val bigIpSpec1: BigIpSpec = (resources[1].resource as BigIp).spec
+        assertThat(resources[0].resource.metadata.name).isEqualTo(bigIpSpec1.routeName)
+
+        assertThat(resources[0]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("MultipleRoutes/route-2.json")
+
+        assertThat(resources[1]).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("MultipleRoutes/bigip-2.json")
     }
 }

@@ -1,0 +1,22 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "annotations": {
+      "haproxy.router.openshift.io/timeout": "30s",
+      "bigipRoute": "true"
+    },
+    "name": "simple-2-bigip",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "host": "simple-2-paas-utv.test.foo",
+    "port": {
+      "targetPort": "http"
+    },
+    "to": {
+      "kind": "Service",
+      "name": "simple"
+    }
+  }
+}
