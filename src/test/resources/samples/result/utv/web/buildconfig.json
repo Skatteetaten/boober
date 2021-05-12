@@ -51,7 +51,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wrench8"
+            "value": "aurora/wrench12"
           },
           {
             "name": "PUSH_EXTRA_TAGS",
@@ -69,7 +69,7 @@
         "exposeDockerSocket": true,
         "from": {
           "kind": "ImageStreamTag",
-          "name": "architect:1",
+          "name": "architect:2",
           "namespace": "openshift"
         }
       },

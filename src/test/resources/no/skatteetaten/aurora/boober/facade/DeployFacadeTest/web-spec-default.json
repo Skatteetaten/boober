@@ -195,11 +195,11 @@
     },
     "version": {
       "source": "default",
-      "value": "1",
+      "value": "2",
       "sources": [
         {
           "name": "default",
-          "value": "1"
+          "value": "2"
         }
       ]
     }
@@ -207,11 +207,11 @@
   "baseImage": {
     "name": {
       "source": "default",
-      "value": "wrench8",
+      "value": "wrench12",
       "sources": [
         {
           "name": "default",
-          "value": "wrench8"
+          "value": "wrench12"
         }
       ]
     },

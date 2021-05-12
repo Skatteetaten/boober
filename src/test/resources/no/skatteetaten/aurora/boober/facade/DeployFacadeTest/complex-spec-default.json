@@ -318,11 +318,11 @@
     },
     "version": {
       "source": "default",
-      "value": "1",
+      "value": "2",
       "sources": [
         {
           "name": "default",
-          "value": "1"
+          "value": "2"
         }
       ]
     }
@@ -330,11 +330,11 @@
   "baseImage": {
     "name": {
       "source": "default",
-      "value": "wingnut8",
+      "value": "wingnut11",
       "sources": [
         {
           "name": "default",
-          "value": "wingnut8"
+          "value": "wingnut11"
         }
       ]
     },
