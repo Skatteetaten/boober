@@ -142,7 +142,16 @@
         "value": "web"
       }
     ]
-  },
+  },  "env" : {
+  "autoDeploy" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  }
+},
   "artifactId": {
     "source": "fileName",
     "value": "web",
@@ -397,14 +406,16 @@
       }
     }
   },
-  "logging" : {
-    "bufferSize" : {
-      "source" : "default",
-      "value" : 20,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 20
-      } ]
+  "logging": {
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
     }
   },
   "route": {
@@ -463,6 +474,26 @@
           }
         ]
       }
+    },
+    "cname": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ttl" : {
+        "source" : "default",
+        "value" : 300,
+        "sources" : [ {
+          "name" : "default",
+          "value" : 300
+        } ]
+      }
     }
   },
   "s3": {
@@ -493,6 +524,16 @@
         {
           "name": "default",
           "value": ""
+        }
+      ]
+    },
+    "tenant": {
+      "source": "default",
+      "value": "paas-utv",
+      "sources": [
+        {
+          "name": "default",
+          "value": "paas-utv"
         }
       ]
     }

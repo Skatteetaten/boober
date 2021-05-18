@@ -43,6 +43,10 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         } returns HttpHeaders()
 
         every {
+            saClient.get("/version", retry = false)
+        } returns ResponseEntity.ok(loadJsonResource("response_version.json"))
+
+        every {
             userClient.getAuthorizationHeaders()
         } returns HttpHeaders()
         Instants.determineNow = { Instant.EPOCH }
@@ -59,12 +63,17 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         val deploymentList = newDeploymentList()
         val jobList = newJobList()
         val cronJobList = newCronJobList()
-
+        val auroraCnameList = mapOf(
+            "apiVersion" to "v1",
+            "kind" to "AuroraCnameList",
+            "items" to ArrayList<String>()
+        )
         val responses = createResponsesFromResultFiles(adr)
-            .addIfNotNull("configmap" to jsonMapper().convertValue<JsonNode>(configMapList))
-            .addIfNotNull("deployment" to jsonMapper().convertValue<JsonNode>(deploymentList))
-            .addIfNotNull("job" to jsonMapper().convertValue<JsonNode>(jobList))
-            .addIfNotNull("cronjob" to jsonMapper().convertValue<JsonNode>(cronJobList))
+            .addIfNotNull("configmap" to jsonMapper().convertValue(configMapList))
+            .addIfNotNull("deployment" to jsonMapper().convertValue(deploymentList))
+            .addIfNotNull("job" to jsonMapper().convertValue(jobList))
+            .addIfNotNull("cronjob" to jsonMapper().convertValue(cronJobList))
+            .addIfNotNull("auroracname" to mapper.valueToTree<JsonNode>(auroraCnameList))
 
         responses.forEach {
             val kind = it.key

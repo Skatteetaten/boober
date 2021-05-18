@@ -12,6 +12,8 @@ utv/python.json | applicationPlatform: "python"
      about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
      folderName | envName: "utv"
        fileName | name: "python"
+                | env:
+        default |   autoDeploy: false
         default | certificate: false
 utv/python.json | groupId: "org.test"
                 | databaseDefaults:
@@ -49,10 +51,14 @@ utv/python.json | route: true
         default |     enabled: false
         default |     insecurePolicy: "None"
         default |     termination: "edge"
+                |   cname:
+        default |     enabled: false
+        default |     ttl: 300
 utv/python.json | s3: true
                 | s3Defaults:
 utv/python.json |   bucketName: "myBucket"
 utv/python.json |   objectArea: "default"
+utv/python.json |   tenant: "paas-utv"
 utv/python.json | sts: true
         default | toxiproxy: false
         default | webseal: false

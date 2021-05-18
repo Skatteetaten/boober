@@ -214,7 +214,7 @@ class MountFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should modify deploymentConfig and add psat`() {
-        every { openShiftClient.version() } returns "1.18.3"
+        every { openShiftClient.k8sVersionOfAtLeast("1.16") } returns true
 
         val resource = modifyResources(existingPSATJson, createEmptyDeploymentConfig())
 
@@ -268,5 +268,27 @@ class MountFeatureTest : AbstractFeatureTest() {
             exception.errors.size,
             "Expecting exactly one exception, but got: " + exception.errors
         )
+    }
+
+    @Test
+    fun `should allow comma separated audience list`() {
+        every { openShiftClient.k8sVersionOfAtLeast("1.16") } returns true
+
+        val resource = modifyResources(
+            """{
+              "mounts": {
+                "mount": {
+                  "type": "PSAT",
+                  "path": "/u01/foo",
+                  "audience": "first,second,third",
+                  "expirationSeconds": 600
+                }
+              }  
+             }""", createEmptyDeploymentConfig()
+        )
+        // ,second,third
+        val auroraResource = resource.first()
+
+        assertThat(auroraResource).auroraResourceMatchesFile("dc-with-several-psats.json")
     }
 }

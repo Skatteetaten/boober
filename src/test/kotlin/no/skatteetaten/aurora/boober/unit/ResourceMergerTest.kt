@@ -24,7 +24,8 @@ class ResourceMergerTest : ResourceLoader() {
             )
         ),
         CONFIGMAP(listOf("/metadata/resourceVersion")),
-        NAMESPACE(listOf("/metadata/annotations"))
+        NAMESPACE(listOf("/metadata/annotations")),
+        AURORACNAME(listOf("/metadata/annotations")),
     }
 
     @ParameterizedTest
@@ -33,6 +34,18 @@ class ResourceMergerTest : ResourceLoader() {
 
         val type = test.name.toLowerCase()
         val oldResource = loadJsonResource("$type.json")
+        val newResource = loadJsonResource("$type-new.json")
+        val merged = mergeWithExistingResource(newResource, oldResource)
+        test.fields.forEach {
+            assertThat(merged.at(it)).isEqualTo(oldResource.at(it))
+        }
+    }
+
+    @ParameterizedTest
+    @EnumSource(OpenShiftResourceTypeTestData::class)
+    fun `Should accept that element to retain might be missing for `(test: OpenShiftResourceTypeTestData) {
+        val type = test.name.toLowerCase()
+        val oldResource = loadJsonResource("$type-new.json")
         val newResource = loadJsonResource("$type-new.json")
         val merged = mergeWithExistingResource(newResource, oldResource)
         test.fields.forEach {

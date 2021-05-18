@@ -12,6 +12,8 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "web"
+               | env:
+       default |   autoDeploy: false
       fileName | artifactId: "web"
       web.json | groupId: "org.test"
       web.json | version: "develop-SNAPSHOT"
@@ -50,10 +52,14 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "Redirect"
        default |     termination: "edge"
+               |   cname:
+       default |     enabled: false
+       default |     ttl: 300
        default | s3: false
                | s3Defaults:
        default |   bucketName: ""
        default |   objectArea: ""
+       default |   tenant: "paas-utv"
        default | sts: false
       web.json | toxiproxy: true
                | deployStrategy:

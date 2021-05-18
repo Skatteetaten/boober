@@ -1,0 +1,18 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "name": "simple-foo",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "host": "not-just-default.utv.apps.paas.skead.no",
+    "port": {
+      "targetPort": "http"
+    },
+    "to": {
+      "kind": "Service",
+      "name": "simple"
+    }
+  }
+}

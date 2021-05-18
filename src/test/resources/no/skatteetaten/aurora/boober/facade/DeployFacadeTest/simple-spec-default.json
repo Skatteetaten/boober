@@ -135,6 +135,16 @@
       }
     ]
   },
+  "env" : {
+    "autoDeploy" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
+    }
+  },
   "certificate": {
     "source": "default",
     "value": false,
@@ -519,6 +529,26 @@
           }
         ]
       }
+    },
+    "cname": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ttl" : {
+        "source" : "default",
+        "value" : 300,
+        "sources" : [ {
+          "name" : "default",
+          "value" : 300
+        } ]
+      }
     }
   },
   "s3": {
@@ -563,6 +593,14 @@
           "value": "default"
         }
       ]
+    },
+    "tenant" : {
+      "source" : "default",
+      "value" : "paas-utv",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "paas-utv"
+      } ]
     }
   },
   "sts": {

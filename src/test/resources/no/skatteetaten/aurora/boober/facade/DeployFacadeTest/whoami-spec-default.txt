@@ -16,6 +16,8 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "whoami"
+               | env:
+       default |   autoDeploy: false
        default | certificate: false
    whoami.json | groupId: "org.test"
                | databaseDefaults:
@@ -53,10 +55,14 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
+               |   cname:
+       default |     enabled: false
+       default |     ttl: 300
        default | s3: false
                | s3Defaults:
        default |   bucketName: ""
        default |   objectArea: ""
+       default |   tenant: "paas-utv"
        default | sts: false
    whoami.json | toxiproxy: true
        default | webseal: false

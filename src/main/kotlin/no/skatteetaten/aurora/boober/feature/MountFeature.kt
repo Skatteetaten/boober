@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.ServiceAccountTokenProjection
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
+import io.fabric8.kubernetes.api.model.VolumeProjection
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -156,20 +157,8 @@ class MountFeature(
             .addIfNotNull(validateVaultExistence(mounts, adc))
     }
 
-    /**
-     * @return true if given semver version is found to be higher or equal to kubernetes semver version
-     */
-    private fun k8sVersionOfAtLeast(ensure: String): Boolean {
-        val k8s = openShiftClient.version().split(".")
-        val v = ensure.split(".")
-        for (index in 0 until Math.min(k8s.size, v.size)) {
-            if (k8s[index].toInt() < v[index].toInt()) return false
-        }
-        return true
-    }
-
     private fun ensureCompatibleKuberntesForPSATMounts(mounts: List<Mount>): List<Exception> {
-        return mounts.filter() { it.type == MountType.PSAT && !k8sVersionOfAtLeast("1.16") }.map {
+        return mounts.filter() { it.type == MountType.PSAT && !openShiftClient.k8sVersionOfAtLeast("1.16") }.map {
             AuroraDeploymentSpecValidationException("PSAT mount=${it.volumeName} is not valid, as kubernetes version is below 1.16")
         }
     }
@@ -288,14 +277,20 @@ fun List<Mount>.podVolumes(appName: String): List<Volume> {
                     projected {
                         name = it.volumeName
                         defaultMode = 420
-                        sources = listOf(newVolumeProjection {
-                            serviceAccountToken = ServiceAccountTokenProjection(it.audience, it.expirationSeconds, it.volumeName)
-                        })
+                        sources = createPsatSources(it)
                     }
                 }
             }
         }
     }
+}
+
+private fun createPsatSources(psat: Mount): List<VolumeProjection> {
+    return psat.audience?.split(",")?.map { aud ->
+        newVolumeProjection {
+            serviceAccountToken = ServiceAccountTokenProjection(aud, psat.expirationSeconds, aud)
+        }
+    }?.toList() ?: emptyList()
 }
 
 enum class MountType(val kind: String) {

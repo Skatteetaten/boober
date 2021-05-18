@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newRoute
 import com.fkorotkov.openshift.port
@@ -21,10 +22,13 @@ import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.model.openshift.AuroraCname
+import no.skatteetaten.aurora.boober.model.openshift.CnameSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.int
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
 import org.springframework.beans.factory.annotation.Value
@@ -70,6 +74,16 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 defaultValue = false
             ),
             AuroraConfigFieldHandler(
+                "routeDefaults/cname/enabled",
+                validator = { it.boolean() },
+                defaultValue = false
+            ),
+            AuroraConfigFieldHandler(
+                "routeDefaults/cname/ttl",
+                validator = { it.int() },
+                defaultValue = 300
+            ),
+            AuroraConfigFieldHandler(
                 "routeDefaults/tls/insecurePolicy",
                 defaultValue = InsecurePolicy.valueOf(applicationPlatform.insecurePolicy),
                 validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) }),
@@ -94,6 +108,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+        val cnames: MutableSet<AuroraResource> = HashSet()
 
         return context.routes.map {
             val resource = it.generateOpenShiftRoute(
@@ -101,8 +116,14 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 serviceName = adc.name,
                 routeSuffix = it.suffix(routeSuffix)
             )
+
+            it.generateAuroraCname(routeNamespace = adc.namespace, routeSuffix = it.suffix(routeSuffix))
+                ?.let { cname -> cnames.add(generateResource(cname)) }
+
             generateResource(resource)
-        }.toSet()
+        }.toMutableSet().apply {
+            addAll(cnames)
+        }
     }
 
     fun getRoute(
@@ -122,12 +143,18 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                         adc["routeDefaults/tls/termination"]
                     )
                 } else null
+                val cname = if (adc["routeDefaults/cname/enabled"]) {
+                    Cname(
+                        ttl = adc["routeDefaults/cname/ttl"]
+                    )
+                } else null
                 return listOf(
                     Route(
                         objectName = adc.name,
                         host = adc["routeDefaults/host"],
                         tls = secure,
-                        annotations = defaultAnnotations
+                        annotations = defaultAnnotations,
+                        cname = cname
                     )
                 )
             }
@@ -136,7 +163,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val routes = adc.findSubKeysRaw(route)
 
         return routes.mapNotNull {
-
             if (!adc.get<Boolean>("$route/$it/enabled")) {
                 null
             } else {
@@ -150,13 +176,26 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
                 val annotations = adc.getRouteAnnotations("$route/$it/annotations/")
                 val allAnnotations = defaultAnnotations.addIfNotNull(annotations)
+                val cname =
+                    if ((adc.hasSubKeys("$route/$it/cname") && adc.getOrDefault(
+                            route,
+                            it,
+                            "cname/enabled"
+                        )) || adc["routeDefaults/cname/enabled"]
+                    ) {
+                        Cname(
+                            ttl = adc.getOrDefault(route, it, "cname/ttl")
+                        )
+                    } else null
+
                 Route(
                     objectName = adc.replacer.replace(it).ensureStartWith(adc.name, "-"),
                     host = adc.getOrDefault(route, it, "host"),
                     path = adc.getOrNull("$route/$it/path"),
                     annotations = allAnnotations,
                     tls = secure,
-                    fullyQualifiedHost = adc.getOrNull("$route/$it/fullyQualifiedHost") ?: false
+                    fullyQualifiedHost = adc.getOrNull("$route/$it/fullyQualifiedHost") ?: false,
+                    cname = cname
                 )
             }
         }
@@ -169,7 +208,11 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     ) {
 
         context.routes.firstOrNull()?.let {
-            val url = it.url(routeSuffix)
+            val url = if (it.cname == null) {
+                it.url(routeSuffix)
+            } else {
+                it.url("")
+            }
             val routeVars = mapOf(
                 "ROUTE_NAME" to url,
                 "ROUTE_URL" to "${it.protocol}$url"
@@ -189,6 +232,14 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     "$key/enabled",
                     validator = { it.boolean() },
                     defaultValue = true
+                ),
+                AuroraConfigFieldHandler(
+                    "$key/cname/enabled",
+                    validator = { it.boolean(false) }
+                ),
+                AuroraConfigFieldHandler(
+                    "$key/cname/ttl",
+                    validator = { it.int(false) }
                 ),
                 AuroraConfigFieldHandler("$key/host"),
                 AuroraConfigFieldHandler(
@@ -254,7 +305,20 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             )
         } else null
 
-        return tlsErrors.addIfNotNull(duplicateRouteErrors).addIfNotNull(duplicateHostError)
+        val cnameAndFqdnHost = routes.filter { it.fullyQualifiedHost && it.cname != null }
+        val cnameAndFqdnHostSimultaneously = if (cnameAndFqdnHost.isNotEmpty()) {
+            AuroraConfigException(
+                "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} has cname and fullyQualifiedHost configurations simultaneously",
+                errors = cnameAndFqdnHost.map { route ->
+                    ConfigFieldErrorDetail.illegal(message = "host=${route.objectName} needs to either be used as a bigIp config, or as a cname config. It cannot be both.")
+                }
+            )
+        } else null
+
+        return tlsErrors
+            .addIfNotNull(duplicateRouteErrors)
+            .addIfNotNull(duplicateHostError)
+            .addIfNotNull(cnameAndFqdnHostSimultaneously)
     }
 
     fun willCreateResource(
@@ -293,6 +357,13 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     }
 }
 
+/**
+ * @property ttl Time to live on the cname entry: A default value if not overridden
+ */
+data class Cname(
+    val ttl: Int
+)
+
 data class Route(
     val objectName: String,
     val host: String,
@@ -300,7 +371,8 @@ data class Route(
     val annotations: Map<String, String> = emptyMap(),
     val labels: Map<String, String>? = null,
     val tls: SecureRoute? = null,
-    val fullyQualifiedHost: Boolean = false
+    val fullyQualifiedHost: Boolean = false,
+    val cname: Cname? = null
 ) {
     val target: String
         get(): String = if (path != null) "$host$path" else host
@@ -343,11 +415,42 @@ data class Route(
                 port {
                     targetPort = IntOrString("http")
                 }
-                host = "${route.host}$routeSuffix"
+                host = if (cname != null) {
+                    // When having cname the host must be FQDN
+                    route.host
+                } else {
+                    "${route.host}$routeSuffix"
+                }
                 route.path?.let {
                     path = it
                 }
             }
+        }
+    }
+
+    fun generateAuroraCname(routeNamespace: String, routeSuffix: String): AuroraCname? {
+        val route = this
+
+        return if (route.cname != null) {
+            AuroraCname(
+                _metadata = newObjectMeta {
+                    name = route.objectName
+                    namespace = routeNamespace
+                },
+                spec = CnameSpec(
+                    cname = route.host,
+                    host = withoutInitialPeriod("$routeSuffix"),
+                    ttl = route.cname.ttl
+                )
+            )
+        } else null
+    }
+
+    private fun withoutInitialPeriod(str: String): String {
+        return if (str.startsWith(".")) {
+            str.substring(1)
+        } else {
+            str
         }
     }
 }

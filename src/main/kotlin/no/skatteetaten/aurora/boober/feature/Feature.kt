@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
@@ -46,7 +47,7 @@ interface Feature {
     fun modifyResource(resource: AuroraResource, comment: String) =
         resource.sources.add(AuroraResourceSource(this::class.java, comment = comment))
 
-    /*
+    /**
       Should this feature run or not.
 
       You can either do this via Spring Conditional annotations to react to the environment,
@@ -58,12 +59,12 @@ interface Feature {
      */
     fun enable(header: AuroraDeploymentSpec): Boolean = true
 
-    /*
+    /**
       Return a set of Handlers, see AuroraConfigFieldHandler for details on what a handler is
      */
     fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler>
 
-    /*
+    /**
       Method to create a context for the given feature
 
       This context will be sent to validate/generate/modify steps
@@ -74,7 +75,7 @@ interface Feature {
      */
     fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): FeatureContext = emptyMap()
 
-    /*
+    /**
     Perform validation of this feature.
 
     If this method throws it will be handled as a single error or multiple errors if ExceptionList
@@ -86,7 +87,7 @@ interface Feature {
     ): List<Exception> =
         emptyList()
 
-    /*
+    /**
        Generate a set of AuroraResource from this feature
 
        Resource generation of all features are run before the modify step occurs
@@ -101,7 +102,7 @@ interface Feature {
     */
     fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> = emptySet()
 
-    /*
+    /**
         Modify generated resources
 
         Resource modification of all features are run before the validate step occurs
@@ -205,6 +206,7 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
                 "env/name",
                 validator = { it.pattern(envNamePattern, envNameMessage, false) }),
             AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
+            AuroraConfigFieldHandler("env/autoDeploy", validator = { it.boolean() }, defaultValue = false),
             AuroraConfigFieldHandler("baseFile"),
             AuroraConfigFieldHandler("envFile"),
             AuroraConfigFieldHandler("includeEnvFile")

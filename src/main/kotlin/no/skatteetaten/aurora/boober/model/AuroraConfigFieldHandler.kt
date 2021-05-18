@@ -7,7 +7,7 @@ typealias Validator = (JsonNode?) -> Exception?
 
 val defaultValidator: Validator = { null }
 
-/*
+/**
   A handler into a given pointer into an AuroraConfig with default value and validation
 
   @param name: the name of the pointer, this can be database/foo/enabled

@@ -1,18 +1,13 @@
 package no.skatteetaten.aurora.boober.utils
 
-import java.io.File
-import java.net.URL
-import java.nio.charset.Charset
-import org.apache.commons.text.StringSubstitutor
-import org.springframework.util.ResourceUtils
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -29,6 +24,12 @@ import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
+import org.apache.commons.text.StringSubstitutor
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.springframework.util.ResourceUtils
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
 
 private val logger = KotlinLogging.logger {}
 
@@ -70,9 +71,7 @@ open class ResourceLoader {
             val txtName = "$prefix.txt"
 
             logger.info("comparing default text file=$txtDefaultName")
-            assertThat(
-                renderJsonForAuroraDeploymentSpecPointers(spec, true)
-            ).isEqualTo(loadResource(txtDefaultName))
+            assertEquals(loadResource(txtDefaultName), renderJsonForAuroraDeploymentSpecPointers(spec, true))
 
             logger.info("comparing text file=$txtName")
             assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false)).isEqualTo(
@@ -208,6 +207,14 @@ fun stubAuroraDeploymentSpec(): AuroraDeploymentSpec {
                     AuroraConfigFieldSource(
                         AuroraConfigFile("utv/simple.json", "{}"),
                         TextNode("simple")
+                    )
+                )
+            ),
+            "applicationDeploymentRef" to AuroraConfigField(
+                sources = setOf(
+                    AuroraConfigFieldSource(
+                        AuroraConfigFile("utv/simple.json", "{}"),
+                        TextNode("fk1-utv/someApp")
                     )
                 )
             )

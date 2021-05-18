@@ -74,6 +74,7 @@ val AuroraDeploymentSpec.deployState get(): DeploymentState = this["deployState"
 val AuroraDeploymentSpec.isJob get(): Boolean = this.type in listOf(TemplateType.job, TemplateType.cronjob)
 
 val AuroraDeploymentSpec.applicationDeploymentId: String get() = this["applicationDeploymentId"]
+val AuroraDeploymentSpec.applicationDeploymentRef: String get() = this["applicationDeploymentRef"]
 val AuroraDeploymentSpec.namespace
     get(): String {
         return when {
@@ -85,6 +86,7 @@ val AuroraDeploymentSpec.namespace
 val AuroraDeploymentSpec.releaseTo: String? get() = this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
 val AuroraDeploymentSpec.groupId: String get() = this["groupId"]
 val AuroraDeploymentSpec.artifactId: String get() = this["artifactId"]
+val AuroraDeploymentSpec.envAutoDeploy: Boolean get() = this["env/autoDeploy"] ?: false
 val AuroraDeploymentSpec.dockerGroup get() = groupId.replace(".", "_")
 
 val AuroraDeploymentSpec.dockerImagePath: String get() = "$dockerGroup/${this.artifactId}"

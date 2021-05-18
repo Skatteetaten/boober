@@ -12,6 +12,8 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "simple"
+               | env:
+       default |   autoDeploy: false
        default | certificate: false
    simple.json | groupId: "org.test"
                | databaseDefaults:
@@ -49,10 +51,14 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     insecurePolicy: "None"
        default |     termination: "edge"
+               |   cname:
+       default |     enabled: false
+       default |     ttl: 300
    simple.json | s3: true
                | s3Defaults:
    simple.json |   bucketName: "myBucket"
    simple.json |   objectArea: "default"
+       default |   tenant: "paas-utv"
    simple.json | sts: true
        default | toxiproxy: false
        default | webseal: false

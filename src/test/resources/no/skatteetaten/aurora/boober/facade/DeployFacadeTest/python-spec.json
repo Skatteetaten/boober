@@ -1,241 +1,318 @@
 {
-  "applicationDeploymentRef" : {
-    "source" : "static",
-    "value" : "utv/python",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "utv/python"
-    } ]
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/python",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/python"
+      }
+    ]
   },
-  "configVersion" : {
-    "source" : "static",
-    "value" : "master",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "master"
-    } ]
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
   },
-  "applicationDeploymentId" : {
-    "source" : "static",
-    "value" : "1234567890",
-    "sources" : [ {
-      "name" : "static",
-      "value" : "1234567890"
-    } ]
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
   },
-  "schemaVersion" : {
-    "source" : "about.json",
-    "value" : "v1",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "v1"
-    } ]
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
   },
-  "type" : {
-    "source" : "about.json",
-    "value" : "deploy",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "deploy"
-    } ]
+  "type": {
+    "source": "about.json",
+    "value": "deploy",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      }
+    ]
   },
-  "applicationPlatform" : {
-    "source" : "utv/python.json",
-    "value" : "python",
-    "sources" : [ {
-      "name" : "default",
-      "value" : "java"
-    }, {
-      "name" : "python.json",
-      "value" : "python"
-    }, {
-      "name" : "utv/python.json",
-      "value" : "python"
-    } ]
+  "applicationPlatform": {
+    "source": "utv/python.json",
+    "value": "python",
+    "sources": [
+      {
+        "name": "default",
+        "value": "java"
+      },
+      {
+        "name": "python.json",
+        "value": "python"
+      },
+      {
+        "name": "utv/python.json",
+        "value": "python"
+      }
+    ]
   },
-  "affiliation" : {
-    "source" : "about.json",
-    "value" : "paas",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "paas"
-    } ]
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
   },
-  "segment" : {
-    "source" : "about.json",
-    "value" : "aurora",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "aurora"
-    } ]
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
   },
-  "cluster" : {
-    "source" : "utv/about.json",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "about.json",
-      "value" : "utv"
-    }, {
-      "name" : "utv/about.json",
-      "value" : "utv"
-    } ]
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
   },
-  "permissions" : {
-    "admin" : {
-      "source" : "about.json",
-      "value" : "APP_PaaS_drift APP_PaaS_utv",
-      "sources" : [ {
-        "name" : "about.json",
-        "value" : "APP_PaaS_drift APP_PaaS_utv"
-      } ]
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
     }
   },
-  "envName" : {
-    "source" : "folderName",
-    "value" : "utv",
-    "sources" : [ {
-      "name" : "folderName",
-      "value" : "utv"
-    } ]
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
   },
-  "name" : {
-    "source" : "fileName",
-    "value" : "python",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "python"
-    } ]
+  "name": {
+    "source": "fileName",
+    "value": "python",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "python"
+      }
+    ]
   },
-  "groupId" : {
-    "source" : "utv/python.json",
-    "value" : "org.test",
-    "sources" : [ {
-      "name" : "python.json",
-      "value" : "org.test"
-    }, {
-      "name" : "utv/python.json",
-      "value" : "org.test"
-    } ]
+  "groupId": {
+    "source": "utv/python.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "python.json",
+        "value": "org.test"
+      },
+      {
+        "name": "utv/python.json",
+        "value": "org.test"
+      }
+    ]
   },
-  "databaseDefaults" : {
-    "tryReuse" : {
-      "source" : "utv/python.json",
-      "value" : true,
-      "sources" : [ {
-        "name" : "default",
-        "value" : false
-      }, {
-        "name" : "python.json",
-        "value" : true
-      }, {
-        "name" : "utv/python.json",
-        "value" : true
-      } ]
+  "databaseDefaults": {
+    "tryReuse": {
+      "source": "utv/python.json",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        },
+        {
+          "name": "python.json",
+          "value": true
+        },
+        {
+          "name": "utv/python.json",
+          "value": true
+        }
+      ]
     }
   },
-  "database" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
+  "database": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
   },
-  "version" : {
-    "source" : "utv/python.json",
-    "value" : "1",
-    "sources" : [ {
-      "name" : "python.json",
-      "value" : "1"
-    }, {
-      "name" : "utv/python.json",
-      "value" : "1"
-    } ]
+  "version": {
+    "source": "utv/python.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "python.json",
+        "value": "1"
+      },
+      {
+        "name": "utv/python.json",
+        "value": "1"
+      }
+    ]
   },
-  "artifactId" : {
-    "source" : "fileName",
-    "value" : "python",
-    "sources" : [ {
-      "name" : "fileName",
-      "value" : "python"
-    } ]
+  "artifactId": {
+    "source": "fileName",
+    "value": "python",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "python"
+      }
+    ]
   },
-  "route" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
+  "route": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
   },
-  "s3" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
+  "s3": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
   },
-  "s3Defaults" : {
-    "bucketName" : {
-      "source" : "utv/python.json",
-      "value" : "myBucket",
-      "sources" : [ {
-        "name" : "default",
-        "value" : ""
-      }, {
-        "name" : "python.json",
-        "value" : "myBucket"
-      }, {
-        "name" : "utv/python.json",
-        "value" : "myBucket"
-      } ]
+  "s3Defaults": {
+    "bucketName": {
+      "source": "utv/python.json",
+      "value": "myBucket",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        },
+        {
+          "name": "python.json",
+          "value": "myBucket"
+        },
+        {
+          "name": "utv/python.json",
+          "value": "myBucket"
+        }
+      ]
     },
-    "objectArea" : {
-      "source" : "utv/python.json",
-      "value" : "default",
-      "sources" : [ {
-        "name" : "default",
-        "value" : ""
-      }, {
-        "name" : "python.json",
-        "value" : "default"
-      }, {
-        "name" : "utv/python.json",
-        "value" : "default"
-      } ]
+    "objectArea": {
+      "source": "utv/python.json",
+      "value": "default",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        },
+        {
+          "name": "python.json",
+          "value": "default"
+        },
+        {
+          "name": "utv/python.json",
+          "value": "default"
+        }
+      ]
+    },
+    "tenant": {
+      "source": "utv/python.json",
+      "value": "paas-utv",
+      "sources": [
+        {
+          "name": "default",
+          "value": "paas-utv"
+        },
+        {
+          "name": "utv/python.json",
+          "value": "paas-utv"
+        }
+      ]
     }
   },
-  "sts" : {
-    "source" : "utv/python.json",
-    "value" : true,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    }, {
-      "name" : "python.json",
-      "value" : true
-    }, {
-      "name" : "utv/python.json",
-      "value" : true
-    } ]
+  "sts": {
+    "source": "utv/python.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "python.json",
+        "value": true
+      },
+      {
+        "name": "utv/python.json",
+        "value": true
+      }
+    ]
   }
 }

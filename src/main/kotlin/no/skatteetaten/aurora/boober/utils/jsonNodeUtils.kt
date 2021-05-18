@@ -141,9 +141,11 @@ fun JsonNode.updateField(source: JsonNode, root: String, field: String, required
 
 fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
     val jsonPtrExpr = "$root/$field"
-    val sourceObject = source.at(jsonPtrExpr) as ObjectNode
-
-    val mergedObject = sourceObject.deepCopy()
+    val sourceObject = source.at(jsonPtrExpr)
+    if (sourceObject.isMissingNode) {
+        return
+    }
+    val mergedObject = (sourceObject as ObjectNode).deepCopy()
 
     val fieldNode = this.at(jsonPtrExpr)
     if (fieldNode is ObjectNode) {
