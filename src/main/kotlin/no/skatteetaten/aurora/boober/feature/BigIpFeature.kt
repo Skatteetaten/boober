@@ -86,15 +86,15 @@ class BigIpFeature(
 
         val hasConfiguredBothLegacyAndMultipleConfig = !isMissingLegacyServiceConfig && isMultipleConfig
         if (hasConfiguredBothLegacyAndMultipleConfig) {
-            throw AuroraDeploymentSpecValidationException(Errors.BothLegacyAndMultipleConfigIsSet.message)
+            return listOf(AuroraDeploymentSpecValidationException(Errors.BothLegacyAndMultipleConfigIsSet.message))
         }
 
         if (!isMultipleConfig && isMissingLegacyServiceConfig) {
-            throw AuroraDeploymentSpecValidationException(Errors.MissingLegacyService.message)
+            return listOf(AuroraDeploymentSpecValidationException(Errors.MissingLegacyService.message))
         }
 
         if (isMissingMultipleServiceConfig) {
-            throw AuroraDeploymentSpecValidationException(Errors.MissingMultipleService.message)
+            return listOf(AuroraDeploymentSpecValidationException(Errors.MissingMultipleService.message))
         }
 
         return emptyList()
