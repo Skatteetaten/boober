@@ -101,9 +101,13 @@ class BigIpFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        return adc.getBigIPHosts()
-            .flatMap { generateBigIPResources(it, adc) }
-            .toSet()
+        return if (adc.isMultipleBigIpConfig()) {
+            adc.getBigIPHosts()
+                .flatMap { generateBigIPResources(it, adc) }
+                .toSet()
+        } else {
+            generateLegacyBigIPResource(adc, context)
+        }
     }
 
     fun generateBigIPResources(host: String, adc: AuroraDeploymentSpec): Set<AuroraResource> {
@@ -150,19 +154,77 @@ class BigIpFeature(
         )
     }
 
+    fun generateLegacyBigIPResource(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+        val enabled = adc.isLegacyFeatureEnabled()
+        if (!enabled) {
+            return emptySet()
+        }
+
+        val routeName = "${adc.name}-bigip"
+
+        // dette var den gamle applicationDeploymentId som må nå være hostname
+        val routeHost = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
+
+        val auroraRoute = Route(
+            objectName = routeName,
+            host = routeHost,
+            annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
+        )
+
+        val bigIp = BigIp(
+            _metadata = newObjectMeta {
+                name = adc.name
+                namespace = adc.namespace
+            },
+            spec = BigIpSpec(
+                routeName, BigIpKonfigurasjonstjenesten(
+                    service = adc["bigip/service"],
+                    asmPolicy = adc.getOrNull("bigip/asmPolicy"),
+                    oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/oauthScopes"),
+                    apiPaths = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/apiPaths"),
+                    externalHost = adc.getOrNull("bigip/externalHost")
+                )
+            )
+        )
+
+        return setOf(
+            auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, routeSuffix).generateAuroraResource(),
+            bigIp.generateAuroraResource()
+        )
+    }
+
+    private fun AuroraDeploymentSpec.isLegacyFeatureEnabled(): Boolean {
+        val hasService = this.getOrNull<String>("bigip/service")
+        val isEnabled = getOrNull<Boolean>("bigip/enabled")
+        return isEnabled ?: !hasService.isNullOrEmpty()
+    }
+
     fun fetchExternalHostsAndPaths(adc: AuroraDeploymentSpec): List<String> {
-        return adc.getBigIPHosts()
-            .filter { adc.isBigIPHostEnabled(it) }
-            .mapNotNull { host -> adc.getOrNull<String>("bigip/$host/externalHost") }
-            .flatMap { externalHost ->
-                adc.getDelimitedStringOrArrayAsSet("bigip/$externalHost/apiPaths").map {
-                    "$externalHost$it"
+        return if (adc.isMultipleBigIpConfig()) {
+            adc.getBigIPHosts()
+                .filter { adc.isBigIPHostEnabled(it) }
+                .mapNotNull { host -> adc.getOrNull<String>("bigip/$host/externalHost") }
+                .flatMap { externalHost ->
+                    adc.getDelimitedStringOrArrayAsSet("bigip/$externalHost/apiPaths").map {
+                        "$externalHost$it"
+                    }
                 }
+        } else {
+            val enabled = adc.isLegacyFeatureEnabled()
+            if (!enabled) return emptyList()
+            val host: String = adc.getOrNull("bigip/externalHost") ?: return emptyList()
+            return adc.getDelimitedStringOrArrayAsSet("bigip/apiPaths").map {
+                "$host$it"
             }
+        }
     }
 
     private fun List<AuroraConfigFile>.getBigIPHosts(): Set<String> {
         return this.findSubKeys("bigip").filter { !bigIpLegacyConfigKeys.contains(it) }.toSet()
+    }
+
+    private fun AuroraDeploymentSpec.isMultipleBigIpConfig(): Boolean {
+        return this.getBigIPHosts().isNotEmpty()
     }
 
     private fun AuroraDeploymentSpec.getBigIPHosts(): Set<String> {
