@@ -70,7 +70,12 @@ class BigIpFeatureTest : AbstractFeatureTest() {
             """{
             "bigip" : {
               "simple": {
+                "enabled": true,
                 "service" : "simple",
+                "asmPolicy": "something",
+                "externalHost": "localhost",
+                "oauthScopes": "test",
+                "apiPaths": "/api/simple/,/web/simple/",
                 "routeAnnotations" : {
                   "haproxy.router.openshift.io|timeout" : "30s"
                 }
@@ -111,7 +116,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should generate several big ip cr and route`() {
 
-        val resources = generateResources(
+        val (route1, bigip1, route2, bigip2) = generateResources(
             """
         {
            "bigip" : {
@@ -132,29 +137,29 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         """, createdResources = 4
         )
 
-        val bigIpSpec1: BigIpSpec = (resources[1].resource as BigIp).spec
-        assertThat(resources[0].resource.metadata.name).isEqualTo(bigIpSpec1.routeName)
+        val bigIpSpec1: BigIpSpec = (bigip1.resource as BigIp).spec
+        assertThat(route1.resource.metadata.name).isEqualTo(bigIpSpec1.routeName)
 
-        val bigIpSpec2: BigIpSpec = (resources[3].resource as BigIp).spec
-        assertThat(resources[2].resource.metadata.name).isEqualTo(bigIpSpec2.routeName)
+        val bigIpSpec2: BigIpSpec = (bigip2.resource as BigIp).spec
+        assertThat(route2.resource.metadata.name).isEqualTo(bigIpSpec2.routeName)
 
-        assertThat(resources[0]).auroraResourceCreatedByThisFeature()
+        assertThat(route1).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("MultipleRoutes/route-1.json")
 
-        assertThat(resources[1]).auroraResourceCreatedByThisFeature()
+        assertThat(bigip1).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("MultipleRoutes/bigip-1.json")
 
-        assertThat(resources[2]).auroraResourceCreatedByThisFeature()
+        assertThat(route2).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("MultipleRoutes/route-2.json")
 
-        assertThat(resources[3]).auroraResourceCreatedByThisFeature()
+        assertThat(bigip2).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("MultipleRoutes/bigip-2.json")
     }
 
     @Test
     fun `should only generate simple-2 route when simple is disabled`() {
 
-        val resources = generateResources(
+        val (route, bigip) = generateResources(
             """
         {
            "bigip" : {
@@ -176,13 +181,13 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         """, createdResources = 2
         )
 
-        val bigIpSpec1: BigIpSpec = (resources[1].resource as BigIp).spec
-        assertThat(resources[0].resource.metadata.name).isEqualTo(bigIpSpec1.routeName)
+        val bigIpSpec1: BigIpSpec = (bigip.resource as BigIp).spec
+        assertThat(route.resource.metadata.name).isEqualTo(bigIpSpec1.routeName)
 
-        assertThat(resources[0]).auroraResourceCreatedByThisFeature()
+        assertThat(route).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("MultipleRoutes/route-2.json")
 
-        assertThat(resources[1]).auroraResourceCreatedByThisFeature()
+        assertThat(bigip).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("MultipleRoutes/bigip-2.json")
     }
 
@@ -223,7 +228,12 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         val (routeResource, bigIpResource) = generateResources(
             """{
             "bigip" : {
+              "enabled": true,
               "service" : "simple",
+              "asmPolicy": "something",
+              "externalHost": "localhost",
+              "oauthScopes": "test",
+              "apiPaths": "/api/simple/,/web/simple/",
               "routeAnnotations" : {
                 "haproxy.router.openshift.io|timeout" : "30s"
                }
