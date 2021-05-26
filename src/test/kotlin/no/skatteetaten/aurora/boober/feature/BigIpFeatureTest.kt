@@ -126,8 +126,8 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                   "haproxy.router.openshift.io|timeout" : "30s"
                  }
              },
-             "simple-2": {
-               "service": "simple-2",
+             "simple-mock": {
+               "service": "simple-mock",
                 "routeAnnotations" : {
                   "haproxy.router.openshift.io|timeout" : "30s"
                  }
@@ -170,8 +170,8 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                   "haproxy.router.openshift.io|timeout" : "30s"
                  }
              },
-             "simple-2": {
-               "service": "simple-2",
+             "simple-mock": {
+               "service": "simple-mock",
                 "routeAnnotations" : {
                   "haproxy.router.openshift.io|timeout" : "30s"
                  }

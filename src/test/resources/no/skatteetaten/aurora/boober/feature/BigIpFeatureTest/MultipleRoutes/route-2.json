@@ -6,11 +6,11 @@
       "haproxy.router.openshift.io/timeout": "30s",
       "bigipRoute": "true"
     },
-    "name": "simple-2-bigip",
+    "name": "simple-simple-mock-bigip",
     "namespace": "paas-utv"
   },
   "spec": {
-    "host": "simple-2-paas-utv.test.foo",
+    "host": "simple-mock-paas-utv.test.foo",
     "port": {
       "targetPort": "http"
     },
