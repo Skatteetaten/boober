@@ -124,7 +124,7 @@ class BigIpFeature(
             "$host-${adc.namespace}"
         }
 
-        val routeName = "$host-bigip"
+        val routeName = if (isApplicationHost) "$host-bigip" else "${adc.name}-$host-bigip"
 
         val route = Route(
             objectName = routeName,
@@ -132,9 +132,11 @@ class BigIpFeature(
             annotations = adc.getRouteAnnotations("bigip/$host/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 
+        val bigIpName = if (isApplicationHost) host else "${adc.name}-$host"
+
         val bigIp = BigIp(
             _metadata = newObjectMeta {
-                name = host
+                name = bigIpName
                 namespace = adc.namespace
             },
             spec = BigIpSpec(
@@ -213,7 +215,7 @@ class BigIpFeature(
             val enabled = adc.isLegacyFeatureEnabled()
             if (!enabled) return emptyList()
             val host: String = adc.getOrNull("bigip/externalHost") ?: return emptyList()
-            return adc.getDelimitedStringOrArrayAsSet("bigip/apiPaths").map {
+            adc.getDelimitedStringOrArrayAsSet("bigip/apiPaths").map {
                 "$host$it"
             }
         }
