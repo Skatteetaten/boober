@@ -2,8 +2,8 @@ import com.adarshr.gradle.testlogger.theme.ThemeType
 
 plugins {
     id("org.springframework.cloud.contract")
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
-    id("org.jetbrains.kotlin.plugin.spring") version "1.3.72"
+    id("org.jetbrains.kotlin.jvm") version "1.4.32"
+    id("org.jetbrains.kotlin.plugin.spring") version "1.4.32"
     id("org.jlleitschuh.gradle.ktlint") version "9.2.1"
     id("org.sonarqube") version "2.8"
 
