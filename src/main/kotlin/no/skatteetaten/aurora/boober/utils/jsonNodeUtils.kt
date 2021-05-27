@@ -236,6 +236,20 @@ fun JsonNode?.boolean(required: Boolean = false): Exception? {
     return null
 }
 
+fun JsonNode?.validDnsPreExpansion(): Exception? {
+    if (this == null) {
+        return null
+    }
+
+    this.textValue()
+        .replace("@", "") // Must allow @ as substitution occurs after validation
+        .split(".")
+        .filter { !it.isValidDns() }
+        .any { return IllegalArgumentException("Invalid DNS node entry: \"${this.textValue()}\", disliked $it") }
+
+    return null
+}
+
 fun JsonNode?.oneOf(candidates: List<String>, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {

@@ -13,12 +13,20 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = RouteFeature(".test.foo")
+
+    // Number of "o" characters is 61
+    private val sixtyOne = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+    private val sixtyThree = "${sixtyOne}oo"
+    private val twoHundred53 = "$sixtyThree.$sixtyThree.$sixtyThree.$sixtyOne"
 
     @Test
     fun `should get error if route with invalid tls termination`() {
@@ -363,7 +371,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             "ROUTE_URL" to "$protocol://$host"
         )
         if (expected != actual) {
-            expected(":${show(actual)} to be:${show(expected)}")
+            this.expected(":${show(actual)} to be:${show(expected)}")
         }
     }
 
@@ -642,5 +650,177 @@ class RouteFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("aurora-cname-simple.json")
 
         assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv")
+    }
+
+    @Test
+    fun `a dns host name can be 253 chars`() {
+        val (dcResource) = generateResources(
+            """
+                {
+                  "route" : {
+                    "foo" : {
+                      "host": "$twoHundred53",
+                      "fullyQualifiedHost" : true
+                    }
+                  }
+                }
+                """.trimIndent(),
+            createEmptyDeploymentConfig(),
+            createdResources = 1
+        )
+        assertThat(dcResource).auroraRouteEnvAdded("$twoHundred53")
+    }
+
+    @Test
+    fun `a dns host name cannot be more than 253 chars`() {
+        val ex: MultiApplicationValidationException = assertThrows {
+            generateResources(
+                """
+                {
+                  "route" : {
+                    "foo" : {
+                      "host": "X$twoHundred53",
+                      "fullyQualifiedHost" : true
+                    }
+                  }
+                }
+                """.trimIndent(),
+                createEmptyDeploymentConfig(),
+                createdResources = 1
+            )
+        }
+        assertTrue(ex.message?.contains(("An error occurred")) ?: false, "Could not find text in ${ex.message}")
+    }
+
+    @Test
+    fun `a node in a host is allowed to be 63 chars`() {
+        val (dcResource) = generateResources(
+            """
+                {
+                  "route" : {
+                    "foo" : {
+                      "host": "$sixtyThree"
+                    }
+                  }
+                }
+                """.trimIndent(),
+            createEmptyDeploymentConfig(),
+            createdResources = 1
+        )
+        assertThat(dcResource).auroraRouteEnvAdded("$sixtyThree.test.foo")
+    }
+
+    @Test
+    fun `a host name cannot exceed 63 chars`() {
+        val ex: MultiApplicationValidationException = assertThrows {
+            generateResources(
+                """
+                {
+                  "route" : {
+                    "foo" : {
+                      "host": "X$sixtyThree""
+                    }
+                  }
+                }
+                """.trimIndent(),
+                createEmptyDeploymentConfig()
+            )
+        }
+        assertThat { ex.message?.contains("DNS node") }
+    }
+
+    @Test
+    fun `when having cname, dns must be valid`() {
+        val ex: MultiApplicationValidationException = assertThrows {
+            generateResources(
+                """
+                {
+                  "route" : {
+                    "foo" : {
+                      "enabled" : "true",
+                      "host": "$sixtyThree.X$sixtyThree",
+                      "cname" : {
+                        "enabled" : "true"
+                      }
+                    }
+                  }
+                }
+                """.trimIndent(),
+                resource = createEmptyDeploymentConfig()
+            )
+        }
+        assertThat { ex.message?.contains("DNS node") }
+    }
+
+    @Test
+    fun `a node in a fqdn host statement cannot exceed 63 chars`() {
+        val ex: MultiApplicationValidationException = assertThrows {
+            generateResources(
+                """
+                {
+                  "route" : {
+                    "simple" : {
+                      "host": "$sixtyThree.X$sixtyThree",
+                      "fullyQualifiedHost" : true
+                    }
+                  }
+                }
+                """.trimIndent(), createEmptyDeploymentConfig()
+            )
+        }
+        assertThat { ex.message?.contains("DNS node") }
+    }
+
+    @Test
+    fun `default host nodes cannot exceed 63 chars`() {
+        val ex: MultiApplicationValidationException = assertThrows {
+            generateResources(
+                """
+                {
+                  "route" : {
+                    "foo" : {
+                      "enabled" : "true"
+                    }
+                  },
+                  "routeDefaults" : {
+                    "host": "$sixtyThree.X$sixtyThree",
+                    "cname" : {
+                      "enabled" : "true"
+                    }
+                  }
+                }
+                """.trimIndent(),
+                createEmptyDeploymentConfig()
+            )
+        }
+        assertThat { ex.message?.contains("DNS node") }
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = ["x.xx", "x1.xx", "x-1.xx", "some-x.org"])
+    fun `valid host names should not fail`(dns: String) {
+        val (dcResource) = generateResources(
+            """{"route" : {"foo" : {
+                  "host": """" + dns + """", "cname" : { "enabled" : "true" }
+                }}}""".trimIndent(),
+            createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+        assertThat(dcResource).auroraRouteEnvAdded(dns)
+    }
+
+    @ParameterizedTest
+    @CsvSource(value = ["x_1.xx", "some.org-", "-some.org", ".no", "x.no.", "x..no"])
+    fun `invalid host names should fail`(dns: String) {
+        val ex: MultiApplicationValidationException = assertThrows {
+            generateResources(
+                """{"route" : {"foo" : {
+                  "host": """" + dns + """", "cname" : { "enabled" : "true" }
+                }}}""".trimIndent(),
+                createEmptyDeploymentConfig(),
+                createdResources = 2
+            )
+        }
+        assertThat { ex.message?.contains("invalid dns name") }
     }
 }

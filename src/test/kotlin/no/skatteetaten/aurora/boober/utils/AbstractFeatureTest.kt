@@ -441,7 +441,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         if (expected == actual.createdSource.feature) {
             actual
         } else {
-            expected(":${show(expected)} and:${show(actual.createdSource.feature)} to be the same")
+            this.expected(":${show(expected)} and:${show(actual.createdSource.feature)} to be the same")
         }
     }
 
@@ -452,7 +452,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             if (actual == expected) {
                 ar
             } else {
-                expected(":${show(expected)} and:${show(actual)} to be the same")
+                this.expected(":${show(expected)} and:${show(actual)} to be the same")
             }
         }
 }
