@@ -6,7 +6,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newObjectMeta
 import com.fkorotkov.kubernetes.newSecret
-import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.Secret
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -32,80 +31,20 @@ private val logger = KotlinLogging.logger {}
 
 class S3ProvisioningException(message: String, cause: Throwable? = null) : ProvisioningException(message, cause)
 
-@ConditionalOnProperty(value = ["integrations.herkimer.url"])
-@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url")
 @Service
-class S3StorageGridFeature(
+class S3StorageGridProvisioner(
     val openShiftDeployer: OpenShiftDeployer,
     val openShiftClient: OpenShiftClient,
     val openShiftCommandService: OpenShiftCommandService,
     val herkimerService: HerkimerService,
     @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String
-) : S3FeatureTemplate() {
-
-    override fun enable(header: AuroraDeploymentSpec) = !header.isJob
-
-    override fun createContext(
-        spec: AuroraDeploymentSpec,
-        cmd: AuroraContextCommand,
-        validationContext: Boolean
-    ): Map<String, Any> = emptyMap()
-
-    override fun validate(
-        adc: AuroraDeploymentSpec,
-        fullValidation: Boolean,
-        context: FeatureContext
-    ): List<Exception> = emptyList()
-
-    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-
-        val s3Credentials = getOrProvisionCredentials(adc)
-
-        val s3Secret = s3Credentials.map { it.createS3Secret(adc.namespace, adc.name) }
-
-        return s3Secret.map { it.generateAuroraResource() }.toSet()
-    }
-
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
-        val envVars = resources.extractS3EnvVarsFromSecrets()
-        resources.addEnvVarsToMainContainers(envVars, javaClass)
-    }
-
-    private fun getOrProvisionCredentials(adc: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
+) {
+    fun getOrProvisionCredentials(adc: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
 
         val objectAreas: List<S3ObjectArea> = adc.s3ObjectAreas
         provisionMissingObjectAreas(adc, objectAreas)
         return getCredentials(adc, objectAreas)
     }
-
-    private fun getCredentials(
-        adc: AuroraDeploymentSpec,
-        objectAreas: List<S3ObjectArea>
-    ): List<ObjectAreaWithCredentials> {
-
-        val sgoaResources =
-            herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.StorageGridObjectArea)
-                .associateBy { it.name }
-
-        return objectAreas.map { objectArea ->
-
-            val objectAreaResourceName = objectArea.specifiedAreaKey
-            val sgoaResource = sgoaResources.get(objectAreaResourceName)
-                ?: throw S3ProvisioningException("Unable to find resource of kind ${ResourceKind.StorageGridObjectArea} with name $objectAreaResourceName for ApplicationDeployment ${adc.name}")
-
-            ObjectAreaWithCredentials(objectArea, sgoaResource.adminClaimCredentials)
-        }
-    }
-
-    private val ResourceHerkimer.adminClaimCredentials
-        get(): StorageGridCredentials {
-            val claimName = "ADMIN"
-            val adminClaim = claims.find { it.name == claimName }
-                ?: throw S3ProvisioningException("Unable to find claim with name $claimName for resource of kind ${this.kind} with name ${this.name}")
-            return StorageGridCredentials
-                .fromJsonNodes(adminClaim.credentials)
-                .copy(bucketRegion = defaultBucketRegion)
-        }
 
     private fun provisionMissingObjectAreas(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>) {
         val existingResourcesWithClaims =
@@ -153,13 +92,69 @@ class S3StorageGridFeature(
         }
     }
 
-    private fun Set<AuroraResource>.extractS3EnvVarsFromSecrets(): List<EnvVar> =
-        findResourcesByType<Secret>("-s3")
-            .map { secret ->
-                val objectArea = secret.metadata.annotations[ANNOTATION_OBJECT_AREA]
+    private fun getCredentials(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>)
+            : List<ObjectAreaWithCredentials> {
 
-                secret.createEnvVarRefs(prefix = "S3_BUCKETS_${objectArea}_")
-            }.flatten()
+        val sgoaResources =
+            herkimerService.getClaimedResources(adc.applicationDeploymentId, ResourceKind.StorageGridObjectArea)
+                .associateBy { it.name }
+
+        return objectAreas.map { objectArea ->
+
+            val objectAreaResourceName = objectArea.specifiedAreaKey
+            val sgoaResource = sgoaResources.get(objectAreaResourceName)
+                ?: throw S3ProvisioningException("Unable to find resource of kind ${ResourceKind.StorageGridObjectArea} with name $objectAreaResourceName for ApplicationDeployment ${adc.name}")
+
+            ObjectAreaWithCredentials(objectArea, sgoaResource.adminClaimCredentials)
+        }
+    }
+
+    private val ResourceHerkimer.adminClaimCredentials
+        get(): StorageGridCredentials {
+            val claimName = "ADMIN"
+            val adminClaim = claims.find { it.name == claimName }
+                ?: throw S3ProvisioningException("Unable to find claim with name $claimName for resource of kind ${this.kind} with name ${this.name}")
+            return StorageGridCredentials
+                .fromJsonNodes(adminClaim.credentials)
+                .copy(bucketRegion = defaultBucketRegion)
+        }
+}
+
+@ConditionalOnProperty(value = ["integrations.herkimer.url"])
+@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url")
+@Service
+class S3StorageGridFeature(
+    val s3StorageGridProvisioner: S3StorageGridProvisioner,
+    val openShiftClient: OpenShiftClient,
+) : S3FeatureTemplate() {
+
+    override fun enable(header: AuroraDeploymentSpec) = !header.isJob
+
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean)
+            : Map<String, Any> = emptyMap()
+
+    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext)
+            : List<Exception> = emptyList()
+
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+
+        val s3Credentials = s3StorageGridProvisioner.getOrProvisionCredentials(adc)
+        val s3Secret = s3Credentials.map { it.createS3Secret(adc.namespace, adc.name) }
+        return s3Secret.map { it.generateAuroraResource() }.toSet()
+    }
+
+    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
+        val secrets = resources.s3Secrets
+        val envVars = createEnvVarRefs(secrets)
+        resources.addEnvVarsToMainContainers(envVars, javaClass)
+    }
+
+    private fun createEnvVarRefs(secrets: List<Secret>) = secrets.map { secret ->
+        val objectArea = secret.metadata.annotations[ANNOTATION_OBJECT_AREA]
+        secret.createEnvVarRefs(prefix = "S3_BUCKETS_${objectArea}_")
+    }.flatten()
+
+    private val Set<AuroraResource>.s3Secrets get() = findResourcesByType<Secret>("-s3")
 }
 
 private val AuroraDeploymentSpec.s3ObjectAreas
@@ -190,19 +185,19 @@ private val AuroraDeploymentSpec.s3ObjectAreas
         }
     }
 
-private data class ObjectAreaWithCredentials(
+data class ObjectAreaWithCredentials(
     val objectArea: S3ObjectArea,
     val s3Credentials: StorageGridCredentials
 )
 
-private data class S3ObjectArea(
+data class S3ObjectArea(
     val tenant: String,
     val bucketName: String,
     val area: String,
     val specifiedAreaKey: String = area
 )
 
-private data class StorageGridCredentials(
+data class StorageGridCredentials(
     val serviceEndpoint: String,
     val accessKey: String,
     val secretKey: String,
