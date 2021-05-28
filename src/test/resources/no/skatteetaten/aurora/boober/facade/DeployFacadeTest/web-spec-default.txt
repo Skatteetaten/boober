@@ -19,7 +19,7 @@ utv/about.json | cluster: "utv"
       web.json | version: "develop-SNAPSHOT"
                | builder:
        default |   name: "architect"
-       default |   version: "2"
+       default |   version: "1"
                | baseImage:
        default |   name: "wrench12"
        default |   version: 1

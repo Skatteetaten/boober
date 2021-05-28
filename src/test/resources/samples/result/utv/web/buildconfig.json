@@ -69,7 +69,7 @@
         "exposeDockerSocket": true,
         "from": {
           "kind": "ImageStreamTag",
-          "name": "architect:2",
+          "name": "architect:1",
           "namespace": "openshift"
         }
       },

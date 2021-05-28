@@ -44,7 +44,7 @@ class BuildFeature(
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
         return gavHandlers(header, cmd) + setOf(
             AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
-            AuroraConfigFieldHandler("builder/version", defaultValue = "2"),
+            AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
             AuroraConfigFieldHandler(
                 "baseImage/name",
                 defaultValue = applicationPlatform.baseImageName

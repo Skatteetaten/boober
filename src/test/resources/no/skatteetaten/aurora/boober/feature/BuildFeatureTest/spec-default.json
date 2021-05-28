@@ -52,11 +52,11 @@
     },
     "version": {
       "source": "default",
-      "value": "2",
+      "value": "1",
       "sources": [
         {
           "name": "default",
-          "value": "2"
+          "value": "1"
         }
       ]
     }
