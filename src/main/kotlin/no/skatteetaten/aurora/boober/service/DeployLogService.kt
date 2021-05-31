@@ -1,16 +1,17 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.utils.Instants.now
 import no.skatteetaten.aurora.boober.utils.openshiftKind
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpStatus
-import org.springframework.stereotype.Service
-import org.springframework.web.client.HttpClientErrorException
 
 private val logger = KotlinLogging.logger {}
 
@@ -34,6 +35,7 @@ class DeployLogService(
         return deployResult
             .map { auroraDeployResult ->
                 val result = filterDeployInformation(auroraDeployResult)
+
                 val deployHistory = DeployHistoryEntry(
                     command = result.command,
                     deployer = deployer, // kan hentes fra comando
@@ -47,6 +49,7 @@ class DeployLogService(
                     result = DeployHistoryEntryResult(result.openShiftResponses, result.tagResponse),
                     projectExist = result.projectExist
                 )
+
                 try {
                     val storeResult =
                         storeDeployHistory(deployHistory, result.auroraDeploymentSpecInternal.cluster)
@@ -64,13 +67,16 @@ class DeployLogService(
         val prefix = if (deployHistoryEntry.success) DEPLOY_PREFIX else FAILED_PREFIX
         val message = "$prefix/$cluster-${deployHistoryEntry.command.applicationDeploymentRef}"
         val fileName = "${deployHistoryEntry.command.auroraConfig.name}/${deployHistoryEntry.deployId}.json"
-        val content = mapper.writeValueAsString(deployHistoryEntry)
+        val content = jacksonObjectMapper().findAndRegisterModules().writeValueAsString(deployHistoryEntry)
         return bitbucketService.uploadFile(project, repo, fileName, message, content)
     }
 
     private fun filterDeployInformation(result: AuroraDeployResult): AuroraDeployResult {
 
         val filteredResponses = result.openShiftResponses.filter { it.responseBody?.openshiftKind != "secret" }
+            .filter { it.command.payload.openshiftKind != "secret" }
+            .filter { it.command.previous?.get("kind")?.asText()?.toLowerCase() != "secret" }
+
         return result.copy(openShiftResponses = filteredResponses)
     }
 
