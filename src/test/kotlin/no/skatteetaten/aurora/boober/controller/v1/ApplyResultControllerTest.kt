@@ -39,7 +39,7 @@ class ApplyResultControllerTest : AbstractControllerTest() {
     @MockkBean
     private lateinit var userDetailsProvider: UserDetailsProvider
 
-    val items = loadJsonResource("deployhistory.json").let {
+    val deployHistory = loadJsonResource("deployhistory.json").let {
         objectMapperWithTime.convertValue<List<JsonNode>>(it)
     }.map { it.toString() }
 
@@ -66,11 +66,11 @@ class ApplyResultControllerTest : AbstractControllerTest() {
 
         every {
             bitbucketService.getFile(any(), any(), any(), any())
-        } returns items.first()
+        } returns deployHistory.first()
 
         mockMvc.get(Path("/v1/apply-result/{auroraConfigName}", auroraConfigRef.name)) {
             statusIsOk()
-                .assertDeployHistoryEqual()
+                .assertDeployHistoryEqual(deployHistory.first())
         }
     }
 
@@ -81,11 +81,11 @@ class ApplyResultControllerTest : AbstractControllerTest() {
 
         every {
             bitbucketService.getFile(any(), any(), any(), any())
-        } returns items.first()
+        } returns deployHistory.first()
 
         mockMvc.get(Path("/v1/apply-result/{auroraConfigName}/{deployId}", auroraConfigRef.name, deployId)) {
             statusIsOk()
-                .assertDeployHistoryEqual()
+                .assertDeployHistoryEqual(deployHistory.first())
         }
     }
 
@@ -122,11 +122,32 @@ class ApplyResultControllerTest : AbstractControllerTest() {
         }
     }
 
-    private fun ResultActions.assertDeployHistoryEqual() {
+    @Test
+    fun `Should filter out secret information if stored`() {
+
+        val deployHistoryWithSecret = loadJsonResource("deployhistoryWithSecret.json").let {
+            objectMapperWithTime.convertValue<List<JsonNode>>(it)
+        }.map { it.toString() }
+
+        every {
+            bitbucketService.getFiles(any(), any(), any())
+        } returns listOf("firstHistoryItem")
+
+        every {
+            bitbucketService.getFile(any(), any(), any(), any())
+        } returns deployHistoryWithSecret.first()
+
+        mockMvc.get(Path("/v1/apply-result/{auroraConfigName}", auroraConfigRef.name)) {
+            statusIsOk()
+                .assertDeployHistoryEqual(deployHistory.first())
+        }
+    }
+
+    private fun ResultActions.assertDeployHistoryEqual(expected: String) {
         val actualHistoryAsAny =
             objectMapperWithTime.readValue<Response>(this.andReturn().response.contentAsString).items.first()
         val actualHistory = objectMapperWithTime.convertValue<DeployHistoryEntry>(actualHistoryAsAny)
 
-        assertThat(actualHistory).isEqualTo(DeployHistoryEntry.fromString(items.first()))
+        assertThat(actualHistory).isEqualTo(DeployHistoryEntry.fromString(expected))
     }
 }
