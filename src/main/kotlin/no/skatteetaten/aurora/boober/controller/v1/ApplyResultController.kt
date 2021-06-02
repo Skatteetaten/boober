@@ -6,9 +6,9 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
-import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
 import no.skatteetaten.aurora.boober.service.DeployLogService
 
 @RestController
@@ -20,7 +20,7 @@ class ApplyResultController(private val deployLogService: DeployLogService) {
         @PathVariable auroraConfigName: String
     ): Response {
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
-        val applicationResults: List<JsonNode> = deployLogService.deployHistory(ref)
+        val applicationResults: List<DeployHistoryEntry> = deployLogService.deployHistory(ref)
         return Response(items = applicationResults)
     }
 

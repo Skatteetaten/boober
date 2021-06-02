@@ -2,9 +2,11 @@ package no.skatteetaten.aurora.boober.unit
 
 import java.nio.charset.Charset
 import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -22,12 +24,13 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
+import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.BitbucketService
 import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
 import no.skatteetaten.aurora.boober.service.DeployLogService
 import no.skatteetaten.aurora.boober.service.DeployLogServiceException
-import no.skatteetaten.aurora.boober.service.Deployer
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.jsonMapper
@@ -39,17 +42,29 @@ class DeployLogServiceTest : ResourceLoader() {
     private val bitbucketService = mockk<BitbucketService>()
     private val deployId = "12e456"
     private val fileName = "test/$deployId.json"
-    private val deployer = Deployer("Test Testesen", "test0test.no")
+
+    private val userDetailsProvider = mockk<UserDetailsProvider>()
+
     private val service = DeployLogService(
         bitbucketService = bitbucketService,
         mapper = jsonMapper(),
         project = "ao",
-        repo = "auroradeploymenttags"
+        repo = "auroradeploymenttags",
+        userDetailsProvider = userDetailsProvider
     )
 
     @AfterEach
     fun tearDown() {
         clearMocks(bitbucketService)
+    }
+
+    @BeforeEach
+    fun setup() {
+        every { userDetailsProvider.getAuthenticatedUser() } returns User(
+            "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
+                SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("APP_PaaS_drift")
+            )
+        )
     }
 
     @Test
@@ -58,7 +73,7 @@ class DeployLogServiceTest : ResourceLoader() {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-utv/simple", any())
         } returns "Success"
 
-        val response = service.markRelease(stubDeployResult(deployId), deployer)
+        val response = service.markRelease(stubDeployResult(deployId))
 
         verify(exactly = 1) {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-utv/simple", any())
@@ -82,7 +97,7 @@ class DeployLogServiceTest : ResourceLoader() {
 
         val openshiftResponsesJson = loadJsonResource("openshift-responses-with-secret.json")
         val openshiftResponse = jacksonObjectMapper().convertValue<List<OpenShiftResponse>>(openshiftResponsesJson)
-        val response = service.markRelease(stubDeployResult(deployId, openshiftResponses = openshiftResponse), deployer)
+        val response = service.markRelease(stubDeployResult(deployId, openshiftResponses = openshiftResponse))
 
         verify(exactly = 1) {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-utv/simple", any())
@@ -99,8 +114,8 @@ class DeployLogServiceTest : ResourceLoader() {
         val kindInOpenshiftResponses = result.mapNotNull { it.responseBody?.openshiftKind }
         val payloadKindInOpenshiftResponse = result.map { it.command.payload.openshiftKind }
         val previousKindInOpenshiftResponse = result.mapNotNull { it.command.previous }
-                .filter { it !is NullNode }
-                .map { it.openshiftKind }
+            .filter { it !is NullNode }
+            .map { it.openshiftKind }
 
         assertThat(kindInOpenshiftResponses).doesNotContain("secret")
         assertThat(payloadKindInOpenshiftResponse).doesNotContain("secret")
@@ -113,7 +128,7 @@ class DeployLogServiceTest : ResourceLoader() {
             bitbucketService.uploadFile("ao", "auroradeploymenttags", fileName, "DEPLOY/utv-utv/simple", any())
         } throws RuntimeException("Some really bad stuff happened")
 
-        val response = service.markRelease(stubDeployResult(deployId), deployer)
+        val response = service.markRelease(stubDeployResult(deployId))
 
         assertThat(response.size).isEqualTo(1)
         val answer = response.first()
