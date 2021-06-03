@@ -35,12 +35,9 @@ private val dnsMatcher: Pattern = Pattern.compile(
 )
 
 fun String.isValidDns(): Boolean {
-    this
+    return this
         .split(".")
-        .filter { !dnsMatcher.matcher(it).matches() }
-        .any { return false }
-
-    return this.length < 254
+        .all { dnsMatcher.matcher(it).matches() } && this.length < 254
 }
 
 fun String.removeExtension(): String = FilenameUtils.removeExtension(this)

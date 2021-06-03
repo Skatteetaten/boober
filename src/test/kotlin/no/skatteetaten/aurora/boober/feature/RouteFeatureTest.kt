@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -673,7 +672,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `a dns host name cannot be more than 253 chars`() {
-        val ex: MultiApplicationValidationException = assertThrows {
+        assertThat {
             generateResources(
                 """
                 {
@@ -688,8 +687,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 createEmptyDeploymentConfig(),
                 createdResources = 1
             )
-        }
-        assertTrue(ex.message?.contains(("An error occurred")) ?: false, "Could not find text in ${ex.message}")
+        }.singleApplicationError("Invalid DNS node entry")
     }
 
     @Test
@@ -712,26 +710,25 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `a host name cannot exceed 63 chars`() {
-        val ex: MultiApplicationValidationException = assertThrows {
+        assertThat {
             generateResources(
                 """
                 {
                   "route" : {
                     "foo" : {
-                      "host": "X$sixtyThree""
+                      "host": "X$sixtyThree"
                     }
                   }
                 }
                 """.trimIndent(),
                 createEmptyDeploymentConfig()
             )
-        }
-        assertThat { ex.message?.contains("DNS node") }
+        }.singleApplicationError("Invalid DNS node entry")
     }
 
     @Test
     fun `when having cname, dns must be valid`() {
-        val ex: MultiApplicationValidationException = assertThrows {
+        assertThat {
             generateResources(
                 """
                 {
@@ -746,15 +743,14 @@ class RouteFeatureTest : AbstractFeatureTest() {
                   }
                 }
                 """.trimIndent(),
-                resource = createEmptyDeploymentConfig()
+                resource = createEmptyDeploymentConfig(), createdResources = 3
             )
-        }
-        assertThat { ex.message?.contains("DNS node") }
+        }.singleApplicationError("Invalid DNS node entry")
     }
 
     @Test
     fun `a node in a fqdn host statement cannot exceed 63 chars`() {
-        val ex: MultiApplicationValidationException = assertThrows {
+        assertThat {
             generateResources(
                 """
                 {
@@ -767,13 +763,12 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 }
                 """.trimIndent(), createEmptyDeploymentConfig()
             )
-        }
-        assertThat { ex.message?.contains("DNS node") }
+        }.singleApplicationError("Invalid DNS node entry")
     }
 
     @Test
     fun `default host nodes cannot exceed 63 chars`() {
-        val ex: MultiApplicationValidationException = assertThrows {
+        assertThat {
             generateResources(
                 """
                 {
@@ -792,8 +787,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 """.trimIndent(),
                 createEmptyDeploymentConfig()
             )
-        }
-        assertThat { ex.message?.contains("DNS node") }
+        }.singleApplicationError("Invalid DNS node entry")
     }
 
     @ParameterizedTest
@@ -812,7 +806,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
     @ParameterizedTest
     @CsvSource(value = ["x_1.xx", "some.org-", "-some.org", ".no", "x.no.", "x..no"])
     fun `invalid host names should fail`(dns: String) {
-        val ex: MultiApplicationValidationException = assertThrows {
+        assertThat {
             generateResources(
                 """{"route" : {"foo" : {
                   "host": """" + dns + """", "cname" : { "enabled" : "true" }
@@ -820,7 +814,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 createEmptyDeploymentConfig(),
                 createdResources = 2
             )
-        }
-        assertThat { ex.message?.contains("invalid dns name") }
+        }.singleApplicationError("Invalid DNS node entry")
     }
 }

@@ -69,7 +69,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             AuroraConfigFieldHandler(
                 "routeDefaults/host",
                 defaultValue = "@name@-@affiliation@-@env@",
-                validator = { it.validDnsPreExpansion() }
+                validator = { it?.validDnsPreExpansion() }
             ),
             AuroraConfigFieldHandler(
                 "routeDefaults/tls/enabled",
@@ -246,7 +246,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 ),
                 AuroraConfigFieldHandler(
                     "$key/host",
-                    validator = { it.validDnsPreExpansion() }
+                    validator = { it?.validDnsPreExpansion() }
                 ),
                 AuroraConfigFieldHandler(
                     "$key/fullyQualifiedHost",
@@ -321,7 +321,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             )
         } else null
 
-        val checkDns = routes
+        val dnsErrors = routes
             .filter { !it.host.isValidDns() }
             .map {
                 AuroraConfigException(
@@ -330,10 +330,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                         ConfigFieldErrorDetail.illegal(message = "host=${route.host} must be a valid dns entry.")
                     }
                 )
-            }.firstOrNull()
+            }
 
         return tlsErrors
-            .addIfNotNull(checkDns)
+            .addIfNotNull(dnsErrors)
             .addIfNotNull(duplicateRouteErrors)
             .addIfNotNull(duplicateHostError)
             .addIfNotNull(cnameAndFqdnHostSimultaneously)

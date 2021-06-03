@@ -236,11 +236,7 @@ fun JsonNode?.boolean(required: Boolean = false): Exception? {
     return null
 }
 
-fun JsonNode?.validDnsPreExpansion(): Exception? {
-    if (this == null) {
-        return null
-    }
-
+fun JsonNode.validDnsPreExpansion(): Exception? {
     this.textValue()
         .replace("@", "") // Must allow @ as substitution occurs after validation
         .split(".")
