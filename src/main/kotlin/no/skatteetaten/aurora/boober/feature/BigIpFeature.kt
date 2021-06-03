@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.truncateStringAndHashTrailingCharacters
 import org.apache.commons.codec.digest.DigestUtils
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -23,9 +24,9 @@ class BigIpFeature(
 ) : Feature {
 
     enum class Errors(val message: String) {
-        MissingLegacyService("bigip/service is required if other bigip flags are set. bigip/service is deprecated and you should move that configuration to bigip/<host>/service."),
-        MissingMultipleService("bigip/<host>/service is required if any other bigip flags are set"),
-        BothLegacyAndMultipleConfigIsSet("specifying both bigip/service and bigip/<host>/service is not allowed. bigip/service is deprecated and you should move that configuration to bigip/<host>/service.")
+        MissingLegacyService("bigip/service is required if other bigip flags are set. bigip/service is deprecated and you should move that configuration to bigip/<name>/service."),
+        MissingMultipleService("bigip/<name>/service is required if any other bigip flags are set"),
+        BothLegacyAndMultipleConfigIsSet("specifying both bigip/service and bigip/<name>/service is not allowed. bigip/service is deprecated and you should move that configuration to bigip/<name>/service.")
     }
 
     val bigIpLegacyConfigKeys: List<String> = listOf(
@@ -44,17 +45,17 @@ class BigIpFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val multipleConfigs = cmd.applicationFiles.getBigIPHosts()
-            .flatMap { host ->
+            .flatMap { name ->
                 setOf(
-                    // host == host in OpenShift Route resource
-                    AuroraConfigFieldHandler("bigip/$host"),
-                    AuroraConfigFieldHandler("bigip/$host/enabled", { it.boolean() }),
-                    AuroraConfigFieldHandler("bigip/$host/service"),
-                    AuroraConfigFieldHandler("bigip/$host/asmPolicy"),
-                    AuroraConfigFieldHandler("bigip/$host/externalHost"),
-                    AuroraConfigFieldHandler("bigip/$host/oauthScopes"),
-                    AuroraConfigFieldHandler("bigip/$host/apiPaths")
-                ) + findRouteAnnotationHandlers("bigip/$host", cmd.applicationFiles, "routeAnnotations")
+                    // name is part of host in the OpenShift Route resource
+                    AuroraConfigFieldHandler("bigip/$name"),
+                    AuroraConfigFieldHandler("bigip/$name/enabled", { it.boolean() }),
+                    AuroraConfigFieldHandler("bigip/$name/service"),
+                    AuroraConfigFieldHandler("bigip/$name/asmPolicy"),
+                    AuroraConfigFieldHandler("bigip/$name/externalHost"),
+                    AuroraConfigFieldHandler("bigip/$name/oauthScopes"),
+                    AuroraConfigFieldHandler("bigip/$name/apiPaths")
+                ) + findRouteAnnotationHandlers("bigip/$name", cmd.applicationFiles, "routeAnnotations")
             }.toSet()
 
         val legacyConfig = setOf(
@@ -121,7 +122,7 @@ class BigIpFeature(
         val routeHost = if (isApplicationHost) {
             DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
         } else {
-            "$host-${adc.namespace}"
+            "${adc.name}-$host-${adc.namespace}".truncateStringAndHashTrailingCharacters(63)
         }
 
         val routeName = if (isApplicationHost) "$host-bigip" else "${adc.name}-$host-bigip"
