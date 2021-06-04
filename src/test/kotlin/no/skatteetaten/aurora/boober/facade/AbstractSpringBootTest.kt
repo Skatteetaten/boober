@@ -11,7 +11,7 @@ import no.skatteetaten.aurora.boober.service.ApplicationDeploymentHerkimer
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.herkimerObjectMapper
+import no.skatteetaten.aurora.boober.service.objectMapperWithTime
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.utils.Instants
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
@@ -176,5 +176,5 @@ fun json(body: String, responseCode: Int = 200) =
 
 fun json(body: Any) =
     MockResponse().setResponseCode(200)
-        .setBody(herkimerObjectMapper.writeValueAsString(body))
+        .setBody(objectMapperWithTime.writeValueAsString(body))
         .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)

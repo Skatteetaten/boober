@@ -30,6 +30,7 @@ import org.springframework.util.ResourceUtils
 import java.io.File
 import java.net.URL
 import java.nio.charset.Charset
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
 private val logger = KotlinLogging.logger {}
 
@@ -128,7 +129,7 @@ fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boo
     return true
 }
 
-fun stubDeployResult(deployId: String, success: Boolean = true): List<AuroraDeployResult> {
+fun stubDeployResult(deployId: String, success: Boolean = true, openshiftResponses: List<OpenShiftResponse> = emptyList()): List<AuroraDeployResult> {
     return listOf(
         AuroraDeployResult(
             success = success,
@@ -139,7 +140,8 @@ fun stubDeployResult(deployId: String, success: Boolean = true): List<AuroraDepl
                 deployId = deployId,
                 shouldDeploy = true,
                 context = stubAuroraDeploymentContext()
-            )
+            ),
+            openShiftResponses = openshiftResponses
         )
     )
 }

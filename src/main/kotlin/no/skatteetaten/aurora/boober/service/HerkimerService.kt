@@ -121,7 +121,7 @@ class HerkimerService(
 
         if (herkimerResponse?.success != true) throw ProvisioningException("Unable to create ApplicationDeployment with payload=$adPayload, cause=${herkimerResponse.messageOrDefault}")
 
-        return herkimerObjectMapper.convertValue(herkimerResponse.items.single())
+        return objectMapperWithTime.convertValue(herkimerResponse.items.single())
     }
 
     private fun getResourceUrl(claimOwnerId: String?, resourceKind: ResourceKind, name: String?): String {
@@ -142,7 +142,7 @@ class HerkimerService(
 
         if (herkimerResponse?.success != true) throw ProvisioningException("Unable to get claimed resources. cause=${herkimerResponse.messageOrDefault}")
 
-        return herkimerObjectMapper.convertValue(herkimerResponse.items)
+        return objectMapperWithTime.convertValue(herkimerResponse.items)
     }
 
     fun createResourceAndClaim(
@@ -166,7 +166,7 @@ class HerkimerService(
 
         if (resourceResponse?.success != true) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.messageOrDefault}")
 
-        val resourceId = herkimerObjectMapper.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
+        val resourceId = objectMapperWithTime.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
 
         val claimResponse = client.post(
             type = HerkimerResponse::class,
@@ -182,7 +182,7 @@ class HerkimerService(
     }
 }
 
-internal val herkimerObjectMapper: ObjectMapper = jacksonObjectMapper()
+internal val objectMapperWithTime: ObjectMapper = jacksonObjectMapper()
     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     .disable(SerializationFeature.WRITE_DATE_TIMESTAMPS_AS_NANOSECONDS)
     .enable(SerializationFeature.WRITE_DATES_WITH_ZONE_ID)
