@@ -11,24 +11,6 @@
   },
   "bigip": {
     "simple": {
-      "source": "utv/simple.json",
-      "value": {
-        "service": "simple",
-        "routeAnnotations": {
-          "haproxy.router.openshift.io|timeout": "30s"
-        }
-      },
-      "sources": [
-        {
-          "name": "utv/simple.json",
-          "value": {
-            "service": "simple",
-            "routeAnnotations": {
-              "haproxy.router.openshift.io|timeout": "30s"
-            }
-          }
-        }
-      ],
       "service": {
         "source": "utv/simple.json",
         "value": "simple",

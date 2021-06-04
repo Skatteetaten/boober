@@ -48,7 +48,6 @@ class BigIpFeature(
             .flatMap { name ->
                 setOf(
                     // name is part of host in the OpenShift Route resource
-                    AuroraConfigFieldHandler("bigip/$name"),
                     AuroraConfigFieldHandler("bigip/$name/enabled", { it.boolean() }),
                     AuroraConfigFieldHandler("bigip/$name/service"),
                     AuroraConfigFieldHandler("bigip/$name/asmPolicy"),
@@ -231,15 +230,14 @@ class BigIpFeature(
     }
 
     private fun AuroraDeploymentSpec.getBigIPHosts(): Set<String> {
-        return this.getSubKeys("bigip")
+        return this.findSubKeysRaw("bigip")
             .filter {
-                val isSubKeyToHost = it.key.split("/").size > 2
+                val isSubKeyToHost = it.split("/").size > 2
                 when {
                     isSubKeyToHost -> false
-                    else -> !bigIpLegacyConfigKeys.map { "bigip/$it" }.contains(it.key)
+                    else -> !bigIpLegacyConfigKeys.contains(it)
                 }
             }
-            .map { it.key.split("/").last() }
             .toSet()
     }
 
