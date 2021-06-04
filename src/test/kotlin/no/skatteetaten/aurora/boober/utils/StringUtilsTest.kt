@@ -14,7 +14,7 @@ class StringUtilsTest {
     }
 
     @Test
-    fun `truncateStringAndHashTrailingCharacters should return same string if lenght is shorter than maxLengt`() {
+    fun `truncateStringAndHashTrailingCharacters should return same string if lenght is shorter than maxLength`() {
         val norm = "test".truncateStringAndHashTrailingCharacters(63)
         assertThat(norm).isEqualTo("test")
         assertThat(norm.length).isEqualTo(4)

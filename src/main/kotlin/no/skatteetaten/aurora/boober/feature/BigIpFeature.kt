@@ -122,7 +122,7 @@ class BigIpFeature(
         val routeHost = if (isApplicationHost) {
             DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
         } else {
-            "${adc.name}-$host-${adc.namespace}".truncateStringAndHashTrailingCharacters(63)
+            "bigip-${adc.name}-${adc.namespace}-$host".truncateStringAndHashTrailingCharacters(63)
         }
 
         val routeName = if (isApplicationHost) "$host-bigip" else "${adc.name}-$host-bigip"

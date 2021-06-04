@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import assertk.assertThat
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
@@ -111,6 +112,26 @@ class BigIpFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(spec).auroraDeploymentSpecMatches("spec-default.json")
+    }
+
+    @Test
+    fun `should truncate route if length is over 63 char`() {
+
+        val (route) = generateResources(
+            """
+        {
+            "name": "etveldiglangtapplikasjonsnavn",
+            "bigip" : {
+                "etveldiglangtbigipkonfignavn": {
+                    "service": "simple"
+                }
+            }
+        }
+        """, createdResources = 2
+        )
+
+        val routeSpec = (route.resource as Route).spec
+        assertThat(routeSpec.host).isEqualTo("bigip-etveldiglangtapplikasjonsnavn-paas-utv-etveldigla-fc9684a.test.foo")
     }
 
     @Test

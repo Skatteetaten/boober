@@ -10,7 +10,7 @@
     "namespace": "paas-utv"
   },
   "spec": {
-    "host": "simple-simple-mock-paas-utv.test.foo",
+    "host": "bigip-simple-paas-utv-simple-mock.test.foo",
     "port": {
       "targetPort": "http"
     },
