@@ -69,6 +69,7 @@ logging:
     level:
         no.skatteetaten: INFO
         no.skatteetaten.aurora.boober: INFO
+        no.skatteetaten.aurora.boober.service.resourceprovisioning: DEBUG
         org:
             jboss: WARN
             hibernate: WARN
@@ -83,6 +84,9 @@ server:
 spring:
     profiles: local
 
+logging:
+    level:
+        no.skatteetaten.aurora.boober.service.resourceprovisioning: DEBUG
 
 management.server.port: 9091
 
