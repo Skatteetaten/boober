@@ -71,14 +71,20 @@ class S3StorageGridProvisioner(
     }
 
     private fun provisionObjectAreas(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>) {
-        val sgoas = objectAreas
-            .map { objectArea -> createSgoaResource(adc, objectArea) }
-            .onEach { sgoa ->
-                val response = openShiftDeployer.applyResource(sgoa.metadata.namespace, sgoa)
-                response.exception?.let { throw S3ProvisioningException("Unable to apply SGOA ${sgoa.fqn}. $it") }
-            }
+        val sgoas = applySgoaResources(adc, objectAreas)
+        val requests = sgoas.waitForRequestCompletionOrTimeout()
+        handleErrors(adc, requests)
+    }
 
-        val requests = sgoas.map { SgoaAndResult(it) }.toMutableList()
+    private fun applySgoaResources(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>) = objectAreas
+        .map { objectArea -> createSgoaResource(adc, objectArea) }
+        .onEach { sgoa ->
+            val response = openShiftDeployer.applyResource(sgoa.metadata.namespace, sgoa)
+            response.exception?.let<String, Unit> { throw S3ProvisioningException("Unable to apply SGOA ${sgoa.fqn}. $it") }
+        }
+
+    private fun List<StorageGridObjectArea>.waitForRequestCompletionOrTimeout(): List<SgoaAndResult> {
+        val requests = this.map { SgoaAndResult(it) }.toMutableList()
         val startTime = System.currentTimeMillis()
         fun hasTimedOut() = System.currentTimeMillis() - startTime > provisioningTimeout
         while (true) {
@@ -93,16 +99,19 @@ class S3StorageGridProvisioner(
 
             Thread.sleep(statusCheckIntervalMillis)
         }
+        return requests
+    }
 
+    private fun handleErrors(adc: AuroraDeploymentSpec, requests: List<SgoaAndResult>) {
         val errors = requests.filter { !it.result.success }
 
-        val failedRequests = errors.filter { it.result.reason.endState }.takeIf { it.isNotEmpty() }
+        errors.filter { it.result.reason.endState }.takeIf { it.isNotEmpty() }
             ?.also { logger.debug("ApplicationDeployment ${adc.name} failed ${it.size} SGOA request(s)") }
-        failedRequests?.let { throw S3ProvisioningException("${it.size} StorageGridObjectArea request(s) failed. Check status with \"oc get sgoa -o yaml\"") }
+            ?.let { throw S3ProvisioningException("${it.size} StorageGridObjectArea request(s) failed. Check status with \"oc get sgoa -o yaml\"") }
 
-        val timedOutRequests = errors.filter { !it.result.reason.endState }.takeIf { it.isNotEmpty() }
+        errors.filter { !it.result.reason.endState }.takeIf { it.isNotEmpty() }
             ?.also { logger.debug("ApplicationDeployment ${adc.name} timed out ${it.size} SGOA request(s)") }
-        timedOutRequests?.let { throw S3ProvisioningException("Timed out waiting for ${it.size} StorageGridObjectArea request(s) to complete. Check status with \"oc get sgoa -o yaml\"") }
+            ?.let { throw S3ProvisioningException("Timed out waiting for ${it.size} StorageGridObjectArea request(s) to complete. Check status with \"oc get sgoa -o yaml\"") }
     }
 
     private data class SgoaAndResult(
