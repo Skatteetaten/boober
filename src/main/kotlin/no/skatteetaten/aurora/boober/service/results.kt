@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentCommand
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import java.time.Instant
+import com.fasterxml.jackson.module.kotlin.readValue
 
 data class AuroraEnvironmentResult(
     val openShiftResponses: List<OpenShiftResponse> = listOf(),
@@ -49,7 +50,11 @@ data class DeployHistoryEntry(
     val command: ApplicationDeploymentCommand,
     val deploymentSpec: Map<String, Any>,
     val result: DeployHistoryEntryResult
-)
+) {
+    companion object {
+        fun fromString(content: String): DeployHistoryEntry = objectMapperWithTime.readValue(content)
+    }
+}
 
 data class DeployHistoryEntryResult(val openshift: List<OpenShiftResponse>, val tagResult: TagResult?)
 

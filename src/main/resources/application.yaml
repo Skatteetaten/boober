@@ -107,7 +107,7 @@ integrations:
     #fiona:
         #url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: https://herkimer-aurora-dev.utv.paas.skead.no
+        url: https://herkimer-aurora-dev.${openshift.cluster}.paas.skead.no/
         fallback:
             applikasjonsnavn: "1234567890"
     openshift:

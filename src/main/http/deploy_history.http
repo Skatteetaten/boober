@@ -1,4 +1,4 @@
-GET {{apiUrl}}/v1/apply-result/paas/
-Authorization: Bearer {{token}}
+GET {{apiUrl}}}/v1/apply-result/paas/
+Authorization: Bearer {{token}}}
 
 ###

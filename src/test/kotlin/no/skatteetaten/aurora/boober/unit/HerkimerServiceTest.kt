@@ -26,7 +26,7 @@ import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.ResourceClaimHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
-import no.skatteetaten.aurora.boober.service.herkimerObjectMapper
+import no.skatteetaten.aurora.boober.service.objectMapperWithTime
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.mockmvc.extensions.TestObjectMapperConfigurer
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
@@ -46,12 +46,12 @@ class HerkimerServiceTest {
     @BeforeEach
     fun setup() {
         clearAllMocks()
-        TestObjectMapperConfigurer.objectMapper = herkimerObjectMapper
+        TestObjectMapperConfigurer.objectMapper = objectMapperWithTime
     }
 
     @Test
     fun `test that empty body throws with nice message`() {
-        val response = herkimerObjectMapper.createObjectNode()
+        val response = objectMapperWithTime.createObjectNode()
 
         server.execute(HttpStatus.NO_CONTENT.value() to response) {
             assertThat { service.getClaimedResources("id", ResourceKind.ManagedOracleSchema) }
