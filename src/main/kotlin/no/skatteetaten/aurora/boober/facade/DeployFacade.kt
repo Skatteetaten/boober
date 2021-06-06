@@ -107,6 +107,10 @@ class DeployFacade(
 
         val namespacesAndSampleSpecs = validContexts.extractNamespacesWithSampleSpec()
 
+        // TODO: To reduce the amount of refactoring required to complete the AOS-5564 feature, the EnvironmentFeature
+        // class is instantiated and reused as is instead of being incorporated or refactored into a service. There
+        // can no longer be an instance of this class in the ApplicationContext as this would interfere with the
+        // timing of when the namespaces in OpenShift/kubernetes is created.
         val environmentFeature = EnvironmentFeature(openShiftDeployer.openShiftClient, userDetailsProvider)
         return namespacesAndSampleSpecs.associate { (namespace, sampleSpecFromNamespace) ->
             val envResources = environmentFeature.generate(sampleSpecFromNamespace, emptyMap())
