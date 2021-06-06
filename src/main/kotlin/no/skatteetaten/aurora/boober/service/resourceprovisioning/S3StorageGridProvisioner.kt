@@ -52,6 +52,7 @@ class S3StorageGridProvisioner(
     val openShiftClient: OpenShiftClient,
     val openShiftCommandService: OpenShiftCommandService,
     val herkimerService: HerkimerService,
+    val operationScopeFeature: OperationScopeFeature,
     @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String,
     @Value("\${storagegrid.provisioning-timeout:20000}") val provisioningTimeout: Long,
     @Value("\${storagegrid.provisioning-status-check-interval:1000}") val statusCheckIntervalMillis: Long
@@ -141,26 +142,25 @@ class S3StorageGridProvisioner(
             return adminClaim.credentials.convert<StorageGridCredentials>()
                 .copy(bucketRegion = defaultBucketRegion)
         }
-}
 
-private fun createSgoaResource(adc: AuroraDeploymentSpec, objectArea: S3ObjectArea): StorageGridObjectArea {
-    val objectAreaName = "${adc.name}-${objectArea.specifiedAreaKey}"
-    // TODO: We need to somehow get the ownerReference set
-    return StorageGridObjectArea(
-        _metadata = newObjectMeta {
-            name = objectAreaName
-            namespace = adc.namespace
-            labels = mapOf(
-                "id" to adc.applicationDeploymentId,
-                "operationScope" to "dev"
-            ).normalizeLabels()
-        },
-        spec = StorageGridObjectAreaSpec(
-            objectArea.bucketName,
-            adc.applicationDeploymentId,
-            objectArea.specifiedAreaKey
+    private fun createSgoaResource(adc: AuroraDeploymentSpec, objectArea: S3ObjectArea): StorageGridObjectArea {
+        val objectAreaName = "${adc.name}-${objectArea.specifiedAreaKey}"
+        // TODO: We need to somehow get the ownerReference set
+        val labels = operationScopeFeature.getLabelsToAdd()
+            .normalizeLabels()
+        return StorageGridObjectArea(
+            _metadata = newObjectMeta {
+                name = objectAreaName
+                namespace = adc.namespace
+                this.labels = labels
+            },
+            spec = StorageGridObjectAreaSpec(
+                objectArea.bucketName,
+                adc.applicationDeploymentId,
+                objectArea.specifiedAreaKey
+            )
         )
-    )
+    }
 }
 
 private val AuroraDeploymentSpec.s3ObjectAreas
