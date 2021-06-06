@@ -66,11 +66,18 @@ class S3StorageGridProvisioner(
 
     fun provisionMissingObjectAreas(adc: AuroraDeploymentSpec) {
         val existingResources = herkimerService.getObjectAreaResourcesIndex(adc)
+        if (existingResources.isNotEmpty()) {
+            logger.debug("ObjectArea(s) ${existingResources.keys.joinToString()} was already provisioned for ADC ${adc.name}")
+        }
         val missingObjectAreas = adc.s3ObjectAreas.filter { !existingResources.containsKey(it.specifiedAreaKey) }
         provisionObjectAreas(adc, missingObjectAreas)
     }
 
     private fun provisionObjectAreas(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>) {
+
+        if (objectAreas.isEmpty()) return
+        logger.debug("Provisioning ObjectArea(s) ${objectAreas.joinToString { it.specifiedAreaKey }} for ADC ${adc.name}")
+
         val sgoas = applySgoaResources(adc, objectAreas)
         val requests = sgoas.waitForRequestCompletionOrTimeout()
         handleErrors(adc, requests)

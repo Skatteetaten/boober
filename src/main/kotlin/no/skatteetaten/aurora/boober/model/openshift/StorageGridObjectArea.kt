@@ -35,7 +35,7 @@ data class StorageGridObjectArea(
     }
 }
 
-val StorageGridObjectArea.fqn get() = _metadata?.run { "${namespace}/${name}" } ?: "unknown"
+val StorageGridObjectArea.fqn get() = metadata.run { "${namespace}/${name}" }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
