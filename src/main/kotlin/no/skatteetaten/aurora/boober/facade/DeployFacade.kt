@@ -21,6 +21,7 @@ class DeployFacade(
     val auroraConfigService: AuroraConfigService,
     val auroraDeploymentContextService: AuroraDeploymentContextService,
     val openShiftDeployer: OpenShiftDeployer,
+    val userDetailsProvider: UserDetailsProvider,
     val deployLogService: DeployLogService,
     val notificationService: NotificationService,
     @Value("\${openshift.cluster}") val cluster: String
