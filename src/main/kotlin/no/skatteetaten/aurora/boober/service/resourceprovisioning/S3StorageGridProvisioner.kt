@@ -1,26 +1,18 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newObjectMeta
 import io.fabric8.kubernetes.api.model.HasMetadata
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.*
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectArea
-import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectAreaSpec
-import no.skatteetaten.aurora.boober.model.openshift.fqn
+import no.skatteetaten.aurora.boober.model.openshift.*
 import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner.SgoaStatus.Status.Reason.Undefined
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner.SgoaStatus.Status.Result
+import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -48,25 +40,7 @@ data class StorageGridCredentials(
     val username: String,
     val password: String,
     val bucketRegion: String? = null
-) {
-    companion object {
-        fun fromJsonNodes(jsonNode: JsonNode): StorageGridCredentials {
-            /*
-            {
-                "tenantName" : "aurora-utv",
-                "bucketName" : "aurora-utv-paas-bucket-u-default",
-                "objectPrefix" : "9d63b79a-95b7-4e00-9105-041200e6895c",
-                "username" : "utv-aurora-bas-test-refapps3",
-                "password" : "S3userpass",
-                "serviceEndpoint" : "http://uia0ins-netapp-storagegrid01.skead.no:10880/",
-                "accessKey" : "MJYKL3BRODDGNQNN35LW",
-                "secretKey" : "Kh/XX1zSVaEHNLfp+hzaFUVcdiyXZjlQcx59U5L7"
-            }
-             */
-            return jacksonObjectMapper().convertValue(jsonNode)
-        }
-    }
-}
+)
 
 class S3ProvisioningException(message: String, cause: Throwable? = null) : ProvisioningException(message, cause)
 
@@ -82,9 +56,6 @@ class S3StorageGridProvisioner(
     @Value("\${storagegrid.provisioning-timeout:20000}") val provisioningTimeout: Long,
     @Value("\${storagegrid.provisioning-status-check-interval:1000}") val statusCheckIntervalMillis: Long
 ) {
-    private val mapper = jacksonObjectMapper()
-        .apply { enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE) }
-
     fun getOrProvisionCredentials(adc: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
 
         provisionMissingObjectAreas(adc)
@@ -106,70 +77,48 @@ class S3StorageGridProvisioner(
                 response.exception?.let { throw S3ProvisioningException("Unable to apply SGOA ${sgoa.fqn}. $it") }
             }
 
-        val requests = sgoas.map { SgoaWithStatus(it) }.toMutableList()
+        val requests = sgoas.map { SgoaAndResult(it) }.toMutableList()
         val startTime = System.currentTimeMillis()
         fun hasTimedOut() = System.currentTimeMillis() - startTime > provisioningTimeout
         while (true) {
-            requests.forEach { sgoaWithStatus ->
-                val sgoa = sgoaWithStatus.sgoa
-                val response = openShiftGetObject(sgoaWithStatus.sgoa)
-                sgoaWithStatus.status = response.responseBody?.let { mapper.convertValue<SgoaStatus>(it) }
-                    ?: throw S3ProvisioningException("Unexpectedly got empty body when requesting status for SGOA ${sgoa.fqn}")
-                logger.debug("Status for SGOA ${sgoa.fqn} is ${sgoaWithStatus.status.status.result}")
+            requests.forEach { sgoaAndResult ->
+                val response = openShiftGetObject(sgoaAndResult.sgoa)
+                sgoaAndResult.result = response.responseBody?.get("status")
+                    ?.convert<StorageGridObjectAreaStatus>()?.result
+                    ?: StorageGridObjectAreaStatusResult()
+                logger.debug("Status for SGOA ${sgoaAndResult.sgoa.fqn} is ${sgoaAndResult.result}")
             }
-            if (requests.all { it.status.status.result.reason.endState } || hasTimedOut()) break
+            if (requests.all { it.result.reason.endState } || hasTimedOut()) break
 
             Thread.sleep(statusCheckIntervalMillis)
         }
 
-        val errors = requests.filter { !it.status.status.result.success }
+        val errors = requests.filter { !it.result.success }
 
-        val failedRequests = errors.filter { it.status.status.result.reason.endState }.takeIf { it.isNotEmpty() }
+        val failedRequests = errors.filter { it.result.reason.endState }.takeIf { it.isNotEmpty() }
             ?.also { logger.debug("ApplicationDeployment ${adc.name} failed ${it.size} SGOA request(s)") }
         failedRequests?.let { throw S3ProvisioningException("${it.size} StorageGridObjectArea request(s) failed. Check status with \"oc get sgoa -o yaml\"") }
 
-        val timedOutRequests = errors.filter { !it.status.status.result.reason.endState }.takeIf { it.isNotEmpty() }
+        val timedOutRequests = errors.filter { !it.result.reason.endState }.takeIf { it.isNotEmpty() }
             ?.also { logger.debug("ApplicationDeployment ${adc.name} timed out ${it.size} SGOA request(s)") }
         timedOutRequests?.let { throw S3ProvisioningException("Timed out waiting for ${it.size} StorageGridObjectArea request(s) to complete. Check status with \"oc get sgoa -o yaml\"") }
     }
 
-    data class SgoaWithStatus(
+    private data class SgoaAndResult(
         val sgoa: StorageGridObjectArea,
-        var status: SgoaStatus = SgoaStatus()
+        var result: StorageGridObjectAreaStatusResult = StorageGridObjectAreaStatusResult()
     )
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    data class SgoaStatus(val status: Status = Status(result = Result("", Undefined, false))) {
-        @JsonIgnoreProperties(ignoreUnknown = true)
-        data class Status(val result: Result) {
-            enum class Reason(val endState: Boolean = false) {
-                @JsonEnumDefaultValue
-                Undefined,
-                SGOAProvisioned(true),
-                AdIdNotBelongToNamespace(true),
-                ApplicationDeploymentDoesNotExist(true),
-                TenantAccountDoesNotExist(true),
-                FailedToProvisionObjectArea,
-                SpecConsistencyValidationFailure(true),
-                FailureFromHerkimer,
-                InternalError(true)
-            }
-
-            data class Result(val message: String, val reason: Reason, val success: Boolean)
-        }
-    }
 
     private fun openShiftGetObject(resource: HasMetadata): OpenShiftResponse {
         val namespace = resource.metadata.namespace
-        val o = openShiftCommandService.createOpenShiftCommand(namespace, resource)
+        val cmd = openShiftCommandService.createOpenShiftCommand(namespace, resource)
             .copy(operationType = OperationType.GET)
-        return openShiftClient.performOpenShiftCommand(namespace, o)
+        return openShiftClient.performOpenShiftCommand(namespace, cmd)
     }
 
     private fun HerkimerService.getObjectAreaAdminCredentials(adc: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
 
         val sgoaResources = getObjectAreaResourcesIndex(adc)
-
         return adc.s3ObjectAreas.map { objectArea ->
 
             val objectAreaResourceName = objectArea.specifiedAreaKey
@@ -189,18 +138,22 @@ class S3StorageGridProvisioner(
             val claimName = "ADMIN"
             val adminClaim = claims.find { it.name == claimName }
                 ?: throw S3ProvisioningException("Unable to find claim with name $claimName for resource of kind ${this.kind} with name ${this.name}")
-            return StorageGridCredentials.fromJsonNodes(adminClaim.credentials)
+            return adminClaim.credentials.convert<StorageGridCredentials>()
                 .copy(bucketRegion = defaultBucketRegion)
         }
 }
 
 private fun createSgoaResource(adc: AuroraDeploymentSpec, objectArea: S3ObjectArea): StorageGridObjectArea {
     val objectAreaName = "${adc.name}-${objectArea.specifiedAreaKey}"
+    // TODO: We need to somehow get the ownerReference set
     return StorageGridObjectArea(
         _metadata = newObjectMeta {
             name = objectAreaName
             namespace = adc.namespace
-            labels = mapOf("id" to adc.applicationDeploymentId).normalizeLabels()
+            labels = mapOf(
+                "id" to adc.applicationDeploymentId,
+                "operationScope" to "dev"
+            ).normalizeLabels()
         },
         spec = StorageGridObjectAreaSpec(
             objectArea.bucketName,
