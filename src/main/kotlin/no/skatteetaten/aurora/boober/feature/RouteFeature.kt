@@ -321,7 +321,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             )
         } else null
 
-        val dnsErrors = routes
+        val dnsErrors = cnameAndFqdnHost
             .filter { !it.host.isValidDns() }
             .map {
                 AuroraConfigException(
