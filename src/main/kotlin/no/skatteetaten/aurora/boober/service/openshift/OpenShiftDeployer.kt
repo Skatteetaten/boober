@@ -3,20 +3,40 @@ package no.skatteetaten.aurora.boober.service.openshift
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.kubernetes.metadata
+import com.fkorotkov.kubernetes.newNamespace
+import com.fkorotkov.kubernetes.newObjectReference
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newOpenshiftRoleBinding
+import com.fkorotkov.openshift.newProjectRequest
+import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.HasMetadata
+import io.fabric8.kubernetes.api.model.Namespace
+import io.fabric8.kubernetes.api.model.ObjectReference
+import io.fabric8.openshift.api.model.OpenshiftRoleBinding
+import io.fabric8.openshift.api.model.ProjectRequest
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.*
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
-import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.*
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.openshiftKind
-import no.skatteetaten.aurora.boober.utils.parallelMap
-import no.skatteetaten.aurora.boober.utils.whenFalse
+import no.skatteetaten.aurora.boober.utils.*
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.time.Duration
 
 private val logger = KotlinLogging.logger { }
+
+data class EnvironmentSpec(
+    val affiliation: String,
+    val namespace: String,
+    val permissions: Permissions,
+    val timeToLive: Duration? = null
+)
+
+fun AuroraDeploymentSpec.toEnvironmentSpec(): EnvironmentSpec {
+    return EnvironmentSpec(this.affiliation, this.namespace, this.permissions, this.envTTL)
+}
 
 @Service
 class OpenShiftDeployer(
@@ -58,48 +78,44 @@ class OpenShiftDeployer(
         }
     }
 
-    /**
-     * @param resources the AuroraResource objects required to create and set up the Kubernetes namespace. This is
-     * typically ProjectRequest, Namespace and RoleBinding resources.
-     */
-    fun prepareDeployEnvironment(namespace: String, resources: Set<AuroraResource>): AuroraEnvironmentResult {
+    fun prepareDeployEnvironment(envSpec: EnvironmentSpec): AuroraEnvironmentResult {
 
+        val namespace = envSpec.namespace
         logger.debug { "Create env with name $namespace" }
+
+        val projectRequest = generateProjectRequest(envSpec)
+        val otherEnvResources = setOf(generateNamespace(envSpec)) + generateRolebindings(envSpec)
+
         val authenticatedUser = userDetailsProvider.getAuthenticatedUser()
 
         val projectExist = openShiftClient.projectExists(namespace)
         val projectResponse = projectExist.whenFalse {
-            val projectRequest = (resources.find { it.resource.kind == "ProjectRequest" }?.resource
-                ?: throw Exception("Could not find project request"))
-            openShiftCommandBuilder.createOpenShiftCommand(
+            val cmd = openShiftCommandBuilder.createOpenShiftCommand(
                 newResource = projectRequest,
                 mergeWithExistingResource = false,
                 retryGetResourceOnFailure = false
-            ).let {
-                openShiftClient.performOpenShiftCommand(namespace, it)
-                    .also { Thread.sleep(projectRequestSleep) }
-            }
+            )
+            openShiftClient.performOpenShiftCommand(cmd)
+                .also { Thread.sleep(projectRequestSleep) }
         }
-        val otherEnvResources = resources.filter { it.resource.kind != "ProjectRequest" }.map {
-            openShiftCommandBuilder.createOpenShiftCommand(
-                namespace = it.resource.metadata.namespace,
-                newResource = it.resource,
+        val otherResponses = otherEnvResources.map {
+            val cmd = openShiftCommandBuilder.createOpenShiftCommand(
+                namespace = it.metadata.namespace,
+                newResource = it,
                 retryGetResourceOnFailure = true
             )
+            openShiftClient.performOpenShiftCommand(cmd)
         }
-        val resourceResponse = otherEnvResources.map { openShiftClient.performOpenShiftCommand(namespace, it) }
-        val environmentResponses = listOfNotNull(projectResponse).addIfNotNull(resourceResponse)
+        val allResponses = listOfNotNull(projectResponse).addIfNotNull(otherResponses)
 
-        val success = environmentResponses.all { it.success }
+        val success = allResponses.all { it.success }
 
-        val message = if (!success) {
-            "One or more http calls to OpenShift failed"
-        } else "Namespace created successfully."
+        val message = if (!success) "One or more http calls to OpenShift failed" else "Namespace created successfully."
 
         logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=$namespace success=$success reason=$message")
 
         return AuroraEnvironmentResult(
-            openShiftResponses = environmentResponses,
+            openShiftResponses = allResponses,
             success = success,
             reason = message,
             projectExist = projectExist
@@ -212,7 +228,7 @@ class OpenShiftDeployer(
 
     fun applyResource(namespace: String, resource: HasMetadata): OpenShiftResponse {
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(namespace, resource)
-        return openShiftClient.performOpenShiftCommand(namespace, applicationCommand)
+        return openShiftClient.performOpenShiftCommand(applicationCommand)
     }
 
     private fun applyOpenShiftApplicationObjects(
@@ -262,8 +278,84 @@ class OpenShiftDeployer(
 
         val deleteOldObjectResponses = openShiftCommandBuilder
             .createOpenShiftDeleteCommands(name, namespace, deployCommand.deployId)
-            .map { openShiftClient.performOpenShiftCommand(namespace, it) }
+            .map { openShiftClient.performOpenShiftCommand(it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
+    }
+}
+
+fun generateNamespace(adc: EnvironmentSpec): Namespace {
+    val ttl = adc.timeToLive?.let {
+        val removeInstant = Instants.now + it
+        "removeAfter" to removeInstant.epochSecond.toString()
+    }
+
+    return newNamespace {
+        metadata {
+            labels = mapOf("affiliation" to adc.affiliation).addIfNotNull(ttl).normalizeLabels()
+            name = adc.namespace
+        }
+    }
+}
+
+fun generateProjectRequest(adc: EnvironmentSpec): ProjectRequest {
+
+    return newProjectRequest {
+        metadata {
+            name = adc.namespace
+        }
+    }
+}
+
+fun generateRolebindings(adc: EnvironmentSpec): Set<OpenshiftRoleBinding> {
+
+    val permissions = adc.permissions
+
+    val admin = createRoleBinding("admin", permissions.admin, adc.namespace)
+
+    val view = permissions.view?.let {
+        createRoleBinding("view", it, adc.namespace)
+    }
+
+    return listOf(admin).addIfNotNull(view).toSet()
+}
+
+fun createRoleBinding(
+    rolebindingName: String,
+    permission: Permission,
+    rolebindingNamespace: String
+): OpenshiftRoleBinding {
+
+    return newOpenshiftRoleBinding {
+        metadata {
+            name = rolebindingName
+            namespace = rolebindingNamespace
+        }
+
+        permission.groups?.let {
+            groupNames = it.toList()
+        }
+        permission.users.let {
+            userNames = it.toList()
+        }
+
+        val userRefeerences: List<ObjectReference> = permission.users.map {
+            newObjectReference {
+                kind = "User"
+                name = it
+            }
+        }
+        val groupRefeerences = permission.groups?.map {
+            newObjectReference {
+                kind = "Group"
+                name = it
+            }
+        }
+
+        subjects = userRefeerences.addIfNotNull(groupRefeerences)
+
+        roleRef {
+            name = rolebindingName
+        }
     }
 }

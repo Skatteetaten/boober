@@ -130,7 +130,7 @@ class S3StorageGridProvisioner(
         val namespace = resource.metadata.namespace
         val cmd = openShiftCommandService.createOpenShiftCommand(namespace, resource)
             .copy(operationType = OperationType.GET)
-        return openShiftClient.performOpenShiftCommand(namespace, cmd)
+        return openShiftClient.performOpenShiftCommand(cmd)
     }
 
     private fun HerkimerService.getObjectAreaAdminCredentials(adc: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {

@@ -110,7 +110,7 @@ class OpenShiftClientTest : ResourceLoader() {
             client.data.client.post(command.url, command.payload)
         } returns ResponseEntity(emptyNode, OK)
 
-        openShiftClient.performOpenShiftCommand("aos", command)
+        openShiftClient.performOpenShiftCommand(command)
 
         verify(exactly = 1) { client.data.client.post(any(), any()) }
         verify(exactly = 0) { otherClient.post(any(), any()) }
@@ -180,7 +180,7 @@ class OpenShiftClientTest : ResourceLoader() {
             )
         )
 
-        val result = openShiftClient.performOpenShiftCommand("foo", cmd)
+        val result = openShiftClient.performOpenShiftCommand(cmd)
 
         assertThat(result.success).isFalse()
         assertThat(result.responseBody?.get("failed")?.asText()).isEqualTo("true")
@@ -210,7 +210,7 @@ class OpenShiftClientTest : ResourceLoader() {
             )
         )
 
-        val result = openShiftClient.performOpenShiftCommand("foo", cmd)
+        val result = openShiftClient.performOpenShiftCommand(cmd)
 
         assertThat(result.success).isFalse()
         assertThat(result.responseBody?.get("error")?.asText()).isEqualTo("failed")

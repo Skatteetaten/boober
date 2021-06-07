@@ -42,7 +42,8 @@ val StorageGridObjectArea.fqn get() = metadata.run { "${namespace}/${name}" }
 data class StorageGridObjectAreaSpec(
     var bucketPostfix: String,
     var applicationDeploymentId: String,
-    var objectArea: String
+    var objectArea: String,
+    val tryReuseCredentials: Boolean = false
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
