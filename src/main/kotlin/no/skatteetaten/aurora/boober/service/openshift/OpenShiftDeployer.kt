@@ -31,7 +31,7 @@ data class EnvironmentSpec(
     val affiliation: String,
     val namespace: String,
     val permissions: Permissions,
-    val envTTL: Duration?
+    val timeToLive: Duration? = null
 )
 
 fun AuroraDeploymentSpec.toEnvironmentSpec(): EnvironmentSpec {
@@ -285,7 +285,7 @@ class OpenShiftDeployer(
 }
 
 fun generateNamespace(adc: EnvironmentSpec): Namespace {
-    val ttl = adc.envTTL?.let {
+    val ttl = adc.timeToLive?.let {
         val removeInstant = Instants.now + it
         "removeAfter" to removeInstant.epochSecond.toString()
     }
