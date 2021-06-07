@@ -8,11 +8,7 @@
   "spec": {
     "routeName": "simple-bigip",
     "konfigtjenesten": {
-      "service": "simple",
-      "apiPaths" : [ "/api/simple/", "/web/simple/" ],
-      "oauthScopes" : [ "test" ],
-      "asmPolicy" : "something",
-      "externalHost" : "localhost"
+      "service": "simple"
     }
   }
 }
