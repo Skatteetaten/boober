@@ -4,12 +4,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.feature.EnvironmentFeature
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.*
 import no.skatteetaten.aurora.boober.service.*
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
+import no.skatteetaten.aurora.boober.service.openshift.toEnvironmentSpec
 import no.skatteetaten.aurora.boober.utils.parallelMap
 
 private val logger = KotlinLogging.logger {}
@@ -101,20 +101,13 @@ class DeployFacade(
 
     private fun createNamespaces(validContexts: List<AuroraDeploymentContext>): Map<String, AuroraEnvironmentResult> {
 
-        fun List<AuroraDeploymentContext>.extractNamespacesWithSampleSpec() = this
-            .groupBy { it.spec.namespace }
-            .map { (namespace, adcList) -> namespace to adcList.first().spec }
+        val environmentSpecs = validContexts
+            .map { it.spec }
+            .groupBy { it.namespace }
+            .map { (_, adcList) -> adcList.first().toEnvironmentSpec() }
 
-        val namespacesAndSampleSpecs = validContexts.extractNamespacesWithSampleSpec()
-
-        // TODO: To reduce the amount of refactoring required to complete the AOS-5564 feature, the EnvironmentFeature
-        // class is instantiated and reused as is instead of being incorporated or refactored into a service. There
-        // can no longer be an instance of this class in the ApplicationContext as this would interfere with the
-        // timing of when the namespaces in OpenShift/kubernetes is created.
-        val environmentFeature = EnvironmentFeature(openShiftDeployer.openShiftClient, userDetailsProvider)
-        return namespacesAndSampleSpecs.associate { (namespace, sampleSpecFromNamespace) ->
-            val envResources = environmentFeature.generate(sampleSpecFromNamespace, emptyMap())
-            namespace to openShiftDeployer.prepareDeployEnvironment(namespace, envResources)
+        return environmentSpecs.associate { spec ->
+            spec.namespace to openShiftDeployer.prepareDeployEnvironment(spec)
         }
     }
 
