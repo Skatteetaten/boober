@@ -238,7 +238,7 @@ class OpenShiftCommandService(
                 listOf(command)
             }
 
-        val results = commands.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val results = commands.map { openShiftClient.performOpenShiftCommand(it) }
 
         return results.map { response ->
             findErrorMessage(response)

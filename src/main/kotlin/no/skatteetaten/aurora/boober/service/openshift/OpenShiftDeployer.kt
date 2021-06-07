@@ -95,7 +95,7 @@ class OpenShiftDeployer(
                 mergeWithExistingResource = false,
                 retryGetResourceOnFailure = false
             ).let {
-                openShiftClient.performOpenShiftCommand(namespace, it)
+                openShiftClient.performOpenShiftCommand(it)
                     .also { Thread.sleep(projectRequestSleep) }
             }
         }
@@ -106,7 +106,7 @@ class OpenShiftDeployer(
                 retryGetResourceOnFailure = true
             )
         }
-        val otherResponses = otherEnvCommands.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val otherResponses = otherEnvCommands.map { openShiftClient.performOpenShiftCommand(it) }
         val allResponses = listOfNotNull(projectResponse).addIfNotNull(otherResponses)
 
         val success = allResponses.all { it.success }
@@ -231,7 +231,7 @@ class OpenShiftDeployer(
 
     fun applyResource(namespace: String, resource: HasMetadata): OpenShiftResponse {
         val applicationCommand = openShiftCommandBuilder.createOpenShiftCommand(namespace, resource)
-        return openShiftClient.performOpenShiftCommand(namespace, applicationCommand)
+        return openShiftClient.performOpenShiftCommand(applicationCommand)
     }
 
     private fun applyOpenShiftApplicationObjects(
@@ -281,7 +281,7 @@ class OpenShiftDeployer(
 
         val deleteOldObjectResponses = openShiftCommandBuilder
             .createOpenShiftDeleteCommands(name, namespace, deployCommand.deployId)
-            .map { openShiftClient.performOpenShiftCommand(namespace, it) }
+            .map { openShiftClient.performOpenShiftCommand(it) }
 
         return openShiftApplicationResponses.addIfNotNull(deleteOldObjectResponses)
     }
