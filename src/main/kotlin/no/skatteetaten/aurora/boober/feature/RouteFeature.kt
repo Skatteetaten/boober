@@ -326,9 +326,9 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             .map {
                 AuroraConfigException(
                     "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} has invalid dns name \"${it.host}\"",
-                    errors = cnameAndFqdnHost.map { route ->
-                        ConfigFieldErrorDetail.illegal(message = "host=${route.host} must be a valid dns entry.")
-                    }
+                    errors = listOf(
+                        ConfigFieldErrorDetail.illegal(message = "host=${it.host} must be a valid dns entry.")
+                    )
                 )
             }
 

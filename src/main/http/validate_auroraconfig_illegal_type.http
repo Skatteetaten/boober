@@ -1,3 +1,6 @@
+PUT {{apiUrl}}/v1/auroraconfig/aurora/validate?resourceValidation=false
+Authorization:Bearer {{token}}
+###
 PUT {{apiUrl}}/v1/auroraconfig/paas/validate?mergeWithRemoteConfig=true
 Authorization:Bearer {{token}}
 Content-Type: application/json
