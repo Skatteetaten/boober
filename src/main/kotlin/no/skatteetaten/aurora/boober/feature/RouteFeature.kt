@@ -29,8 +29,10 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.int
+import no.skatteetaten.aurora.boober.utils.isValidDns
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
+import no.skatteetaten.aurora.boober.utils.validDnsPreExpansion
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -66,7 +68,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             ),
             AuroraConfigFieldHandler(
                 "routeDefaults/host",
-                defaultValue = "@name@-@affiliation@-@env@"
+                defaultValue = "@name@-@affiliation@-@env@",
+                validator = { it?.validDnsPreExpansion() }
             ),
             AuroraConfigFieldHandler(
                 "routeDefaults/tls/enabled",
@@ -241,7 +244,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                     "$key/cname/ttl",
                     validator = { it.int(false) }
                 ),
-                AuroraConfigFieldHandler("$key/host"),
+                AuroraConfigFieldHandler(
+                    "$key/host",
+                    validator = { it?.validDnsPreExpansion() }
+                ),
                 AuroraConfigFieldHandler(
                     "$key/fullyQualifiedHost",
                     validator = { it.boolean(false) }), // since this is internal I do not want default value on it.
@@ -315,7 +321,19 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             )
         } else null
 
+        val dnsErrors = routes
+            .filter { !it.host.isValidDns() }
+            .map {
+                AuroraConfigException(
+                    "Application ${applicationDeploymentRef.application} in environment ${applicationDeploymentRef.environment} has invalid dns name \"${it.host}\"",
+                    errors = listOf(
+                        ConfigFieldErrorDetail.illegal(message = "host=${it.host} must be a valid dns entry.")
+                    )
+                )
+            }
+
         return tlsErrors
+            .addIfNotNull(dnsErrors)
             .addIfNotNull(duplicateRouteErrors)
             .addIfNotNull(duplicateHostError)
             .addIfNotNull(cnameAndFqdnHostSimultaneously)
