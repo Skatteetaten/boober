@@ -90,30 +90,27 @@ class OpenShiftDeployer(
 
         val projectExist = openShiftClient.projectExists(namespace)
         val projectResponse = projectExist.whenFalse {
-            openShiftCommandBuilder.createOpenShiftCommand(
+            val cmd = openShiftCommandBuilder.createOpenShiftCommand(
                 newResource = projectRequest,
                 mergeWithExistingResource = false,
                 retryGetResourceOnFailure = false
-            ).let {
-                openShiftClient.performOpenShiftCommand(it)
-                    .also { Thread.sleep(projectRequestSleep) }
-            }
+            )
+            openShiftClient.performOpenShiftCommand(cmd)
+                .also { Thread.sleep(projectRequestSleep) }
         }
-        val otherEnvCommands = otherEnvResources.map {
-            openShiftCommandBuilder.createOpenShiftCommand(
+        val otherResponses = otherEnvResources.map {
+            val cmd = openShiftCommandBuilder.createOpenShiftCommand(
                 namespace = it.metadata.namespace,
                 newResource = it,
                 retryGetResourceOnFailure = true
             )
+            openShiftClient.performOpenShiftCommand(cmd)
         }
-        val otherResponses = otherEnvCommands.map { openShiftClient.performOpenShiftCommand(it) }
         val allResponses = listOfNotNull(projectResponse).addIfNotNull(otherResponses)
 
         val success = allResponses.all { it.success }
 
-        val message = if (!success) {
-            "One or more http calls to OpenShift failed"
-        } else "Namespace created successfully."
+        val message = if (!success) "One or more http calls to OpenShift failed" else "Namespace created successfully."
 
         logger.info("Environment done. user='${authenticatedUser.fullName}' namespace=$namespace success=$success reason=$message")
 
