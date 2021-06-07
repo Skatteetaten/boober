@@ -7,6 +7,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import org.apache.commons.io.FilenameUtils
 import org.springframework.util.Base64Utils
+import java.util.regex.Pattern
 
 fun String.ensureEndsWith(endsWith: String, seperator: String = ""): String {
     if (this.endsWith(endsWith)) {
@@ -23,6 +24,20 @@ fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
         return this
     }
     return "$startWith$seperator$this"
+}
+
+/** Inspired by https://www.geeksforgeeks.org/how-to-validate-a-domain-name-using-regular-expression/
+ * but trimmed down due to local needs
+ */
+private val dnsMatcher: Pattern = Pattern.compile(
+    "^((?!-)[A-Za-z0-9-]" +
+            "{1,63}(?<!-))"
+)
+
+fun String.isValidDns(): Boolean {
+    return this
+        .split(".")
+        .all { dnsMatcher.matcher(it).matches() } && this.length < 254
 }
 
 fun String.removeExtension(): String = FilenameUtils.removeExtension(this)
