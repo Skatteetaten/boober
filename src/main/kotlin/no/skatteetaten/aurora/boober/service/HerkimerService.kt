@@ -7,6 +7,7 @@ import org.springframework.boot.context.properties.ConstructorBinding
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -42,6 +43,7 @@ data class ApplicationDeploymentCreateRequest(
     val businessGroup: String
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ApplicationDeploymentHerkimer(
     val id: String,
     val name: String,
@@ -54,6 +56,7 @@ data class ApplicationDeploymentHerkimer(
     val modifiedBy: String
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ResourceHerkimer(
     val id: String,
     val name: String,
@@ -67,6 +70,7 @@ data class ResourceHerkimer(
     val modifiedBy: String
 )
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class ResourceClaimHerkimer(
     val id: String,
     val ownerId: String,
