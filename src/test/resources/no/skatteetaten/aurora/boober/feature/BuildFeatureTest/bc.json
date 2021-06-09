@@ -33,7 +33,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wingnut8"
+            "value": "aurora/wingnut11"
           },
           {
             "name": "PUSH_EXTRA_TAGS",

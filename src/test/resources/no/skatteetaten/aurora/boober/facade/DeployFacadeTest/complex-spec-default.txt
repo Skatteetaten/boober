@@ -38,7 +38,7 @@ utv/about-alternate.json |   ttl: "1d"
                  default |   name: "architect"
                  default |   version: "1"
                          | baseImage:
-                 default |   name: "wingnut8"
+                 default |   name: "wingnut11"
                  default |   version: 1
                          | certificate:
             complex.json |   commonName: "komplex"
