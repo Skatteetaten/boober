@@ -237,8 +237,11 @@ fun JsonNode?.boolean(required: Boolean = false): Exception? {
 }
 
 fun JsonNode.validDnsPreExpansion(): Exception? {
-    return this.textValue()
-        .replace("@", "") // Must allow @ as substitution occurs after validation
+    if (textValue().contains("@")) {
+        return null
+    }
+
+    return textValue()
         .split(".")
         .filter { !it.isValidDns() }
         .map { IllegalArgumentException("Invalid DNS node entry: \"${this.textValue()}\", disliked $it") }

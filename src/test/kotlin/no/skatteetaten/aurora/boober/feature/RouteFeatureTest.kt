@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -13,10 +17,6 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -63,6 +63,48 @@ class RouteFeatureTest : AbstractFeatureTest() {
         }.singleApplicationError(
             "Config for application simple in environment utv contains errors. Must be one of [Redirect, None, Allow]"
         )
+    }
+
+    @Test
+    fun `should have separate routes for onprem and azure`() {
+        val (dcResource, routeResource, azureRouteResource) = generateResources(
+            """{
+            "route" : {
+               "simple" : {
+                    "azure": true
+               }
+            }
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
+        assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-azure.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
+    }
+
+    @Test
+    fun `should have separate routes for onpremf and azure while simplified`() {
+        val (dcResource, routeResource, azureRouteResource) = generateResources(
+            """{
+            "routeDefaults": {
+                "azure": true
+            },
+            "route" : true
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
+        assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-azure.json")
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
     }
 
     @Test
