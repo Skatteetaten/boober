@@ -67,7 +67,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should have separate routes for onprem and azure`() {
-        val (dcResource, routeResource, azureRouteResource) = generateResources(
+        val (dcResource, routeResource, azureRouteResource, cname) = generateResources(
             """{
             "route" : {
                "simple" : {
@@ -75,7 +75,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                }
             }
         }""", createEmptyDeploymentConfig(),
-            createdResources = 2
+            createdResources = 3
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -96,7 +96,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             },
             "route" : true
         }""", createEmptyDeploymentConfig(),
-            createdResources = 2
+            createdResources = 3
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()

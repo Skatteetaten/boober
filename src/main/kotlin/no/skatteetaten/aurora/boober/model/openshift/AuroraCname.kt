@@ -44,6 +44,12 @@ data class AuroraCname(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class CnameSpec(
     val cname: String,
+    val type: CNameType,
     val host: String,
     val ttl: Int
 )
+
+enum class CNameType {
+    MSDNS,
+    AzureDNS
+}
