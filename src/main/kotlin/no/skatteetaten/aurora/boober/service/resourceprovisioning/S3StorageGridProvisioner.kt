@@ -53,7 +53,7 @@ class S3StorageGridProvisioner(
     val openShiftCommandService: OpenShiftCommandService,
     val herkimerService: HerkimerService,
     val operationScopeFeature: OperationScopeFeature,
-    @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String,
+    @Value("\${storagegrid.bucket.region:us-east-1}") val defaultBucketRegion: String,
     @Value("\${storagegrid.provisioning-timeout:20000}") val provisioningTimeout: Long,
     @Value("\${storagegrid.provisioning-status-check-interval:1000}") val statusCheckIntervalMillis: Long
 ) {
