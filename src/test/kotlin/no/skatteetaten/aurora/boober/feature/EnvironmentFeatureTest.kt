@@ -133,15 +133,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             }"""
                     )
                 ),
-                createdResources = 4
+                createdResources = 0
             )
-
-        assertThat(projectResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("project.json")
-        assertThat(namespaceResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("namespace.json")
-        assertThat(rolebindingResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("rolebinding.json")
-        assertThat(viewRolebindingResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("rolebinding-view.json")
     }
 
     @Test
