@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.ObjectAreaWithCredentials
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.s3ObjectAreas
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
@@ -35,6 +36,8 @@ class S3StorageGridFeature(
             : List<Exception> = emptyList()
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+
+        if (adc.s3ObjectAreas.isEmpty()) return emptySet()
 
         val s3Credentials = s3StorageGridProvisioner.getOrProvisionCredentials(adc)
         val s3Secret = s3Credentials.map { it.createS3Secret(adc.namespace, adc.name) }

@@ -9,10 +9,7 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ObjectAreaWithCredentials
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ObjectArea
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
@@ -36,48 +33,101 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     }
 
     val tenant = "paas-utv"
-    val bucketName = "theBucket"
+    val bucket1Name = "theBucket"
+
+    val area1Name = "default"
+    val area2Name = "min-andre-bucket"
+
 
     @Test
-    fun `creates secretes and environment variable refs for provisioned credentials`() {
+    fun `verify is able to disable s3 when simple config`() {
+        generateResources(
+            """{ 
+                "s3": false
+           }""",
+            createdResources = 0,
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+    }
 
-        val area1Name = "default"
-        val area2Name = "min-andre-bucket"
+    @Test
+    fun `verify is able to disable s3 when expanded config`() {
 
-        every { s3StorageGridProvisioner.getOrProvisionCredentials(any()) } returns listOf(
-            ObjectAreaWithCredentials(
-                S3ObjectArea(tenant, bucketName, area1Name),
-                StorageGridCredentials(
-                    tenant,
-                    "endpoint",
-                    "accessKey",
-                    "secretKey",
-                    bucketName,
-                    "objectPrefix",
-                    "username",
-                    "password"
-                )
-            ),
-            ObjectAreaWithCredentials(
-                S3ObjectArea(tenant, bucketName, area2Name),
-                StorageGridCredentials(
-                    tenant,
-                    "endpoint",
-                    "accessKey",
-                    "secretKey",
-                    bucketName,
-                    "objectPrefix",
-                    "username",
-                    "password"
-                )
-            )
+        every {
+            s3StorageGridProvisioner.getOrProvisionCredentials(match { adc ->
+                adc.s3ObjectAreas.run {
+                    size == 1 && find { it.bucketName == bucket1Name && it.area == area1Name } != null
+                }
+            })
+        } returns listOf(
+            objectAreaWithCredentials(area1Name, bucket1Name),
+        )
+        val resources = generateResources(
+            """{ 
+                "s3": {
+                    "$area1Name" : {
+                        "bucketName": "$bucket1Name"
+                    },
+                    "$area2Name" : {
+                        "enabled": false,
+                        "bucketName" : "anotherId"
+                    }
+                }
+           }""",
+            createdResources = 1,
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+
+        resources.verifyS3SecretsAndEnvs(listOf(area1Name))
+    }
+
+    @Test
+    fun `verify two objectareas with different bucketnames`() {
+        val bucket2Name = "anotherBucket"
+
+        every {
+            s3StorageGridProvisioner.getOrProvisionCredentials(match { adc ->
+                adc.s3ObjectAreas.run {
+                    find { it.bucketName == bucket1Name && it.area == area1Name } != null
+                            && find { it.bucketName == bucket2Name && it.area == area2Name } != null
+                }
+            })
+        } returns listOf(
+            objectAreaWithCredentials(area1Name, bucket1Name),
+            objectAreaWithCredentials(area2Name, bucket2Name)
         )
 
         val resources = generateResources(
             """{ 
                 "s3Defaults": {
-                    "bucketName": "theBucket",
-                    "tenant": "paas-utv"
+                    "bucketName": "$bucket1Name"
+                },
+                "s3": {
+                    "$area1Name" : {
+                    },
+                    "$area2Name" : {
+                        "bucketName" : "$bucket2Name"
+                    }
+                }
+           }""",
+            createdResources = 2,
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+        resources.verifyS3SecretsAndEnvs(listOf(area1Name, area2Name))
+    }
+
+    @Test
+    fun `creates secretes and environment variable refs for provisioned credentials`() {
+
+        every { s3StorageGridProvisioner.getOrProvisionCredentials(any()) } returns listOf(
+            objectAreaWithCredentials(area1Name, bucket1Name),
+            objectAreaWithCredentials(area2Name, bucket1Name)
+        )
+
+        val resources = generateResources(
+            """{ 
+                "s3Defaults": {
+                    "bucketName": "$bucket1Name"
                 },
                 "s3": {
                     "$area1Name": {
@@ -94,6 +144,20 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
 
         resources.verifyS3SecretsAndEnvs(listOf(area1Name, area2Name))
     }
+
+    private fun objectAreaWithCredentials(objectAreaName: String, bucketName: String) = ObjectAreaWithCredentials(
+        S3ObjectArea(tenant, this.bucket1Name, objectAreaName),
+        StorageGridCredentials(
+            tenant,
+            "endpoint",
+            "accessKey",
+            "secretKey",
+            this.bucket1Name,
+            "objectPrefix",
+            "username",
+            "password"
+        )
+    )
 
     private fun List<AuroraResource>.verifyS3SecretsAndEnvs(expectedObjectAreas: List<String> = listOf("default")) {
         val secrets: List<Secret> = findResourcesByType()
