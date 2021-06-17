@@ -10,7 +10,10 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioningRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWithCredentials
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
@@ -98,7 +101,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("Duplicated objectArea=default in same bucket=bucket1")
+        }.singleApplicationError("objectArea name=default used 2 times for same application")
     }
 
     @Test
@@ -120,7 +123,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     @Test
     fun `verify is able to disable s3 when simple config`() {
 
-        verify(exactly = 0) { provisioner.getOrProvisionCredentials(any()) }
+        verify(exactly = 0) { provisioner.getOrProvisionCredentials(any(), any()) }
 
         generateResources(
             """{ 
@@ -135,14 +138,11 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     fun `verify is able to disable s3 when expanded config`() {
 
         every {
-            provisioner.getOrProvisionCredentials(match { adc ->
-                adc.s3ObjectAreas.run {
-                    size == 1 && find { it.bucketName == bucket1Name && it.area == area1Name } != null
-                }
+            provisioner.getOrProvisionCredentials(any(), match {
+                it.size == 1 && it.find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
             })
-        } returns listOf(
-            objectAreaWithCredentials(area1Name, bucket1Name),
-        )
+        } returns listOf(sgRequestsWithCredentials(area1Name, bucket1Name))
+
         val resources = generateResources(
             """{ 
                 "s3": {
@@ -167,15 +167,15 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
         val bucket2Name = "anotherBucket"
 
         every {
-            provisioner.getOrProvisionCredentials(match { adc ->
-                adc.s3ObjectAreas.run {
-                    find { it.bucketName == bucket1Name && it.area == area1Name } != null
-                            && find { it.bucketName == bucket2Name && it.area == area2Name } != null
+            provisioner.getOrProvisionCredentials(any(), match { r ->
+                r.run {
+                    find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
+                            && find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
                 }
             })
         } returns listOf(
-            objectAreaWithCredentials(area1Name, bucket1Name),
-            objectAreaWithCredentials(area2Name, bucket2Name)
+            sgRequestsWithCredentials(area1Name, bucket1Name),
+            sgRequestsWithCredentials(area2Name, bucket2Name)
         )
 
         val resources = generateResources(
@@ -199,9 +199,9 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     @Test
     fun `creates secretes and environment variable refs for provisioned credentials`() {
 
-        every { provisioner.getOrProvisionCredentials(any()) } returns listOf(
-            objectAreaWithCredentials(area1Name, bucket1Name),
-            objectAreaWithCredentials(area2Name, bucket1Name)
+        every { provisioner.getOrProvisionCredentials(any(), any()) } returns listOf(
+            sgRequestsWithCredentials(area1Name, bucket1Name),
+            sgRequestsWithCredentials(area2Name, bucket1Name)
         )
 
         val resources = generateResources(
@@ -225,8 +225,8 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
         resources.verifyS3SecretsAndEnvs(listOf(area1Name, area2Name))
     }
 
-    private fun objectAreaWithCredentials(objectAreaName: String, bucketName: String) = ObjectAreaWithCredentials(
-        S3ObjectArea(tenant, this.bucket1Name, objectAreaName),
+    private fun sgRequestsWithCredentials(objectAreaName: String, bucketName: String) = SgRequestsWithCredentials(
+        SgProvisioningRequest(tenant, objectAreaName, appName, kubeNs, this.bucket1Name),
         StorageGridCredentials(
             tenant,
             "endpoint",

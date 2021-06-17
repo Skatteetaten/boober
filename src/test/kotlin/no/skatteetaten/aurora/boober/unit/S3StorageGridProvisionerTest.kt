@@ -5,22 +5,19 @@ import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
-import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.OperationScopeFeature
-import no.skatteetaten.aurora.boober.feature.S3FeatureTemplate
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.HerkimerService
 import no.skatteetaten.aurora.boober.service.ResourceClaimHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind.StorageGridObjectArea
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ObjectAreaWithCredentials
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
-import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime.now
+import kotlin.random.Random
 
-class S3StorageGridProvisionerTest : AbstractFeatureTest() {
+class S3StorageGridProvisionerTest {
 
     val herkimerService = mockk<HerkimerService>()
 
@@ -38,44 +35,45 @@ class S3StorageGridProvisionerTest : AbstractFeatureTest() {
     @Test
     fun `does nothing when s3 is disabled`() {
 
-        provisioner.getOrProvisionCredentials(ads("""{ }"""))
-        provisioner.getOrProvisionCredentials(ads("""{ "s3": false }"""))
+        provisioner.getOrProvisionCredentials("", emptyList())
     }
 
     @Test
     fun `does not provision for existing claims`() {
 
+        val aId = "some_id"
         val objectAreaName = "default"
-        every { herkimerService.getClaimedResources(any(), StorageGridObjectArea) } returns
-                listOf(sgAdminCreds(objectAreaName))
+        val requests = listOf(SgProvisioningRequest("", objectAreaName, "", "", ""))
 
-        fun List<ObjectAreaWithCredentials>.validate() {
-            assertThat(this.size).isEqualTo(1)
-            first().let { (objectArea) ->
-                assertThat(objectArea.area).isEqualTo(objectAreaName)
-            }
-        }
-        provisioner.getOrProvisionCredentials(ads("""{ "s3": true }"""))
-            .validate()
-        provisioner.getOrProvisionCredentials(ads("""{ "s3": { "$objectAreaName": { "enabled": true } } }"""))
-            .validate()
-        provisioner.getOrProvisionCredentials(ads("""{ "s3": { "custom": { "enabled": true, "objectArea": "$objectAreaName" } } }"""))
-            .validate()
+        every { herkimerService.getClaimedResources(aId, StorageGridObjectArea) } returns
+                listOf(sgAdminCreds(aId, objectAreaName))
+
+        val response = provisioner.getOrProvisionCredentials(aId, requests)
+        assertThat(response.size).isEqualTo(1)
     }
-
-    private fun ads(appFile: String): AuroraDeploymentSpec =
-        createAuroraDeploymentContext(appFile, files = emptyList()).spec
-
-    override val feature: Feature
-        get() = object : S3FeatureTemplate() {}
 }
 
-private fun sgAdminCreds(objectAreaName: String): ResourceHerkimer {
+private fun sgAdminCreds(aId: String, objectAreaName: String): ResourceHerkimer {
+
     val sgc = StorageGridCredentials("", "", "", "", "", "", "", "", null)
     val sgcJsonNode = jacksonObjectMapper().readTree(jacksonObjectMapper().writeValueAsString(sgc))
+    val resourceId = Random.nextLong(0, 1000)
+    val credId = Random.nextLong(0, 1000)
+    val user = "aurora"
+    val created = now()
     return ResourceHerkimer(
-        "", objectAreaName, StorageGridObjectArea, "", listOf(
-            ResourceClaimHerkimer("", "", 1, sgcJsonNode, "ADMIN", now(), now(), "", "")
-        ), null, now(), now(), "", ""
+        "$resourceId", objectAreaName, StorageGridObjectArea, aId, listOf(
+            ResourceClaimHerkimer(
+                credId.toString(),
+                aId,
+                resourceId,
+                sgcJsonNode,
+                "ADMIN",
+                created,
+                created,
+                user,
+                user
+            )
+        ), null, created, created, user, user
     )
 }

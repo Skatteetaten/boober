@@ -3,12 +3,15 @@ package no.skatteetaten.aurora.boober.feature
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
 import io.fabric8.kubernetes.api.model.Secret
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioningRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWithCredentials
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
@@ -25,6 +28,8 @@ class S3StorageGridFeature(
     val openShiftClient: OpenShiftClient,
 ) : S3FeatureTemplate() {
 
+    private val logger = KotlinLogging.logger { }
+
     override fun enable(header: AuroraDeploymentSpec) = !header.isJob
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean)
@@ -35,10 +40,14 @@ class S3StorageGridFeature(
 
     override fun generate(spec: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        if (spec.s3ObjectAreas.isEmpty()) return emptySet()
+        val s3ObjectAreas = spec.s3ObjectAreas
+        if (s3ObjectAreas.isEmpty()) return emptySet()
 
-        val s3Credentials = s3StorageGridProvisioner.getOrProvisionCredentials(spec)
-        val s3Secret = s3Credentials.map { it.createS3Secret(spec.namespace, spec.name) }
+        val requests = s3ObjectAreas
+            .map { SgProvisioningRequest(it.tenant, it.area, spec.name, spec.namespace, it.bucketName) }
+        val s3Credentials = s3StorageGridProvisioner.getOrProvisionCredentials(spec.applicationDeploymentId, requests)
+        logger.debug("Found ${s3Credentials.size} ObjectArea credentials for ApplicationDeployment ${spec.namespace}/${spec.name}")
+        val s3Secret = s3Credentials.map(SgRequestsWithCredentials::toS3Secret)
         return s3Secret.map { it.generateAuroraResource() }.toSet()
     }
 
@@ -56,15 +65,15 @@ class S3StorageGridFeature(
     private val Set<AuroraResource>.s3Secrets: List<Secret> get() = findResourcesByType(S3_RESOURCE_NAME_SUFFIX)
 }
 
-private fun ObjectAreaWithCredentials.createS3Secret(nsName: String, appName: String) = newSecret {
+private fun SgRequestsWithCredentials.toS3Secret() = newSecret {
     metadata {
-        name = "$appName-${objectArea.specifiedAreaKey}$S3_RESOURCE_NAME_SUFFIX"
-        namespace = nsName
+        name = "${request.deploymentName}-${request.objectAreaName}$S3_RESOURCE_NAME_SUFFIX"
+        namespace = request.targetNamespace
         annotations = mapOf(
-            ANNOTATION_OBJECT_AREA to objectArea.specifiedAreaKey
+            ANNOTATION_OBJECT_AREA to request.objectAreaName
         )
     }
-    data = s3Credentials.run {
+    data = credentials.run {
         mapOf(
             "serviceEndpoint" to serviceEndpoint,
             "accessKey" to accessKey,
