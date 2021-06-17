@@ -8,6 +8,7 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
@@ -17,12 +18,12 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 
 class S3StorageGridFeatureTest : AbstractFeatureTest() {
-    val s3StorageGridProvisioner = mockk<S3StorageGridProvisioner>()
+    private val provisioner = mockk<S3StorageGridProvisioner>()
 
     override val feature: Feature
         get() {
             return S3StorageGridFeature(
-                s3StorageGridProvisioner,
+                provisioner,
                 mockk(),
             )
         }
@@ -41,6 +42,9 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `verify is able to disable s3 when simple config`() {
+
+        verify(exactly = 0) { provisioner.getOrProvisionCredentials(any()) }
+
         generateResources(
             """{ 
                 "s3": false
@@ -54,7 +58,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     fun `verify is able to disable s3 when expanded config`() {
 
         every {
-            s3StorageGridProvisioner.getOrProvisionCredentials(match { adc ->
+            provisioner.getOrProvisionCredentials(match { adc ->
                 adc.s3ObjectAreas.run {
                     size == 1 && find { it.bucketName == bucket1Name && it.area == area1Name } != null
                 }
@@ -86,7 +90,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
         val bucket2Name = "anotherBucket"
 
         every {
-            s3StorageGridProvisioner.getOrProvisionCredentials(match { adc ->
+            provisioner.getOrProvisionCredentials(match { adc ->
                 adc.s3ObjectAreas.run {
                     find { it.bucketName == bucket1Name && it.area == area1Name } != null
                             && find { it.bucketName == bucket2Name && it.area == area2Name } != null
@@ -119,7 +123,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     @Test
     fun `creates secretes and environment variable refs for provisioned credentials`() {
 
-        every { s3StorageGridProvisioner.getOrProvisionCredentials(any()) } returns listOf(
+        every { provisioner.getOrProvisionCredentials(any()) } returns listOf(
             objectAreaWithCredentials(area1Name, bucket1Name),
             objectAreaWithCredentials(area2Name, bucket1Name)
         )

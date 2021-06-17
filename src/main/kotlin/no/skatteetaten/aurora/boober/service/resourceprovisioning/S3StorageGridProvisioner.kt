@@ -73,7 +73,7 @@ class S3StorageGridProvisioner(
         provisionObjectAreas(adc, missingObjectAreas)
     }
 
-    private fun provisionObjectAreas(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>) {
+    private fun provisionObjectAreas(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea> = adc.s3ObjectAreas) {
 
         if (objectAreas.isEmpty()) return
         logger.debug("Provisioning ObjectArea(s) ${objectAreas.joinToString { it.specifiedAreaKey }} for ADC ${adc.name}")
@@ -179,7 +179,7 @@ class S3StorageGridProvisioner(
     }
 }
 
-private val AuroraDeploymentSpec.s3ObjectAreas
+val AuroraDeploymentSpec.s3ObjectAreas
     get(): List<S3ObjectArea> {
 
         val tenantName = "$affiliation-$cluster"
