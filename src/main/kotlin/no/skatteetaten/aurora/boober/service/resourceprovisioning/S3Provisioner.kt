@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.ServiceTypes
 import no.skatteetaten.aurora.boober.TargetService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
@@ -47,7 +48,7 @@ class FionaRestTemplateWrapper(
 ) : RetryingRestTemplateWrapper(restTemplate = restTemplate, retries = retries, baseUrl = baseUrl)
 
 @Service
-@ConditionalOnProperty("integrations.fiona.url")
+@ConditionalOnProperty(value = ["integrations.s3.variant"], havingValue = "minio", matchIfMissing = false)
 class S3Provisioner(
     val restTemplate: FionaRestTemplateWrapper
 ) {

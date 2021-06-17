@@ -14,6 +14,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 
 data class SgProvisioningRequest(
@@ -44,19 +45,20 @@ data class SgRequestsWithCredentials(
 
 class S3ProvisioningException(message: String, cause: Throwable? = null) : ProvisioningException(message, cause)
 
-private val logger = KotlinLogging.logger { }
-
 @Service
+@ConditionalOnProperty(value = ["integrations.s3.variant"], havingValue = "storagegrid", matchIfMissing = false)
 class S3StorageGridProvisioner(
     val openShiftDeployer: OpenShiftDeployer,
     val openShiftClient: OpenShiftClient,
     val openShiftCommandService: OpenShiftCommandService,
     val herkimerService: HerkimerService,
     val operationScopeFeature: OperationScopeFeature,
-    @Value("\${storagegrid.bucket.region:us-east-1}") val defaultBucketRegion: String,
-    @Value("\${storagegrid.provisioning-timeout:20000}") val provisioningTimeout: Long,
-    @Value("\${storagegrid.provisioning-status-check-interval:1000}") val statusCheckIntervalMillis: Long
+    @Value("\${integrations.storagegrid.bucket.region:us-east-1}") val defaultBucketRegion: String,
+    @Value("\${integrations.storagegrid.provisioning-timeout:20000}") val provisioningTimeout: Long,
+    @Value("\${integrations.storagegrid.provisioning-status-check-interval:1000}") val statusCheckIntervalMillis: Long
 ) {
+    private val logger = KotlinLogging.logger { }
+
     fun getOrProvisionCredentials(applicationDeploymentId: String, requests: List<SgProvisioningRequest>)
             : List<SgRequestsWithCredentials> {
 

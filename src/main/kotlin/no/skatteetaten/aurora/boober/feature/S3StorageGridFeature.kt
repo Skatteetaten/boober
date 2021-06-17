@@ -12,16 +12,14 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWithCredentials
-import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import org.apache.commons.codec.binary.Base64
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 
 
-@ConditionalOnProperty(value = ["integrations.herkimer.url"])
-@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url")
+@ConditionalOnBean(S3StorageGridProvisioner::class)
 @Service
 class S3StorageGridFeature(
     val s3StorageGridProvisioner: S3StorageGridProvisioner,
@@ -29,6 +27,10 @@ class S3StorageGridFeature(
 ) : S3FeatureTemplate() {
 
     private val logger = KotlinLogging.logger { }
+
+    init {
+        logger.info("Enabling StorageGrid S3 Feature")
+    }
 
     override fun enable(header: AuroraDeploymentSpec) = !header.isJob
 

@@ -32,6 +32,7 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.pattern
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 
 private val logger = KotlinLogging.logger {}
 
@@ -62,7 +63,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
     }
 }
 
-@ConditionalOnProperty(value = ["integrations.fiona.url", "integrations.herkimer.url"])
+@ConditionalOnBean(S3Provisioner::class)
 @Service
 class S3Feature(
     val s3Provisioner: S3Provisioner,
@@ -71,6 +72,12 @@ class S3Feature(
     @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String
 ) : S3FeatureTemplate() {
+
+    private val logger = KotlinLogging.logger { }
+
+    init {
+        logger.info("Enabling Minio S3 Feature")
+    }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
