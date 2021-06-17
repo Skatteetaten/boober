@@ -13,6 +13,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
@@ -21,12 +22,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     private val provisioner = mockk<S3StorageGridProvisioner>()
 
     override val feature: Feature
-        get() {
-            return S3StorageGridFeature(
-                provisioner,
-                mockk(),
-            )
-        }
+        get() = S3StorageGridFeature(provisioner, mockk())
 
     @AfterEach
     fun after() {
@@ -39,6 +35,87 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     val area1Name = "default"
     val area2Name = "min-andre-bucket"
 
+
+    @Test
+    fun `should fail with message when s3 bucketName is missing`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3Defaults": {
+                   "objectArea": "my-object-area"
+                },
+                "s3": true
+           }"""
+            )
+        }.singleApplicationError("Missing field: bucketName for s3")
+    }
+
+    @Test
+    fun `should fail with message when s3 objectArea is not according to required format`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3Defaults": {
+                   "objectArea": "my-object_Area",
+                   "bucketName": "myBucket"
+                },
+                "s3": true
+           }"""
+            )
+        }.singleApplicationError("s3 objectArea can only contain lower case characters,")
+    }
+
+    @Test
+    fun `verify fails when tenant is not on required form`() {
+        val tenant = "paas"
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName" : "anotherId",
+                        "tenant": "$tenant"
+                    }
+                }
+           }"""
+            )
+        }.singleApplicationError("Config for application simple in environment utv contains errors. s3 tenant must be on the form affiliation-cluster, specified value was: \"$tenant\".")
+    }
+
+    @Test
+    fun `verify fails on validate when two identical objectareas in same bucket`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName": "bucket1"
+                    },
+                    "another":{
+                        "objectArea": "default",
+                        "bucketName": "bucket1"
+                    }
+                }
+           }"""
+            )
+        }.singleApplicationError("Duplicated objectArea=default in same bucket=bucket1")
+    }
+
+    @Test
+    fun `verify setting tenant in AuroraConfig is overridden with default`() {
+        val areaName = "default"
+        val spec = createAuroraDeploymentContext(
+            """{ 
+                "s3": {
+                    "$areaName" : {
+                        "bucketName" : "anotherId",
+                        "tenant": "demo-utv"
+                    }
+                }
+           }"""
+        ).spec
+        assertThat(spec.s3ObjectAreas.find { it.area == areaName }?.tenant).isEqualTo("paas-utv")
+    }
 
     @Test
     fun `verify is able to disable s3 when simple config`() {
@@ -107,8 +184,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     "bucketName": "$bucket1Name"
                 },
                 "s3": {
-                    "$area1Name" : {
-                    },
+                    "$area1Name" : { },
                     "$area2Name" : {
                         "bucketName" : "$bucket2Name"
                     }

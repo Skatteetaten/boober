@@ -25,8 +25,8 @@ data class ObjectAreaWithCredentials(
 data class S3ObjectArea(
     val tenant: String,
     val bucketName: String,
-    val area: String,
-    val specifiedAreaKey: String = area
+    val specifiedAreaKey: String,
+    val area: String = specifiedAreaKey,
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -57,34 +57,37 @@ class S3StorageGridProvisioner(
     @Value("\${storagegrid.provisioning-timeout:20000}") val provisioningTimeout: Long,
     @Value("\${storagegrid.provisioning-status-check-interval:1000}") val statusCheckIntervalMillis: Long
 ) {
-    fun getOrProvisionCredentials(adc: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
+    fun getOrProvisionCredentials(spec: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
 
-        provisionMissingObjectAreas(adc)
-        return herkimerService.getObjectAreaAdminCredentials(adc)
-            .also { logger.debug("Found ${it.size} ObjectArea credentials for ApplicationDeployment ${adc.namespace}/${adc.name}") }
+        if (spec.s3ObjectAreas.isEmpty()) return emptyList()
+
+        provisionMissingObjectAreas(spec)
+        return herkimerService.getObjectAreaAdminCredentials(spec)
+            .also { logger.debug("Found ${it.size} ObjectArea credentials for ApplicationDeployment ${spec.namespace}/${spec.name}") }
     }
 
-    fun provisionMissingObjectAreas(adc: AuroraDeploymentSpec) {
-        val existingResources = herkimerService.getObjectAreaResourcesIndex(adc)
+    fun provisionMissingObjectAreas(spec: AuroraDeploymentSpec) {
+        val existingResources = herkimerService.getObjectAreaResourcesIndex(spec)
         if (existingResources.isNotEmpty()) {
-            logger.debug("ObjectArea(s) ${existingResources.keys.joinToString()} was already provisioned for ADC ${adc.name}")
+            logger.debug("ObjectArea(s) ${existingResources.keys.joinToString()} was already provisioned for ADC ${spec.name}")
         }
-        val missingObjectAreas = adc.s3ObjectAreas.filter { !existingResources.containsKey(it.specifiedAreaKey) }
-        provisionObjectAreas(adc, missingObjectAreas)
+        val missingObjectAreas = spec.s3ObjectAreas
+            .filter { !existingResources.containsKey(it.area) }
+        provisionObjectAreas(spec, missingObjectAreas)
     }
 
-    private fun provisionObjectAreas(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea> = adc.s3ObjectAreas) {
+    private fun provisionObjectAreas(spec: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea> = spec.s3ObjectAreas) {
 
         if (objectAreas.isEmpty()) return
-        logger.debug("Provisioning ObjectArea(s) ${objectAreas.joinToString { it.specifiedAreaKey }} for ADC ${adc.name}")
+        logger.debug("Provisioning ObjectArea(s) ${objectAreas.joinToString { it.area }} for spec ${spec.name}")
 
-        val sgoas = applySgoaResources(adc, objectAreas)
+        val sgoas = applySgoaResources(spec, objectAreas)
         val requests = sgoas.waitForRequestCompletionOrTimeout()
-        handleErrors(adc, requests)
+        handleErrors(spec, requests)
     }
 
-    private fun applySgoaResources(adc: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>) = objectAreas
-        .map { objectArea -> createSgoaResource(adc, objectArea) }
+    private fun applySgoaResources(spec: AuroraDeploymentSpec, objectAreas: List<S3ObjectArea>) = objectAreas
+        .map { objectArea -> createSgoaResource(spec, objectArea) }
         .onEach { sgoa ->
             val response = openShiftDeployer.applyResource(sgoa.metadata.namespace, sgoa)
             response.exception?.let<String, Unit> { throw S3ProvisioningException("Unable to apply SGOA ${sgoa.fqn}. $it") }
@@ -109,15 +112,15 @@ class S3StorageGridProvisioner(
         return requests
     }
 
-    private fun handleErrors(adc: AuroraDeploymentSpec, requests: List<SgoaAndResult>) {
+    private fun handleErrors(spec: AuroraDeploymentSpec, requests: List<SgoaAndResult>) {
         val errors = requests.filter { !it.result.success }
 
         errors.filter { it.result.reason.endState }.takeIf { it.isNotEmpty() }
-            ?.also { logger.debug("ApplicationDeployment ${adc.name} failed ${it.size} SGOA request(s)") }
+            ?.also { logger.debug("ApplicationDeployment ${spec.name} failed ${it.size} SGOA request(s)") }
             ?.let { throw S3ProvisioningException("${it.size} StorageGridObjectArea request(s) failed. Check status with \"oc get sgoa -o yaml\"") }
 
         errors.filter { !it.result.reason.endState }.takeIf { it.isNotEmpty() }
-            ?.also { logger.debug("ApplicationDeployment ${adc.name} timed out ${it.size} SGOA request(s)") }
+            ?.also { logger.debug("ApplicationDeployment ${spec.name} timed out ${it.size} SGOA request(s)") }
             ?.let { throw S3ProvisioningException("Timed out waiting for ${it.size} StorageGridObjectArea request(s) to complete. Check status with \"oc get sgoa -o yaml\"") }
     }
 
@@ -133,21 +136,21 @@ class S3StorageGridProvisioner(
         return openShiftClient.performOpenShiftCommand(cmd)
     }
 
-    private fun HerkimerService.getObjectAreaAdminCredentials(adc: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
+    private fun HerkimerService.getObjectAreaAdminCredentials(spec: AuroraDeploymentSpec): List<ObjectAreaWithCredentials> {
 
-        val sgoaResources = getObjectAreaResourcesIndex(adc)
-        return adc.s3ObjectAreas.map { objectArea ->
+        val sgoaResources = getObjectAreaResourcesIndex(spec)
+        return spec.s3ObjectAreas.map { objectArea ->
 
-            val objectAreaResourceName = objectArea.specifiedAreaKey
+            val objectAreaResourceName = objectArea.area
             val sgoaResource = sgoaResources[objectAreaResourceName]
-                ?: throw S3ProvisioningException("Unable to find resource of kind ${ResourceKind.StorageGridObjectArea} with name $objectAreaResourceName for AuroraDeploymentSpec ${adc.name}")
+                ?: throw S3ProvisioningException("Unable to find resource of kind ${ResourceKind.StorageGridObjectArea} with name $objectAreaResourceName for AuroraDeploymentSpec ${spec.name}")
 
             ObjectAreaWithCredentials(objectArea, sgoaResource.adminClaimCredentials)
         }
     }
 
-    private fun HerkimerService.getObjectAreaResourcesIndex(adc: AuroraDeploymentSpec): Map<String, ResourceHerkimer> =
-        getClaimedResources(adc.applicationDeploymentId, ResourceKind.StorageGridObjectArea)
+    private fun HerkimerService.getObjectAreaResourcesIndex(spec: AuroraDeploymentSpec): Map<String, ResourceHerkimer> =
+        getClaimedResources(spec.applicationDeploymentId, ResourceKind.StorageGridObjectArea)
             .associateBy { it.name }
 
     private val ResourceHerkimer.adminClaimCredentials
@@ -159,21 +162,21 @@ class S3StorageGridProvisioner(
                 .copy(bucketRegion = defaultBucketRegion)
         }
 
-    private fun createSgoaResource(adc: AuroraDeploymentSpec, objectArea: S3ObjectArea): StorageGridObjectArea {
-        val objectAreaName = "${adc.name}-${objectArea.specifiedAreaKey}"
+    private fun createSgoaResource(spec: AuroraDeploymentSpec, objectArea: S3ObjectArea): StorageGridObjectArea {
+        val objectAreaName = "${spec.name}-${objectArea.area}"
         // TODO: We need to somehow get the ownerReference set
         val labels = operationScopeFeature.getLabelsToAdd()
             .normalizeLabels()
         return StorageGridObjectArea(
             _metadata = newObjectMeta {
                 name = objectAreaName
-                namespace = adc.namespace
+                namespace = spec.namespace
                 this.labels = labels
             },
             spec = StorageGridObjectAreaSpec(
                 objectArea.bucketName,
-                adc.applicationDeploymentId,
-                objectArea.specifiedAreaKey
+                spec.applicationDeploymentId,
+                objectArea.area
             )
         )
     }
@@ -184,12 +187,14 @@ val AuroraDeploymentSpec.s3ObjectAreas
 
         val tenantName = "$affiliation-$cluster"
         val defaultBucketName: String = this["$FEATURE_DEFAULTS_FIELD_NAME/bucketName"]
+        val defaultObjectAreaName =
+            this.get<String>("$FEATURE_DEFAULTS_FIELD_NAME/objectArea").takeIf { it.isNotBlank() } ?: "default"
 
         return if (this.isSimplifiedAndEnabled(FEATURE_FIELD_NAME)) {
             val defaultS3Bucket = S3ObjectArea(
                 tenant = tenantName,
                 bucketName = defaultBucketName,
-                area = this["$FEATURE_DEFAULTS_FIELD_NAME/objectArea"]
+                specifiedAreaKey = defaultObjectAreaName
             )
             listOf(defaultS3Bucket)
         } else {
@@ -200,12 +205,41 @@ val AuroraDeploymentSpec.s3ObjectAreas
                     S3ObjectArea(
                         tenant = tenantName,
                         bucketName = getOrNull("$FEATURE_FIELD_NAME/$objectAreaName/bucketName") ?: defaultBucketName,
-                        area = this["$FEATURE_FIELD_NAME/$objectAreaName/objectArea"],
-                        specifiedAreaKey = objectAreaName
+                        specifiedAreaKey = objectAreaName,
+                        area = this["$FEATURE_FIELD_NAME/$objectAreaName/objectArea"]
                     )
                 }
         }
     }
+
+fun AuroraDeploymentSpec.validateS3(): List<IllegalArgumentException> {
+
+    val objectAreas = this.s3ObjectAreas
+    if (objectAreas.isEmpty()) return emptyList()
+
+    val requiredFieldsExceptions = objectAreas.validateRequiredFieldsArePresent()
+    val duplicateObjectAreaInSameBucketExceptions = objectAreas.verifyObjectAreasAreUnique()
+
+    return requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions
+}
+
+private fun List<S3ObjectArea>.validateRequiredFieldsArePresent(): List<IllegalArgumentException> {
+    return this.flatMap {
+        val bucketNameException =
+            if (it.bucketName.isEmpty()) IllegalArgumentException("Missing field: bucketName for s3") else null
+        val objectAreaException =
+            if (it.area.isEmpty()) IllegalArgumentException("Missing field: objectArea for s3") else null
+
+        listOf(bucketNameException, objectAreaException)
+    }.filterNotNull()
+}
+
+private fun List<S3ObjectArea>.verifyObjectAreasAreUnique(): List<IllegalArgumentException> {
+    return groupBy { it.area }
+        .mapValues { it.value.size }
+        .filter { it.value > 1 }
+        .map { (name, count) -> IllegalArgumentException("objectArea name=${name} used $count times for same application") }
+}
 
 private const val FEATURE_FIELD_NAME = "s3"
 private const val FEATURE_DEFAULTS_FIELD_NAME = "s3Defaults"

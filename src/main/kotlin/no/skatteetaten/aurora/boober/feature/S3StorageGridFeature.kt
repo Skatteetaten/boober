@@ -8,9 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.addEnvVarsToMainContainers
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.ObjectAreaWithCredentials
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.s3ObjectAreas
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.*
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
@@ -32,19 +30,19 @@ class S3StorageGridFeature(
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean)
             : Map<String, Any> = emptyMap()
 
-    override fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext)
-            : List<Exception> = emptyList()
+    override fun validate(spec: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext)
+            : List<Exception> = spec.validateS3()
 
-    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+    override fun generate(spec: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        if (adc.s3ObjectAreas.isEmpty()) return emptySet()
+        if (spec.s3ObjectAreas.isEmpty()) return emptySet()
 
-        val s3Credentials = s3StorageGridProvisioner.getOrProvisionCredentials(adc)
-        val s3Secret = s3Credentials.map { it.createS3Secret(adc.namespace, adc.name) }
+        val s3Credentials = s3StorageGridProvisioner.getOrProvisionCredentials(spec)
+        val s3Secret = s3Credentials.map { it.createS3Secret(spec.namespace, spec.name) }
         return s3Secret.map { it.generateAuroraResource() }.toSet()
     }
 
-    override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
+    override fun modify(spec: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
         val secrets = resources.s3Secrets
         val envVars = createEnvVarRefs(secrets)
         resources.addEnvVarsToMainContainers(envVars, javaClass)
