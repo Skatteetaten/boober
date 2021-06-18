@@ -66,12 +66,15 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should have separate routes for onprem and azure`() {
-        val (dcResource, routeResource, azureRouteResource, cname) = generateResources(
+    fun `separate routes for onprem and azure with cname`() {
+        val (dcResource, routeResource, azureRouteResource, azureCname) = generateResources(
             """{
             "route" : {
                "simple" : {
-                    "azure": true
+                    "azure": {
+                       "enabled": true,
+                       "cnameTtl": 100
+                    }
                }
             }
         }""", createEmptyDeploymentConfig(),
@@ -84,15 +87,46 @@ class RouteFeatureTest : AbstractFeatureTest() {
         assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-with-azure.json")
 
+        assertThat(azureCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-azure-ttl.json")
+
         assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
     }
 
     @Test
-    fun `should have separate routes for onpremf and azure while simplified`() {
-        val (dcResource, routeResource, azureRouteResource) = generateResources(
+    fun `should be able to disable azure route`() {
+        val (dcResource, routeResource) = generateResources(
             """{
-            "routeDefaults": {
-                "azure": true
+            "routeDefaults" : { 
+                "azure": {
+                    "enabled": true
+                }
+            },
+            "route" : {
+               "simple" : {
+                    "azure": {
+                       "enabled": false
+                    }
+               }
+            }
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 1
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
+    }
+
+    @Test
+    fun `should have separate routes for onprem and azure with cname defaults`() {
+        val (dcResource, routeResource, azureRouteResource, azureCname) = generateResources(
+            """{
+            "routeDefaults" : { 
+                "azure": {
+                    "enabled": true
+                }
             },
             "route" : true
         }""", createEmptyDeploymentConfig(),
@@ -104,6 +138,9 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
         assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-with-azure.json")
+
+        assertThat(azureCname).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("aurora-cname-azure.json")
+
         assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
     }
 
@@ -729,7 +766,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 createEmptyDeploymentConfig(),
                 createdResources = 1
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -765,7 +802,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 """.trimIndent(),
                 createEmptyDeploymentConfig()
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -787,7 +824,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 """.trimIndent(),
                 resource = createEmptyDeploymentConfig(), createdResources = 3
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -805,7 +842,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 }
                 """.trimIndent(), createEmptyDeploymentConfig()
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -829,16 +866,23 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 """.trimIndent(),
                 createEmptyDeploymentConfig()
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @ParameterizedTest
     @CsvSource(value = ["x.xx", "x1.xx", "x-1.xx", "some-x.org"])
     fun `valid host names should not fail`(dns: String) {
         val (dcResource) = generateResources(
-            """{"route" : {"foo" : {
-                  "host": """" + dns + """", "cname" : { "enabled" : "true" }
-                }}}""".trimIndent(),
+            """{
+                  "route": {
+                    "foo": {
+                      "host": "$dns",
+                      "cname": {
+                        "enabled": "true"
+                      }
+                    }
+                  }
+                }""".trimIndent(),
             createEmptyDeploymentConfig(),
             createdResources = 2
         )
@@ -850,12 +894,19 @@ class RouteFeatureTest : AbstractFeatureTest() {
     fun `invalid host names should fail`(dns: String) {
         assertThat {
             generateResources(
-                """{"route" : {"foo" : {
-                  "host": """" + dns + """", "cname" : { "enabled" : "true" }
-                }}}""".trimIndent(),
+                """{
+                    "route": {
+                        "foo" : {
+                            "host": "$dns",
+                            "cname" : { 
+                                "enabled" : "true" 
+                            }
+                        }
+                    }
+                }""".trimIndent(),
                 createEmptyDeploymentConfig(),
                 createdResources = 2
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 }

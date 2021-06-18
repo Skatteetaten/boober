@@ -43,9 +43,17 @@ data class AuroraCname(
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class CnameSpec(
-    val cname: String,
-    val type: CNameType,
     val host: String,
+    val cname: String,
+    val ttl: Int,
+    val msDns: CnameDNSResolver? = null,
+    val azureDns: CnameDNSResolver? = null
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class CnameDNSResolver(
+    val enabled: Boolean = true,
     val ttl: Int
 )
 
