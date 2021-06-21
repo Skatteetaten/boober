@@ -1,13 +1,21 @@
 package no.skatteetaten.aurora.boober.utils
 
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
+import java.io.File
+import java.net.URL
+import java.nio.charset.Charset
+import org.apache.commons.text.StringSubstitutor
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.util.ResourceUtils
+import com.fasterxml.jackson.core.JsonGenerator
+import com.fasterxml.jackson.core.util.DefaultIndenter
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import assertk.Assert
+import assertk.assertions.support.fail
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
@@ -21,20 +29,16 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPointers
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
-import org.apache.commons.text.StringSubstitutor
-import org.springframework.util.ResourceUtils
-import java.io.File
-import java.net.URL
-import java.nio.charset.Charset
-import assertk.assertions.support.fail
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
 private val logger = KotlinLogging.logger {}
 
 open class ResourceLoader {
+    @Value("\${test.resources.shouldOverwrite:false}")
+    var shouldOverwriteResources: Boolean? = null
 
     val mapper = jsonMapper()
 
@@ -68,12 +72,11 @@ open class ResourceLoader {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
 
-    val shouldOverwrite = false
     fun Assert<String>.txtEquals(actual: String) {
         given { txtFileName ->
             val expected = loadResource(txtFileName)
             if (actual.equals(expected, false)) return
-            if (shouldOverwrite) {
+            if (shouldOverwriteResources == true) {
                 overwriteResource(txtFileName, actual)
             } else {
                 fail(expected, actual)
@@ -81,21 +84,22 @@ open class ResourceLoader {
         }
     }
 
-    fun Assert<JsonNode>.jsonEquals(actual: JsonNode, name: String) {
-        given { expected ->
-            val writer = jsonMapper().writerWithDefaultPrettyPrinter()
-            val targetString = writer.writeValueAsString(actual)
-            val nodeString = writer.writeValueAsString(expected)
+    fun Assert<JsonNode>.jsonEquals(expected: JsonNode, name: String, allowOverwrite: Boolean = true) {
+        given { actual ->
+            val writer = jsonMapper().writer(ResourcePrettyPrinter())
+            val targetString = writer.writeValueAsString(expected)
+            val nodeString = writer.writeValueAsString(actual)
 
             name.let {
                 logger.info { "Comparing file with name=$name" }
             }
 
             if (targetString.equals(nodeString, false)) return
-            if (shouldOverwrite) {
+            if (shouldOverwriteResources == true && allowOverwrite) {
                 overwriteResource(name, targetString)
+                assertThat(loadJsonResource(name)).jsonEquals(expected, name)
             } else {
-                fail(expected, actual)
+                fail(actual, expected)
             }
         }
     }
@@ -111,16 +115,9 @@ open class ResourceLoader {
 
             logger.info("comparing default text file=$txtDefaultName")
             assertThat(txtDefaultName).txtEquals(renderJsonForAuroraDeploymentSpecPointers(spec, true))
-            // val isTxtDefaultEqual = loadResource(txtDefaultName), renderJsonForAuroraDeploymentSpecPointers(spec, true)
-            // assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, true)).isEqualTo(loadResource(txtDefaultName))
 
             logger.info("comparing text file=$txtName")
             assertThat(txtName).txtEquals(renderJsonForAuroraDeploymentSpecPointers(spec, false))
-            // assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false)).isEqualTo(
-            //     loadResource(
-            //         txtName
-            //     )
-            // )
 
             assertThat(loadJsonResource(jsonDefaultName)).jsonEquals(
                 mapper.readTree(
@@ -141,34 +138,19 @@ open class ResourceLoader {
     fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
         val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
         val expectedJson = loadJsonResource(fileName)
-        compareJson(expectedJson, actualJson, fileName)
+        assertThat(actualJson).jsonEquals(expectedJson, fileName)
         ar
     }
 
     // TODO: test with this method in all feature tests
     fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatches(jsonDefaultName: String): Assert<AuroraDeploymentSpec> =
         transform { spec ->
-            compareJson(
-                loadJsonResource(jsonDefaultName),
-                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, true))),
-                jsonDefaultName
+            assertThat(loadJsonResource(jsonDefaultName)).jsonEquals(
+                expected = mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, true))),
+                name = jsonDefaultName
             )
             spec
         }
-}
-
-// This is done as text comparison and not jsonNode equals to get easier diff when they dif
-fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boolean {
-    val writer = jsonMapper().writerWithDefaultPrettyPrinter()
-    val targetString = writer.writeValueAsString(actual)
-    val nodeString = writer.writeValueAsString(expected)
-
-    name?.let {
-        logger.info { "Comparing file with name=$name" }
-    }
-
-    assertThat(targetString).isEqualTo(nodeString)
-    return true
 }
 
 fun stubDeployResult(
@@ -372,3 +354,18 @@ data class TestFile(
     val path: String,
     val content: JsonNode
 )
+
+class ResourcePrettyPrinter : DefaultPrettyPrinter() {
+    override fun createInstance(): DefaultPrettyPrinter {
+        val indenter: Indenter = DefaultIndenter("  ", DefaultIndenter.SYS_LF)
+
+        return ResourcePrettyPrinter().apply {
+            indentObjectsWith(indenter)
+            indentArraysWith(indenter)
+        }
+    }
+
+    override fun writeObjectFieldValueSeparator(g: JsonGenerator) {
+        g.writeRaw(": ")
+    }
+}

@@ -1,28 +1,32 @@
 package no.skatteetaten.aurora.boober.facade
 
-import assertk.Assert
-import assertk.assertions.contains
-import assertk.assertions.isEqualTo
-import assertk.assertions.isTrue
+import java.io.File
+import org.junit.jupiter.api.BeforeEach
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import no.skatteetaten.aurora.boober.utils.UUIDGenerator
-import no.skatteetaten.aurora.boober.utils.compareJson
 import no.skatteetaten.aurora.boober.utils.getResultFiles
+import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.MockRules
-import org.junit.jupiter.api.BeforeEach
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import java.io.File
+
+private val logger = KotlinLogging.logger {}
 
 /*
 
@@ -118,6 +122,20 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
         compareJson(resultFile.content, generatedObject, resultFile.path)
     }
     assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
+}
+
+// This is done as text comparison and not jsonNode equals to get easier diff when they dif
+fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boolean {
+    val writer = jsonMapper().writerWithDefaultPrettyPrinter()
+    val targetString = writer.writeValueAsString(actual)
+    val nodeString = writer.writeValueAsString(expected)
+
+    name?.let {
+        logger.info { "Comparing file with name=$name" }
+    }
+
+    assertThat(targetString).isEqualTo(nodeString)
+    return true
 }
 
 fun JsonNode.getKey(): String {
