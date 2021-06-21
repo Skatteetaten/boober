@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import assertk.Assert
@@ -14,7 +13,6 @@ import assertk.assertions.support.show
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 
@@ -121,7 +119,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should have separate routes for onprem and azure with cname defaults`() {
-        val (dcResource, routeResource, azureRouteResource, azureCname) = generateResources(
+        val (dcResource, routeResource, azureRouteResource, auroraCname) = generateResources(
             """{
             "routeDefaults" : { 
                 "azure": {
@@ -139,7 +137,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
         assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-with-azure.json")
 
-        assertThat(azureCname).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("aurora-cname-azure.json")
+        assertThat(auroraCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-azure.json")
 
         assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
     }
@@ -683,29 +682,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("aurora-cname.json")
 
         assertThat(dcResource).auroraRouteEnvAdded("simple-specific-cname")
-    }
-
-    @Test
-    fun `cname and fullyQualifiedHost cannot be set simultaneously`() {
-        val ex: MultiApplicationValidationException = assertThrows {
-            generateResources(
-                """{
-            "route" : { 
-                "foo" : {
-                    "enabled" : "true",
-                    "fullyQualifiedHost": "true",
-                    "host": "simple-foo-specific-cname",
-                    "cname" : {
-                      "enabled" : "true"
-                    }
-                }
-            }
-            }""",
-                resource = createEmptyDeploymentConfig(),
-                createdResources = 2
-            )
-        }
-        assertThat { ex.message?.contains("configurations simultaneously") }
     }
 
     @Test

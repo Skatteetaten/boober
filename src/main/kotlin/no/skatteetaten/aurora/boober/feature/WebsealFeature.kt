@@ -58,7 +58,7 @@ class WebsealFeature(
                 "type" to "webseal"
             )
 
-            val auroraRoute = Route(
+            val auroraRoute = ConfiguredRoute(
                 objectName = routeName,
                 host = host,
                 annotations = annotations,

@@ -25,11 +25,11 @@ import no.skatteetaten.aurora.boober.service.renderJsonForAuroraDeploymentSpecPo
 import no.skatteetaten.aurora.boober.service.renderSpecAsJson
 import okio.Buffer
 import org.apache.commons.text.StringSubstitutor
-import org.junit.jupiter.api.Assertions.assertEquals
 import org.springframework.util.ResourceUtils
 import java.io.File
 import java.net.URL
 import java.nio.charset.Charset
+import assertk.assertions.support.fail
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 
 private val logger = KotlinLogging.logger {}
@@ -40,6 +40,12 @@ open class ResourceLoader {
 
     fun loadResource(resourceName: String, folder: String = this.javaClass.simpleName): String =
         getResourceUrl(resourceName, folder).readText()
+
+    fun overwriteResource(resourceName: String, content: String, folder: String = this.javaClass.simpleName) {
+        val resourceUrl = getResourceUrl(resourceName, folder)
+        val resourceFile = ResourceUtils.getFile(resourceUrl)
+        resourceFile.writeText(content)
+    }
 
     // TODO: should this not use package name to make it easier to reuse files
     fun getResourceUrl(resourceName: String, folder: String = this.javaClass.simpleName): URL {
@@ -62,6 +68,38 @@ open class ResourceLoader {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
 
+    val shouldOverwrite = false
+    fun Assert<String>.txtEquals(actual: String) {
+        given { txtFileName ->
+            val expected = loadResource(txtFileName)
+            if (actual.equals(expected, false)) return
+            if (shouldOverwrite) {
+                overwriteResource(txtFileName, actual)
+            } else {
+                fail(expected, actual)
+            }
+        }
+    }
+
+    fun Assert<JsonNode>.jsonEquals(actual: JsonNode, name: String) {
+        given { expected ->
+            val writer = jsonMapper().writerWithDefaultPrettyPrinter()
+            val targetString = writer.writeValueAsString(actual)
+            val nodeString = writer.writeValueAsString(expected)
+
+            name.let {
+                logger.info { "Comparing file with name=$name" }
+            }
+
+            if (targetString.equals(nodeString, false)) return
+            if (shouldOverwrite) {
+                overwriteResource(name, targetString)
+            } else {
+                fail(expected, actual)
+            }
+        }
+    }
+
     // TODO: test with this method in facade test
     fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatchesSpecFiles(prefix: String): Assert<AuroraDeploymentSpec> =
         transform { spec ->
@@ -72,26 +110,30 @@ open class ResourceLoader {
             val txtName = "$prefix.txt"
 
             logger.info("comparing default text file=$txtDefaultName")
-            assertEquals(loadResource(txtDefaultName), renderJsonForAuroraDeploymentSpecPointers(spec, true))
+            assertThat(txtDefaultName).txtEquals(renderJsonForAuroraDeploymentSpecPointers(spec, true))
+            // val isTxtDefaultEqual = loadResource(txtDefaultName), renderJsonForAuroraDeploymentSpecPointers(spec, true)
+            // assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, true)).isEqualTo(loadResource(txtDefaultName))
 
             logger.info("comparing text file=$txtName")
-            assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false)).isEqualTo(
-                loadResource(
-                    txtName
+            assertThat(txtName).txtEquals(renderJsonForAuroraDeploymentSpecPointers(spec, false))
+            // assertThat(renderJsonForAuroraDeploymentSpecPointers(spec, false)).isEqualTo(
+            //     loadResource(
+            //         txtName
+            //     )
+            // )
+
+            assertThat(loadJsonResource(jsonDefaultName)).jsonEquals(
+                mapper.readTree(
+                    mapper.writeValueAsString(
+                        renderSpecAsJson(spec, true)
+                    )
+                ), jsonDefaultName
+            )
+
+            assertThat(loadJsonResource(jsonName))
+                .jsonEquals(
+                    mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, false))), jsonName
                 )
-            )
-
-            compareJson(
-                loadJsonResource(jsonDefaultName),
-                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, true))),
-                jsonDefaultName
-            )
-
-            compareJson(
-                loadJsonResource(jsonName),
-                mapper.readTree(mapper.writeValueAsString(renderSpecAsJson(spec, false))),
-                jsonName
-            )
 
             spec
         }
@@ -129,7 +171,11 @@ fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boo
     return true
 }
 
-fun stubDeployResult(deployId: String, success: Boolean = true, openshiftResponses: List<OpenShiftResponse> = emptyList()): List<AuroraDeployResult> {
+fun stubDeployResult(
+    deployId: String,
+    success: Boolean = true,
+    openshiftResponses: List<OpenShiftResponse> = emptyList()
+): List<AuroraDeployResult> {
     return listOf(
         AuroraDeployResult(
             success = success,

@@ -106,23 +106,6 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     mountName: "pvc"
                  default |     volumeName: "pvc"
             complex.json |     exist: true
-                         | route:
-                         |   @name@:
-                 default |     enabled: true
-                         |     tls:
-            complex.json |       insecurePolicy: "Allow"
-            complex.json |       termination: "edge"
-                         |   path:
-                 default |     enabled: true
-            complex.json |     host: "pathroute"
-            complex.json |     path: "/path"
-                         |   foobar:
-                 default |     enabled: true
-            complex.json |     host: "foobar"
-                         |     annotations:
-            complex.json |       wembley.sits.no|externalHost: "test.ske"
-            complex.json |       wembley.sits.no|apiPaths: "/api"
-            complex.json |       haproxy.router.openshift.io|timeout: "30s"
                          | routeDefaults:
                  default |   host: "@name@-@affiliation@-@env@"
                          |   tls:
@@ -132,6 +115,29 @@ utv/about-alternate.json |   ttl: "1d"
                          |   cname:
                  default |     enabled: false
                  default |     ttl: 300
+                         |   azure:
+                 default |     enabled: false
+                 default |     cnameTtl: 300
+                         | route:
+                         |   @name@:
+                 default |     enabled: true
+                 default |     fullyQualifiedHost: false
+                         |     tls:
+            complex.json |       insecurePolicy: "Allow"
+            complex.json |       termination: "edge"
+                         |   path:
+                 default |     enabled: true
+            complex.json |     host: "pathroute"
+                 default |     fullyQualifiedHost: false
+            complex.json |     path: "/path"
+                         |   foobar:
+                 default |     enabled: true
+            complex.json |     host: "foobar"
+                 default |     fullyQualifiedHost: false
+                         |     annotations:
+            complex.json |       wembley.sits.no|externalHost: "test.ske"
+            complex.json |       wembley.sits.no|apiPaths: "/api"
+            complex.json |       haproxy.router.openshift.io|timeout: "30s"
                          | s3:
                          |   default:
             complex.json |     bucketName: "minYndlingsBucket"

@@ -1,143 +1,115 @@
 {
-  "applicationDeploymentRef": {
-    "source": "static",
-    "value": "utv/job",
-    "sources": [
-      {
-        "name": "static",
-        "value": "utv/job"
-      }
-    ]
+  "applicationDeploymentRef" : {
+    "source" : "static",
+    "value" : "utv/job",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "utv/job"
+    } ]
   },
-  "configVersion": {
-    "source": "static",
-    "value": "master",
-    "sources": [
-      {
-        "name": "static",
-        "value": "master"
-      }
-    ]
+  "configVersion" : {
+    "source" : "static",
+    "value" : "master",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "master"
+    } ]
   },
-  "applicationDeploymentId": {
-    "source": "static",
-    "value": "1234567890",
-    "sources": [
-      {
-        "name": "static",
-        "value": "1234567890"
-      }
-    ]
+  "applicationDeploymentId" : {
+    "source" : "static",
+    "value" : "1234567890",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "1234567890"
+    } ]
   },
-  "schemaVersion": {
-    "source": "about.json",
-    "value": "v1",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "v1"
-      }
-    ]
+  "schemaVersion" : {
+    "source" : "about.json",
+    "value" : "v1",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "v1"
+    } ]
   },
-  "type": {
-    "source": "job.json",
-    "value": "cronjob",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "deploy"
-      },
-      {
-        "name": "job.json",
-        "value": "cronjob"
-      }
-    ]
+  "type" : {
+    "source" : "job.json",
+    "value" : "cronjob",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "deploy"
+    }, {
+      "name" : "job.json",
+      "value" : "cronjob"
+    } ]
   },
-  "deployState": {
-    "source": "default",
-    "value": "deploymentConfig",
-    "sources": [
-      {
-        "name": "default",
-        "value": "deploymentConfig"
-      }
-    ]
+  "deployState" : {
+    "source" : "default",
+    "value" : "deploymentConfig",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "deploymentConfig"
+    } ]
   },
-  "applicationPlatform": {
-    "source": "default",
-    "value": "java",
-    "sources": [
-      {
-        "name": "default",
-        "value": "java"
-      }
-    ]
+  "applicationPlatform" : {
+    "source" : "default",
+    "value" : "java",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "java"
+    } ]
   },
-  "affiliation": {
-    "source": "about.json",
-    "value": "paas",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "paas"
-      }
-    ]
+  "affiliation" : {
+    "source" : "about.json",
+    "value" : "paas",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "paas"
+    } ]
   },
-  "segment": {
-    "source": "about.json",
-    "value": "aurora",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "aurora"
-      }
-    ]
+  "segment" : {
+    "source" : "about.json",
+    "value" : "aurora",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "aurora"
+    } ]
   },
-  "cluster": {
-    "source": "utv/about.json",
-    "value": "utv",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "utv"
-      },
-      {
-        "name": "utv/about.json",
-        "value": "utv"
-      }
-    ]
+  "cluster" : {
+    "source" : "utv/about.json",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "utv"
+    }, {
+      "name" : "utv/about.json",
+      "value" : "utv"
+    } ]
   },
-  "permissions": {
-    "admin": {
-      "source": "about.json",
-      "value": "APP_PaaS_drift APP_PaaS_utv",
-      "sources": [
-        {
-          "name": "about.json",
-          "value": "APP_PaaS_drift APP_PaaS_utv"
-        }
-      ]
+  "permissions" : {
+    "admin" : {
+      "source" : "about.json",
+      "value" : "APP_PaaS_drift APP_PaaS_utv",
+      "sources" : [ {
+        "name" : "about.json",
+        "value" : "APP_PaaS_drift APP_PaaS_utv"
+      } ]
     }
   },
-  "envName": {
-    "source": "folderName",
-    "value": "utv",
-    "sources": [
-      {
-        "name": "folderName",
-        "value": "utv"
-      }
-    ]
+  "envName" : {
+    "source" : "folderName",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "folderName",
+      "value" : "utv"
+    } ]
   },
-  "name": {
-    "source": "fileName",
-    "value": "job",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "job"
-      }
-    ]
+  "name" : {
+    "source" : "fileName",
+    "value" : "job",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "job"
+    } ]
   },
   "env" : {
     "autoDeploy" : {
@@ -149,139 +121,113 @@
       } ]
     }
   },
-  "certificate": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "certificate" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "groupId": {
-    "source": "job.json",
-    "value": "no.skatteetaten.demo",
-    "sources": [
-      {
-        "name": "job.json",
-        "value": "no.skatteetaten.demo"
-      }
-    ]
+  "groupId" : {
+    "source" : "job.json",
+    "value" : "no.skatteetaten.demo",
+    "sources" : [ {
+      "name" : "job.json",
+      "value" : "no.skatteetaten.demo"
+    } ]
   },
-  "config": {
-    "FOO": {
-      "source": "job.json",
-      "value": "bar",
-      "sources": [
-        {
-          "name": "job.json",
-          "value": "bar"
-        }
-      ]
+  "config" : {
+    "FOO" : {
+      "source" : "job.json",
+      "value" : "bar",
+      "sources" : [ {
+        "name" : "job.json",
+        "value" : "bar"
+      } ]
     }
   },
-  "databaseDefaults": {
-    "flavor": {
-      "source": "default",
-      "value": "ORACLE_MANAGED",
-      "sources": [
-        {
-          "name": "default",
-          "value": "ORACLE_MANAGED"
-        }
-      ]
+  "databaseDefaults" : {
+    "flavor" : {
+      "source" : "default",
+      "value" : "ORACLE_MANAGED",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "ORACLE_MANAGED"
+      } ]
     },
-    "generate": {
-      "source": "default",
-      "value": true,
-      "sources": [
-        {
-          "name": "default",
-          "value": true
-        }
-      ]
+    "generate" : {
+      "source" : "default",
+      "value" : true,
+      "sources" : [ {
+        "name" : "default",
+        "value" : true
+      } ]
     },
-    "tryReuse": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
+    "tryReuse" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
     },
-    "name": {
-      "source": "default",
-      "value": "@name@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@"
-        }
-      ]
+    "name" : {
+      "source" : "default",
+      "value" : "@name@",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "@name@"
+      } ]
     }
   },
-  "database": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "database" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "alarm": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ]
+  "alarm" : {
+    "source" : "default",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : true
+    } ]
   },
-  "pause": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "pause" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "debug": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "debug" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "version": {
-    "source": "job.json",
-    "value": "1",
-    "sources": [
-      {
-        "name": "job.json",
-        "value": "1"
-      }
-    ]
+  "version" : {
+    "source" : "job.json",
+    "value" : "1",
+    "sources" : [ {
+      "name" : "job.json",
+      "value" : "1"
+    } ]
   },
-  "management": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "management" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
   "logging" : {
     "bufferSize" : {
@@ -293,232 +239,124 @@
       } ]
     }
   },
-  "artifactId": {
-    "source": "fileName",
-    "value": "job",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "job"
-      }
-    ]
+  "artifactId" : {
+    "source" : "fileName",
+    "value" : "job",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "job"
+    } ]
   },
-  "serviceAccount": {
-    "source": "job.json",
-    "value": "foo",
-    "sources": [
-      {
-        "name": "job.json",
-        "value": "foo"
-      }
-    ]
+  "serviceAccount" : {
+    "source" : "job.json",
+    "value" : "foo",
+    "sources" : [ {
+      "name" : "job.json",
+      "value" : "foo"
+    } ]
   },
-  "schedule": {
-    "source": "job.json",
-    "value": "0/5 * * * *",
-    "sources": [
-      {
-        "name": "job.json",
-        "value": "0/5 * * * *"
-      }
-    ]
+  "schedule" : {
+    "source" : "job.json",
+    "value" : "0/5 * * * *",
+    "sources" : [ {
+      "name" : "job.json",
+      "value" : "0/5 * * * *"
+    } ]
   },
-  "suspend": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "suspend" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "failureCount": {
-    "source": "default",
-    "value": 1,
-    "sources": [
-      {
-        "name": "default",
-        "value": 1
-      }
-    ]
+  "failureCount" : {
+    "source" : "default",
+    "value" : 1,
+    "sources" : [ {
+      "name" : "default",
+      "value" : 1
+    } ]
   },
-  "startingDeadline": {
-    "source": "default",
-    "value": 60,
-    "sources": [
-      {
-        "name": "default",
-        "value": 60
-      }
-    ]
+  "startingDeadline" : {
+    "source" : "default",
+    "value" : 60,
+    "sources" : [ {
+      "name" : "default",
+      "value" : 60
+    } ]
   },
-  "successCount": {
-    "source": "default",
-    "value": 3,
-    "sources": [
-      {
-        "name": "default",
-        "value": 3
-      }
-    ]
+  "successCount" : {
+    "source" : "default",
+    "value" : 3,
+    "sources" : [ {
+      "name" : "default",
+      "value" : 3
+    } ]
   },
-  "concurrentPolicy": {
-    "source": "default",
-    "value": "Forbid",
-    "sources": [
-      {
-        "name": "default",
-        "value": "Forbid"
-      }
-    ]
+  "concurrentPolicy" : {
+    "source" : "default",
+    "value" : "Forbid",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "Forbid"
+    } ]
   },
-  "route": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
-  "routeDefaults": {
-    "host": {
-      "source": "default",
-      "value": "@name@-@affiliation@-@env@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@-@affiliation@-@env@"
-        }
-      ]
-    },
-    "tls": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "insecurePolicy": {
-        "source": "default",
-        "value": "None",
-        "sources": [
-          {
-            "name": "default",
-            "value": "None"
-          }
-        ]
-      },
-      "termination": {
-        "source": "default",
-        "value": "edge",
-        "sources": [
-          {
-            "name": "default",
-            "value": "edge"
-          }
-        ]
-      }
-    },
-    "cname": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "ttl" : {
+  "secretVaults" : {
+    "foo" : {
+      "name" : {
         "source" : "default",
-        "value" : 300,
+        "value" : "foo",
         "sources" : [ {
           "name" : "default",
-          "value" : 300
+          "value" : "foo"
+        } ]
+      },
+      "enabled" : {
+        "source" : "default",
+        "value" : true,
+        "sources" : [ {
+          "name" : "default",
+          "value" : true
+        } ]
+      },
+      "file" : {
+        "source" : "default",
+        "value" : "latest.properties",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "latest.properties"
+        } ]
+      },
+      "keys" : {
+        "source" : "job.json",
+        "value" : [ "BAR", "FOO" ],
+        "sources" : [ {
+          "name" : "job.json",
+          "value" : [ "BAR", "FOO" ]
+        } ]
+      },
+      "keyMappings" : {
+        "source" : "job.json",
+        "value" : {
+          "BAR" : "BAZ"
+        },
+        "sources" : [ {
+          "name" : "job.json",
+          "value" : {
+            "BAR" : "BAZ"
+          }
         } ]
       }
     }
   },
-  "secretVaults": {
-    "foo": {
-      "name": {
-        "source": "default",
-        "value": "foo",
-        "sources": [
-          {
-            "name": "default",
-            "value": "foo"
-          }
-        ]
-      },
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "file": {
-        "source": "default",
-        "value": "latest.properties",
-        "sources": [
-          {
-            "name": "default",
-            "value": "latest.properties"
-          }
-        ]
-      },
-      "keys": {
-        "source": "job.json",
-        "value": [
-          "BAR",
-          "FOO"
-        ],
-        "sources": [
-          {
-            "name": "job.json",
-            "value": [
-              "BAR",
-              "FOO"
-            ]
-          }
-        ]
-      },
-      "keyMappings": {
-        "source": "job.json",
-        "value": {
-          "BAR": "BAZ"
-        },
-        "sources": [
-          {
-            "name": "job.json",
-            "value": {
-              "BAR": "BAZ"
-            }
-          }
-        ]
-      }
-    }
-  },
-  "sts": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "sts" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   }
 }

@@ -2,7 +2,7 @@
   "apiVersion": "skatteetaten.no/v1",
   "kind": "AuroraCname",
   "metadata": {
-    "name": "simple-azure",
+    "name": "simple",
     "namespace": "paas-utv"
   },
   "spec": {
