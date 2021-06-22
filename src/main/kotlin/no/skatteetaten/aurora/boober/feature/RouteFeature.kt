@@ -49,7 +49,7 @@ private val FeatureContext.routes: List<ConfiguredRoute>
         ROUTE_CONTEXT_KEY
     )
 
-private val FeatureContext.cnames: List<RouteFeature.Cname>
+private val FeatureContext.cnames: List<Cname>
     get() = this.getContextKey(
         CNAMES_CONTEXT_KEY
     )
@@ -136,36 +136,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         resources.addEnvVarsToMainContainers(envVars, this::class.java)
     }
 
-    data class Cname(
-        val routeHost: String,
-        val ttl: Int,
-        val objectName: String,
-        val msDnsCname: CnameDNSResolver?,
-        val azureDnsCname: CnameDNSResolver?
-    ) {
-        fun generateAuroraCname(routeNamespace: String, routeSuffix: String) =
-            AuroraCname(
-                _metadata = newObjectMeta {
-                    name = objectName
-                    namespace = routeNamespace
-                },
-                spec = CnameSpec(
-                    cname = routeHost,
-                    host = withoutInitialPeriod(routeSuffix),
-                    ttl = ttl,
-                    azureDns = azureDnsCname,
-                    msDns = msDnsCname
-                )
-            )
-
-        private fun withoutInitialPeriod(str: String): String =
-            if (str.startsWith(".")) {
-                str.substring(1)
-            } else {
-                str
-            }
-    }
-
     fun parseConfiguredRoutes(
         adc: AuroraDeploymentSpec
     ): CnamesAndRoutes {
@@ -250,7 +220,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val objectname = adc.replacer.replace(routeName).ensureStartWith(adc.name, "-")
 
         val isMsDnsCnameConfigured = adc.isMsDnsCnameEnabled(routeName)
-        val fullyQualifiedHost: Boolean = adc["$ROUTE_FEATURE_FIELD/$routeName/fullyQualifiedHost"] || isMsDnsCnameConfigured
+        val fullyQualifiedHost: Boolean =
+            adc["$ROUTE_FEATURE_FIELD/$routeName/fullyQualifiedHost"] || isMsDnsCnameConfigured
         return ConfiguredRoute(
             objectName = objectname,
             host = adc.getOrNull("$ROUTE_FEATURE_FIELD/$routeName/host") ?: defaultRoute.host,
@@ -537,6 +508,36 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             null
         }
     }
+}
+
+data class Cname(
+    val routeHost: String,
+    val ttl: Int,
+    val objectName: String,
+    val msDnsCname: CnameDNSResolver?,
+    val azureDnsCname: CnameDNSResolver?
+) {
+    fun generateAuroraCname(routeNamespace: String, routeSuffix: String) =
+        AuroraCname(
+            _metadata = newObjectMeta {
+                name = objectName
+                namespace = routeNamespace
+            },
+            spec = CnameSpec(
+                cname = routeHost,
+                host = withoutInitialPeriod(routeSuffix),
+                ttl = ttl,
+                azureDns = azureDnsCname,
+                msDns = msDnsCname
+            )
+        )
+
+    private fun withoutInitialPeriod(str: String): String =
+        if (str.startsWith(".")) {
+            str.substring(1)
+        } else {
+            str
+        }
 }
 
 data class ConfiguredRoute(

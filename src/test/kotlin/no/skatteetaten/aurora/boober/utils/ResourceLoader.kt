@@ -17,6 +17,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import assertk.Assert
 import assertk.assertions.support.fail
 import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.facade.compareJson
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -138,7 +139,7 @@ open class ResourceLoader {
     fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
         val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
         val expectedJson = loadJsonResource(fileName)
-        assertThat(actualJson).jsonEquals(expectedJson, fileName)
+        compareJson(expectedJson, actualJson, fileName)
         ar
     }
 

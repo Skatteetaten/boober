@@ -7,11 +7,15 @@
   },
   "spec": {
     "host": "test.foo",
-    "cname" : "simple-paas-utv",
-    "ttl" : 100,
-    "azureDns" : {
-      "enabled" : true,
-      "ttl" : 100
+    "cname": "simple-specific-cname.foo.no",
+    "ttl": 150,
+    "msDns": {
+      "enabled": true,
+      "ttl": 150
+    },
+    "azureDns": {
+      "enabled": true,
+      "ttl": 100
     }
   }
 }
