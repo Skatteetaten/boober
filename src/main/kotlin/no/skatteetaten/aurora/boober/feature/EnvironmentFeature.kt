@@ -4,7 +4,6 @@ import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
@@ -15,11 +14,8 @@ class EnvironmentFeature(
     val openShiftClient: OpenShiftClient,
     val userDetailsProvider: UserDetailsProvider
 ) : Feature {
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf()
-    }
-
-    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> = emptySet()
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> =
+        setOf()
 
     override fun validate(
         adc: AuroraDeploymentSpec,
