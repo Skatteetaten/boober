@@ -58,7 +58,6 @@ class S3DisabledFeature : S3FeatureTemplate() {
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        adc.s3ObjectAreas.forEach { println(it) }
         val isS3Enabled = adc.s3ObjectAreas.isNotEmpty()
 
         return if (isS3Enabled) {
