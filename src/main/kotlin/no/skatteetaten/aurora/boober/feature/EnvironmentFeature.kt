@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -8,10 +9,6 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import org.springframework.boot.convert.DurationStyle
-import org.springframework.stereotype.Service
-import java.time.Duration
-
 
 @Service
 class EnvironmentFeature(

@@ -1,9 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
-import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import org.springframework.boot.convert.DurationStyle
 import java.time.Duration
-
+import org.springframework.boot.convert.DurationStyle
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 
 val AuroraDeploymentSpec.envTTL: Duration?
     get() = this.getOrNull<String>("env/ttl")

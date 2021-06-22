@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.binary.Base64
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newSecret
 import io.fabric8.kubernetes.api.model.Secret
@@ -14,10 +17,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioning
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWithCredentials
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
-import org.apache.commons.codec.binary.Base64
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
-import org.springframework.stereotype.Service
-
 
 @ConditionalOnBean(S3StorageGridProvisioner::class)
 @Service
@@ -35,10 +34,10 @@ class S3StorageGridFeature(
     override fun enable(header: AuroraDeploymentSpec) = !header.isJob
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean)
-            : Map<String, Any> = emptyMap()
+        : Map<String, Any> = emptyMap()
 
     override fun validate(spec: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext)
-            : List<Exception> = spec.validateS3()
+        : List<Exception> = spec.validateS3()
 
     override fun generate(spec: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 

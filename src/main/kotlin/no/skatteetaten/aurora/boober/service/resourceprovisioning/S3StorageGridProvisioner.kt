@@ -1,21 +1,30 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fkorotkov.kubernetes.newObjectMeta
 import io.fabric8.kubernetes.api.model.HasMetadata
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.OperationScopeFeature
-import no.skatteetaten.aurora.boober.model.openshift.*
-import no.skatteetaten.aurora.boober.service.*
+import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectArea
+import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectAreaSpec
+import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectAreaStatus
+import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectAreaStatusResult
+import no.skatteetaten.aurora.boober.model.openshift.fqn
+import no.skatteetaten.aurora.boober.model.openshift.reason
+import no.skatteetaten.aurora.boober.service.HerkimerService
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.service.ResourceHerkimer
+import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
 import no.skatteetaten.aurora.boober.service.openshift.OperationType
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
-import org.springframework.stereotype.Service
 
 data class SgProvisioningRequest(
     val tenant: String,
@@ -60,7 +69,7 @@ class S3StorageGridProvisioner(
     private val logger = KotlinLogging.logger { }
 
     fun getOrProvisionCredentials(applicationDeploymentId: String, requests: List<SgProvisioningRequest>)
-            : List<SgRequestsWithCredentials> {
+        : List<SgRequestsWithCredentials> {
 
         if (requests.isEmpty()) return emptyList()
 
@@ -168,7 +177,7 @@ class S3StorageGridProvisioner(
         }
 
     private fun createSgoaResource(applicationDeploymentId: String, request: SgProvisioningRequest)
-            : StorageGridObjectArea {
+        : StorageGridObjectArea {
         val objectAreaName = "${request.deploymentName}-${request.objectAreaName}"
         // TODO: We need to somehow get the ownerReference set
         val labels = operationScopeFeature.getLabelsToAdd()
