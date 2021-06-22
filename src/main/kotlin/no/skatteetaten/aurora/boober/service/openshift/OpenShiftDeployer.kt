@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
+import java.time.Duration
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -16,14 +19,35 @@ import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.openshift.api.model.OpenshiftRoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.feature.*
+import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
+import no.skatteetaten.aurora.boober.feature.Permission
+import no.skatteetaten.aurora.boober.feature.Permissions
+import no.skatteetaten.aurora.boober.feature.affiliation
+import no.skatteetaten.aurora.boober.feature.deployState
+import no.skatteetaten.aurora.boober.feature.dockerImagePath
+import no.skatteetaten.aurora.boober.feature.envTTL
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.feature.pause
+import no.skatteetaten.aurora.boober.feature.permissions
+import no.skatteetaten.aurora.boober.feature.releaseTo
+import no.skatteetaten.aurora.boober.feature.type
+import no.skatteetaten.aurora.boober.feature.version
 import no.skatteetaten.aurora.boober.model.AuroraDeployCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
-import no.skatteetaten.aurora.boober.service.*
-import no.skatteetaten.aurora.boober.utils.*
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import java.time.Duration
+import no.skatteetaten.aurora.boober.service.AuroraDeployResult
+import no.skatteetaten.aurora.boober.service.AuroraEnvironmentResult
+import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
+import no.skatteetaten.aurora.boober.service.RedeployService
+import no.skatteetaten.aurora.boober.service.TagCommand
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.utils.Instants
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.normalizeLabels
+import no.skatteetaten.aurora.boober.utils.openshiftKind
+import no.skatteetaten.aurora.boober.utils.parallelMap
+import no.skatteetaten.aurora.boober.utils.whenFalse
 
 private val logger = KotlinLogging.logger { }
 
@@ -185,9 +209,9 @@ class OpenShiftDeployer(
 
         logger.debug("Apply objects")
         val openShiftResponses: List<OpenShiftResponse> = listOf(applicationResult) +
-                applyOpenShiftApplicationObjects(
-                    cmd, projectExist, ownerReferenceUid
-                )
+            applyOpenShiftApplicationObjects(
+                cmd, projectExist, ownerReferenceUid
+            )
 
         logger.debug("done applying objects")
         val success = openShiftResponses.all { it.success }
