@@ -4,6 +4,7 @@ import assertk.assertThat
 import assertk.assertions.*
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newProject
 import com.fkorotkov.openshift.status
@@ -147,6 +148,17 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
                 )
             }
 
+            rule({ path?.endsWith("/easy-default") }) {
+                replayRequestJsonWithModification(
+                    rootPath = "",
+                    key = "status",
+                    newValue = jacksonObjectMapper().readTree("""{ "result": {
+      "message": "nothing here",
+      "reason": "SGOAProvisioned",
+      "success": true
+    }}""")
+                )
+            }
             // All post/put/delete request just send the result back and assume OK.
             rule {
                 MockResponse().setResponseCode(200)
@@ -394,18 +406,9 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
         val adId = "1234567890"
 
         applicationDeploymentGenerationMock(adId) {
-            rule({
-                path.contains("resource?claimedBy=$booberAdId")
-            }) {
+            rule({ path.contains("resource?claimedBy=$adId") }) {
                 MockResponse()
                     .setBody(loadBufferResource("herkimerResponseBucketAdmin.json"))
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            }
-            rule({
-                path.endsWith("/resource")
-            }) {
-                MockResponse()
-                    .setBody(loadBufferResource("herkimerResponseCreateResource.json"))
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
 

@@ -43,17 +43,23 @@ private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea>
         BUCKET_OBJECT_AREA_CONTEXT_KEY
     )
 
-@ConditionalOnPropertyMissingOrEmpty("integrations.herkimer.url")
+@ConditionalOnProperty(value = ["integrations.s3.variant"], havingValue = "none", matchIfMissing = true)
 @Service
 class S3DisabledFeature : S3FeatureTemplate() {
+
+    private val logger = KotlinLogging.logger { }
+
+    init {
+        logger.info("S3 support is disabled")
+    }
 
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        val isS3Enabled = adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) ||
-            adc.getSubKeys(FEATURE_FIELD_NAME).isNotEmpty()
+        adc.s3ObjectAreas.forEach { println(it) }
+        val isS3Enabled = adc.s3ObjectAreas.isNotEmpty()
 
         return if (isS3Enabled) {
             listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))

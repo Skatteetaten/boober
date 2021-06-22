@@ -103,41 +103,6 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should generate environment resources`() {
-        every { openShiftClient.getGroups() } returns OpenShiftGroups(
-            mapOf(
-                "APP_PaaS_utv" to listOf("hero"),
-                "APP_PaaS_test" to listOf(),
-                "APP_PaaS_drift" to listOf()
-            )
-        )
-
-        every { userDetailsProvider.getAuthenticatedUser() } returns User(
-            "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
-                SimpleGrantedAuthority("APP_PaaS_utv")
-            )
-        )
-
-        val (projectResource, namespaceResource, rolebindingResource, viewRolebindingResource) =
-            generateResources(
-                files = listOf(
-                    AuroraConfigFile(
-                        "utv/about.json", """{
-              "permissions" : {
-                "view" : "APP_PaaS_test",
-                "adminServiceAccount" : "foo:bar:baz"
-                },
-                "env" : {
-                  "ttl" : "1d"
-                }
-            }"""
-                    )
-                ),
-                createdResources = 0
-            )
-    }
-
-    @Test
     fun `Should fail when name is not valid DNS952 label`() {
         assertThat {
             createAuroraDeploymentContext(

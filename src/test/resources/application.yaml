@@ -30,6 +30,8 @@ integrations:
         git:
             project: "ao"
             repo: "auroradeploymenttags"
+    s3:
+        variant: storagegrid
     aurora:
         templates:
             project: "ao"
