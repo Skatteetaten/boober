@@ -1,15 +1,14 @@
 package no.skatteetaten.aurora.boober.service.resourceprovisioning
 
-import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.ServiceTypes
-import no.skatteetaten.aurora.boober.TargetService
-import no.skatteetaten.aurora.boober.service.ProvisioningException
-import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import org.springframework.web.client.RestTemplate
+import no.skatteetaten.aurora.boober.ServiceTypes
+import no.skatteetaten.aurora.boober.TargetService
+import no.skatteetaten.aurora.boober.service.ProvisioningException
+import no.skatteetaten.aurora.boober.utils.RetryingRestTemplateWrapper
 
 data class S3ProvisioningRequest(
     val bucketName: String,
