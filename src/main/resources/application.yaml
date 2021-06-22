@@ -85,10 +85,6 @@ server:
 spring:
     profiles: local
 
-logging:
-    level:
-        no.skatteetaten.aurora.boober.service.resourceprovisioning: DEBUG
-
 management.server.port: 9091
 
 server:
