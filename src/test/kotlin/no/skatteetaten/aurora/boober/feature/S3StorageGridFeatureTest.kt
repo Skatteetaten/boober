@@ -226,13 +226,13 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     }
 
     private fun sgRequestsWithCredentials(objectAreaName: String, bucketName: String) = SgRequestsWithCredentials(
-        SgProvisioningRequest(tenant, objectAreaName, appName, kubeNs, this.bucket1Name),
+        SgProvisioningRequest(tenant, objectAreaName, appName, kubeNs, bucketName),
         StorageGridCredentials(
             tenant,
             "endpoint",
             "accessKey",
             "secretKey",
-            this.bucket1Name,
+            bucketName,
             "objectPrefix",
             "username",
             "password"
