@@ -64,11 +64,11 @@
   "baseImage": {
     "name": {
       "source": "default",
-      "value": "wingnut8",
+      "value": "wingnut11",
       "sources": [
         {
           "name": "default",
-          "value": "wingnut8"
+          "value": "wingnut11"
         }
       ]
     },
