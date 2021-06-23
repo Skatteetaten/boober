@@ -81,16 +81,16 @@ class OpenShiftDeployer(
         val envDeploys: Map<String, List<AuroraDeployCommand>> = deployCommands.groupBy { it.context.spec.namespace }
 
         return envDeploys.flatMap { (ns, commands) ->
-            val env = environmentResults[ns] ?: throw Exception("Unable to find environment result for namespace $ns")
+            val env = environmentResults[ns]
 
-            if (!env.success) {
+            if (env?.success != true) {
                 commands.map {
                     AuroraDeployResult(
-                        projectExist = env.projectExist,
+                        projectExist = env?.projectExist ?: false,
                         deployCommand = it,
-                        success = env.success,
-                        reason = env.reason,
-                        openShiftResponses = env.openShiftResponses
+                        success = env?.success ?: false,
+                        reason = env?.reason ?: "No environment result for namespace=$ns",
+                        openShiftResponses = env?.openShiftResponses ?: emptyList()
                     )
                 }
             } else {
