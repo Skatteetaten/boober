@@ -24,7 +24,6 @@ class S3StorageGridProvisionerTest {
     val provisioner = S3StorageGridProvisioner(
         mockk(),
         mockk(),
-        mockk(),
         herkimerService,
         OperationScopeFeature("utv"),
         "us-east-1",

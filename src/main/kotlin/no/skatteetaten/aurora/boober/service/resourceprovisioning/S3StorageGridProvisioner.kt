@@ -4,6 +4,9 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newObjectMeta
 import io.fabric8.kubernetes.api.model.HasMetadata
 import mu.KotlinLogging
@@ -15,14 +18,14 @@ import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectAreaStatus
 import no.skatteetaten.aurora.boober.model.openshift.fqn
 import no.skatteetaten.aurora.boober.model.openshift.reason
 import no.skatteetaten.aurora.boober.service.HerkimerService
-import no.skatteetaten.aurora.boober.service.OpenShiftCommandService
 import no.skatteetaten.aurora.boober.service.ProvisioningException
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResponse
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.openshift.OperationType.GET
+import no.skatteetaten.aurora.boober.utils.appropriateNamedUrl
 import no.skatteetaten.aurora.boober.utils.convert
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 
@@ -59,7 +62,6 @@ class S3ProvisioningException(message: String, cause: Throwable? = null) : Provi
 class S3StorageGridProvisioner(
     val openShiftDeployer: OpenShiftDeployer,
     val openShiftClient: OpenShiftClient,
-    val openShiftCommandService: OpenShiftCommandService,
     val herkimerService: HerkimerService,
     val operationScopeFeature: OperationScopeFeature,
     @Value("\${integrations.storagegrid.bucket.region:us-east-1}") val defaultBucketRegion: String,
@@ -110,11 +112,12 @@ class S3StorageGridProvisioner(
         fun hasTimedOut() = System.currentTimeMillis() - startTime > provisioningTimeout
         while (true) {
             requests.forEach { sgoaAndResult ->
-                val response = openShiftGetObject(sgoaAndResult.sgoa)
+                val sgoa = sgoaAndResult.sgoa
+                val response = openShiftClient.performOpenShiftCommand(sgoa.toGetCommand())
                 sgoaAndResult.result = response.responseBody?.get("status")
                     ?.convert<StorageGridObjectAreaStatus>()?.result
                     ?: StorageGridObjectAreaStatusResult()
-                logger.debug("Status for SGOA ${sgoaAndResult.sgoa.fqn} is ${sgoaAndResult.result}")
+                logger.debug("Status for SGOA ${sgoa.fqn} is ${sgoaAndResult.result}")
             }
             if (requests.all { it.result.reason.endState } || hasTimedOut()) break
 
@@ -139,13 +142,6 @@ class S3StorageGridProvisioner(
         val sgoa: StorageGridObjectArea,
         var result: StorageGridObjectAreaStatusResult = StorageGridObjectAreaStatusResult()
     )
-
-    private fun openShiftGetObject(resource: HasMetadata): OpenShiftResponse {
-        val namespace = resource.metadata.namespace
-        val cmd = openShiftCommandService.createOpenShiftCommand(namespace, resource)
-            .copy(operationType = OperationType.GET)
-        return openShiftClient.performOpenShiftCommand(cmd)
-    }
 
     private fun HerkimerService.getObjectAreaAdminCredentials(
         applicationDeploymentId: String,
@@ -196,3 +192,7 @@ class S3StorageGridProvisioner(
         )
     }
 }
+
+private fun HasMetadata.toGetCommand() = OpenshiftCommand(GET, this.toJson().appropriateNamedUrl)
+
+private fun HasMetadata.toJson() = jacksonObjectMapper().convertValue<JsonNode>(this)
