@@ -20,6 +20,7 @@ utv/about.json | cluster: "utv"
    whoami.json |       enabled: true
        default | certificate: false
    whoami.json | groupId: "org.test"
+       default | azure: false
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true

@@ -15,6 +15,7 @@ utv/about.json | cluster: "utv"
                | env:
        default |   autoDeploy: false
        default | certificate: false
+       default | azure: false
                | config:
        ah.json |   FOO: "bar"
                | databaseDefaults:

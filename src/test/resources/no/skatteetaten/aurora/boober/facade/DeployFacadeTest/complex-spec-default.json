@@ -363,6 +363,14 @@
       ]
     }
   },
+  "azure" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
   "config": {
     "FOO": {
       "source": "complex.json",

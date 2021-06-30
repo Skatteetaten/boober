@@ -42,6 +42,7 @@ utv/about-alternate.json |   ttl: "1d"
                  default |   version: 1
                          | certificate:
             complex.json |   commonName: "komplex"
+                 default | azure: false
                          | config:
             complex.json |   FOO: "BAR"
             complex.json |   THIS.VALUE: "BAZ"

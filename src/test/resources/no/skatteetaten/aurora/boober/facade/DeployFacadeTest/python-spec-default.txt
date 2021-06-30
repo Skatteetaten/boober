@@ -16,6 +16,7 @@ utv/python.json | applicationPlatform: "python"
         default |   autoDeploy: false
         default | certificate: false
 utv/python.json | groupId: "org.test"
+        default | azure: false
                 | databaseDefaults:
         default |   flavor: "ORACLE_MANAGED"
         default |   generate: true

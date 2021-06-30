@@ -24,6 +24,7 @@ utv/about.json | cluster: "utv"
        default |   name: "wrench12"
        default |   version: 1
        default | certificate: false
+       default | azure: false
                | config:
       web.json |   foo2: "baz"
                | databaseDefaults:

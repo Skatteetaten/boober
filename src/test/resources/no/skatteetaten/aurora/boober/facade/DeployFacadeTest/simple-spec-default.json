@@ -134,6 +134,24 @@
       "value" : "org.test"
     } ]
   },
+  "azure" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "databaseDefaults": {
+    "flavor": {
+      "source": "default",
+      "value": "ORACLE_MANAGED",
+      "sources": [
+        {
+          "name": "default",
+          "value": "ORACLE_MANAGED"
+        }
+      ]
   "databaseDefaults" : {
     "flavor" : {
       "source" : "default",

@@ -16,6 +16,7 @@ utv/about.json | cluster: "utv"
        default |   autoDeploy: false
        default | certificate: false
    simple.json | groupId: "org.test"
+       default | azure: false
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
