@@ -60,7 +60,7 @@ class ClingerSidecarFeature(
         }
 
         return createImageMetadataContext(
-            repo = "no_skatteetaten_aurora_openshift",
+            repo = "no_skatteetaten_aurora",
             name = "clinger",
             tag = clingerTag
         )
@@ -164,6 +164,8 @@ class ClingerSidecarFeature(
                 listOf(
                     EnvVarBuilder().withName("PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
                     EnvVarBuilder().withName("PROXY_BACKEND_PORT").withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
+                        .build(),
+                    EnvVarBuilder().withName("PROXY_SERVER_PORT").withValue(ports.first().containerPort.toString())
                         .build(),
                     EnvVarBuilder().withName("DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"]).build(),
                     EnvVarBuilder().withName("IV_GROUPS_REQUIRED").withValue(adc["azure/proxySidecar/ivGroupsRequired"])

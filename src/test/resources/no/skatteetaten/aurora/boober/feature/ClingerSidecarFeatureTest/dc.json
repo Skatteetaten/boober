@@ -42,6 +42,9 @@
                 "name" : "PROXY_BACKEND_PORT",
                 "value" : "8080"
               }, {
+                "name" : "PROXY_SERVER_PORT",
+                "value" : "8100"
+              }, {
                 "name" : "DISCOVERY_URL",
                 "value" : "https://endpoint"
               }, {
@@ -52,7 +55,7 @@
                 "value" : "presently-just-fake"
               }
             ],
-            "image": "docker.registry/no_skatteetaten_aurora_openshift/clinger@sha:1234567",
+            "image": "docker.registry/no_skatteetaten_aurora/clinger@sha:1234567",
             "name": "simple-clinger-sidecar",
             "ports": [
               {
