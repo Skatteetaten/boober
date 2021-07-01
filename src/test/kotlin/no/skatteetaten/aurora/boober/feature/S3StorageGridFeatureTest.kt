@@ -33,7 +33,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     }
 
     val tenant = "paas-utv"
-    val bucket1Name = "theBucket"
+    val bucket1Name = "thebucket"
 
     val area1Name = "default"
     val area2Name = "min-andre-bucket"
@@ -51,21 +51,6 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
            }"""
             )
         }.singleApplicationError("Missing field: bucketName for s3")
-    }
-
-    @Test
-    fun `should fail with message when s3 objectArea is not according to required format`() {
-        assertThat {
-            createAuroraDeploymentContext(
-                """{ 
-                "s3Defaults": {
-                   "objectArea": "my-object_Area",
-                   "bucketName": "myBucket"
-                },
-                "s3": true
-           }"""
-            )
-        }.singleApplicationError("s3 objectArea can only contain lower case characters,")
     }
 
     @Test
@@ -143,7 +128,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
             """{ 
                 "s3": {
                     "$areaName" : {
-                        "bucketName" : "anotherId",
+                        "bucketName" : "anotherid",
                         "tenant": "demo-utv"
                     }
                 }
@@ -196,7 +181,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `verify two objectareas with different bucketnames`() {
-        val bucket2Name = "anotherBucket"
+        val bucket2Name = "anotherbucket"
 
         every {
             provisioner.getOrProvisionCredentials(any(), match { r ->

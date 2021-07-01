@@ -52,10 +52,10 @@ fun AuroraDeploymentSpec.validateS3(): List<IllegalArgumentException> {
 }
 
 private fun List<S3ObjectArea>.validateBucketNames() = runValidators(
-    { s3ObjectArea ->
-        s3ObjectArea.bucketName
-            .takeIf { !Regex("[a-z0-9-.]+").matches(it) }
-            ?.let { "s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: $it" }
+    {
+        if (!Regex("[a-z0-9-.]*").matches(it.bucketName))
+            "s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: \"${it.bucketName}\""
+        else null
     }, { s3ObjectArea ->
         "${s3ObjectArea.tenant}-${s3ObjectArea.bucketName}"
             .takeIf { it.length < 3 || it.length >= 63 }
@@ -63,16 +63,10 @@ private fun List<S3ObjectArea>.validateBucketNames() = runValidators(
     }
 )
 
-private fun List<S3ObjectArea>.validateRequiredFieldsArePresent(): List<IllegalArgumentException> {
-    return this.flatMap {
-        val bucketNameException =
-            if (it.bucketName.isEmpty()) IllegalArgumentException("Missing field: bucketName for s3") else null
-        val objectAreaException =
-            if (it.area.isEmpty()) IllegalArgumentException("Missing field: objectArea for s3") else null
-
-        listOf(bucketNameException, objectAreaException)
-    }.filterNotNull()
-}
+private fun List<S3ObjectArea>.validateRequiredFieldsArePresent() = runValidators(
+    { if (it.bucketName.isEmpty()) "Missing field: bucketName for s3" else null },
+    { if (it.area.isEmpty()) "Missing field: objectArea for s3" else null }
+)
 
 private fun List<S3ObjectArea>.verifyObjectAreasAreUnique(): List<IllegalArgumentException> {
     return groupBy { it.area }
