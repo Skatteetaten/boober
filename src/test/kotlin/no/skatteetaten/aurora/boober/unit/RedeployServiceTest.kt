@@ -47,7 +47,7 @@ class RedeployServiceTest {
     fun `Should throw error if dc is null`() {
 
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns openShiftResponse()
 
         assertThat {
@@ -62,7 +62,7 @@ class RedeployServiceTest {
     fun `Redeploy given null ImageStream return success`() {
 
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns openShiftResponse()
 
         val response = redeployService.triggerRedeploy(listOf(deploymentConfig), TemplateType.deploy)
@@ -74,7 +74,7 @@ class RedeployServiceTest {
     @Test
     fun `Redeploy with paused deploy will run manual deploy`() {
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns imageStreamImportResponse()
 
         val response =
@@ -91,7 +91,7 @@ class RedeployServiceTest {
     @Test
     fun `Redeploy with newly created imagestream will not import`() {
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns imageStreamImportResponse()
 
         val response = redeployService.triggerRedeploy(
@@ -107,7 +107,7 @@ class RedeployServiceTest {
     @Test
     fun `Redeploy given image is already imported return success`() {
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns imageStreamImportResponse()
 
         val response = redeployService.triggerRedeploy(listOf(deploymentConfig, imageStream), TemplateType.deploy)
@@ -119,7 +119,7 @@ class RedeployServiceTest {
     @Test
     fun `Redeploy given image is not imported return success`() {
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns imageStreamImportResponse("234")
 
         val response = redeployService.triggerRedeploy(listOf(deploymentConfig, imageStream), TemplateType.deploy)
@@ -134,7 +134,7 @@ class RedeployServiceTest {
         val deploymentConfigWithoutType = deploymentConfig(null)
 
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns openShiftResponse()
 
         val response =
@@ -148,7 +148,7 @@ class RedeployServiceTest {
     fun `Redeploy with same image will run explicit deploy`() {
 
         every {
-            openShiftClient.performOpenShiftCommand("aos-test", any())
+            openShiftClient.performOpenShiftCommand(any())
         } returns openShiftResponse()
 
         val response = redeployService.triggerRedeploy(

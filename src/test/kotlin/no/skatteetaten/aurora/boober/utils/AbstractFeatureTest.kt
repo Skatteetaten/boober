@@ -83,6 +83,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     val affiliation = "paas"
     val appName = "simple"
     val environment = "utv"
+    val kubeNs = "$affiliation-$environment"
     val aid = ApplicationDeploymentRef(environment, appName)
 
     val openShiftClient: OpenShiftClient = mockk()
@@ -95,7 +96,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         AuroraResource(newImageStream {
             metadata {
                 name = appName
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
             spec {
                 dockerImageRepository = "docker.registry/org_test/simple"
@@ -105,7 +106,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createEmptyService() = AuroraResource(newService {
         metadata {
             name = "simple"
-            namespace = "paas-$environment"
+            namespace = kubeNs
         }
 
         spec {
@@ -129,7 +130,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         newBuildConfig {
             metadata {
                 name = "simple"
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
 
             spec {
@@ -172,7 +173,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             spec = ApplicationDeploymentSpec(),
             _metadata = newObjectMeta {
                 name = "simple"
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
         ), createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
@@ -182,7 +183,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
             metadata {
                 name = "simple"
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
             spec {
                 strategy {

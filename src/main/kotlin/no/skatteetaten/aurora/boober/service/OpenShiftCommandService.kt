@@ -148,11 +148,12 @@ class OpenShiftCommandService(
         return if (existingResource == null) {
             OpenshiftCommand(CREATE, payload = newResource, url = resourceUrl)
         } else {
-            val mergedResource = mergeWithExistingResource(newResource, existingResource.body!!)
+            val existingBody = existingResource.body
+            val mergedResource = existingBody?.let { mergeWithExistingResource(newResource, it) } ?: newResource
             OpenshiftCommand(
                 operationType = UPDATE,
                 payload = mergedResource,
-                previous = existingResource.body,
+                previous = existingBody,
                 generated = newResource,
                 url = namedUrl
             )
@@ -238,7 +239,7 @@ class OpenShiftCommandService(
                 listOf(command)
             }
 
-        val results = commands.map { openShiftClient.performOpenShiftCommand(namespace, it) }
+        val results = commands.map { openShiftClient.performOpenShiftCommand(it) }
 
         return results.map { response ->
             findErrorMessage(response)

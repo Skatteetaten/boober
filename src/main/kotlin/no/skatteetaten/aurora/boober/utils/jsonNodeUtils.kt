@@ -81,7 +81,7 @@ fun JsonNode.annotation(name: String): String? {
 }
 
 val JsonNode.namespace: String
-    get() = this.get("metadata").get("namespace").asText()
+    get() = this.get("metadata")?.get("namespace")?.asText() ?: ""
 
 val JsonNode.apiVersion: String
     get() = this.get("apiVersion").asText()
@@ -103,6 +103,14 @@ val JsonNode.namespacedResourceUrl: String
 
 val JsonNode.namespacedNamedUrl: String
     get() = "${this.namespacedResourceUrl}/${this.openshiftName}"
+
+val JsonNode.appropriateResourceAndNamedUrl get() = if (this.namespace.isEmpty()) {
+    this.resourceUrl to this.namedUrl
+} else {
+    this.namespacedResourceUrl to this.namespacedNamedUrl
+}
+
+val JsonNode.appropriateNamedUrl: String get() = appropriateResourceAndNamedUrl.second
 
 val JsonNode.openshiftKind: String
     get() = this.get("kind")?.asText()?.toLowerCase()

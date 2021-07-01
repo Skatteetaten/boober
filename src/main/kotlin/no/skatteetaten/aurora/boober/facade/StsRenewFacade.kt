@@ -52,7 +52,7 @@ class StsRenewFacade(
             .convertValue<JsonNode>(secret)
         val command = commandService.createOpenShiftCommand(request.namespace, json)
 
-        val response = openshiftClient.performOpenShiftCommand(request.namespace, command)
+        val response = openshiftClient.performOpenShiftCommand(command)
         val deployResult = response.success.whenTrue {
             redeployer.performDeploymentRequest(request.namespace, request.name)
         }

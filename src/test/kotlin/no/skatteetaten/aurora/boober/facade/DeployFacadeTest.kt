@@ -1,15 +1,10 @@
 package no.skatteetaten.aurora.boober.facade
 
 import assertk.assertThat
-import assertk.assertions.contains
-import assertk.assertions.doesNotContain
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFailure
-import assertk.assertions.isInstanceOf
-import assertk.assertions.isNotNull
-import assertk.assertions.messageContains
+import assertk.assertions.*
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.openshift.metadata
 import com.fkorotkov.openshift.newProject
 import com.fkorotkov.openshift.status
@@ -30,8 +25,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
-
-private val logger = KotlinLogging.logger { }
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -155,6 +148,17 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
                 )
             }
 
+            rule({ path?.endsWith("/easy-default") }) {
+                replayRequestJsonWithModification(
+                    rootPath = "",
+                    key = "status",
+                    newValue = jacksonObjectMapper().readTree("""{ "result": {
+      "message": "nothing here",
+      "reason": "SGOAProvisioned",
+      "success": true
+    }}""")
+                )
+            }
             // All post/put/delete request just send the result back and assume OK.
             rule {
                 MockResponse().setResponseCode(200)
@@ -358,6 +362,9 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     @Test
     fun `fail deploy if there are duplicate resources generated`() {
 
+        val env = "utv"
+        val namespace = "paas-$env"
+
         dbhMock {
             rule {
                 MockResponse()
@@ -369,9 +376,13 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
         openShiftMock {
 
-            rule({ path?.endsWith("/groups") }) {
-                mockJsonFromFile("groups.json")
-            }
+            getRule("/groups", "groups.json")
+            getRule("/projects/$namespace", "project.json")
+            getRule("/namespaces/$namespace", "namespace.json")
+            putRule("/namespaces/$namespace")
+
+            getRule("/namespaces/$namespace/rolebindings/admin", statusCode = 404)
+            postRule("/namespaces/$namespace/rolebindings")
 
             // Should it be able to reuse rules?
             rule(mockOpenShiftUsers)
@@ -379,10 +390,10 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
         assertThat {
             facade.executeDeploy(
-                auroraConfigRef, listOf(ApplicationDeploymentRef("utv", "ah")),
+                auroraConfigRef, listOf(ApplicationDeploymentRef(env, "ah")),
                 overrides = listOf(
                     AuroraConfigFile(
-                        "utv/ah.json",
+                        "$env/ah.json",
                         contents = """{ "route" : "true" }""",
                         override = true
                     )
@@ -395,18 +406,9 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
         val adId = "1234567890"
 
         applicationDeploymentGenerationMock(adId) {
-            rule({
-                path.contains("resource?claimedBy=$booberAdId")
-            }) {
+            rule({ path.contains("resource?claimedBy=$adId") }) {
                 MockResponse()
                     .setBody(loadBufferResource("herkimerResponseBucketAdmin.json"))
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            }
-            rule({
-                path.endsWith("/resource")
-            }) {
-                MockResponse()
-                    .setBody(loadBufferResource("herkimerResponseCreateResource.json"))
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
 

@@ -46,7 +46,7 @@ class DeploymentFacade(
 
         return deleteCommands.map {
             val openshiftResponse =
-                openShiftClient.performOpenShiftCommand(it.applicationRef.namespace, it.cmd)
+                openShiftClient.performOpenShiftCommand(it.cmd)
 
             val applicationDeploymentExists = openshiftResponse.responseBody != null
 
@@ -77,7 +77,7 @@ class DeploymentFacade(
 
         return applicationdeploymentGetCommand.map {
             val openshiftResponse =
-                openShiftClient.performOpenShiftCommand(it.applicationRef.namespace, it.cmd)
+                openShiftClient.performOpenShiftCommand(it.cmd)
 
             val forbidden = openshiftResponse.httpErrorCode?.let {
                 it == HttpStatus.SC_FORBIDDEN

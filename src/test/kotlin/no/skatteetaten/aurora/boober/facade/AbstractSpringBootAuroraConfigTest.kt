@@ -117,7 +117,10 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
         val resultFile = resultFiles[key]!!
         compareJson(resultFile.content, generatedObject, resultFile.path)
     }
-    assertThat(generatedObjects.map { it.getKey() }.toSortedSet()).isEqualTo(resultFiles.keys.toSortedSet())
+    val generatedObjectNames = generatedObjects.map { it.getKey() }.toSortedSet()
+    val expected = resultFiles.keys.toSortedSet()
+    expected.removeIf { it.startsWith("storagegridobjectarea/")}
+    assertThat(generatedObjectNames).isEqualTo(expected)
 }
 
 fun JsonNode.getKey(): String {
