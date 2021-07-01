@@ -46,9 +46,22 @@ fun AuroraDeploymentSpec.validateS3(): List<IllegalArgumentException> {
 
     val requiredFieldsExceptions = objectAreas.validateRequiredFieldsArePresent()
     val duplicateObjectAreaInSameBucketExceptions = objectAreas.verifyObjectAreasAreUnique()
+    val bucketNameExceptions = objectAreas.validateBucketNames()
 
-    return requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions
+    return requiredFieldsExceptions + duplicateObjectAreaInSameBucketExceptions + bucketNameExceptions
 }
+
+private fun List<S3ObjectArea>.validateBucketNames() = runValidators(
+    { s3ObjectArea ->
+        s3ObjectArea.bucketName
+            .takeIf { !Regex("[a-z0-9-.]+").matches(it) }
+            ?.let { "s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: $it" }
+    }, { s3ObjectArea ->
+        "${s3ObjectArea.tenant}-${s3ObjectArea.bucketName}"
+            .takeIf { it.length < 3 || it.length >= 63 }
+            ?.let { "combination of bucketName and tenantName must be between 3 and 63 chars, specified value was ${it.length} chars long" }
+    }
+)
 
 private fun List<S3ObjectArea>.validateRequiredFieldsArePresent(): List<IllegalArgumentException> {
     return this.flatMap {
@@ -67,6 +80,9 @@ private fun List<S3ObjectArea>.verifyObjectAreasAreUnique(): List<IllegalArgumen
         .filter { it.value > 1 }
         .map { (name, count) -> IllegalArgumentException("objectArea name=${name} used $count times for same application") }
 }
+
+private fun <T> List<T>.runValidators(vararg validators: (T) -> String?) =
+    validators.flatMap { validator -> this.mapNotNull(validator) }.map { IllegalArgumentException(it) }
 
 private const val FEATURE_FIELD_NAME = "s3"
 private const val FEATURE_DEFAULTS_FIELD_NAME = "s3Defaults"

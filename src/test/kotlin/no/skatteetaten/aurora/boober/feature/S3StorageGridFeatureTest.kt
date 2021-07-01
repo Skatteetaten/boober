@@ -105,6 +105,38 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `verify fails on validate when bucketName contains illegal chars`() {
+        val bucketName = "Bucket-1"
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName": "$bucketName"
+                    }
+                }
+           }"""
+            )
+        }.singleApplicationError("s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: \"$bucketName\"")
+    }
+
+    @Test
+    fun `verify fails on validate when combination of bucketName and tenant is too long`() {
+        val bucketName = "bucket-1-bit-extra-here-to-get-the-bucket-name-too-long-abcdefghijk"
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+                "s3": {
+                    "default" : {
+                        "bucketName": "$bucketName"
+                    }
+                }
+           }"""
+            )
+        }.singleApplicationError("combination of bucketName and tenantName must be between 3 and 63 chars, specified value was 76 chars long")
+    }
+
+    @Test
     fun `verify setting tenant in AuroraConfig is overridden with default`() {
         val areaName = "default"
         val spec = createAuroraDeploymentContext(
