@@ -278,7 +278,7 @@ fun JsonNode?.notBlank(message: String): Exception? {
 fun JsonNode?.validUrl(required: Boolean = true): Exception? {
     if (this == null || !this.isTextual || this.textValue().isBlank()) {
         return if (required) {
-            return IllegalArgumentException("Need to set a valid URL.")
+            IllegalArgumentException("Need to set a valid URL.")
         } else {
             null
         }

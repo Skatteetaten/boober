@@ -1,8 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.metadata
-import com.fkorotkov.kubernetes.newConfigMap
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newProbe
@@ -23,10 +20,8 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.validUrl
 
-// val AuroraDeploymentSpec.clingerSidecar: String? get() = this.getOrNull<String>("azure/proxySidecar")
 val AuroraDeploymentSpec.clingerSidecar: String?
     get() =
         this.featureEnabled("azure/proxySidecar") {
@@ -82,8 +77,8 @@ class ClingerSidecarFeature(
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/version",
-                defaultValue = "0.1.0",
-                validator = { it.notBlank("Expecting clinger version or false") }),
+                defaultValue = "0.1.0"
+            ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/discoveryUrl",
                 validator = { it.validUrl(required = false) }),
@@ -93,20 +88,6 @@ class ClingerSidecarFeature(
                 defaultValue = false,
                 validator = { it.boolean() })
         )
-    }
-
-    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-
-        adc.clingerSidecar ?: return emptySet()
-
-        val configMap = newConfigMap {
-            metadata {
-                name = "${adc.name}-clinger-config"
-                namespace = adc.namespace
-            }
-            data = emptyMap() // mapOf("config.json" to getClingerProxyConfig())
-        }
-        return setOf(generateResource(configMap))
     }
 
     override fun modify(
@@ -185,7 +166,7 @@ class ClingerSidecarFeature(
                 )
             }
             image = imageMetadata.getFullImagePath()
-            // TODO use actual readiness endpoint, and add liveness
+            // TODO AOT-1285 use actual readiness endpoint, and add liveness
             readinessProbe = newProbe {
                 tcpSocket {
                     port = IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT)
@@ -194,21 +175,5 @@ class ClingerSidecarFeature(
                 timeoutSeconds = 1
             }
         }
-    }
-
-    /**
-     * TODO Consider to make proxy object more generic. As it is it is stolen from ToxiProxy
-     * @see ToxiproxySidecarFeature#getToxiProxyConfig
-     */
-    data class ClingerProxyConfig(val name: String, val listen: String, val upstream: String)
-
-    fun getClingerProxyConfig(): String {
-        val config = ClingerProxyConfig(
-            name = "app",
-            listen = "0.0.0.0:" + PortNumbers.CLINGER_PROXY_HTTP_PORT,
-            upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT
-        )
-
-        return jacksonObjectMapper().writeValueAsString(listOf(config))
     }
 }

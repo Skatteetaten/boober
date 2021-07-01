@@ -42,7 +42,7 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should add clinger to dc and change service port`() {
-        val (serviceResource, dcResource) = generateResources(
+        val (serviceResource, dcResource) = modifyResources(
             """{
              "azure" : {
                 "proxySidecar": {
@@ -64,13 +64,11 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
             .auroraResourceMatchesFile("dc.json")
-
-        // We do not want configMap (probably) : assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
     }
 
     @Test
     fun `clinger is able to be enabled based on default values`() {
-        val (serviceResource, dcResource) = generateResources(
+        val (serviceResource, dcResource) = modifyResources(
             """{
              "azure" : {
                 "proxySidecar": {
