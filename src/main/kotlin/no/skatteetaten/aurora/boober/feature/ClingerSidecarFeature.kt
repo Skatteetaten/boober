@@ -80,12 +80,18 @@ class ClingerSidecarFeature(
                 validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
-            AuroraConfigFieldHandler("azure/proxySidecar/version", defaultValue = "0.1.0", validator = { it.notBlank("Expecting clinger version or false") }),
+            AuroraConfigFieldHandler(
+                "azure/proxySidecar/version",
+                defaultValue = "0.1.0",
+                validator = { it.notBlank("Expecting clinger version or false") }),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/discoveryUrl",
                 validator = { it.validUrl(required = false) }),
 
-            AuroraConfigFieldHandler("azure/proxySidecar/ivGroupsRequired", defaultValue = false, validator = { it.boolean() })
+            AuroraConfigFieldHandler(
+                "azure/proxySidecar/ivGroupsRequired",
+                defaultValue = false,
+                validator = { it.boolean() })
         )
     }
 
@@ -157,22 +163,15 @@ class ClingerSidecarFeature(
             }).addIfNotNull(
                 listOf(
                     EnvVarBuilder().withName("PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
-                    EnvVarBuilder().withName("PROXY_BACKEND_PORT").withValue(ports.first().containerPort.toString()).build(),
+                    EnvVarBuilder().withName("PROXY_BACKEND_PORT").withValue(ports.first().containerPort.toString())
+                        .build(),
                     EnvVarBuilder().withName("DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"]).build(),
-                    EnvVarBuilder().withName("IV_GROUPS_REQUIRED").withValue(adc["azure/proxySidecar/ivGroupsRequired"]).build(),
+                    EnvVarBuilder().withName("IV_GROUPS_REQUIRED").withValue(adc["azure/proxySidecar/ivGroupsRequired"])
+                        .build(),
                     EnvVarBuilder().withName("APPID").withValue("presently-just-fake").build()
                 )
             )
 
-
-            /*
-            volumeMounts = listOf(
-                newVolumeMount {
-                    name = "${adc.name}-clinger-config"
-                    mountPath = "${Paths.configPath}/clinger"
-                }
-            )
-             */
             resources {
                 limits = mapOf(
                     "memory" to Quantity("256Mi"),
@@ -195,12 +194,10 @@ class ClingerSidecarFeature(
         }
     }
 
-
-
     /**
      * TODO Consider to make proxy object more generic. As it is it is stolen from ToxiProxy
      * @see ToxiproxySidecarFeature#getToxiProxyConfig
-    */
+     */
     data class ClingerProxyConfig(val name: String, val listen: String, val upstream: String)
 
     fun getClingerProxyConfig(): String {

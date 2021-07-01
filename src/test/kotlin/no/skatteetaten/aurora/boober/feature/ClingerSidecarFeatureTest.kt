@@ -56,7 +56,11 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to clinger")
         val service = serviceResource.resource as Service
-        assertEquals(service.spec.ports.first().targetPort, IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT),"Target should be rewritten to proxy port.")
+        assertEquals(
+            service.spec.ports.first().targetPort,
+            IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT),
+            "Target should be rewritten to proxy port."
+        )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
             .auroraResourceMatchesFile("dc.json")
@@ -78,10 +82,13 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to clinger")
         val service = serviceResource.resource as Service
-        assertEquals(service.spec.ports.first().targetPort, IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT),"Target should be rewritten to proxy port.")
+        assertEquals(
+            service.spec.ports.first().targetPort,
+            IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT),
+            "Target should be rewritten to proxy port."
+        )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
             .auroraResourceMatchesFile("dc.json")
     }
-
 }
