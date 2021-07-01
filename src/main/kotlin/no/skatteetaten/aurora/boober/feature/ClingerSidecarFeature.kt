@@ -60,7 +60,7 @@ class ClingerSidecarFeature(
         }
 
         return createImageMetadataContext(
-            repo = "shopify",
+            repo = "no_skatteetaten_aurora_openshift",
             name = "clinger",
             tag = clingerTag
         )
@@ -163,7 +163,7 @@ class ClingerSidecarFeature(
             }).addIfNotNull(
                 listOf(
                     EnvVarBuilder().withName("PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
-                    EnvVarBuilder().withName("PROXY_BACKEND_PORT").withValue(ports.first().containerPort.toString())
+                    EnvVarBuilder().withName("PROXY_BACKEND_PORT").withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
                         .build(),
                     EnvVarBuilder().withName("DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"]).build(),
                     EnvVarBuilder().withName("IV_GROUPS_REQUIRED").withValue(adc["azure/proxySidecar/ivGroupsRequired"])

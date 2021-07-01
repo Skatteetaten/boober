@@ -25,11 +25,11 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
     fun setupMock() {
         every {
             cantusService.getImageMetadata(
-                "shopify", "clinger", "0.1.0"
+                "no_skatteetaten_aurora_openshift", "clinger", "0.1.0"
             )
         } returns
                 ImageMetadata(
-                    "docker.registry/shopify/clinger",
+                    "docker.registry/no_skatteetaten_aurora_openshift/clinger",
                     "0.1.0",
                     "sha:1234567"
                 )
