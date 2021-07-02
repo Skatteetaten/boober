@@ -56,7 +56,7 @@
               }
             ],
             "image": "docker.registry/no_skatteetaten_aurora/clinger@sha:1234567",
-            "name": "simple-clinger-sidecar",
+            "name": "simple-clinger-mix",
             "ports": [
               {
                 "containerPort": 8100,
