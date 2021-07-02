@@ -130,7 +130,7 @@ class ClingerSidecarFeature(
         val imageMetadata = context.imageMetadata
 
         return newContainer {
-            name = "${adc.name}-clinger-sidecar"
+            name = "${adc.name}-clinger-mix" // Not naming it sidecar, as that will mask out secrets
             ports = containerPorts.map {
                 newContainerPort {
                     name = it.key
