@@ -39,6 +39,19 @@ utv/about.json | cluster: "utv"
        default | startingDeadline: 60
        default | successCount: 3
        default | concurrentPolicy: "Forbid"
+       default | route: false
+               | routeDefaults:
+       default |   host: "@name@-@affiliation@-@env@"
+               |   tls:
+       default |     enabled: false
+       default |     insecurePolicy: "None"
+       default |     termination: "edge"
+               |   cname:
+       default |     enabled: false
+       default |     ttl: 300
+               |   azure:
+       default |     enabled: false
+       default |     cnameTtl: 300
                | secretVaults:
                |   foo:
        default |     name: "foo"
