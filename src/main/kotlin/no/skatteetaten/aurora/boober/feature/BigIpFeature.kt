@@ -126,7 +126,7 @@ class BigIpFeature(
 
         val routeName = if (isApplicationHost) "$host-bigip" else "${adc.name}-$host-bigip"
 
-        val route = Route(
+        val route = ConfiguredRoute(
             objectName = routeName,
             host = routeHost,
             annotations = adc.getRouteAnnotations("bigip/$host/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
@@ -167,7 +167,7 @@ class BigIpFeature(
         // dette var den gamle applicationDeploymentId som må nå være hostname
         val routeHost = DigestUtils.sha1Hex("${adc.namespace}/${adc.name}")
 
-        val auroraRoute = Route(
+        val auroraRoute = ConfiguredRoute(
             objectName = routeName,
             host = routeHost,
             annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")

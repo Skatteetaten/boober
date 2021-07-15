@@ -8,6 +8,10 @@ aurora:
     token:
         value: token
 
+test:
+    resources:
+        shouldOverwrite: false
+
 splunk:
     hec:
         token: token

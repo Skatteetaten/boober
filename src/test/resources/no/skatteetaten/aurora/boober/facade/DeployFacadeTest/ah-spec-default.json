@@ -1,143 +1,115 @@
 {
-  "applicationDeploymentRef": {
-    "source": "static",
-    "value": "utv/ah",
-    "sources": [
-      {
-        "name": "static",
-        "value": "utv/ah"
-      }
-    ]
+  "applicationDeploymentRef" : {
+    "source" : "static",
+    "value" : "utv/ah",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "utv/ah"
+    } ]
   },
-  "configVersion": {
-    "source": "static",
-    "value": "master",
-    "sources": [
-      {
-        "name": "static",
-        "value": "master"
-      }
-    ]
+  "configVersion" : {
+    "source" : "static",
+    "value" : "master",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "master"
+    } ]
   },
-  "applicationDeploymentId": {
-    "source": "static",
-    "value": "1234567890",
-    "sources": [
-      {
-        "name": "static",
-        "value": "1234567890"
-      }
-    ]
+  "applicationDeploymentId" : {
+    "source" : "static",
+    "value" : "1234567890",
+    "sources" : [ {
+      "name" : "static",
+      "value" : "1234567890"
+    } ]
   },
-  "schemaVersion": {
-    "source": "about.json",
-    "value": "v1",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "v1"
-      }
-    ]
+  "schemaVersion" : {
+    "source" : "about.json",
+    "value" : "v1",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "v1"
+    } ]
   },
-  "type": {
-    "source": "ah.json",
-    "value": "localTemplate",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "deploy"
-      },
-      {
-        "name": "ah.json",
-        "value": "localTemplate"
-      }
-    ]
+  "type" : {
+    "source" : "ah.json",
+    "value" : "localTemplate",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "deploy"
+    }, {
+      "name" : "ah.json",
+      "value" : "localTemplate"
+    } ]
   },
-  "deployState": {
-    "source": "default",
-    "value": "deploymentConfig",
-    "sources": [
-      {
-        "name": "default",
-        "value": "deploymentConfig"
-      }
-    ]
+  "deployState" : {
+    "source" : "default",
+    "value" : "deploymentConfig",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "deploymentConfig"
+    } ]
   },
-  "applicationPlatform": {
-    "source": "default",
-    "value": "java",
-    "sources": [
-      {
-        "name": "default",
-        "value": "java"
-      }
-    ]
+  "applicationPlatform" : {
+    "source" : "default",
+    "value" : "java",
+    "sources" : [ {
+      "name" : "default",
+      "value" : "java"
+    } ]
   },
-  "affiliation": {
-    "source": "about.json",
-    "value": "paas",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "paas"
-      }
-    ]
+  "affiliation" : {
+    "source" : "about.json",
+    "value" : "paas",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "paas"
+    } ]
   },
-  "segment": {
-    "source": "about.json",
-    "value": "aurora",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "aurora"
-      }
-    ]
+  "segment" : {
+    "source" : "about.json",
+    "value" : "aurora",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "aurora"
+    } ]
   },
-  "cluster": {
-    "source": "utv/about.json",
-    "value": "utv",
-    "sources": [
-      {
-        "name": "about.json",
-        "value": "utv"
-      },
-      {
-        "name": "utv/about.json",
-        "value": "utv"
-      }
-    ]
+  "cluster" : {
+    "source" : "utv/about.json",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "about.json",
+      "value" : "utv"
+    }, {
+      "name" : "utv/about.json",
+      "value" : "utv"
+    } ]
   },
-  "permissions": {
-    "admin": {
-      "source": "about.json",
-      "value": "APP_PaaS_drift APP_PaaS_utv",
-      "sources": [
-        {
-          "name": "about.json",
-          "value": "APP_PaaS_drift APP_PaaS_utv"
-        }
-      ]
+  "permissions" : {
+    "admin" : {
+      "source" : "about.json",
+      "value" : "APP_PaaS_drift APP_PaaS_utv",
+      "sources" : [ {
+        "name" : "about.json",
+        "value" : "APP_PaaS_drift APP_PaaS_utv"
+      } ]
     }
   },
-  "envName": {
-    "source": "folderName",
-    "value": "utv",
-    "sources": [
-      {
-        "name": "folderName",
-        "value": "utv"
-      }
-    ]
+  "envName" : {
+    "source" : "folderName",
+    "value" : "utv",
+    "sources" : [ {
+      "name" : "folderName",
+      "value" : "utv"
+    } ]
   },
-  "name": {
-    "source": "fileName",
-    "value": "ah",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "ah"
-      }
-    ]
+  "name" : {
+    "source" : "fileName",
+    "value" : "ah",
+    "sources" : [ {
+      "name" : "fileName",
+      "value" : "ah"
+    } ]
   },
   "env" : {
     "autoDeploy" : {
@@ -149,251 +121,204 @@
       } ]
     }
   },
-  "certificate": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "certificate" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "config": {
-    "FOO": {
-      "source": "ah.json",
-      "value": "bar",
-      "sources": [
-        {
-          "name": "ah.json",
-          "value": "bar"
-        }
-      ]
+  "config" : {
+    "FOO" : {
+      "source" : "ah.json",
+      "value" : "bar",
+      "sources" : [ {
+        "name" : "ah.json",
+        "value" : "bar"
+      } ]
     }
   },
-  "databaseDefaults": {
-    "flavor": {
-      "source": "default",
-      "value": "ORACLE_MANAGED",
-      "sources": [
-        {
-          "name": "default",
-          "value": "ORACLE_MANAGED"
-        }
-      ]
+  "databaseDefaults" : {
+    "flavor" : {
+      "source" : "default",
+      "value" : "ORACLE_MANAGED",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "ORACLE_MANAGED"
+      } ]
     },
-    "generate": {
-      "source": "default",
-      "value": true,
-      "sources": [
-        {
-          "name": "default",
-          "value": true
-        }
-      ]
+    "generate" : {
+      "source" : "default",
+      "value" : true,
+      "sources" : [ {
+        "name" : "default",
+        "value" : true
+      } ]
     },
-    "tryReuse": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
+    "tryReuse" : {
+      "source" : "default",
+      "value" : false,
+      "sources" : [ {
+        "name" : "default",
+        "value" : false
+      } ]
     },
-    "name": {
-      "source": "default",
-      "value": "@name@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@"
-        }
-      ]
+    "name" : {
+      "source" : "default",
+      "value" : "@name@",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "@name@"
+      } ]
     }
   },
-  "database": {
-    "source": "ah.json",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
+  "database" : {
+    "source" : "ah.json",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    }, {
+      "name" : "ah.json",
+      "value" : true
+    } ]
+  },
+  "alarm" : {
+    "source" : "default",
+    "value" : true,
+    "sources" : [ {
+      "name" : "default",
+      "value" : true
+    } ]
+  },
+  "pause" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "debug" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "version" : {
+    "source" : "ah.json",
+    "value" : "1.3.4",
+    "sources" : [ {
+      "name" : "ah.json",
+      "value" : "1.3.4"
+    } ]
+  },
+  "management" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "logging" : {
+    "bufferSize" : {
+      "source" : "default",
+      "value" : 20,
+      "sources" : [ {
+        "name" : "default",
+        "value" : 20
+      } ]
+    }
+  },
+  "parameters" : {
+    "FEED_NAME" : {
+      "source" : "ah.json",
+      "value" : "feed",
+      "sources" : [ {
+        "name" : "ah.json",
+        "value" : "feed"
+      } ]
+    },
+    "DOMAIN_NAME" : {
+      "source" : "ah.json",
+      "value" : "localhost",
+      "sources" : [ {
+        "name" : "ah.json",
+        "value" : "localhost"
+      } ]
+    },
+    "DB_NAME" : {
+      "source" : "ah.json",
+      "value" : "feed",
+      "sources" : [ {
+        "name" : "ah.json",
+        "value" : "feed"
+      } ]
+    }
+  },
+  "templateFile" : {
+    "source" : "ah.json",
+    "value" : "templates/atomhopper.json",
+    "sources" : [ {
+      "name" : "ah.json",
+      "value" : "templates/atomhopper.json"
+    } ]
+  },
+  "route" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
+  },
+  "routeDefaults" : {
+    "host" : {
+      "source" : "default",
+      "value" : "@name@-@affiliation@-@env@",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "@name@-@affiliation@-@env@"
+      } ]
+    },
+    "tls" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : false,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        } ]
       },
-      {
-        "name": "ah.json",
-        "value": true
-      }
-    ]
-  },
-  "alarm": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ]
-  },
-  "pause": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
-  "debug": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
-  "version": {
-    "source": "ah.json",
-    "value": "1.3.4",
-    "sources": [
-      {
-        "name": "ah.json",
-        "value": "1.3.4"
-      }
-    ]
-  },
-  "management": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
-  "logging": {
-    "bufferSize": {
-      "source": "default",
-      "value": 20,
-      "sources": [
-        {
-          "name": "default",
-          "value": 20
-        }
-      ]
-    }
-  },
-  "parameters": {
-    "FEED_NAME": {
-      "source": "ah.json",
-      "value": "feed",
-      "sources": [
-        {
-          "name": "ah.json",
-          "value": "feed"
-        }
-      ]
-    },
-    "DOMAIN_NAME": {
-      "source": "ah.json",
-      "value": "localhost",
-      "sources": [
-        {
-          "name": "ah.json",
-          "value": "localhost"
-        }
-      ]
-    },
-    "DB_NAME": {
-      "source": "ah.json",
-      "value": "feed",
-      "sources": [
-        {
-          "name": "ah.json",
-          "value": "feed"
-        }
-      ]
-    }
-  },
-  "templateFile": {
-    "source": "ah.json",
-    "value": "templates/atomhopper.json",
-    "sources": [
-      {
-        "name": "ah.json",
-        "value": "templates/atomhopper.json"
-      }
-    ]
-  },
-  "route": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
-  "routeDefaults": {
-    "host": {
-      "source": "default",
-      "value": "@name@-@affiliation@-@env@",
-      "sources": [
-        {
-          "name": "default",
-          "value": "@name@-@affiliation@-@env@"
-        }
-      ]
-    },
-    "tls": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
+      "insecurePolicy" : {
+        "source" : "default",
+        "value" : "None",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "None"
+        } ]
       },
-      "insecurePolicy": {
-        "source": "default",
-        "value": "None",
-        "sources": [
-          {
-            "name": "default",
-            "value": "None"
-          }
-        ]
-      },
-      "termination": {
-        "source": "default",
-        "value": "edge",
-        "sources": [
-          {
-            "name": "default",
-            "value": "edge"
-          }
-        ]
+      "termination" : {
+        "source" : "default",
+        "value" : "edge",
+        "sources" : [ {
+          "name" : "default",
+          "value" : "edge"
+        } ]
       }
     },
-    "cname": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
+    "cname" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : false,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        } ]
       },
       "ttl" : {
         "source" : "default",
@@ -403,78 +328,82 @@
           "value" : 300
         } ]
       }
+    },
+    "azure" : {
+      "enabled" : {
+        "source" : "default",
+        "value" : false,
+        "sources" : [ {
+          "name" : "default",
+          "value" : false
+        } ]
+      },
+      "cnameTtl" : {
+        "source" : "default",
+        "value" : 300,
+        "sources" : [ {
+          "name" : "default",
+          "value" : 300
+        } ]
+      }
     }
   },
-  "s3": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "s3" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "s3Defaults": {
-    "bucketName": {
-      "source": "default",
-      "value": "",
-      "sources": [
-        {
-          "name": "default",
-          "value": ""
-        }
-      ]
+  "s3Defaults" : {
+    "bucketName" : {
+      "source" : "default",
+      "value" : "",
+      "sources" : [ {
+        "name" : "default",
+        "value" : ""
+      } ]
     },
-    "objectArea": {
-      "source": "default",
-      "value": "",
-      "sources": [
-        {
-          "name": "default",
-          "value": ""
-        }
-      ]
+    "objectArea" : {
+      "source" : "default",
+      "value" : "",
+      "sources" : [ {
+        "name" : "default",
+        "value" : ""
+      } ]
     },
-    "tenant": {
-      "source": "default",
-      "value": "paas-utv",
-      "sources": [
-        {
-          "name": "default",
-          "value": "paas-utv"
-        }
-      ]
+    "tenant" : {
+      "source" : "default",
+      "value" : "paas-utv",
+      "sources" : [ {
+        "name" : "default",
+        "value" : "paas-utv"
+      } ]
     }
   },
-  "sts": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "sts" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "toxiproxy": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "toxiproxy" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   },
-  "webseal": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "webseal" : {
+    "source" : "default",
+    "value" : false,
+    "sources" : [ {
+      "name" : "default",
+      "value" : false
+    } ]
   }
 }

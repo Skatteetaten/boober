@@ -163,14 +163,16 @@
       }
     ]
   },
-  "env" : {
-    "autoDeploy" : {
-      "source" : "default",
-      "value" : false,
-      "sources" : [ {
-        "name" : "default",
-        "value" : false
-      } ]
+  "env": {
+    "autoDeploy": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
     }
   },
   "certificate": {
@@ -365,14 +367,16 @@
       }
     }
   },
-  "logging" : {
-    "bufferSize" : {
-      "source" : "default",
-      "value" : 20,
-      "sources" : [ {
-        "name" : "default",
-        "value" : 20
-      } ]
+  "logging": {
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
     }
   },
   "artifactId": {
@@ -561,13 +565,37 @@
           }
         ]
       },
-      "ttl" : {
-        "source" : "default",
-        "value" : 300,
-        "sources" : [ {
-          "name" : "default",
-          "value" : 300
-        } ]
+      "ttl": {
+        "source": "default",
+        "value": 300,
+        "sources": [
+          {
+            "name": "default",
+            "value": 300
+          }
+        ]
+      }
+    },
+    "azure": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "cnameTtl": {
+        "source": "default",
+        "value": 300,
+        "sources": [
+          {
+            "name": "default",
+            "value": 300
+          }
+        ]
       }
     }
   },
@@ -602,13 +630,15 @@
         }
       ]
     },
-    "tenant" : {
-      "source" : "default",
-      "value" : "paas-utv",
-      "sources" : [ {
-        "name" : "default",
-        "value" : "paas-utv"
-      } ]
+    "tenant": {
+      "source": "default",
+      "value": "paas-utv",
+      "sources": [
+        {
+          "name": "default",
+          "value": "paas-utv"
+        }
+      ]
     }
   },
   "sts": {

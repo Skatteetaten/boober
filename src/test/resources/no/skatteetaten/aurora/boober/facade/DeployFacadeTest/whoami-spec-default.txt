@@ -58,6 +58,9 @@ utv/about.json | cluster: "utv"
                |   cname:
        default |     enabled: false
        default |     ttl: 300
+               |   azure:
+       default |     enabled: false
+       default |     cnameTtl: 300
        default | s3: false
                | s3Defaults:
        default |   bucketName: ""

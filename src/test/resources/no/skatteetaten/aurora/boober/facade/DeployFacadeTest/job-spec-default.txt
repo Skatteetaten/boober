@@ -49,6 +49,9 @@ utv/about.json | cluster: "utv"
                |   cname:
        default |     enabled: false
        default |     ttl: 300
+               |   azure:
+       default |     enabled: false
+       default |     cnameTtl: 300
                | secretVaults:
                |   foo:
        default |     name: "foo"
