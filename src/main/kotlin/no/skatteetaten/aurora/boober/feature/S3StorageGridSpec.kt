@@ -6,7 +6,7 @@ data class S3ObjectArea(
     val tenant: String,
     val bucketName: String,
     val specifiedAreaKey: String,
-    val area: String = specifiedAreaKey,
+    val area: String = specifiedAreaKey
 )
 
 val AuroraDeploymentSpec.s3ObjectAreas
@@ -72,7 +72,7 @@ private fun List<S3ObjectArea>.verifyObjectAreasAreUnique(): List<IllegalArgumen
     return groupBy { it.area }
         .mapValues { it.value.size }
         .filter { it.value > 1 }
-        .map { (name, count) -> IllegalArgumentException("objectArea name=${name} used $count times for same application") }
+        .map { (name, count) -> IllegalArgumentException("objectArea name=$name used $count times for same application") }
 }
 
 private fun <T> List<T>.runValidators(vararg validators: (T) -> String?) =

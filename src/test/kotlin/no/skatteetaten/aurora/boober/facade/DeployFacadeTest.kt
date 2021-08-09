@@ -1,20 +1,5 @@
 package no.skatteetaten.aurora.boober.facade
 
-import assertk.assertThat
-import assertk.assertions.*
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.openshift.metadata
-import com.fkorotkov.openshift.newProject
-import com.fkorotkov.openshift.status
-import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
-import no.skatteetaten.aurora.boober.service.HerkimerResponse
-import no.skatteetaten.aurora.boober.utils.getResultFiles
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -25,6 +10,26 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
+import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newProject
+import com.fkorotkov.openshift.status
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.doesNotContain
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFailure
+import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
+import assertk.assertions.messageContains
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
+import no.skatteetaten.aurora.boober.service.HerkimerResponse
+import no.skatteetaten.aurora.boober.utils.getResultFiles
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import okhttp3.mockwebserver.MockResponse
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
@@ -152,11 +157,13 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
                 replayRequestJsonWithModification(
                     rootPath = "",
                     key = "status",
-                    newValue = jacksonObjectMapper().readTree("""{ "result": {
+                    newValue = jacksonObjectMapper().readTree(
+                        """{ "result": {
       "message": "nothing here",
       "reason": "SGOAProvisioned",
       "success": true
-    }}""")
+    }}"""
+                    )
                 )
             }
             // All post/put/delete request just send the result back and assume OK.

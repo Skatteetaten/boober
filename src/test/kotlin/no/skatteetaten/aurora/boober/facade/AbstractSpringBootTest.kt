@@ -81,7 +81,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
             try {
                 it.replace(key, newValue)
             } catch (e: Exception) {
-                it.set(key, newValue)
+                it.set<JsonNode>(key, newValue)
             }
         }
 

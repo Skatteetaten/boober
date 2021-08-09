@@ -119,7 +119,7 @@ fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transfor
     }
     val generatedObjectNames = generatedObjects.map { it.getKey() }.toSortedSet()
     val expected = resultFiles.keys.toSortedSet()
-    expected.removeIf { it.startsWith("storagegridobjectarea/")}
+    expected.removeIf { it.startsWith("storagegridobjectarea/") }
     assertThat(generatedObjectNames).isEqualTo(expected)
 }
 

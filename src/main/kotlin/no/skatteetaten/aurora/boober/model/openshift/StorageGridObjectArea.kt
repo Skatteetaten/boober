@@ -1,6 +1,11 @@
 package no.skatteetaten.aurora.boober.model.openshift
 
-import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.annotation.JsonPropertyOrder
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectAreaStatusResult.Companion.defaultReason
@@ -35,7 +40,7 @@ data class StorageGridObjectArea(
     }
 }
 
-val StorageGridObjectArea.fqn get() = metadata.run { "${namespace}/${name}" }
+val StorageGridObjectArea.fqn get() = metadata.run { "$namespace/$name" }
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -82,4 +87,3 @@ data class StorageGridObjectAreaStatusResult(
 val StorageGridObjectAreaStatusResult.reason
     get() = if (reasonString.isBlank()) defaultReason
     else Reason.valueOf(reasonString)
-

@@ -22,7 +22,7 @@ import no.skatteetaten.aurora.boober.utils.findResourcesByType
 @Service
 class S3StorageGridFeature(
     val s3StorageGridProvisioner: S3StorageGridProvisioner,
-    val openShiftClient: OpenShiftClient,
+    val openShiftClient: OpenShiftClient
 ) : S3FeatureTemplate() {
 
     private val logger = KotlinLogging.logger { }
@@ -33,11 +33,11 @@ class S3StorageGridFeature(
 
     override fun enable(header: AuroraDeploymentSpec) = !header.isJob
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean)
-        : Map<String, Any> = emptyMap()
+    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean):
+        Map<String, Any> = emptyMap()
 
-    override fun validate(spec: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext)
-        : List<Exception> = spec.validateS3()
+    override fun validate(spec: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext):
+        List<Exception> = spec.validateS3()
 
     override fun generate(spec: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 

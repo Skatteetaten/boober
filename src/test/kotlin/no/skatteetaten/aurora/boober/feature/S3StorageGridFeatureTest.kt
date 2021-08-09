@@ -38,7 +38,6 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     val area1Name = "default"
     val area2Name = "min-andre-bucket"
 
-
     @Test
     fun `should fail with message when s3 bucketName is missing`() {
         assertThat {
@@ -186,8 +185,8 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
         every {
             provisioner.getOrProvisionCredentials(any(), match { r ->
                 r.run {
-                    find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
-                            && find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
+                    find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null &&
+                            find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
                 }
             })
         } returns listOf(

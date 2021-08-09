@@ -70,8 +70,8 @@ class S3StorageGridProvisioner(
 ) {
     private val logger = KotlinLogging.logger { }
 
-    fun getOrProvisionCredentials(applicationDeploymentId: String, requests: List<SgProvisioningRequest>)
-        : List<SgRequestsWithCredentials> {
+    fun getOrProvisionCredentials(applicationDeploymentId: String, requests: List<SgProvisioningRequest>):
+        List<SgRequestsWithCredentials> {
 
         if (requests.isEmpty()) return emptyList()
 
@@ -153,7 +153,7 @@ class S3StorageGridProvisioner(
 
             val objectAreaResourceName = request.objectAreaName
             val sgoaResource = sgoaResources[objectAreaResourceName]
-                ?: throw S3ProvisioningException("Unable to find resource of kind ${ResourceKind.StorageGridObjectArea} with name $objectAreaResourceName for applicationDeploymentId=${applicationDeploymentId}")
+                ?: throw S3ProvisioningException("Unable to find resource of kind ${ResourceKind.StorageGridObjectArea} with name $objectAreaResourceName for applicationDeploymentId=$applicationDeploymentId")
 
             SgRequestsWithCredentials(request, sgoaResource.adminClaimCredentials)
         }
@@ -172,8 +172,8 @@ class S3StorageGridProvisioner(
                 .copy(bucketRegion = defaultBucketRegion)
         }
 
-    private fun createSgoaResource(applicationDeploymentId: String, request: SgProvisioningRequest)
-        : StorageGridObjectArea {
+    private fun createSgoaResource(applicationDeploymentId: String, request: SgProvisioningRequest):
+        StorageGridObjectArea {
         val objectAreaName = "${request.deploymentName}-${request.objectAreaName}"
         // TODO: We need to somehow get the ownerReference set
         val labels = operationScopeFeature.getLabelsToAdd()
