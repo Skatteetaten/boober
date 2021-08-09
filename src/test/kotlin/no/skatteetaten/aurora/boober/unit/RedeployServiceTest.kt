@@ -53,7 +53,7 @@ class RedeployServiceTest {
         assertThat {
             redeployService.triggerRedeploy(listOf(), TemplateType.deploy)
         }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
+            this.isInstanceOf(IllegalArgumentException::class)
             hasMessage("Missing DeploymentConfig")
         }
     }

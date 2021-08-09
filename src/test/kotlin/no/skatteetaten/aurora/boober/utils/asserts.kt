@@ -34,11 +34,11 @@ fun <T> Assert<Result<T>>.applicationErrors(messages: List<String>) {
         .transform { mae ->
             val errors = mae.errors.flatMap { it.errors }
             if (errors.size != messages.size) {
-                expected("You do not expect all error messages. Actual error messages are ${errors.size}")
+                this.expected("You do not expect all error messages. Actual error messages are ${errors.size}")
             }
             errors.zip(messages).forEach { (actual, expected) ->
                 if (!actual.localizedMessage.contains(expected)) {
-                    expected(":${show(actual.localizedMessage)} to contain:${show(expected)}")
+                    this.expected(":${show(actual.localizedMessage)} to contain:${show(expected)}")
                 }
             }
         }
@@ -51,11 +51,11 @@ fun <T> Assert<Result<T>>.configErrors(messages: List<String>) {
             val errors = ace.errors.map { it.asWarning() }.distinct()
 
             if (errors.size != messages.size) {
-                expected("You do not expect all error messages. Actual error messages are ${errors.size}")
+                this.expected("You do not expect all error messages. Actual error messages are ${errors.size}")
             }
             errors.zip(messages).forEach { (actual, expected) ->
                 if (!actual.contains(expected)) {
-                    expected(":${show(actual)} to contain:${show(expected)}")
+                    this.expected(":${show(actual)} to contain:${show(expected)}")
                 }
             }
         }
