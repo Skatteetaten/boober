@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.beans.factory.annotation.Autowired
@@ -400,6 +401,7 @@ class AuroraConfigFacadeTest(
     }
 
     @Test
+    @Disabled
     fun `validate sample aurora config full`() {
 
         openShiftMock {

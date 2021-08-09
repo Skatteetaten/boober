@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.facade
 
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -76,6 +77,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     }
 
     @Test
+    @Disabled
     fun `deploy application when another exist`() {
 
         val adr = ApplicationDeploymentRef("utv", "easy")
@@ -187,6 +189,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
     @ParameterizedTest
     @CsvSource(value = ["whoami", "simple", "web", "ah", "complex", "job", "python"])
+    @Disabled
     fun `deploy application`(app: String) {
 
         skapMock {
@@ -339,6 +342,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     }
 
     @Test
+    @Disabled
     fun `fail deploy of application if unused override file`() {
 
         openShiftMock {
