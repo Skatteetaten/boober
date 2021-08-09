@@ -31,7 +31,7 @@ integrations:
             project: "ao"
             repo: "auroradeploymenttags"
     s3:
-        variant: storagegrid
+        variant: minio
     aurora:
         templates:
             project: "ao"
