@@ -6,7 +6,6 @@ import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.annotation.DirtiesContext
@@ -37,7 +36,7 @@ import okhttp3.mockwebserver.MockResponse
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: String) :
+class DeployFacadeTest :
     AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
@@ -410,7 +409,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     }
 
     private fun mockHerkimerRequests() {
-        val adId = booberAdId
+        val adId = "1234567890"
         applicationDeploymentGenerationMock(adId) {
             rule({ path.contains("resource?claimedBy=$adId") }) {
                 MockResponse()

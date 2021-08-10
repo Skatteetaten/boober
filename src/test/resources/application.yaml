@@ -78,7 +78,10 @@ integrations:
         releases: "docker.release.registry:5000"
 
 
-application.deployment.id: 1234567890
+application:
+    deployment:
+        id: 1234567890
+
 boober:
     projectrequest:
         sleep: 0
