@@ -1191,11 +1191,11 @@
     "default": {
       "bucketName": {
         "source": "complex.json",
-        "value": "minYndlingsBucket",
+        "value": "minyndlingsbucket",
         "sources": [
           {
             "name": "complex.json",
-            "value": "minYndlingsBucket"
+            "value": "minyndlingsbucket"
           }
         ]
       },

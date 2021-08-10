@@ -34,7 +34,7 @@ import okhttp3.mockwebserver.MockResponse
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
-    properties = ["integrations.openshift.retries=0"]
+    properties = ["integrations.openshift.retries=0", "integrations.s3.variant=storagegrid"]
 )
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
@@ -77,7 +77,6 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     }
 
     @Test
-    @Disabled
     fun `deploy application when another exist`() {
 
         val adr = ApplicationDeploymentRef("utv", "easy")
@@ -189,7 +188,6 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
 
     @ParameterizedTest
     @CsvSource(value = ["whoami", "simple", "web", "ah", "complex", "job", "python"])
-    @Disabled
     fun `deploy application`(app: String) {
 
         skapMock {
@@ -342,7 +340,6 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     }
 
     @Test
-    @Disabled
     fun `fail deploy of application if unused override file`() {
 
         openShiftMock {
@@ -414,12 +411,11 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
     }
 
     private fun mockHerkimerRequests() {
-        val adId = "1234567890"
-
+        val adId = booberAdId
         applicationDeploymentGenerationMock(adId) {
             rule({ path.contains("resource?claimedBy=$adId") }) {
                 MockResponse()
-                    .setBody(loadBufferResource("herkimerResponseBucketAdmin.json"))
+                    .setBody(loadBufferResource("herkimerResponseBucketAdminSG.json"))
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
 
