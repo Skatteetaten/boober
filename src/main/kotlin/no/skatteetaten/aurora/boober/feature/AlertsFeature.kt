@@ -172,30 +172,23 @@ class AlertsFeature : Feature {
 
         val alertEnabled = this.getOrNull<Boolean>("$confPath/enabled")
         val alertExpr = this.getOrNull<String>("$confPath/expr")
+            ?: throw IllegalStateException("Missing $confPath/expr value, check validation-logic")
         val alertDelay = this.getOrNull<Int>("$confPath/delay")
         val alertConnection = this.getOrNull<String>("$confPath/connection")
         val alertSeverity = this.getOrNull<String>("$confPath/severity")
+            ?: throw IllegalStateException("Missing $confPath/severity value, check validation-logic")
 
-        if (this.hasSubKeys(defaultsName)) {
-            val defaultEnabled = this.getOrNull<Boolean>("$defaultsName/enabled") ?: false
-            val defaultDelay = this.getOrNull<Int>("$defaultsName/delay") ?: -1
-            val defaultConnection = this.getOrNull<String>("$defaultsName/connection") ?: ""
-
-            return AlertConfiguration(
-                enabled = alertEnabled ?: defaultEnabled,
-                expr = alertExpr ?: "",
-                delay = alertDelay ?: defaultDelay,
-                connection = alertConnection ?: defaultConnection,
-                severity = alertSeverity ?: ""
-            )
-        }
+        val defaultEnabled = this.getOrNull<Boolean>("$defaultsName/enabled") ?: false
+        val defaultDelay = this.getOrNull<Int>("$defaultsName/delay") ?: 1
+        val connection = alertConnection ?: this.getOrNull<String>("$defaultsName/connection")
+        ?: throw IllegalStateException("Missing $confPath/connection value, check validation-logic")
 
         return AlertConfiguration(
-            alertEnabled ?: false,
-            alertExpr ?: "",
-            alertDelay ?: -1,
-            alertConnection ?: "",
-            alertSeverity ?: ""
+            enabled = alertEnabled ?: defaultEnabled,
+            expr = alertExpr,
+            delay = alertDelay ?: defaultDelay,
+            connection = alertConnection ?: connection,
+            severity = alertSeverity
         )
     }
 }
