@@ -621,4 +621,23 @@ class AuroraConfigFacadeTest(
         val searchForApplications = facade.searchForApplications("master", "utv")
         assertThat(searchForApplications.size).isEqualTo(8)
     }
+
+    @Test
+    fun `get spec for including environment files with override`() {
+
+        val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
+            ref = auroraConfigRef,
+            adr = adr,
+            overrideFiles = listOf(
+                AuroraConfigFile(
+                    "include/simple.json",
+                    override = true,
+                    contents = """{}"""
+                )
+            ),
+            errorsAsWarnings = false
+        )
+
+        assertThat(spec.get<String>("env.ttl")).isEqualTo("1d")
+    }
 }
