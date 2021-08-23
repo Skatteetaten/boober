@@ -35,6 +35,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.boot.web.client.RestTemplateBuilder
 import java.util.UUID
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 private val logger = KotlinLogging.logger { }
 
@@ -147,23 +148,35 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `create database secret from id`() {
+    fun `should get error if schema with id is not in the selected affiliation`() {
+        val uuid = UUID.randomUUID()
+
         httpMockServer(5000) {
             rule {
-                json(DbApiEnvelope("ok", listOf(schema)))
+                json(DbApiEnvelope("ok", listOf(createDbhSchema(uuid))))
             }
         }
 
-        val (adResource, dcResource, secretResource) = generateResources(
-            """{ 
+        assertThat {
+            generateResources(
+                """{ 
                "database" : {
-                 "simple" : "123456"
+                 "simple" : "$uuid"
                 }
-           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
-        )
-
-        assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
-        assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
+           }""",
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig()),
+                files = listOf(
+                    AuroraConfigFile(
+                        "about.json", """{
+                         "schemaVersion": "v1",
+                         "type": "deploy",
+                         "cluster": "utv",
+                         "affiliation": "aurora"
+                    }"""
+                    )
+                )
+            )
+        }.singleApplicationError("Schema with id=$uuid is located in the affiliation=paas, current affiliation=aurora. Using schema with id across affiliations is not allowed")
     }
 
     @Test
