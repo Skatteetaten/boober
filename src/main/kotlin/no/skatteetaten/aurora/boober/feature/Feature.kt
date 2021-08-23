@@ -209,7 +209,7 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
             AuroraConfigFieldHandler("env/autoDeploy", validator = { it.boolean() }, defaultValue = false),
             AuroraConfigFieldHandler("baseFile"),
             AuroraConfigFieldHandler("envFile"),
-            AuroraConfigFieldHandler("includeEnvFile")
-
+            AuroraConfigFieldHandler("includeEnvFile"),
+            AuroraConfigFieldHandler("includeGlobalFile")
         )
     }

@@ -194,10 +194,17 @@ data class AuroraConfig(
             AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
         }
 
+        val includeGlobal = envFileJson.get("includeGlobalFile")?.asText()
+
+        val globalFiles = includeGlobal?.let {
+            require(it.startsWith(("about"))) { "included globalFile must start with about" }
+            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.GLOBAL_INCLUDE)
+        }
+
         return setOf(
             AuroraConfigFileSpec("about", AuroraConfigFileType.GLOBAL),
             AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE)
-        ).addIfNotNull(envFiles).addIfNotNull(
+        ).addIfNotNull(envFiles).addIfNotNull(globalFiles).addIfNotNull(
             setOf(
                 AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
                 AuroraConfigFileSpec(
