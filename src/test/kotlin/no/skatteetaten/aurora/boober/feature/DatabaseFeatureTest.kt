@@ -1,5 +1,11 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.util.UUID
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.boot.web.client.RestTemplateBuilder
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.contains
@@ -7,7 +13,6 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isSuccess
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
@@ -15,6 +20,7 @@ import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.facade.json
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
@@ -30,12 +36,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.boot.web.client.RestTemplateBuilder
-import java.util.UUID
-import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 
 private val logger = KotlinLogging.logger { }
 
@@ -139,6 +139,26 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                        "type" : "ytelse"
                     }
                   }
+                }
+           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+
+        assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
+        assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
+    }
+
+    @Test
+    fun `create database secret from id`() {
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+        }
+
+        val (adResource, dcResource, secretResource) = generateResources(
+            """{ 
+               "database" : {
+                 "simple" : "123456"
                 }
            }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
