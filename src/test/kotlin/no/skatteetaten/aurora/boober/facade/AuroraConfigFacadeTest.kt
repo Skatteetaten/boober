@@ -60,7 +60,6 @@ class AuroraConfigFacadeTest(
     }
 
     val adr = ApplicationDeploymentRef("utv", "simple")
-    val adr2 = ApplicationDeploymentRef("include", "simple")
 
     @Test
     fun `get spec for applications deployment refs`() {
@@ -290,7 +289,7 @@ class AuroraConfigFacadeTest(
             )
         }.isFailure()
             .isInstanceOf(IllegalArgumentException::class)
-            .hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name ah2.")
+            .hasMessage("BaseFile ah2.(json|yaml) missing for application: utv/ah2")
     }
 
     @Test
@@ -646,10 +645,10 @@ class AuroraConfigFacadeTest(
 
         val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
             ref = auroraConfigRef,
-            adr = ApplicationDeploymentRef("include", "simple"),
+            adr = ApplicationDeploymentRef("include", "include"),
             overrideFiles = listOf(
                 AuroraConfigFile(
-                    "include/simple.json",
+                    "include/include.json",
                     override = true,
                     contents = """{}"""
                 )
@@ -657,6 +656,6 @@ class AuroraConfigFacadeTest(
             errorsAsWarnings = false
         )
 
-        assertThat(spec.get<String>("type")).isEqualTo("development")
+        assertThat(spec.get<String>("globalFile")).isEqualTo("about-alternative1.json")
     }
 }
