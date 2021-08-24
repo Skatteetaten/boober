@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.model
 
+import java.io.File
+import java.nio.charset.Charset
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
@@ -7,8 +9,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
-import java.io.File
-import java.nio.charset.Charset
 
 data class AuroraConfig(
     val files: List<AuroraConfigFile>,
@@ -194,25 +194,21 @@ data class AuroraConfig(
             AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
         }
 
-        val includeGlobal = envFileJson.get("includeGlobalFile")?.asText()
-
-        val globalFiles = includeGlobal?.let {
-            require(it.startsWith(("about"))) { "included globalFile must start with about" }
-            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.GLOBAL_INCLUDE)
-        }
+        val globalFile = envFileJson.get("globalFile")?.asText()?.removeExtension() ?: "about"
 
         return setOf(
-            AuroraConfigFileSpec("about", AuroraConfigFileType.GLOBAL),
+            AuroraConfigFileSpec(globalFile, AuroraConfigFileType.GLOBAL),
             AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE)
-        ).addIfNotNull(envFiles).addIfNotNull(globalFiles).addIfNotNull(
-            setOf(
-                AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
-                AuroraConfigFileSpec(
-                    "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
-                    AuroraConfigFileType.APP
+        ).addIfNotNull(envFiles)
+            .addIfNotNull(
+                setOf(
+                    AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
+                    AuroraConfigFileSpec(
+                        "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
+                        AuroraConfigFileType.APP
+                    )
                 )
             )
-        )
     }
 
     fun merge(localAuroraConfig: AuroraConfig): AuroraConfig {
