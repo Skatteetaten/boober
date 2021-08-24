@@ -31,7 +31,7 @@ dependencies {
     // The above library uses an vulnerable bcprov, set the fixed version here, hopefully this will work.
     // pr is sent to maintainer
     implementation("org.bouncycastle:bcprov-jdk15on:1.69")
-    implementation("com.github.ben-manes.caffeine:caffeine:3.0.2")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.3")
     implementation("org.apache.commons:commons-text:1.9")
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
@@ -49,7 +49,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
 
-    testImplementation("io.mockk:mockk:1.11.0")
+    testImplementation("io.mockk:mockk:1.12.0")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.22")
     testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.0")
     testImplementation("com.ninja-squad:springmockk:2.0.3")

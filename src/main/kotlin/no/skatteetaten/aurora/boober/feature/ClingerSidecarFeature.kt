@@ -1,10 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
+import com.fkorotkov.kubernetes.httpGet
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newProbe
 import com.fkorotkov.kubernetes.resources
-import com.fkorotkov.kubernetes.tcpSocket
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
@@ -77,7 +77,7 @@ class ClingerSidecarFeature(
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/version",
-                defaultValue = "0.1.0"
+                defaultValue = "0.2.0"
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/discoveryUrl",
@@ -113,7 +113,7 @@ class ClingerSidecarFeature(
             } else if (it.resource.kind == "Service") {
                 val service: Service = it.resource as Service
                 service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
-                    port.targetPort = IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT)
+                    port.targetPort = IntOrString(PortNumbers.CLINGER_PROXY_SERVER_PORT)
                 }
 
                 modifyResource(it, "Changed targetPort to point to clinger")
@@ -123,8 +123,8 @@ class ClingerSidecarFeature(
 
     private fun createClingerProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val containerPorts = mapOf(
-            "http" to PortNumbers.CLINGER_PROXY_HTTP_PORT,
-            "management" to PortNumbers.CLINGER_PROXY_ADMIN_HTTP_PORT
+            "http" to PortNumbers.CLINGER_PROXY_SERVER_PORT,
+            "management" to PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT
         )
 
         val imageMetadata = context.imageMetadata
@@ -138,21 +138,23 @@ class ClingerSidecarFeature(
                     protocol = "TCP"
                 }
             }
-            env = (containerPorts.map {
-                val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
-                EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
-            }).addIfNotNull(
-                listOf(
-                    EnvVarBuilder().withName("PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
-                    EnvVarBuilder().withName("PROXY_BACKEND_PORT").withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
-                        .build(),
-                    EnvVarBuilder().withName("PROXY_SERVER_PORT").withValue(ports.first().containerPort.toString())
-                        .build(),
-                    EnvVarBuilder().withName("DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"]).build(),
-                    EnvVarBuilder().withName("IV_GROUPS_REQUIRED").withValue(adc["azure/proxySidecar/ivGroupsRequired"])
-                        .build(),
-                    EnvVarBuilder().withName("APPID").withValue("presently-just-fake").build()
-                )
+            env = listOf(
+                EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
+                    .withValue(PortNumbers.CLINGER_PROXY_SERVER_PORT.toString()).build(),
+                EnvVarBuilder().withName("CLINGER_MANAGEMENT_SERVER_PORT")
+                    .withValue(PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT.toString()).build(),
+                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
+                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")
+                    .withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT").withValue(ports.first().containerPort.toString())
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"])
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
+                    .withValue(adc["azure/proxySidecar/ivGroupsRequired"])
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_APPID").withValue("presently-just-fake").build()
             )
 
             resources {
@@ -168,11 +170,12 @@ class ClingerSidecarFeature(
             image = imageMetadata.getFullImagePath()
             // TODO AOT-1285 use actual readiness endpoint, and add liveness
             readinessProbe = newProbe {
-                tcpSocket {
-                    port = IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT)
+                httpGet {
+                    path = "/ready"
+                    port = IntOrString(PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT)
                 }
                 initialDelaySeconds = 10
-                timeoutSeconds = 1
+                timeoutSeconds = 2
             }
         }
     }

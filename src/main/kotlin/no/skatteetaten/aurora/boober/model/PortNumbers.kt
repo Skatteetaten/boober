@@ -7,8 +7,8 @@ object PortNumbers {
     const val INTERNAL_ADMIN_PORT = 8081
     const val EXTRA_APPLICATION_PORT = 8082
     const val TOXIPROXY_HTTP_PORT = 8090
-    const val CLINGER_PROXY_HTTP_PORT = 8100
-    const val CLINGER_PROXY_ADMIN_HTTP_PORT = 8101
+    const val CLINGER_PROXY_SERVER_PORT = 8100
+    const val CLINGER_MANAGEMENT_SERVER_PORT = 8101
     const val TOXIPROXY_ADMIN_PORT = 8474
     const val JOLOKIA_HTTP_PORT = 8778
     const val NODE_PORT = 9090

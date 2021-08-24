@@ -29,29 +29,29 @@
           {
             "env": [
               {
-                "name": "HTTP_PORT",
+                "name": "CLINGER_PROXY_SERVER_PORT",
                 "value": "8100"
               },
               {
-                "name": "MANAGEMENT_HTTP_PORT",
+                "name": "CLINGER_MANAGEMENT_SERVER_PORT",
                 "value": "8101"
               }, {
-                "name" : "PROXY_BACKEND_HOST",
+                "name": "CLINGER_PROXY_BACKEND_HOST",
                 "value" : "0.0.0.0"
               }, {
-                "name" : "PROXY_BACKEND_PORT",
+                "name": "CLINGER_PROXY_BACKEND_PORT",
                 "value" : "8080"
               }, {
-                "name" : "PROXY_SERVER_PORT",
+                "name": "CLINGER_PROXY_SERVER_PORT",
                 "value" : "8100"
               }, {
-                "name" : "DISCOVERY_URL",
+                "name": "CLINGER_DISCOVERY_URL",
                 "value" : "https://endpoint"
               }, {
-                "name" : "IV_GROUPS_REQUIRED",
+                "name": "CLINGER_IV_GROUPS_REQUIRED",
                 "value" : "false"
               }, {
-                "name" : "APPID",
+                "name": "CLINGER_APPID",
                 "value" : "presently-just-fake"
               }
             ],
@@ -70,11 +70,12 @@
               }
             ],
             "readinessProbe": {
-              "initialDelaySeconds": 10,
-              "tcpSocket": {
-                "port": 8100
+              "httpGet": {
+                "path": "/ready",
+                "port": 8101
               },
-              "timeoutSeconds": 1
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 2
             },
             "resources": {
               "limits": {

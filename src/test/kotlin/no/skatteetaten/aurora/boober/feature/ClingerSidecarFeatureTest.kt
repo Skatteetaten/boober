@@ -25,12 +25,12 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
     fun setupMock() {
         every {
             cantusService.getImageMetadata(
-                "no_skatteetaten_aurora", "clinger", "0.1.0"
+                "no_skatteetaten_aurora", "clinger", "0.2.0"
             )
         } returns
                 ImageMetadata(
                     "docker.registry/no_skatteetaten_aurora/clinger",
-                    "0.1.0",
+                    "0.2.0",
                     "sha:1234567"
                 )
     }
@@ -46,7 +46,7 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
             """{
              "azure" : {
                 "proxySidecar": {
-                    "version": "0.1.0", 
+                    "version": "0.2.0", 
                     "discoveryUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
                 }
@@ -58,7 +58,7 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
         val service = serviceResource.resource as Service
         assertEquals(
             service.spec.ports.first().targetPort,
-            IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT),
+            IntOrString(PortNumbers.CLINGER_PROXY_SERVER_PORT),
             "Target should be rewritten to proxy port."
         )
 
@@ -82,7 +82,7 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
         val service = serviceResource.resource as Service
         assertEquals(
             service.spec.ports.first().targetPort,
-            IntOrString(PortNumbers.CLINGER_PROXY_HTTP_PORT),
+            IntOrString(PortNumbers.CLINGER_PROXY_SERVER_PORT),
             "Target should be rewritten to proxy port."
         )
 
