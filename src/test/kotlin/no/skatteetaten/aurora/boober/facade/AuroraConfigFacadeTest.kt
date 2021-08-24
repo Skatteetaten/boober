@@ -640,6 +640,7 @@ class AuroraConfigFacadeTest(
 
         assertThat(spec.get<String>("env/ttl")).isEqualTo("1d")
     }
+
     @Test
     fun `get spec for replacing globalfile`() {
 
