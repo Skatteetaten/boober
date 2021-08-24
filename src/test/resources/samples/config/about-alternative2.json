@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "v1",
+  "permissions": {
+    "admin": "APP_PaaS_drift APP_PaaS_utv"
+  },
+  "affiliation": "paas",
+  "segment": "aurora",
+  "cluster": "utv",
+  "type": "deploy"
+}
