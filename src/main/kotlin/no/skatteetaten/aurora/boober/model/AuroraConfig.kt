@@ -193,8 +193,13 @@ data class AuroraConfig(
             require(it.substringAfterLast("/").startsWith(("about"))) { "included envFile must start with about" }
             AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
         }
+        val baseFileJson = files.find { file ->
+            file.name.removeExtension() == baseFile && !file.override
+        }?.asJsonNode
+            ?: throw java.lang.IllegalArgumentException("BaseFile $baseFile.(json|yaml) missing for application: $applicationDeploymentRef")
 
-        val globalFile = envFileJson.get("globalFile")?.asText()?.removeExtension() ?: "about"
+        val globalFile = envFileJson.get("globalFile")?.asText()?.removeExtension()
+            ?: baseFileJson.get("globalFile")?.asText()?.removeExtension() ?: "about"
 
         return setOf(
             AuroraConfigFileSpec(globalFile, AuroraConfigFileType.GLOBAL),
