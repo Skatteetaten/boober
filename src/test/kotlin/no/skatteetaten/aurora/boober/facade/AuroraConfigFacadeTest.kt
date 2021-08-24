@@ -60,6 +60,7 @@ class AuroraConfigFacadeTest(
     }
 
     val adr = ApplicationDeploymentRef("utv", "simple")
+    val adr2 = ApplicationDeploymentRef("include", "simple")
 
     @Test
     fun `get spec for applications deployment refs`() {
@@ -627,7 +628,7 @@ class AuroraConfigFacadeTest(
 
         val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
             ref = auroraConfigRef,
-            adr = adr,
+            adr = ApplicationDeploymentRef("include", "simple"),
             overrideFiles = listOf(
                 AuroraConfigFile(
                     "include/simple.json",
@@ -638,14 +639,14 @@ class AuroraConfigFacadeTest(
             errorsAsWarnings = false
         )
 
-        assertThat(spec.get<String>("env.ttl")).isEqualTo("1d")
+        assertThat(spec.get<String>("env/ttl")).isEqualTo("1d")
     }
     @Test
     fun `get spec for replacing globalfile`() {
 
         val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
             ref = auroraConfigRef,
-            adr = adr,
+            adr = ApplicationDeploymentRef("include", "simple"),
             overrideFiles = listOf(
                 AuroraConfigFile(
                     "include/simple.json",
