@@ -22,7 +22,6 @@ enum class AuroraConfigFileType {
     DEFAULT,
     GLOBAL,
     GLOBAL_OVERRIDE,
-    GLOBAL_INCLUDE,
     BASE,
     BASE_OVERRIDE,
     INCLUDE_ENV,
