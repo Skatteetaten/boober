@@ -640,4 +640,22 @@ class AuroraConfigFacadeTest(
 
         assertThat(spec.get<String>("env.ttl")).isEqualTo("1d")
     }
+    @Test
+    fun `get spec for replacing globalfile`() {
+
+        val spec: AuroraDeploymentSpec = facade.findAuroraDeploymentSpecSingle(
+            ref = auroraConfigRef,
+            adr = adr,
+            overrideFiles = listOf(
+                AuroraConfigFile(
+                    "include/simple.json",
+                    override = true,
+                    contents = """{}"""
+                )
+            ),
+            errorsAsWarnings = false
+        )
+
+        assertThat(spec.get<String>("type")).isEqualTo("development")
+    }
 }
