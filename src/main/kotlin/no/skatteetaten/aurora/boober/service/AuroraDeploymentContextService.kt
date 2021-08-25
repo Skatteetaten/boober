@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.feature.CertificateFeature
 import no.skatteetaten.aurora.boober.feature.ConfigFeature
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
+import no.skatteetaten.aurora.boober.feature.HeaderHandlers
 import no.skatteetaten.aurora.boober.feature.RouteFeature
 import no.skatteetaten.aurora.boober.feature.StsFeature
 import no.skatteetaten.aurora.boober.feature.WebsealFeature
@@ -16,7 +17,6 @@ import no.skatteetaten.aurora.boober.feature.affiliation
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
-import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.ApplicationRef
@@ -142,7 +142,8 @@ class AuroraDeploymentContextService(
         fullValidation: Boolean
     ): AuroraDeploymentContext {
 
-        val headerHandlers = deployCommand.applicationDeploymentRef.headerHandlers
+        val headerHandlers = deployCommand.applicationDeploymentRef
+            .run { HeaderHandlers.create(application, environment) }.handlers
         val headerSpec =
             AuroraDeploymentSpec.create(
                 handlers = headerHandlers,

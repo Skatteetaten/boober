@@ -36,7 +36,6 @@ import io.mockk.every
 import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
-import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -58,6 +57,7 @@ import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuro
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
 import kotlin.reflect.KClass
+import no.skatteetaten.aurora.boober.feature.HeaderHandlers
 
 /*
   Abstract class to test a single feature
@@ -311,7 +311,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
         val ctx = createAuroraDeploymentContext(app, fullValidation, files)
 
-        val headers = ctx.cmd.applicationDeploymentRef.headerHandlers.map {
+        val headers = ctx.cmd.applicationDeploymentRef.run { HeaderHandlers.create(application, environment) }.handlers.map {
             it.name
         }
         val fields = ctx.spec.fields.filterNot {
