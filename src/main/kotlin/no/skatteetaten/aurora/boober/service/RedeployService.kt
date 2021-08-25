@@ -120,7 +120,7 @@ class RedeployService(
         val url = "${deploymentRequest.apiBaseUrl}/namespaces/$namespace/deploymentconfigs/$name/instantiate"
         val command = OpenshiftCommand(OperationType.CREATE, payload = deploymentRequest, url = url)
 
-        return openShiftClient.performOpenShiftCommand(namespace, command)
+        return openShiftClient.performOpenShiftCommand(command)
     }
 
     fun generateDeploymentRequest(name: String): JsonNode {

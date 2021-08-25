@@ -1,0 +1,41 @@
+{
+  "success": true,
+  "message": "OK",
+  "items": [
+    {
+      "id": "1",
+      "name": "default",
+      "kind": "StorageGridObjectArea",
+      "ownerId": "1234567890",
+      "claims": [
+        {
+          "id": "1",
+          "ownerId": "1234567890",
+          "resourceId": 1,
+          "name": "ADMIN",
+          "credentials": {
+            "tenantName": "",
+            "serviceEndpoint": "",
+            "accessKey": "",
+            "secretKey": "",
+            "bucketName": "",
+            "objectPrefix": "",
+            "username": "",
+            "password": "",
+            "bucketRegion": ""
+          },
+          "createdDate": "2020-09-29T16:04:53.687",
+          "modifiedDate": "2020-09-29T16:04:53.687",
+          "createdBy": "aurora",
+          "modifiedBy": "aurora"
+        }
+      ],
+      "createdDate": "2020-09-29T16:03:26.539",
+      "modifiedDate": "2020-09-29T16:03:26.539",
+      "createdBy": "aurora",
+      "modifiedBy": "aurora"
+    }
+  ],
+  "errors": [],
+  "count": 1
+}

@@ -134,7 +134,7 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     ttl: 300
                          | s3:
                          |   default:
-            complex.json |     bucketName: "minYndlingsBucket"
+            complex.json |     bucketName: "minyndlingsbucket"
                  default |     objectArea: "default"
                  default |     enabled: true
                          | s3Defaults:

@@ -1,0 +1,28 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "StorageGridObjectArea",
+  "metadata": {
+    "creationTimestamp": "2021-05-19T10:59:26Z",
+    "generation": 1,
+    "labels": {
+      "id": "f906a8673f"
+    },
+    "name": "easy-default",
+    "namespace": "paas-utv",
+    "resourceVersion": "1489394588",
+    "selfLink": "/apis/skatteetaten.no/v1/namespaces/paas-utv/storagegridobjectareas/easy-default",
+    "uid": "46b55695-b891-11eb-a779-005056849398"
+  },
+  "spec": {
+    "applicationDeploymentId": "f906a8673f",
+    "bucketPostfix": "paas-bucket-u-default",
+    "objectArea": "default"
+  },
+  "status": {
+    "result": {
+      "message": "nothing here",
+      "reason": "SGOAProvisioned",
+      "success": true
+    }
+  }
+}

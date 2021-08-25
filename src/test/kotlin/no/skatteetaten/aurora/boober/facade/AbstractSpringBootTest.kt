@@ -24,6 +24,7 @@ import okhttp3.mockwebserver.RecordedRequest
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import java.time.Instant
@@ -76,7 +77,13 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         newValue: JsonNode
     ): MockResponse {
         val ad: JsonNode = jacksonObjectMapper().readTree(this.bodyAsString())
-        (ad.at(rootPath) as ObjectNode).replace(key, newValue)
+        (ad.at(rootPath) as ObjectNode).let {
+            try {
+                it.replace(key, newValue)
+            } catch (e: Exception) {
+                it.set<JsonNode>(key, newValue)
+            }
+        }
 
         return MockResponse()
             .setResponseCode(200)
@@ -167,6 +174,27 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
         )
         every { serviceAccountTokenProvider.getToken() } returns "auth token"
     }
+
+    private fun HttpMock.basicRule(
+        pathPostfix: String,
+        jsonFile: String? = null,
+        statusCode: Int = HttpStatus.OK.value(),
+        httpMethod: String = "GET"
+    ): HttpMock =
+        rule({ method == httpMethod && path?.endsWith(pathPostfix) == true }) {
+            (jsonFile?.let { mockJsonFromFile(jsonFile) } ?: MockResponse()).apply {
+                setResponseCode(statusCode)
+            }
+        }
+
+    fun HttpMock.getRule(pathPostfix: String, jsonFile: String? = null, statusCode: Int = HttpStatus.OK.value()): HttpMock =
+        basicRule(pathPostfix, jsonFile, statusCode, "GET")
+
+    fun HttpMock.postRule(pathPostfix: String, jsonFile: String? = null, statusCode: Int = HttpStatus.OK.value()): HttpMock =
+        basicRule(pathPostfix, jsonFile, statusCode, "POST")
+
+    fun HttpMock.putRule(pathPostfix: String, jsonFile: String? = null, statusCode: Int = HttpStatus.OK.value()): HttpMock =
+        basicRule(pathPostfix, jsonFile, statusCode, "PUT")
 }
 
 fun json(body: String, responseCode: Int = 200) =

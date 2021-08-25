@@ -602,7 +602,7 @@
   "s3Defaults": {
     "bucketName": {
       "source": "utv/python.json",
-      "value": "myBucket",
+      "value": "mybucket",
       "sources": [
         {
           "name": "default",
@@ -610,11 +610,11 @@
         },
         {
           "name": "python.json",
-          "value": "myBucket"
+          "value": "mybucket"
         },
         {
           "name": "utv/python.json",
-          "value": "myBucket"
+          "value": "mybucket"
         }
       ]
     },

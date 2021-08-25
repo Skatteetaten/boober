@@ -60,7 +60,7 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
                     RequestEntity<Any>(HttpMethod.GET, URI(resourceUrl)), true
                 )
             }.isFailure().all {
-                isInstanceOf(HttpClientErrorException::class)
+                this.isInstanceOf(HttpClientErrorException::class)
             }
         }
     }
@@ -76,7 +76,7 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
                     RequestEntity<Any>(HttpMethod.GET, URI(resourceUrl)), false
                 )
             }.isFailure().all {
-                isInstanceOf(HttpClientErrorException::class)
+                this.isInstanceOf(HttpClientErrorException::class)
             }
             // TOOD: hvordan kan jeg her sjekke at den ikke gjør flere kall?
         }

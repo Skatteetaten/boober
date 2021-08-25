@@ -281,7 +281,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 """{ 
                 "s3Defaults": {
                    "objectArea": "my-object_Area",
-                   "bucketName": "myBucket"
+                   "bucketName": "mybucket"
                 },
                 "s3": true
            }"""

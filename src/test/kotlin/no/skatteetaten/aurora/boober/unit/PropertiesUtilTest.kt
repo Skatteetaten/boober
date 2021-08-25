@@ -34,7 +34,7 @@ class PropertiesUtilTest {
     fun `Throw IllegalArgumentException when filtering with a key that is not available in properties`() {
         assertThat {
             filterProperties(props, listOf("username", "unknown"), null)
-        }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
+        }.isFailure().all { this.isInstanceOf(IllegalArgumentException::class) }
     }
 
     @Test
