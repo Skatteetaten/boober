@@ -77,7 +77,7 @@ class ClingerSidecarFeature(
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/version",
-                defaultValue = "0.2.0"
+                defaultValue = "0.3.0"
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/discoveryUrl",
@@ -171,10 +171,17 @@ class ClingerSidecarFeature(
                 )
             }
             image = imageMetadata.getFullImagePath()
-            // TODO AOT-1285 use actual readiness endpoint, and add liveness
             readinessProbe = newProbe {
                 httpGet {
                     path = "/ready"
+                    port = IntOrString(PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT)
+                }
+                initialDelaySeconds = 10
+                timeoutSeconds = 2
+            }
+            livenessProbe = newProbe {
+                httpGet {
+                    path = "/liveness"
                     port = IntOrString(PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT)
                 }
                 initialDelaySeconds = 10

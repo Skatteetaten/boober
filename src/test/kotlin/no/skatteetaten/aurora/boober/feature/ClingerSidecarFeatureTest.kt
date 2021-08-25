@@ -25,12 +25,12 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
     fun setupMock() {
         every {
             cantusService.getImageMetadata(
-                "no_skatteetaten_aurora", "clinger", "0.2.0"
+                "no_skatteetaten_aurora", "clinger", "0.3.0"
             )
         } returns
                 ImageMetadata(
                     "docker.registry/no_skatteetaten_aurora/clinger",
-                    "0.2.0",
+                    "0.3.0",
                     "sha:1234567"
                 )
     }
@@ -46,7 +46,7 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
             """{
              "azure" : {
                 "proxySidecar": {
-                    "version": "0.2.0", 
+                    "version": "0.3.0", 
                     "discoveryUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
                 }

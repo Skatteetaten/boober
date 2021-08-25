@@ -56,6 +56,14 @@
               }
             ],
             "image": "docker.registry/no_skatteetaten_aurora/clinger@sha:1234567",
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/liveness",
+                "port": 8101
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 2
+            },
             "name": "simple-clinger-mix",
             "ports": [
               {
