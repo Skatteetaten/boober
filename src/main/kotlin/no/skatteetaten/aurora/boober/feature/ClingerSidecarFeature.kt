@@ -138,23 +138,26 @@ class ClingerSidecarFeature(
                     protocol = "TCP"
                 }
             }
-            env = listOf(
-                EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
-                    .withValue(PortNumbers.CLINGER_PROXY_SERVER_PORT.toString()).build(),
-                EnvVarBuilder().withName("CLINGER_MANAGEMENT_SERVER_PORT")
-                    .withValue(PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT.toString()).build(),
-                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
-                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")
-                    .withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
-                    .build(),
-                EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT").withValue(ports.first().containerPort.toString())
-                    .build(),
-                EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"])
-                    .build(),
-                EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
-                    .withValue(adc["azure/proxySidecar/ivGroupsRequired"])
-                    .build(),
-                EnvVarBuilder().withName("CLINGER_APPID").withValue("presently-just-fake").build()
+
+            env = (containerPorts.map {
+                val portName = if (it.key == "http") "CLINGER_PROXY_SERVER_PORT" else "CLINGER_MANAGEMENT_SERVER_PORT"
+                EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
+            }).addIfNotNull(
+                listOf(
+                    EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
+                    EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")
+                        .withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
+                        .build(),
+                    EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
+                        .withValue(ports.first().containerPort.toString())
+                        .build(),
+                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"])
+                        .build(),
+                    EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
+                        .withValue(adc["azure/proxySidecar/ivGroupsRequired"])
+                        .build(),
+                    EnvVarBuilder().withName("CLINGER_APPID").withValue("presently-just-fake").build()
+                )
             )
 
             resources {
