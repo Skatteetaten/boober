@@ -50,9 +50,6 @@
               }, {
                 "name": "CLINGER_IV_GROUPS_REQUIRED",
                 "value" : "false"
-              }, {
-                "name": "CLINGER_APPID",
-                "value" : "presently-just-fake"
               }
             ],
             "image": "docker.registry/no_skatteetaten_aurora/clinger@sha:1234567",

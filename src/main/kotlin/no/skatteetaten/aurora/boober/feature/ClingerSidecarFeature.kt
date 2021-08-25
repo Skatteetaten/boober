@@ -155,8 +155,7 @@ class ClingerSidecarFeature(
                         .build(),
                     EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
                         .withValue(adc["azure/proxySidecar/ivGroupsRequired"])
-                        .build(),
-                    EnvVarBuilder().withName("CLINGER_APPID").withValue("presently-just-fake").build()
+                        .build()
                 )
             )
 
