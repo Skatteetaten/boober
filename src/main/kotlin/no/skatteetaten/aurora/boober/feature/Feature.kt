@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
 import io.fabric8.kubernetes.api.model.HasMetadata
-import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -53,8 +52,8 @@ interface Feature {
       You can either do this via Spring Conditional annotations to react to the environment,
       or you can react on the header and toggle if you are active in that way.
 
-      If you look at BuildFeature you will see that it reacts on the Application.type to only enable
-      itself if the type is development
+    If you look at BuildFeature you will see that it reacts on the Application.type to only enable
+    itself if the type is development
 
      */
     fun enable(header: AuroraDeploymentSpec): Boolean = true
@@ -113,7 +112,7 @@ interface Feature {
 
         use the modifyResource method in this interface as a helper to add a source to your modification
 
-        If you have more then one error throw an ExceptionList
+    If you have more then one error throw an ExceptionList
      */
     fun modify(
         adc: AuroraDeploymentSpec,
@@ -147,16 +146,26 @@ enum class DeploymentState {
 
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
 
-val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
-    get() {
+class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName: String) {
 
+    val handlers: Set<AuroraConfigFieldHandler>
+    val globalFile = AuroraConfigFieldHandler(GLOBAL_FILE)
+    val envFile = AuroraConfigFieldHandler(ENV_FILE)
+    val baseFile = AuroraConfigFieldHandler(BASE_FILE)
+
+    companion object {
+        fun create(defaultAppName: String, defaultEnvName: String) = HeaderHandlers(defaultAppName, defaultEnvName)
+        const val GLOBAL_FILE = "globalFile"
+        const val ENV_FILE = "envFile"
+        const val BASE_FILE = "baseFile"
+    }
+
+    init {
         val validSchemaVersions = listOf("v1")
-
         val envNamePattern = "^[a-z0-9\\-]{0,52}$"
         val envNameMessage =
             "Environment must consist of lower case alphanumeric characters or '-'. It must be no longer than 52 characters."
-
-        return setOf(
+        handlers = setOf(
             AuroraConfigFieldHandler(
                 "schemaVersion",
                 validator = { it.oneOf(validSchemaVersions) }),
@@ -190,10 +199,10 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
             AuroraConfigFieldHandler(
                 "envName", validator = { it.pattern(envNamePattern, envNameMessage) },
                 defaultSource = "folderName",
-                defaultValue = this.environment
+                defaultValue = defaultEnvName
             ),
             AuroraConfigFieldHandler("name",
-                defaultValue = this.application,
+                defaultValue = defaultAppName,
                 defaultSource = "fileName",
                 validator = {
                     it.pattern(
@@ -207,9 +216,10 @@ val ApplicationDeploymentRef.headerHandlers: Set<AuroraConfigFieldHandler>
                 validator = { it.pattern(envNamePattern, envNameMessage, false) }),
             AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
             AuroraConfigFieldHandler("env/autoDeploy", validator = { it.boolean() }, defaultValue = false),
-            AuroraConfigFieldHandler("baseFile"),
-            AuroraConfigFieldHandler("envFile"),
-            AuroraConfigFieldHandler("globalFile"),
+            baseFile,
+            envFile,
+            globalFile,
             AuroraConfigFieldHandler("includeEnvFile")
         )
     }
+}
