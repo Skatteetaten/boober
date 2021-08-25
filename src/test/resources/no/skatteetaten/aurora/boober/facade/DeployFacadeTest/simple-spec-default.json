@@ -568,7 +568,7 @@
   "s3Defaults": {
     "bucketName": {
       "source": "simple.json",
-      "value": "myBucket",
+      "value": "mybucket",
       "sources": [
         {
           "name": "default",
@@ -576,7 +576,7 @@
         },
         {
           "name": "simple.json",
-          "value": "myBucket"
+          "value": "mybucket"
         }
       ]
     },

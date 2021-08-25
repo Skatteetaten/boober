@@ -121,7 +121,6 @@ class OpenShiftCommandServiceTest : ResourceLoader() {
         val commandSlot = slot<OpenshiftCommand>()
         every {
             openshiftClient.performOpenShiftCommand(
-                namespace = namespace,
                 command = capture(commandSlot)
             )
         } answers { OpenShiftResponse(commandSlot.captured, json) }

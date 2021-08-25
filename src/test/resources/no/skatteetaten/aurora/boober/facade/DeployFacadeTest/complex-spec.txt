@@ -93,7 +93,7 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |       haproxy.router.openshift.io|timeout: "30s"
                          | s3:
                          |   default:
-            complex.json |     bucketName: "minYndlingsBucket"
+            complex.json |     bucketName: "minyndlingsbucket"
                          | secretVaults:
                          |   foo:
             complex.json |     keys: ["BAR","FOO"]

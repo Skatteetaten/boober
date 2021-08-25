@@ -6,7 +6,7 @@
   },
   "database": true,
   "s3Defaults": {
-    "bucketName": "myBucket",
+    "bucketName": "mybucket",
     "objectArea": "default"
   },
   "s3": true,
