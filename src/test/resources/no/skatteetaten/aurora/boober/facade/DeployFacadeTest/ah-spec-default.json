@@ -137,16 +137,6 @@
       "value" : false
     } ]
   },
-  "config": {
-    "FOO": {
-      "source": "ah.json",
-      "value": "bar",
-      "sources": [
-        {
-          "name": "ah.json",
-          "value": "bar"
-        }
-      ]
   "config" : {
     "FOO" : {
       "source" : "ah.json",

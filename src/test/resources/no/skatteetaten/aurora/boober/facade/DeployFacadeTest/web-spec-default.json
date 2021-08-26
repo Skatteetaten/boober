@@ -200,16 +200,6 @@
       "value" : false
     } ]
   },
-  "config": {
-    "foo2": {
-      "source": "web.json",
-      "value": "baz",
-      "sources": [
-        {
-          "name": "web.json",
-          "value": "baz"
-        }
-      ]
   "config" : {
     "foo2" : {
       "source" : "web.json",

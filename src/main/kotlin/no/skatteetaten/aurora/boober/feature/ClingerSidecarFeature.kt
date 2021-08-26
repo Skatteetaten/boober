@@ -77,7 +77,7 @@ class ClingerSidecarFeature(
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/version",
-                defaultValue = "0.3.0"
+                defaultValue = "0.3.1"
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/discoveryUrl",

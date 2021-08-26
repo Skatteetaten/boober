@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.utils
 
-import org.springframework.boot.convert.DurationStyle
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
