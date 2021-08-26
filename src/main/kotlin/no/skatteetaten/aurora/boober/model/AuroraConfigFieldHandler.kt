@@ -22,5 +22,6 @@ data class AuroraConfigFieldHandler(
     @JsonIgnore val validator: Validator = defaultValidator,
     val defaultValue: Any? = null,
     val defaultSource: String = "default",
-    val canBeSimplifiedConfig: Boolean = false
+    val canBeSimplifiedConfig: Boolean = false,
+    val validFiles: List<AuroraConfigFileType>? = null
 )
