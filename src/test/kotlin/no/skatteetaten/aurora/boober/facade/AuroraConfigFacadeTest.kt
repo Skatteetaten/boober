@@ -659,4 +659,22 @@ class AuroraConfigFacadeTest(
 
         assertThat(spec.get<String>("globalFile")).isEqualTo("about-alternative1.json")
     }
+
+    @Test
+    fun `Should throw error if globalFile field is placed illegally`() {
+
+        assertThat { facade.findAuroraDeploymentSpecSingle(
+            ref = auroraConfigRef,
+            adr = ApplicationDeploymentRef("include", "include"),
+            overrideFiles = listOf(
+                AuroraConfigFile(
+                    "include/include.json",
+                    override = true,
+                    contents = """{ "globalFile": "about-alternative1.json"}"""
+                )
+            ),
+            errorsAsWarnings = false)
+        }.isNotNull().isFailure()
+            .messageContains("Config for application include in environment include contains errors. Invalid Source field=globalFile. Actual source=include/include.json.override (File type: APP). Must be placed within files of type: [BASE, ENV].")
+    }
 }
