@@ -2,7 +2,8 @@ package no.skatteetaten.aurora.boober.feature
 
 import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
@@ -142,7 +143,7 @@ val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["
 class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName: String) {
 
     val handlers: Set<AuroraConfigFieldHandler>
-    val globalFile = AuroraConfigFieldHandler(GLOBAL_FILE, validFiles = listOf(AuroraConfigFileType.BASE, AuroraConfigFileType.ENV))
+    val globalFile = AuroraConfigFieldHandler(GLOBAL_FILE, validFiles = listOf(BASE, ENV))
     val envFile = AuroraConfigFieldHandler(ENV_FILE)
     val baseFile = AuroraConfigFieldHandler(BASE_FILE)
 
