@@ -143,7 +143,7 @@ val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["
 class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName: String) {
 
     val handlers: Set<AuroraConfigFieldHandler>
-    val globalFile = AuroraConfigFieldHandler(GLOBAL_FILE, validFiles = listOf(BASE, ENV))
+    val globalFile = AuroraConfigFieldHandler(GLOBAL_FILE, allowedFilesTypes = setOf(BASE, ENV))
     val envFile = AuroraConfigFieldHandler(ENV_FILE)
     val baseFile = AuroraConfigFieldHandler(BASE_FILE)
 
