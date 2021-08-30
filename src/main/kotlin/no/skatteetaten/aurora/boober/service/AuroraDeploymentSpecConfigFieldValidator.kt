@@ -38,8 +38,10 @@ class AuroraDeploymentSpecConfigFieldValidator(
                         )
                     }
 
+                val fieldDeclaredInAllowedFile: Boolean = e.allowedFilesTypes?.contains(rawField.fileType) ?: true
+
                 logger.trace("Validating field=${e.name}")
-                val auroraConfigField: JsonNode? = rawField.value
+                val auroraConfigField: JsonNode = rawField.value
                 logger.trace("value is=${jacksonObjectMapper().writeValueAsString(auroraConfigField)}")
 
                 val result = e.validator(auroraConfigField)
@@ -49,6 +51,11 @@ class AuroraDeploymentSpecConfigFieldValidator(
                     invalidEnvSource -> ConfigFieldErrorDetail.illegal(
                         "Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.name}",
                         e.name, rawField
+                    )
+                    !fieldDeclaredInAllowedFile -> ConfigFieldErrorDetail.illegal(
+                        "Invalid Source field=${e.name}. Actual source=${rawField.name} (File type: ${rawField.fileType}). Must be placed within files of type: ${e.allowedFilesTypes}",
+                        e.name,
+                        rawField
                     )
                     result == null -> null
                     auroraConfigField != null -> ConfigFieldErrorDetail.illegal(

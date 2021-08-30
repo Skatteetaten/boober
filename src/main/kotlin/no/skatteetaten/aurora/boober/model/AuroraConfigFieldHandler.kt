@@ -22,5 +22,8 @@ data class AuroraConfigFieldHandler(
     @JsonIgnore val validator: Validator = defaultValidator,
     val defaultValue: Any? = null,
     val defaultSource: String = "default",
-    val canBeSimplifiedConfig: Boolean = false
+    val canBeSimplifiedConfig: Boolean = false,
+
+    // The file types this config field can be declared in. <code>null</code> means no restriction.
+    val allowedFilesTypes: Set<AuroraConfigFileType>? = null
 )
