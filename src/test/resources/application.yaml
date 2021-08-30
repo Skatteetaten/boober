@@ -34,6 +34,8 @@ integrations:
         git:
             project: "ao"
             repo: "auroradeploymenttags"
+    s3:
+        variant: minio
     aurora:
         templates:
             project: "ao"
@@ -80,7 +82,10 @@ integrations:
         releases: "docker.release.registry:5000"
 
 
-application.deployment.id: abc4567890
+application:
+    deployment:
+        id: 1234567890
+
 boober:
     projectrequest:
         sleep: 0

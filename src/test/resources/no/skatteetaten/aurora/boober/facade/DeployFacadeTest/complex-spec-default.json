@@ -1005,15 +1005,17 @@
       }
     }
   },
-  "s3" : {
-    "default" : {
-      "bucketName" : {
-        "source" : "complex.json",
-        "value" : "minYndlingsBucket",
-        "sources" : [ {
-          "name" : "complex.json",
-          "value" : "minYndlingsBucket"
-        } ]
+  "s3": {
+    "default": {
+      "bucketName": {
+        "source": "complex.json",
+        "value": "minyndlingsbucket",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "minyndlingsbucket"
+          }
+        ]
       },
       "objectArea" : {
         "source" : "default",

@@ -59,7 +59,7 @@ utv/about.json | cluster: "utv"
        default |     cnameTtl: 300
    simple.json | s3: true
                | s3Defaults:
-   simple.json |   bucketName: "myBucket"
+   simple.json |   bucketName: "mybucket"
    simple.json |   objectArea: "default"
        default |   tenant: "paas-utv"
    simple.json | sts: true

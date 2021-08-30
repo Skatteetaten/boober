@@ -1,0 +1,30 @@
+{
+  "apiVersion": "project.openshift.io/v1",
+  "kind": "Project",
+  "metadata": {
+    "annotations": {
+      "openshift.io/description": "",
+      "openshift.io/display-name": "",
+      "openshift.io/requester": "username",
+      "openshift.io/sa.scc.mcs": "s0:c82,c54",
+      "openshift.io/sa.scc.supplemental-groups": "1006750000/10000",
+      "openshift.io/sa.scc.uid-range": "1006750000/10000"
+    },
+    "creationTimestamp": "2021-06-08T11:36:10Z",
+    "labels": {
+      "affiliation": "paas"
+    },
+    "name": "paas-utv",
+    "resourceVersion": "1517646003",
+    "selfLink": "/apis/project.openshift.io/v1/projects/paas-utv",
+    "uid": "b919f783-c84d-11eb-ac90-00505684e5da"
+  },
+  "spec": {
+    "finalizers": [
+      "kubernetes"
+    ]
+  },
+  "status": {
+    "phase": "Active"
+  }
+}

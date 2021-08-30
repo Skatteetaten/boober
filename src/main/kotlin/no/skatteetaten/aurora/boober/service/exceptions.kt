@@ -42,7 +42,7 @@ class MultiApplicationValidationException(
 }
 
 class EmptyBodyException(message: String) : ServiceException(message, null)
-class ProvisioningException(message: String, cause: Throwable? = null) :
+open class ProvisioningException(message: String, cause: Throwable? = null) :
     ServiceException(message, cause)
 
 class AuroraConfigServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)

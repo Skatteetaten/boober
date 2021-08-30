@@ -39,7 +39,6 @@ import io.mockk.every
 import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
-import no.skatteetaten.aurora.boober.feature.headerHandlers
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -58,6 +57,10 @@ import no.skatteetaten.aurora.boober.service.IdServiceFallback
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
+import kotlin.reflect.KClass
+import no.skatteetaten.aurora.boober.feature.HeaderHandlers
 
 /*
   Abstract class to test a single feature
@@ -83,6 +86,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     val affiliation = "paas"
     val appName = "simple"
     val environment = "utv"
+    val kubeNs = "$affiliation-$environment"
     val aid = ApplicationDeploymentRef(environment, appName)
 
     val openShiftClient: OpenShiftClient = mockk()
@@ -95,7 +99,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         AuroraResource(newImageStream {
             metadata {
                 name = appName
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
             spec {
                 dockerImageRepository = "docker.registry/org_test/simple"
@@ -105,7 +109,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createEmptyService() = AuroraResource(newService {
         metadata {
             name = "simple"
-            namespace = "paas-$environment"
+            namespace = kubeNs
         }
 
         spec {
@@ -129,7 +133,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         newBuildConfig {
             metadata {
                 name = "simple"
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
 
             spec {
@@ -172,7 +176,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             spec = ApplicationDeploymentSpec(),
             _metadata = newObjectMeta {
                 name = "simple"
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
         ), createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
 
@@ -182,7 +186,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
             metadata {
                 name = "simple"
-                namespace = "paas-$environment"
+                namespace = kubeNs
             }
             spec {
                 strategy {
@@ -311,7 +315,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
         val ctx = createAuroraDeploymentContext(app, fullValidation, files)
 
-        val headers = ctx.cmd.applicationDeploymentRef.headerHandlers.map {
+        val headers = ctx.cmd.applicationDeploymentRef.run { HeaderHandlers.create(application, environment) }.handlers.map {
             it.name
         }
         val fields = ctx.spec.fields.filterNot {

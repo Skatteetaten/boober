@@ -129,7 +129,7 @@ class OpenShiftClient(
     val mapper: ObjectMapper
 ) {
 
-    fun performOpenShiftCommand(namespace: String, command: OpenshiftCommand): OpenShiftResponse {
+    fun performOpenShiftCommand(command: OpenshiftCommand): OpenShiftResponse {
 
         val kind = command.payload.openshiftKind
 

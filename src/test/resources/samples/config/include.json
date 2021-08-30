@@ -6,10 +6,11 @@
   },
   "database": true,
   "s3Defaults": {
-    "bucketName": "mybucket",
+    "bucketName": "myBucket",
     "objectArea": "default"
   },
   "s3": true,
   "sts": true,
-  "route": true
+  "route": true,
+  "globalFile": "about-alternative2.json"
 }

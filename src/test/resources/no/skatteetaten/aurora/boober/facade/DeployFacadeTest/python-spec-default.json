@@ -502,20 +502,24 @@
       "value" : true
     } ]
   },
-  "s3Defaults" : {
-    "bucketName" : {
-      "source" : "utv/python.json",
-      "value" : "myBucket",
-      "sources" : [ {
-        "name" : "default",
-        "value" : ""
-      }, {
-        "name" : "python.json",
-        "value" : "myBucket"
-      }, {
-        "name" : "utv/python.json",
-        "value" : "myBucket"
-      } ]
+  "s3Defaults": {
+    "bucketName": {
+      "source": "utv/python.json",
+      "value": "mybucket",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        },
+        {
+          "name": "python.json",
+          "value": "mybucket"
+        },
+        {
+          "name": "utv/python.json",
+          "value": "mybucket"
+        }
+      ]
     },
     "objectArea" : {
       "source" : "utv/python.json",

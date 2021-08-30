@@ -70,11 +70,11 @@ fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<Aur
 
 fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<AuroraResource>?> {
 
-    val eitherErrorsOrFeatures: List<Pair<ContextErrors?, Set<AuroraResource>?>> = features.map {
+    val eitherErrorsOrFeatures: List<Pair<ContextErrors?, Set<AuroraResource>?>> = features.map { (feature, adc) ->
 
-        val context = this.featureContext[it.key] ?: emptyMap()
+        val context = this.featureContext[feature] ?: emptyMap()
         try {
-            null to it.key.generate(it.value, context)
+            null to feature.generate(adc, context)
         } catch (e: Throwable) {
             if (e is ExceptionList) {
                 ContextErrors(this.cmd, e.exceptions) to null

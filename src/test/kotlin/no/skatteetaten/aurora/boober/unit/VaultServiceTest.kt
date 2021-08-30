@@ -117,7 +117,7 @@ class VaultServiceTest {
                 secrets = contents
             )
         }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
+            this.isInstanceOf(IllegalArgumentException::class)
             hasMessage("Vault key=[latest.properties/INVALID KEY] is not valid. Regex used for matching ^[-._a-zA-Z0-9]+\$")
         }
     }
@@ -133,7 +133,7 @@ class VaultServiceTest {
         lines.forEach { line ->
             assertThat {
                 VaultService.assertSecretKeysAreValid(mapOf("latest.properties" to line.toByteArray()))
-            }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
+            }.isFailure().all { this.isInstanceOf(IllegalArgumentException::class) }
         }
     }
 
@@ -194,11 +194,11 @@ class VaultServiceTest {
 
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
-        }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
+        }.isFailure().all { this.isInstanceOf(IllegalArgumentException::class) }
 
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
-        }.isFailure().all { isInstanceOf(IllegalArgumentException::class) }
+        }.isFailure().all { this.isInstanceOf(IllegalArgumentException::class) }
     }
 
     @Test
@@ -214,7 +214,7 @@ class VaultServiceTest {
         assertThat {
             vaultService.deleteVault(COLLECTION_NAME, "")
         }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
+            this.isInstanceOf(IllegalArgumentException::class)
             messageContains("vault name can not be empty")
         }
     }
@@ -233,7 +233,7 @@ class VaultServiceTest {
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
         }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
+            this.isInstanceOf(IllegalArgumentException::class)
             hasMessage("Vault not found name=test")
         }
 
@@ -274,7 +274,7 @@ class VaultServiceTest {
 
         assertThat {
             vaultService.findVault(COLLECTION_NAME, VAULT_NAME)
-        }.isFailure().all { isInstanceOf(UnauthorizedAccessException::class) }
+        }.isFailure().all { this.isInstanceOf(UnauthorizedAccessException::class) }
 
         val vaults = vaultService.findAllVaultsWithUserAccessInVaultCollection(COLLECTION_NAME)
         val vaultWithAccess = vaults.find { it.vaultName == VAULT_NAME }!!
@@ -289,7 +289,7 @@ class VaultServiceTest {
         assertThat {
             vaultService.setVaultPermissions(COLLECTION_NAME, VAULT_NAME, listOf("admin"))
         }.isFailure().all {
-            isInstanceOf(UnauthorizedAccessException::class)
+            this.isInstanceOf(UnauthorizedAccessException::class)
             hasMessage("You (aurora) do not have required permissions to operate on this vault. You have [UTV]")
         }
     }

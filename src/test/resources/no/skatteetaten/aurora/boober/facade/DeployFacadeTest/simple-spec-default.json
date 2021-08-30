@@ -478,17 +478,20 @@
       "value" : true
     } ]
   },
-  "s3Defaults" : {
-    "bucketName" : {
-      "source" : "simple.json",
-      "value" : "myBucket",
-      "sources" : [ {
-        "name" : "default",
-        "value" : ""
-      }, {
-        "name" : "simple.json",
-        "value" : "myBucket"
-      } ]
+  "s3Defaults": {
+    "bucketName": {
+      "source": "simple.json",
+      "value": "mybucket",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        },
+        {
+          "name": "simple.json",
+          "value": "mybucket"
+        }
+      ]
     },
     "objectArea" : {
       "source" : "simple.json",
