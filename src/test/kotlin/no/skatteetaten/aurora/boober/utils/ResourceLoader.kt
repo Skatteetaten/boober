@@ -80,7 +80,7 @@ open class ResourceLoader {
             if (shouldOverwriteResources == true) {
                 overwriteResource(txtFileName, actual)
             } else {
-                fail(expected, actual)
+                this.fail(expected, actual)
             }
         }
     }
@@ -100,7 +100,7 @@ open class ResourceLoader {
                 overwriteResource(name, targetString)
                 assertThat(loadJsonResource(name)).jsonEquals(expected, name)
             } else {
-                fail(actual, expected)
+                this.fail(actual, expected)
             }
         }
     }
