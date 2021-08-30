@@ -19,11 +19,6 @@ class AuroraDeploymentSpecConfigFieldValidator(
 
     fun validate(fullValidation: Boolean = true): List<ConfigFieldErrorDetail> {
 
-        val envPointers = listOf(
-            "env/name", "env/ttl", "envName", "affiliation",
-            "permissions/admin", "permissions/view", "permissions/adminServiceAccount"
-        )
-
         val errors: List<ConfigFieldErrorDetail> = fieldHandlers.mapNotNull { e ->
             val rawField = fields[e.name]
             if (rawField == null) {
@@ -31,14 +26,9 @@ class AuroraDeploymentSpecConfigFieldValidator(
                     ConfigFieldErrorDetail.missing(it.localizedMessage, e.name)
                 }
             } else {
-                val invalidEnvSource =
-                    envPointers.contains(e.name) && !rawField.isDefault && rawField.name.let {
-                        !it.split("/").last().startsWith(
-                            "about"
-                        )
-                    }
 
-                val fieldDeclaredInAllowedFile: Boolean = e.allowedFilesTypes?.contains(rawField.fileType) ?: true
+                val fieldDeclaredInAllowedFile: Boolean =
+                    e.allowedFilesTypes?.let { rawField.isDefault || it.contains(rawField.fileType) } ?: true
 
                 logger.trace("Validating field=${e.name}")
                 val auroraConfigField: JsonNode = rawField.value
@@ -48,10 +38,6 @@ class AuroraDeploymentSpecConfigFieldValidator(
                 logger.trace("validator result is=$result")
 
                 val err = when {
-                    invalidEnvSource -> ConfigFieldErrorDetail.illegal(
-                        "Invalid Source field=${e.name} requires an about source. Actual source is source=${rawField.name}",
-                        e.name, rawField
-                    )
                     !fieldDeclaredInAllowedFile -> ConfigFieldErrorDetail.illegal(
                         "Invalid Source field=${e.name}. Actual source=${rawField.name} (File type: ${rawField.fileType}). Must be placed within files of type: ${e.allowedFilesTypes}",
                         e.name,
