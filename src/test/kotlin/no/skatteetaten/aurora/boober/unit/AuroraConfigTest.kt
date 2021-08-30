@@ -181,7 +181,7 @@ class AuroraConfigTest : ResourceLoader() {
             )
         }.isFailure().all {
             this.isInstanceOf(IllegalArgumentException::class)
-            hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name simple.")
+            hasMessage("BaseFile simple.(json|yaml) missing for application: utv/simple")
         }
     }
 

@@ -1,3 +1,4 @@
 {
-  "includeEnvFile": "utv/about.json"
+  "includeEnvFile": "utv/about-alternate.json",
+  "globalFile": "about-alternative1.json"
 }
