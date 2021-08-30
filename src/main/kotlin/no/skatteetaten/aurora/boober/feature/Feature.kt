@@ -189,10 +189,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
                 allowedFilesTypes = aboutFileTypes
             ),
             AuroraConfigFieldHandler("segment"),
-            AuroraConfigFieldHandler(
-                "cluster",
-                validator = { it.notBlank("Cluster must be set") }, allowedFilesTypes = aboutFileTypes
-            ),
+            AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("permissions/admin", allowedFilesTypes = aboutFileTypes),
             AuroraConfigFieldHandler("permissions/view", allowedFilesTypes = aboutFileTypes),
             AuroraConfigFieldHandler("permissions/adminServiceAccount", allowedFilesTypes = aboutFileTypes),
@@ -239,9 +236,4 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
             AuroraConfigFieldHandler("includeEnvFile", allowedFilesTypes = setOf(ENV))
         )
     }
-
-    val envPointers = listOf(
-        "env/name", "env/ttl", "envName", "affiliation",
-        "permissions/admin", "permissions/view", "permissions/adminServiceAccount"
-    )
 }
