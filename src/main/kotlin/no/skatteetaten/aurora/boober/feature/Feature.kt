@@ -73,16 +73,16 @@ interface Feature {
 
     You can throw an exception here and it will be registered as a validation error if you like
      */
-    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean)
-        : FeatureContext = emptyMap()
+    fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean):
+        FeatureContext = emptyMap()
 
     /**
     Perform validation of this feature.
 
     If this method throws it will be handled as a single error or multiple errors if ExceptionList
      */
-    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext)
-        : List<Exception> = emptyList()
+    fun validate(adc: AuroraDeploymentSpec, fullValidation: Boolean, context: FeatureContext):
+        List<Exception> = emptyList()
 
     /**
     Generate a set of AuroraResource from this feature
