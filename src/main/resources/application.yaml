@@ -59,6 +59,8 @@ boober:
     webseal:
         suffix: ".amutv.skead.no"
     productionlevel: "u"
+    builder:
+        version: "1"
 
 aurora:
     token:

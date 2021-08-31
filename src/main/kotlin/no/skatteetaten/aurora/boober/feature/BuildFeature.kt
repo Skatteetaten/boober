@@ -22,7 +22,9 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 
 @Service
 class BuildFeature(
-    @Value("\${integrations.docker.registry}") val dockerRegistryUrl: String
+    @Value("\${integrations.docker.registry}") val dockerRegistryUrl: String,
+    @Value("\${boober.builder.version}")
+    val builderVersion: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type == TemplateType.development
@@ -44,7 +46,7 @@ class BuildFeature(
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
         return gavHandlers(header, cmd) + setOf(
             AuroraConfigFieldHandler("builder/name", defaultValue = "architect"),
-            AuroraConfigFieldHandler("builder/version", defaultValue = "1"),
+            AuroraConfigFieldHandler("builder/version", defaultValue = builderVersion),
             AuroraConfigFieldHandler(
                 "baseImage/name",
                 defaultValue = applicationPlatform.baseImageName
