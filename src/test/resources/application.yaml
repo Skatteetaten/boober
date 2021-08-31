@@ -95,6 +95,8 @@ boober:
     webseal:
         suffix: ".test.webseal"
     productionlevel: "u"
+    builder:
+        version: "1"
 
 vault:
     operations:
