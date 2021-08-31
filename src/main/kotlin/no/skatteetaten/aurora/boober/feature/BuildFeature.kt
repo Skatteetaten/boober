@@ -23,8 +23,7 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 @Service
 class BuildFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistryUrl: String,
-    @Value("\${builder.version}")
-    val builderVersion: String
+    @Value("\${auroraconfig.builder.version}") val builderVersion: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type == TemplateType.development

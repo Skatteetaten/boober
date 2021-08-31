@@ -60,8 +60,9 @@ boober:
         suffix: ".amutv.skead.no"
     productionlevel: "u"
 
-builder:
-    version: "1"
+auroraconfig:
+    builder:
+        version: "1"
 
 aurora:
     token:
