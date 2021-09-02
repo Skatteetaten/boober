@@ -27,8 +27,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
                 }
             } else {
 
-                val fieldDeclaredInAllowedFile: Boolean =
-                    e.allowedFilesTypes?.let { rawField.isDefault || it.contains(rawField.fileType) } ?: true
+                val fieldDeclaredInAllowedFile: Boolean = rawField.run { isDefault || e.isAllowedFileType(fileType) }
 
                 logger.trace("Validating field=${e.name}")
                 val auroraConfigField: JsonNode = rawField.value
