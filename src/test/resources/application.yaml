@@ -96,6 +96,10 @@ boober:
         suffix: ".test.webseal"
     productionlevel: "u"
 
+auroraconfig:
+    builder:
+        version: "1"
+
 vault:
     operations:
         enabled: true
