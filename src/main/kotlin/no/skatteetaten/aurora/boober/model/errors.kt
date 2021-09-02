@@ -39,12 +39,13 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
         fun illegal(
             message: String,
             path: String = "",
-            auroraConfigField: AuroraConfigField? = null
+            auroraConfigField: AuroraConfigField? = null,
+            severity: ErrorType = ErrorType.ILLEGAL
         ): ConfigFieldErrorDetail {
             val fieldError = auroraConfigField?.let {
                 AuroraConfigFieldError(path, auroraConfigField.name, auroraConfigField.value)
             }
-            return ConfigFieldErrorDetail(ErrorType.ILLEGAL, message, fieldError)
+            return ConfigFieldErrorDetail(severity, message, fieldError)
         }
 
         fun missing(message: String, path: String): ConfigFieldErrorDetail {
