@@ -199,7 +199,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
                 validator = { it.pattern(envNamePattern, envNameMessage) },
                 defaultSource = "folderName",
                 defaultValue = defaultEnvName,
-                allowedFilesTypes = aboutFileTypes
+                allowedFilesTypes = setOf(ENV)
             ),
             AuroraConfigFieldHandler(
                 "name",
@@ -217,7 +217,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
             AuroraConfigFieldHandler(
                 "env/name",
                 validator = { it.pattern(envNamePattern, envNameMessage, false) },
-                allowedFilesTypes = aboutFileTypes
+                allowedFilesTypes = setOf(ENV)
             ),
             AuroraConfigFieldHandler(
                 "env/ttl",
