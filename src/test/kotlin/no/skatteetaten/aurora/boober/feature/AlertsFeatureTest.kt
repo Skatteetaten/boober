@@ -123,7 +123,7 @@ class AlertsFeatureTest : AbstractFeatureTest() {
 
         assertThat(generatedResources).hasSize(1)
         val alert = (generatedResources[0].resource as Alerts).spec.alert
-        assertThat(alert.delay).isEqualTo(4)
+        assertThat(alert.delay).isEqualTo("4")
         assertThat(alert.connection).isEqualTo("koblingsregel")
         assertThat(alert.severity).isEqualTo("critical")
     }
@@ -151,7 +151,7 @@ class AlertsFeatureTest : AbstractFeatureTest() {
 
         assertThat(generatedResources).hasSize(1)
         val alert = (generatedResources[0].resource as Alerts).spec.alert
-        assertThat(alert.delay).isEqualTo(2)
+        assertThat(alert.delay).isEqualTo("2")
         assertThat(alert.connection).isEqualTo("en-annen-koblingsregel")
     }
 }
