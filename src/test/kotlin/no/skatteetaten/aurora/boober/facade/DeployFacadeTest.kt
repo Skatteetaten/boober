@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import okhttp3.mockwebserver.MockResponse
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.params.ParameterizedTest
@@ -77,6 +78,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
         }.isFailure().messageContains("Public vaults are not allowed")
     }
 
+    @Disabled
     @Test
     fun `deploy application when another exist`() {
 
