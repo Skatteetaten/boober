@@ -176,6 +176,7 @@ class DeployFacadeTest(@Value("\${application.deployment.id}") val booberAdId: S
         assertThat(result).auroraDeployResultMatchesFiles()
     }
 
+    @Disabled
     @ParameterizedTest
     @CsvSource(value = ["whoami", "simple", "web", "ah", "complex", "job", "python"])
     fun `deploy application`(app: String) {
