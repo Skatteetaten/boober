@@ -21,9 +21,11 @@ import org.springframework.stereotype.Service
 data class AlertConfiguration(
     val enabled: Boolean,
     val expr: String,
-    val delay: Int,
+    val delay: String,
     val connection: String,
-    val severity: String
+    val severity: String,
+    val summary: String,
+    val description: String
 )
 
 @Service
@@ -65,7 +67,9 @@ class AlertsFeature : Feature {
                     AuroraConfigFieldHandler("$featureName/$name/connection"),
                     AuroraConfigFieldHandler("$featureName/$name/severity", validator = { node ->
                         node?.oneOf(listOf("warning", "critical"))
-                    })
+                    }),
+                    AuroraConfigFieldHandler("$featureName/$name/summary"),
+                    AuroraConfigFieldHandler("$featureName/$name/description")
                 )
             }.toSet()
         return definedAlerts
@@ -159,7 +163,9 @@ class AlertsFeature : Feature {
                     alertConfig.delay,
                     alertConfig.severity,
                     alertConfig.connection,
-                    alertConfig.enabled
+                    alertConfig.enabled,
+                    alertConfig.summary,
+                    alertConfig.description
                 )
             )
         )
@@ -173,13 +179,15 @@ class AlertsFeature : Feature {
         val alertEnabled = this.getOrNull<Boolean>("$confPath/enabled")
         val alertExpr = this.getOrNull<String>("$confPath/expr")
             ?: throw IllegalStateException("Missing $confPath/expr value, check validation-logic")
-        val alertDelay = this.getOrNull<Int>("$confPath/delay")
+        val alertDelay = this.getOrNull<String>("$confPath/delay")
         val alertConnection = this.getOrNull<String>("$confPath/connection")
         val alertSeverity = this.getOrNull<String>("$confPath/severity")
             ?: throw IllegalStateException("Missing $confPath/severity value, check validation-logic")
+        val alertSummary = this.getOrNull<String>("$confPath/summary") ?: "oppsummering av alarm er ikke angitt"
+        val alertDescription = this.getOrNull<String>("$confPath/description") ?: "beskrivelse av alarm er ikke angitt"
 
         val defaultEnabled = this.getOrNull<Boolean>("$defaultsName/enabled") ?: false
-        val defaultDelay = this.getOrNull<Int>("$defaultsName/delay") ?: 1
+        val defaultDelay = this.getOrNull<String>("$defaultsName/delay") ?: "1"
         val connection = alertConnection ?: this.getOrNull<String>("$defaultsName/connection")
         ?: throw IllegalStateException("Missing $confPath/connection value, check validation-logic")
 
@@ -188,7 +196,9 @@ class AlertsFeature : Feature {
             expr = alertExpr,
             delay = alertDelay ?: defaultDelay,
             connection = alertConnection ?: connection,
-            severity = alertSeverity
+            severity = alertSeverity,
+            summary = alertSummary,
+            description = alertDescription
         )
     }
 }
