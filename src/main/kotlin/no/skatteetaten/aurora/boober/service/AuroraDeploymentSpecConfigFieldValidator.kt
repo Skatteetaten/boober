@@ -38,7 +38,7 @@ class AuroraDeploymentSpecConfigFieldValidator(
 
                 val err = when {
                     !fieldDeclaredInAllowedFile ->
-                        ConfigFieldErrorDetail.illegal(
+                        ConfigFieldErrorDetail.forSeverity(
                             "Invalid Source field=${e.name}. Actual source=${rawField.name} (File type: ${rawField.fileType}). Must be placed within files of type: ${e.allowedFilesTypes}",
                             e.name,
                             rawField,
