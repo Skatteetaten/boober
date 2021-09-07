@@ -205,7 +205,7 @@ class AuroraDeploymentContextService(
         if (!deployCommand.errorsAsWarnings && filteredErrors.isNotEmpty()) {
             throw AuroraConfigException(
                 "Config for application ${deployCommand.applicationDeploymentRef.application} in environment ${deployCommand.applicationDeploymentRef.environment} contains errors",
-                errors = errors
+                errors = filteredErrors
             )
         }
 
