@@ -25,5 +25,8 @@ data class AuroraConfigFieldHandler(
     val canBeSimplifiedConfig: Boolean = false,
 
     // The file types this config field can be declared in. <code>null</code> means no restriction.
-    val allowedFilesTypes: Set<AuroraConfigFileType>? = null
-)
+    val allowedFilesTypes: Set<AuroraConfigFileType>? = null,
+    val validationSeverity: ErrorType = ErrorType.ILLEGAL
+) {
+    fun isAllowedFileType(fileType: AuroraConfigFileType) = allowedFilesTypes?.contains(fileType) ?: true
+}

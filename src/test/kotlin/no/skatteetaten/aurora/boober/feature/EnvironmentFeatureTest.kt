@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
@@ -12,10 +16,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 
 class EnvironmentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -132,7 +132,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     )
                 )
             )
-        }.singleApplicationError("Invalid Source field=affiliation requires an about source. Actual source is source=utv/simple.json.")
+        }.singleApplicationError("Config for application simple in environment utv contains errors. Invalid Source field=affiliation. Actual source=utv/simple.json (File type: APP). Must be placed within files of type: [GLOBAL, ENV, INCLUDE_ENV].")
     }
 
     @Test
