@@ -25,6 +25,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
+import no.skatteetaten.aurora.boober.model.ErrorType
 import no.skatteetaten.aurora.boober.model.validate
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.parallelMap
@@ -157,11 +158,12 @@ class AuroraDeploymentContextService(
             fieldHandlers = headerHandlers,
             fields = headerSpec.fields
         ).validate(false)
-
-        if (!deployCommand.errorsAsWarnings && headerErrors.isNotEmpty()) {
+        val filteredHeaderErrors = headerErrors.filter { it.type != ErrorType.WARNING }
+        // throws exception for header errors that are not warnings
+        if (!deployCommand.errorsAsWarnings && filteredHeaderErrors.isNotEmpty()) {
             throw AuroraConfigException(
                 "Config for application ${deployCommand.applicationDeploymentRef.application} in environment ${deployCommand.applicationDeploymentRef.environment} contains errors",
-                errors = headerErrors
+                errors = filteredHeaderErrors
             )
         }
 
@@ -198,10 +200,12 @@ class AuroraDeploymentContextService(
             fieldHandlers = allHandlers,
             fields = spec.fields
         ).validate()
-        if (!deployCommand.errorsAsWarnings && errors.isNotEmpty()) {
+        val filteredErrors = errors.filter { it.type != ErrorType.WARNING }
+        // throws exception for  errors that are not warnings
+        if (!deployCommand.errorsAsWarnings && filteredErrors.isNotEmpty()) {
             throw AuroraConfigException(
                 "Config for application ${deployCommand.applicationDeploymentRef.application} in environment ${deployCommand.applicationDeploymentRef.environment} contains errors",
-                errors = errors
+                errors = filteredErrors
             )
         }
 
@@ -217,9 +221,13 @@ class AuroraDeploymentContextService(
             feature.createContext(featureSpec, deployCommand, !fullValidation)
         }
 
-        val errorWarnings = (headerErrors + errors).map {
-            it.asWarning()
-        }.distinct()
+        val errorWarnings = if (deployCommand.errorsAsWarnings) {
+            (headerErrors + errors).map {
+                it.asWarning()
+            }.distinct()
+        } else {
+            (headerErrors + errors).filter { it.type == ErrorType.WARNING }.map { it.asWarning() }.distinct()
+        }
 
         return AuroraDeploymentContext(
             spec,

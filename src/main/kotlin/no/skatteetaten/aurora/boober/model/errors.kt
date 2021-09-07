@@ -25,6 +25,7 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
     ErrorDetail(type, message) {
 
     fun asWarning(): String {
+        val typeMessage = if (type != ErrorType.WARNING) "ERROR type=$type " else ""
         val fieldMessage = field?.let {
             if (it.fileName == null) {
                 "path=${it.path}"
@@ -32,7 +33,7 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
                 "file=${it.fileName} path=${it.path}"
             }
         } ?: ""
-        return "ERROR type=$type  $fieldMessage message=$message"
+        return "$typeMessage$fieldMessage message=$message"
     }
 
     companion object {
@@ -41,10 +42,7 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
             path: String = "",
             auroraConfigField: AuroraConfigField? = null
         ): ConfigFieldErrorDetail {
-            val fieldError = auroraConfigField?.let {
-                AuroraConfigFieldError(path, auroraConfigField.name, auroraConfigField.value)
-            }
-            return ConfigFieldErrorDetail(ErrorType.ILLEGAL, message, fieldError)
+            return forSeverity(message, path, auroraConfigField, ErrorType.ILLEGAL)
         }
 
         fun missing(message: String, path: String): ConfigFieldErrorDetail {
@@ -55,6 +53,18 @@ class ConfigFieldErrorDetail(type: ErrorType, message: String, val field: Aurora
         fun invalid(filename: String, path: String): ConfigFieldErrorDetail {
             val fieldError = AuroraConfigFieldError(path, filename)
             return ConfigFieldErrorDetail(ErrorType.INVALID, "$path is not a valid config field pointer", fieldError)
+        }
+
+        fun forSeverity(
+            message: String,
+            path: String = "",
+            auroraConfigField: AuroraConfigField? = null,
+            severity: ErrorType = ErrorType.ILLEGAL
+        ): ConfigFieldErrorDetail {
+            val fieldError = auroraConfigField?.let {
+                AuroraConfigFieldError(path, auroraConfigField.name, auroraConfigField.value)
+            }
+            return ConfigFieldErrorDetail(severity, message, fieldError)
         }
     }
 }
