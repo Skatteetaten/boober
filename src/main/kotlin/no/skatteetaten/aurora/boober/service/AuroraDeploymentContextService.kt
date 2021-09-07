@@ -159,6 +159,7 @@ class AuroraDeploymentContextService(
             fields = headerSpec.fields
         ).validate(false)
         val filteredHeaderErrors = headerErrors.filter { it.type != ErrorType.WARNING }
+        // throws exception for header errors that are not warnings
         if (!deployCommand.errorsAsWarnings && filteredHeaderErrors.isNotEmpty()) {
             throw AuroraConfigException(
                 "Config for application ${deployCommand.applicationDeploymentRef.application} in environment ${deployCommand.applicationDeploymentRef.environment} contains errors",
@@ -200,6 +201,7 @@ class AuroraDeploymentContextService(
             fields = spec.fields
         ).validate()
         val filteredErrors = errors.filter { it.type != ErrorType.WARNING }
+        // throws exception for  errors that are not warnings
         if (!deployCommand.errorsAsWarnings && filteredErrors.isNotEmpty()) {
             throw AuroraConfigException(
                 "Config for application ${deployCommand.applicationDeploymentRef.application} in environment ${deployCommand.applicationDeploymentRef.environment} contains errors",
