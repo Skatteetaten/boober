@@ -2,9 +2,10 @@ package no.skatteetaten.aurora.boober.model
 
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
+import no.skatteetaten.aurora.boober.feature.TemplateType.deploy
 import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.ExceptionList
-import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
 import no.skatteetaten.aurora.boober.utils.UUIDGenerator
 import no.skatteetaten.aurora.boober.utils.parallelMap
 
@@ -25,7 +26,9 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
     }
 }
 
-fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<AuroraDeployCommand> {
+fun List<AuroraDeploymentContext>.createDeployCommand(
+    deploy: Boolean
+): List<AuroraDeployCommand> {
     val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = this.parallelMap { context ->
         val (errors, resourceResults) = context.createResources()
         when {
@@ -49,23 +52,29 @@ fun List<AuroraDeploymentContext>.createDeployCommand(deploy: Boolean): List<Aur
             }
         }
     }
-    val resourceErrors = result.flatMap { it.first }
-    if (resourceErrors.isNotEmpty()) {
 
-        /* just throw the exception...
-        resourceErrors.forEach { it.errors.forEach { err ->
-            throw err
-        } }
-         */
-        val errorMessages = resourceErrors.flatMap { err ->
+    val test = result.partition {
+        it.second != null
+    }
+    val valid = test.first.mapNotNull { it.second }
+    val invalid = test.second.map { it.first }.flatten()
+
+    if (invalid.isNotEmpty()) {
+        val errorMessages = invalid.map { err ->
             err.errors.map { it.localizedMessage }
         }
         logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
-
-        throw MultiApplicationValidationException(resourceErrors)
     }
 
-    return result.mapNotNull { it.second }
+    if (invalid.isNotEmpty()) {
+        throw MultiApplicationDeployValidationResultException(
+            valid = valid,
+            invalid = invalid,
+            errorMessage = "Invalid deploy commands"
+        )
+    }
+
+    return valid
 }
 
 fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<AuroraResource>?> {

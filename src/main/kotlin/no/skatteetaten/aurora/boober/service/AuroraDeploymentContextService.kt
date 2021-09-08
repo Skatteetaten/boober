@@ -49,7 +49,7 @@ class AuroraDeploymentContextService(
     fun createValidatedAuroraDeploymentContexts(
         commands: List<AuroraContextCommand>,
         resourceValidation: Boolean = true
-    ): List<AuroraDeploymentContext> {
+    ): Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>> {
 
         val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.parallelMap { cmd ->
             try {
@@ -68,24 +68,25 @@ class AuroraDeploymentContextService(
             }
         }
 
-        val errors = result.mapNotNull { it.second }
-        if (errors.isNotEmpty()) {
-            val errorMessages = errors.flatMap { err ->
-                err.errors.map { it.localizedMessage }
-            }
-            logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
-            throw MultiApplicationValidationException(errors)
+        val test = result.partition {
+            it.second?.errors?.isNotEmpty() ?: false
         }
+        val valid = test.second.mapNotNull { it.first }.addDuplicatedUrls()
+        val invalid = test.first
 
-        val contexts = result.mapNotNull { it.first }
+        return valid to invalid
+    }
 
-        val adcWithDuplicatedUrls: AuroraDeploymentContextUrlMultimap =
-            findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(contexts)
+    private fun List<AuroraDeploymentContext>.addDuplicatedUrls(): List<AuroraDeploymentContext> {
+        val adcWithDuplicatedUrls = findDuplicatedUrlWarningsGroupedByAuroraDeploymentContext(this)
 
-        return contexts.map {
-            if (adcWithDuplicatedUrls.containsKey(it)) {
-                it.copy(warnings = it.warnings.addIfNotNull(adcWithDuplicatedUrls[it]))
-            } else it
+        return map {
+            when {
+                adcWithDuplicatedUrls.containsKey(it) -> {
+                    it.copy(warnings = it.warnings.addIfNotNull(adcWithDuplicatedUrls[it]))
+                }
+                else -> it
+            }
         }
     }
 

@@ -259,7 +259,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
             overrides = emptyList()
         )
-        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true).first()
+        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true).first.first()
     }
 
     /*
@@ -301,7 +301,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
             overrides = files.filter { it.override }
         )
-        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), fullValidation).first()
+        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), fullValidation).first.first()
     }
 
     fun createAuroraDeploymentSpecForFeature(

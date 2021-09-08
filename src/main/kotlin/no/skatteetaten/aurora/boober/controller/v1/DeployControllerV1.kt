@@ -50,8 +50,15 @@ class DeployControllerV1(private val deployFacade: DeployFacade) {
         }
 
         return auroraDeployResults.find { !it.success }
-            ?.let { Response(items = auroraDeployResults, success = false, message = it.reason ?: "Deploy failed") }
-            ?: Response(items = auroraDeployResults)
+            ?.let {
+                Response(
+                    items = auroraDeployResults, success = false,
+                    message = when (auroraDeployResults.size) {
+                        1 -> it.reason ?: "Unknown error"
+                        else -> "Deploy failed"
+                    }
+                )
+            } ?: Response(items = auroraDeployResults)
     }
 }
 

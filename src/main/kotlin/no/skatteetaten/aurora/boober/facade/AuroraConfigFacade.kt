@@ -16,6 +16,7 @@ import no.skatteetaten.aurora.boober.model.toAdr
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.parallelMap
 
 private val logger = KotlinLogging.logger {}
@@ -107,10 +108,13 @@ class AuroraConfigFacade(
             AuroraContextCommand(auroraConfig, it, auroraConfigRef, emptyList())
         }
 
-        val result =
-            auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
+        val (valid, invalid) = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
 
-        return result.filter { it.warnings.isNotEmpty() }
+        if (invalid.isNotEmpty()) {
+            throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
+        }
+
+        return valid.filter { it.warnings.isNotEmpty() }
             .associate {
                 it.cmd.applicationDeploymentRef to it.warnings
             }
