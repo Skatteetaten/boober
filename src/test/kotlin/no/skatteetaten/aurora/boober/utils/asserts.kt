@@ -8,7 +8,9 @@ import assertk.assertions.messageContains
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
+import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationResultException
 
 fun <T> Assert<Result<T>>.singleApplicationError(expectedMessage: String) {
     this.isFailure()
@@ -20,6 +22,28 @@ fun <T> Assert<Result<T>>.singleApplicationError(expectedMessage: String) {
             } else {
                 errors.first()
             }
+        }
+        .messageContains(expectedMessage)
+}
+
+fun <T> Assert<Result<T>>.singleApplicationValidationError(expectedMessage: String) {
+    this.isFailure()
+        .isInstanceOf(MultiApplicationValidationResultException::class)
+        .transform { mae ->
+            if (mae.invalid.size != 1) {
+                throw mae
+            } else mae.invalid.first().second!!.errors.first()
+        }
+        .messageContains(expectedMessage)
+}
+
+fun <T> Assert<Result<T>>.singleApplicationDeployError(expectedMessage: String) {
+    this.isFailure()
+        .isInstanceOf(MultiApplicationDeployValidationResultException::class)
+        .transform { mae ->
+            if (mae.invalid.size != 1) {
+                throw mae
+            } else mae.invalid.first().errors.first()
         }
         .messageContains(expectedMessage)
 }
