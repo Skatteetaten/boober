@@ -244,7 +244,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createCustomAuroraDeploymentContext(
         adr: ApplicationDeploymentRef,
         vararg file: Pair<String, String>
-    ): AuroraDeploymentContext {
+    ): Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>> {
         val idService = mockk<IdService>()
 
         every {
@@ -261,7 +261,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
             overrides = emptyList()
         )
-        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true).first.first()
+        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true)
     }
 
     /*
@@ -367,7 +367,11 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     ): List<AuroraResource> {
 
         val numberOfEmptyResources = resources.size
-        val (valid, _) = createAuroraDeploymentContext(app, files = files)
+        val (valid, invalid) = createAuroraDeploymentContext(app, files = files)
+
+        if (invalid.isNotEmpty()) {
+            throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
+        }
 
         val generated = valid.first().features.flatMap {
             it.key.generate(it.value, valid.first().featureContext[it.key] ?: emptyMap())

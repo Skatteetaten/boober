@@ -15,7 +15,6 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrors
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class EnvironmentFeatureTest : AbstractFeatureTest() {
@@ -170,7 +169,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
                     """{ "version" : "1" }"""
             )
-        }.singleApplicationError("Name must be alphanumeric and no more than 40 characters")
+        }.singleApplicationErrorResult("Name must be alphanumeric and no more than 40 characters")
     }
 
     enum class PermissionsTestData(val values: String) {
