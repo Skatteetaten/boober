@@ -14,7 +14,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultResults
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
@@ -132,7 +132,7 @@ class MountFeatureTest : AbstractFeatureTest() {
              }""".trimIndent(),
                 fullValidation = false
             )
-        }.singleApplicationError(data.errorMessage)
+        }.singleApplicationErrorResult(data.errorMessage)
     }
 
     @Test
@@ -141,7 +141,7 @@ class MountFeatureTest : AbstractFeatureTest() {
         every { openShiftClient.resourceExists("secret", "paas-utv", "mount") } returns false
 
         assertThat { createAuroraDeploymentContext(existingSecretJson) }
-            .singleApplicationError("Required existing resource with type=Secret namespace=paas-utv name=mount does not exist")
+            .singleApplicationErrorResult("Required existing resource with type=Secret namespace=paas-utv name=mount does not exist")
     }
 
     @Test
@@ -150,7 +150,7 @@ class MountFeatureTest : AbstractFeatureTest() {
         every { vaultProvider.vaultExists("paas", "foo") } returns false
 
         assertThat { createAuroraDeploymentContext(secretVaultJson) }
-            .singleApplicationError("Referenced Vault foo in Vault Collection paas does not exist")
+            .singleApplicationErrorResult("Referenced Vault foo in Vault Collection paas does not exist")
     }
 
     @Test

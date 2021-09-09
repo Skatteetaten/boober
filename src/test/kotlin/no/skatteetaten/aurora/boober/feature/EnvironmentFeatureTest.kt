@@ -16,6 +16,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class EnvironmentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -37,7 +38,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext()
-        }.singleApplicationError("User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]")
+        }.singleApplicationErrorResult("User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]")
     }
 
     @Test
@@ -83,7 +84,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     )
                 )
             )
-        }.singleApplicationError("permissions.admin cannot be empty")
+        }.singleApplicationErrorResult("permissions.admin cannot be empty")
     }
 
     @Test
@@ -99,7 +100,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext(fullValidation = false)
-        }.singleApplicationError("[APP_PaaS_drift, APP_PaaS_utv] are not valid groupNames")
+        }.singleApplicationErrorResult("[APP_PaaS_drift, APP_PaaS_utv] are not valid groupNames")
     }
 
     @Test
@@ -110,7 +111,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
              "name": "test%qwe)"
             }"""
             )
-        }.singleApplicationError("Name must be alphanumeric and no more than 40 characters")
+        }.singleApplicationErrorResult("Name must be alphanumeric and no more than 40 characters")
     }
 
     @Test
@@ -132,7 +133,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     )
                 )
             )
-        }.singleApplicationError("Config for application simple in environment utv contains errors. Invalid Source field=affiliation. Actual source=utv/simple.json (File type: APP). Must be placed within files of type: [GLOBAL, ENV, INCLUDE_ENV].")
+        }.singleApplicationErrorResult("Config for application simple in environment utv contains errors. Invalid Source field=affiliation. Actual source=utv/simple.json (File type: APP). Must be placed within files of type: [GLOBAL, ENV, INCLUDE_ENV].")
     }
 
     @Test
@@ -154,7 +155,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     )
                 )
             )
-        }.singleApplicationError("Affiliation can only contain letters and must be no longer than 10 characters")
+        }.singleApplicationErrorResult("Affiliation can only contain letters and must be no longer than 10 characters")
     }
 
     @Test

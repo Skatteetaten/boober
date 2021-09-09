@@ -18,7 +18,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWith
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class S3StorageGridFeatureTest : AbstractFeatureTest() {
@@ -49,7 +49,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 "s3": true
            }"""
             )
-        }.singleApplicationError("Missing field: bucketName for s3")
+        }.singleApplicationErrorResult("Missing field: bucketName for s3")
     }
 
     @Test
@@ -66,13 +66,14 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("Config for application simple in environment utv contains errors. s3 tenant must be on the form affiliation-cluster, specified value was: \"$tenant\".")
+        }.singleApplicationErrorResult("Config for application simple in environment utv contains errors. s3 tenant must be on the form affiliation-cluster, specified value was: \"$tenant\".")
     }
 
     @Test
     fun `verify fails on validate when two identical objectareas in same bucket`() {
-        val (_, invalid) = createAuroraDeploymentContext(
-            """{ 
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
                 "s3": {
                     "default" : {
                         "bucketName": "bucket1"
@@ -83,10 +84,8 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     }
                 }
            }"""
-        )
-        assertThat {
-            invalid.isNotEmpty()
-        }.singleApplicationError("objectArea name=default used 2 times for same application")
+            )
+        }.singleApplicationErrorResult("objectArea name=default used 2 times for same application")
     }
 
     @Test
@@ -102,7 +101,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: \"$bucketName\"")
+        }.singleApplicationErrorResult("s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: \"$bucketName\"")
     }
 
     @Test
@@ -118,7 +117,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("combination of bucketName and tenantName must be between 3 and 63 chars, specified value was 76 chars long")
+        }.singleApplicationErrorResult("combination of bucketName and tenantName must be between 3 and 63 chars, specified value was 76 chars long")
     }
 
     @Test

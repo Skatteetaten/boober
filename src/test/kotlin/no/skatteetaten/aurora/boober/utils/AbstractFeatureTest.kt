@@ -56,6 +56,7 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.IdService
 import no.skatteetaten.aurora.boober.service.IdServiceFallback
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
@@ -388,7 +389,12 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createAuroraConfigFieldHandlers(
         app: String = """{}"""
     ): AuroraDeploymentSpec {
-        val (valid, _) = createAuroraDeploymentContext(app)
+        val (valid, invalid) = createAuroraDeploymentContext(app)
+
+        if (invalid.isNotEmpty()) {
+            throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
+        }
+
         return valid.first().features.values.first()
     }
 

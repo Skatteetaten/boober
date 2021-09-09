@@ -5,7 +5,7 @@ import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
 
 class LocalTemplateFeatureTest : AbstractFeatureTest() {
@@ -25,7 +25,7 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             "templateFile" : "templates/atomhopper.json"
             }"""
             )
-        }.singleApplicationError("Config for application simple in environment utv contains errors. The file named templates/atomhopper.json does not exist in AuroraConfig.")
+        }.singleApplicationErrorResult("Config for application simple in environment utv contains errors. The file named templates/atomhopper.json does not exist in AuroraConfig.")
     }
 
     @Test
@@ -38,7 +38,7 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             "templateFile" : "templates/atomhopper.json"
             }""", files = templateFile
             )
-        }.singleApplicationError("Required template parameters [FEED_NAME, DB_NAME] not set")
+        }.singleApplicationErrorResult("Required template parameters [FEED_NAME, DB_NAME] not set")
     }
 
     @Test

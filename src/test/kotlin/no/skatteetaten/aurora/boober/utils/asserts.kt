@@ -4,13 +4,29 @@ import assertk.Assert
 import assertk.Result
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isSuccess
 import assertk.assertions.messageContains
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
+import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationResultException
+
+fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>>>>.singleApplicationErrorResult(expectedMessage: String) {
+    this.isSuccess()
+        .transform { mae ->
+            val errors = mae.second.map { it.second }
+            if (errors.size > 1 && errors.isNotEmpty()) {
+                throw IllegalArgumentException("More than one error")
+            } else {
+                errors.first()!!.errors.first()
+            }
+        }
+        .messageContains(expectedMessage)
+}
 
 fun <T> Assert<Result<T>>.singleApplicationError(expectedMessage: String) {
     this.isFailure()

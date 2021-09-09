@@ -13,7 +13,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrors
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
 
 class SecretVaultFeatureTest : AbstractFeatureTest() {
@@ -38,7 +38,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.singleApplicationError("The name of the secretVault=simple-this-secret-name-is-really-way-way-way-too-long-long-long-long is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
+        }.singleApplicationErrorResult("The name of the secretVault=simple-this-secret-name-is-really-way-way-way-too-long-long-long-long is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
     }
 
     @Test
@@ -58,7 +58,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "The secretVault keyMappings [BAR] were not found in keys"
         )
     }
@@ -83,7 +83,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               "secretVault" : "simple"
              }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Your user does not have access"
         )
     }

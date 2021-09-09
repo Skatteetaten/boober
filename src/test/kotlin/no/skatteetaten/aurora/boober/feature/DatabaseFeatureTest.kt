@@ -34,6 +34,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.RestorableSche
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 
@@ -93,7 +94,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("Could not find schema")
+        }.singleApplicationErrorResult("Could not find schema")
     }
 
     @Test
@@ -113,7 +114,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                }
            }"""
             )
-        }.singleApplicationError("Could not find schema")
+        }.singleApplicationErrorResult("Could not find schema")
     }
 
     @Test

@@ -91,7 +91,7 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(useHerkimerIdService = false)
         }.isSuccess().given {
-            assertThat(it.second.first().first!!.spec.applicationDeploymentId).isEqualTo("fallbackid")
+            assertThat(it.first.first().spec.applicationDeploymentId).isEqualTo("fallbackid")
         }
     }
 }

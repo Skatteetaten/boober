@@ -17,6 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -41,7 +42,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Config for application simple in environment utv contains errors. Must be one of [edge, passthrough]."
         )
     }
@@ -60,7 +61,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Config for application simple in environment utv contains errors. Must be one of [Redirect, None, Allow]"
         )
     }
@@ -79,7 +80,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Config for application simple in environment utv contains errors. Annotation foo/bar cannot contain '/'. Use '|' instead."
         )
     }
@@ -99,7 +100,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Application simple in environment utv have a tls enabled route with a '.' in the host. Route name=simple-foo with tls uses '.' in host name."
         )
     }
@@ -120,7 +121,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Application simple in environment utv have duplicated host+path configurations. host=simple-paas-utv is not unique. Remove the configuration from one of the following routes simple-foo,simple-bar."
         )
     }
@@ -140,7 +141,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Application simple in environment utv have routes with duplicate names. Route name=simple is duplicated."
         )
     }
