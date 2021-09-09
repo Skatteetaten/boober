@@ -191,7 +191,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             )
         )
 
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             files = listOf(
                 AuroraConfigFile(
                     "about.json", """{
@@ -207,7 +207,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             )
         )
 
-        assertThat(ctx.spec.getDelimitedStringOrArrayAsSet("permissions/admin", " "))
+        assertThat(valid.first().spec.getDelimitedStringOrArrayAsSet("permissions/admin", " "))
             .isEqualTo(
                 setOf(
                     "APP_PaaS_utv",

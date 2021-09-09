@@ -17,8 +17,8 @@ class BuildFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should disable feature if deploy type`() {
 
-        val adc = createAuroraDeploymentContext()
-        assertThat(adc.features.isEmpty())
+        val (valid, _) = createAuroraDeploymentContext()
+        assertThat(valid.first().features.isEmpty())
     }
 
     @Test

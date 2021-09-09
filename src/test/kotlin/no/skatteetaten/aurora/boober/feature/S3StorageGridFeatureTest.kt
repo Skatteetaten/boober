@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsAll
@@ -18,8 +20,6 @@ import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
 
 class S3StorageGridFeatureTest : AbstractFeatureTest() {
     private val provisioner = mockk<S3StorageGridProvisioner>()
@@ -71,9 +71,8 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `verify fails on validate when two identical objectareas in same bucket`() {
-        assertThat {
-            createAuroraDeploymentContext(
-                """{ 
+        val (_, invalid) = createAuroraDeploymentContext(
+            """{ 
                 "s3": {
                     "default" : {
                         "bucketName": "bucket1"
@@ -84,7 +83,9 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     }
                 }
            }"""
-            )
+        )
+        assertThat {
+            invalid.isNotEmpty()
         }.singleApplicationError("objectArea name=default used 2 times for same application")
     }
 
@@ -123,7 +124,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     @Test
     fun `verify setting tenant in AuroraConfig is overridden with default`() {
         val areaName = "default"
-        val spec = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{ 
                 "s3": {
                     "$areaName" : {
@@ -132,8 +133,8 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     }
                 }
            }"""
-        ).spec
-        assertThat(spec.s3ObjectAreas.find { it.area == areaName }?.tenant).isEqualTo("paas-utv")
+        )
+        assertThat(valid.first().spec.s3ObjectAreas.find { it.area == areaName }?.tenant).isEqualTo("paas-utv")
     }
 
     @Test
@@ -186,7 +187,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
             provisioner.getOrProvisionCredentials(any(), match { r ->
                 r.run {
                     find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null &&
-                            find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
+                        find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
                 }
             })
         } returns listOf(

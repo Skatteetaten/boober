@@ -43,7 +43,9 @@ fun <T> Assert<Result<T>>.singleApplicationDeployError(expectedMessage: String) 
         .transform { mae ->
             if (mae.invalid.size != 1) {
                 throw mae
-            } else mae.invalid.first().errors.first()
+            } else {
+                mae.invalid.first().errors.first()
+            }
         }
         .messageContains(expectedMessage)
 }
