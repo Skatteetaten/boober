@@ -14,7 +14,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.applicationErrors
+import no.skatteetaten.aurora.boober.utils.applicationErrorResult
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class EnvironmentFeatureTest : AbstractFeatureTest() {
@@ -54,7 +54,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext()
-        }.applicationErrors(
+        }.applicationErrorResult(
             "All groups=[APP_PaaS_drift, APP_PaaS_utv] are empty",
             "User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]"
         )

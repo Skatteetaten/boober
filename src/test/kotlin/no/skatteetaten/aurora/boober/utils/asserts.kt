@@ -15,7 +15,9 @@ import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationRes
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationResultException
 
-fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>>>>.singleApplicationErrorResult(expectedMessage: String) {
+fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>>>>.singleApplicationErrorResult(
+    expectedMessage: String
+) {
     this.isSuccess()
         .transform { mae ->
             val errors = mae.second.map { it.second }
@@ -81,6 +83,22 @@ fun <T> Assert<Result<T>>.applicationErrors(messages: List<String>) {
             errors.zip(messages).forEach { (actual, expected) ->
                 if (!actual.localizedMessage.contains(expected)) {
                     this.expected(":${show(actual.localizedMessage)} to contain:${show(expected)}")
+                }
+            }
+        }
+}
+
+fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>>>>.applicationErrorResult(
+    vararg message: String
+) {
+    this.isSuccess()
+        .transform { mae ->
+            val errors = mae.second.first().second!!.errors.map { it.localizedMessage }
+
+            errors.zip(message.toList()).forEach { (actual, expected) ->
+                println("$actual  :   $expected")
+                if (!actual.contains(expected)) {
+                    this.expected(":${show(actual)} to contain:${show(expected)}")
                 }
             }
         }

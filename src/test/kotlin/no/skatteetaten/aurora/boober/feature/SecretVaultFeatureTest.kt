@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.EnvVar
@@ -12,9 +13,9 @@ import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.applicationErrorResult
 import no.skatteetaten.aurora.boober.utils.applicationErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
-import org.junit.jupiter.api.Test
 
 class SecretVaultFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -128,7 +129,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "The keys [MISSING] were not found in the secret vault=foo in collection=paas"
         )
     }
@@ -145,7 +146,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               "secretVault" : "foo" 
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "File with name=latest.properties is not present in vault=foo in collection=paas",
             "Vault=foo in VaultCollection=paas is public"
         )
@@ -163,7 +164,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               "secretVault" : "foo" 
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "Referenced Vault foo in Vault Collection paas does not exist",
             "File with name=latest.properties is not present in vault=foo in collection=paas"
         )
