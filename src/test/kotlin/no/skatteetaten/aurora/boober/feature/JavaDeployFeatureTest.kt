@@ -1,14 +1,13 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isSuccess
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
-import org.junit.jupiter.api.Test
 
 class JavaDeployFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -85,7 +84,6 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `Fails when application name is too long and artifactId blank`() {
-
         assertThat {
             createCustomAuroraDeploymentContext(
                 ApplicationDeploymentRef("utv", "this-name-is-stupid-stupid-stupidly-long-for-no-reason"),
@@ -95,7 +93,7 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
                 "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
                     """{ "name" : "foo", "version" : "1" }"""
             )
-        }.singleApplicationError("ArtifactId must be set and be shorter then 50 characters")
+        }.singleApplicationErrorResult("ArtifactId must be set and be shorter then 50 characters")
     }
 
     @Test

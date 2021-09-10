@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrorResult
-import no.skatteetaten.aurora.boober.utils.applicationErrors
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class SecretVaultFeatureTest : AbstractFeatureTest() {
@@ -106,7 +105,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "File with name=latest.properties is not present in vault=simple in collection=paas",
             "File with name=latest.properties is not present in vault=simple in collection=paas",
             "SecretVaults does not have unique names=[simple, simple]"
