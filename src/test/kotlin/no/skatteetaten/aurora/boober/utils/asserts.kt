@@ -68,26 +68,6 @@ fun <T> Assert<Result<T>>.singleApplicationDeployError(expectedMessage: String) 
         .messageContains(expectedMessage)
 }
 
-fun <T> Assert<Result<T>>.applicationErrors(vararg message: String) {
-    this.applicationErrors(message.toList())
-}
-
-fun <T> Assert<Result<T>>.applicationErrors(messages: List<String>) {
-    this.isFailure()
-        .isInstanceOf(MultiApplicationValidationException::class)
-        .transform { mae ->
-            val errors = mae.errors.flatMap { it.errors }
-            if (errors.size != messages.size) {
-                this.expected("You do not expect all error messages. Actual error messages are ${errors.size}")
-            }
-            errors.zip(messages).forEach { (actual, expected) ->
-                if (!actual.localizedMessage.contains(expected)) {
-                    this.expected(":${show(actual.localizedMessage)} to contain:${show(expected)}")
-                }
-            }
-        }
-}
-
 fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>>>>.applicationErrorResult(
     vararg message: String
 ) {
