@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.model
 
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
-import no.skatteetaten.aurora.boober.feature.TemplateType.deploy
 import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.ExceptionList
 import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
@@ -53,11 +52,11 @@ fun List<AuroraDeploymentContext>.createDeployCommand(
         }
     }
 
-    val test = result.partition {
+    val pairedResults = result.partition {
         it.second != null
     }
-    val valid = test.first.mapNotNull { it.second }
-    val invalid = test.second.map { it.first }.flatten()
+    val valid = pairedResults.first.mapNotNull { it.second }
+    val invalid = pairedResults.second.map { it.first }.flatten()
 
     if (invalid.isNotEmpty()) {
         val errorMessages = invalid.map { err ->

@@ -68,11 +68,11 @@ class AuroraDeploymentContextService(
             }
         }
 
-        val test = result.partition {
+        val pairedResults = result.partition {
             it.second?.errors?.isNotEmpty() ?: false
         }
-        val valid = test.second.mapNotNull { it.first }.addDuplicatedUrls()
-        val invalid = test.first
+        val valid = pairedResults.second.mapNotNull { it.first }.addDuplicatedUrls()
+        val invalid = pairedResults.first
 
         return valid to invalid
     }
