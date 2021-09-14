@@ -31,16 +31,7 @@ class MultiApplicationValidationException(
 
     fun toValidationErrors(): List<ApplicationError> {
         return this.errors.flatMap {
-            it.errors.map { t ->
-                ApplicationError(
-                    it.command.applicationDeploymentRef.application, it.command.applicationDeploymentRef.environment,
-                    when (t) {
-                        is AuroraConfigException -> t.errors
-                        is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message ?: ""))
-                        else -> listOf(ErrorDetail(message = t.message ?: ""))
-                    }
-                )
-            }
+            it.applicationErrorMapper()
         }
     }
 }
@@ -52,19 +43,7 @@ class MultiApplicationValidationResultException(
 ) : ServiceException(errorMessage) {
     fun toValidationErrors(): List<ApplicationError> = listOf(
         invalid.map {
-            it.second?.let {
-                it.errors.map { t ->
-                    ApplicationError(
-                        it.command.applicationDeploymentRef.application,
-                        it.command.applicationDeploymentRef.environment,
-                        when (t) {
-                            is AuroraConfigException -> t.errors
-                            is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message ?: ""))
-                            else -> listOf(ErrorDetail(message = t.message ?: ""))
-                        }
-                    )
-                }
-            } ?: listOf(
+            it.second?.applicationErrorMapper() ?: listOf(
                 ApplicationError(
                     it.first!!.cmd.applicationDeploymentRef.application,
                     it.first!!.cmd.applicationDeploymentRef.environment,
@@ -99,17 +78,7 @@ class MultiApplicationDeployValidationResultException(
 ) : ServiceException(errorMessage) {
     fun toValidationErrors(): List<ApplicationError> = listOf(
         invalid.map {
-            it.errors.map { t ->
-                ApplicationError(
-                    it.command.applicationDeploymentRef.application,
-                    it.command.applicationDeploymentRef.environment,
-                    when (t) {
-                        is AuroraConfigException -> t.errors
-                        is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message ?: ""))
-                        else -> listOf(ErrorDetail(message = t.message ?: ""))
-                    }
-                )
-            }
+            it.applicationErrorMapper()
         }.flatten(),
         valid.map {
             ApplicationError(
@@ -126,7 +95,18 @@ class MultiApplicationDeployValidationResultException(
     ).flatten()
 }
 
-class EmptyBodyException(message: String) : ServiceException(message, null)
+fun ContextErrors.applicationErrorMapper(): List<ApplicationError> = errors.map { t ->
+    ApplicationError(
+        this.command.applicationDeploymentRef.application,
+        this.command.applicationDeploymentRef.environment,
+        when (t) {
+            is AuroraConfigException -> t.errors
+            is IllegalArgumentException -> listOf(ConfigFieldErrorDetail.illegal(t.message ?: ""))
+            else -> listOf(ErrorDetail(message = t.message ?: ""))
+        }
+    )
+}
+
 open class ProvisioningException(message: String, cause: Throwable? = null) :
     ServiceException(message, cause)
 
@@ -138,5 +118,3 @@ class GitReferenceException(message: String, cause: Throwable? = null) : Service
 class DeployLogServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class NotificationServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
-
-class CantusServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
