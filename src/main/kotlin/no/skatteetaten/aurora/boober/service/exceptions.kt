@@ -31,7 +31,7 @@ class MultiApplicationValidationException(
 
     fun toValidationErrors(): List<ApplicationError> {
         return this.errors.flatMap {
-            it.applicationErrorMapper()
+            it.asApplicationErrors()
         }
     }
 }
@@ -43,30 +43,12 @@ class MultiApplicationValidationResultException(
 ) : ServiceException(errorMessage) {
     fun toValidationErrors(): List<ApplicationError> = listOf(
         invalid.map {
-            it.second?.applicationErrorMapper() ?: listOf(
-                ApplicationError(
-                    it.first!!.cmd.applicationDeploymentRef.application,
-                    it.first!!.cmd.applicationDeploymentRef.environment,
-                    listOf(
-                        ErrorDetail(
-                            type = SKIPPED,
-                            message = "Skipped due to validation errors in multi application deployment"
-                        )
-                    )
-                )
+            it.second?.asApplicationErrors() ?: listOf(
+                it.first!!.asSkippedApplicationError()
             )
         }.flatten(),
         valid.map {
-            ApplicationError(
-                it.cmd.applicationDeploymentRef.application,
-                it.cmd.applicationDeploymentRef.environment,
-                listOf(
-                    ErrorDetail(
-                        type = SKIPPED,
-                        message = "Skipped due to validation errors in multi application deployment"
-                    )
-                )
-            )
+            it.asSkippedApplicationError()
         }
     ).flatten()
 }
@@ -78,24 +60,15 @@ class MultiApplicationDeployValidationResultException(
 ) : ServiceException(errorMessage) {
     fun toValidationErrors(): List<ApplicationError> = listOf(
         invalid.map {
-            it.applicationErrorMapper()
+            it.asApplicationErrors()
         }.flatten(),
         valid.map {
-            ApplicationError(
-                it.context.cmd.applicationDeploymentRef.application,
-                it.context.cmd.applicationDeploymentRef.environment,
-                listOf(
-                    ErrorDetail(
-                        type = SKIPPED,
-                        message = "Deploy skipped due to validation errors in multi application deployment commands"
-                    )
-                )
-            )
+            it.context.asSkippedApplicationError()
         }
     ).flatten()
 }
 
-fun ContextErrors.applicationErrorMapper(): List<ApplicationError> = errors.map { t ->
+fun ContextErrors.asApplicationErrors(): List<ApplicationError> = errors.map { t ->
     ApplicationError(
         this.command.applicationDeploymentRef.application,
         this.command.applicationDeploymentRef.environment,
@@ -106,6 +79,17 @@ fun ContextErrors.applicationErrorMapper(): List<ApplicationError> = errors.map 
         }
     )
 }
+
+fun AuroraDeploymentContext.asSkippedApplicationError(): ApplicationError = ApplicationError(
+    this.cmd.applicationDeploymentRef.application,
+    this.cmd.applicationDeploymentRef.environment,
+    listOf(
+        ErrorDetail(
+            type = SKIPPED,
+            message = "Deploy skipped due to validation errors in multi application deployment commands"
+        )
+    )
+)
 
 open class ProvisioningException(message: String, cause: Throwable? = null) :
     ServiceException(message, cause)
