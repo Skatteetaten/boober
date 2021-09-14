@@ -108,7 +108,10 @@ class AuroraConfigFacade(
             AuroraContextCommand(auroraConfig, it, auroraConfigRef, emptyList())
         }
 
-        val (valid, invalid) = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands, resourceValidation)
+        val (valid, invalid) = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(
+            commands,
+            resourceValidation
+        )
 
         if (invalid.isNotEmpty()) {
             throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
