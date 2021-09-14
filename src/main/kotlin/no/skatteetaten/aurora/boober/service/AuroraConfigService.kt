@@ -1,5 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
+import java.io.File
+import org.apache.commons.io.FileUtils
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.api.errors.InvalidRemoteException
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.Domain.AURORA_CONFIG
@@ -7,13 +14,6 @@ import no.skatteetaten.aurora.boober.TargetDomain
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import org.apache.commons.io.FileUtils
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.api.errors.InvalidRemoteException
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
-import java.io.File
 
 private val logger = KotlinLogging.logger {}
 
@@ -82,7 +82,7 @@ class AuroraConfigService(
         watch.start("validate")
         logger.debug("Affected AID for file={} adr={}", newFile, affectedAid)
         // This will validate both AuroraConfig and External validation for the affected AID
-        val (valid, invalid) = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(
+        val (_, invalid) = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(
             commands = affectedAid.map {
                 AuroraContextCommand(auroraConfig, it, ref)
             },
