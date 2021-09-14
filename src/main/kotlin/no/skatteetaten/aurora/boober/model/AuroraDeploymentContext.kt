@@ -28,6 +28,7 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
 fun List<AuroraDeploymentContext>.createDeployCommand(
     deploy: Boolean
 ): List<AuroraDeployCommand> {
+
     val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = this.parallelMap { context ->
         val (errors, resourceResults) = context.createResources()
         when {
@@ -63,9 +64,6 @@ fun List<AuroraDeploymentContext>.createDeployCommand(
             err.errors.map { it.localizedMessage }
         }
         logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
-    }
-
-    if (invalid.isNotEmpty()) {
         throw MultiApplicationDeployValidationResultException(
             valid = valid,
             invalid = invalid,
