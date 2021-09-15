@@ -70,6 +70,7 @@ class AuroraDeploymentContextService(
             context to errors?.let { ContextErrors(cmd, it.toList()) }
         }
 
+        // Let's null-assert here, since we "know" that the references infact are not null
         val valid = result.filter { it.second == null }.map { it.first!! }
         // Would really love for AuroraDeploymentContext? to be null safe here. See comment above.
         val invalid: List<Pair<AuroraDeploymentContext?, ContextErrors>> =
