@@ -67,14 +67,15 @@ class AuroraDeploymentContextService(
             } catch (e: Throwable) {
                 listOf(e)
             }
-            context to errors?.let { ContextErrors(cmd, it.toList()) }
+            context to errors?.let { ContextErrors(cmd, it) }
         }
 
-        // Let's null-assert here, since we "know" that the references infact are not null
-        val valid = result.filter { it.second == null }.map { it.first!! }.addDuplicatedUrls()
+        // Let's null-assert here, since we "know" that the references are in fact not null
+        val isError: (Pair<AuroraDeploymentContext?, ContextErrors?>) -> Boolean = { it.second == null }
+        val valid = result.filter(isError).map { it.first!! }.addDuplicatedUrls()
         // Would really love for AuroraDeploymentContext? to be null safe here. See comment above.
         val invalid: List<Pair<AuroraDeploymentContext?, ContextErrors>> =
-            result.filter { it.second != null }.map { it.first to it.second!! }
+            result.filterNot(isError).map { it.first to it.second!! }
 
         return valid to invalid
     }
