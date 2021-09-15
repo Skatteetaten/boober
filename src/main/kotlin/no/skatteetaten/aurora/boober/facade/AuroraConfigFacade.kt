@@ -114,7 +114,7 @@ class AuroraConfigFacade(
         )
 
         if (invalid.isNotEmpty()) {
-            throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
+            throw MultiApplicationValidationException(invalid.map { it.second })
         }
 
         return valid.filter { it.warnings.isNotEmpty() }

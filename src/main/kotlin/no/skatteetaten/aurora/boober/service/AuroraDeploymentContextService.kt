@@ -29,6 +29,7 @@ import no.skatteetaten.aurora.boober.model.ErrorType
 import no.skatteetaten.aurora.boober.model.validate
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.parallelMap
+import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import no.skatteetaten.aurora.boober.utils.toMultiMap
 
 private val logger = KotlinLogging.logger {}
@@ -49,30 +50,30 @@ class AuroraDeploymentContextService(
     fun createValidatedAuroraDeploymentContexts(
         commands: List<AuroraContextCommand>,
         resourceValidation: Boolean = true
-    ): Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>> {
+    ): Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors>>> {
 
         val result: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = commands.parallelMap { cmd ->
-            try {
-                logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")
-                val context = createAuroraDeploymentContext(cmd, resourceValidation)
-
-                val errors = context.validate(resourceValidation).flatMap { it.value }
-
-                if (errors.isEmpty()) {
-                    context to null
-                } else {
-                    context to ContextErrors(cmd, errors)
-                }
+            logger.debug("Create ADC for app=${cmd.applicationDeploymentRef}")
+            val context = try {
+                createAuroraDeploymentContext(cmd, resourceValidation)
             } catch (e: Throwable) {
-                null to ContextErrors(cmd, listOf(e))
+                // Is this really a ContextError? The error occurred while creating the context, it is not in relation
+                // to an actual context. Should be handled differently to be able to make the `invalid` list below
+                // completely null-safe.
+                return@parallelMap null to ContextErrors(cmd, listOf(e))
             }
+            val errors = try {
+                context.validate(resourceValidation).flatMap { it.value }.takeIfNotEmpty()
+            } catch (e: Throwable) {
+                listOf(e)
+            }
+            context to errors?.let { ContextErrors(cmd, it.toList()) }
         }
 
-        val pairedResults = result.partition {
-            it.second?.errors?.isNotEmpty() ?: false
-        }
-        val valid = pairedResults.second.mapNotNull { it.first }.addDuplicatedUrls()
-        val invalid = pairedResults.first
+        val valid = result.filter { it.second == null }.map { it.first!! }
+        // Would really love for AuroraDeploymentContext? to be null safe here. See comment above.
+        val invalid: List<Pair<AuroraDeploymentContext?, ContextErrors>> =
+            result.filter { it.second != null }.map { it.first to it.second!! }
 
         return valid to invalid
     }
