@@ -65,6 +65,7 @@ class AuroraDeploymentContextService(
             val errors = try {
                 context.validate(resourceValidation).flatMap { it.value }.takeIfNotEmpty()
             } catch (e: Throwable) {
+                // In theory this should never happen, but do we dare not catching here?
                 listOf(e)
             }
             context to errors?.let { ContextErrors(cmd, it) }

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.utils
 
+import kotlin.reflect.KClass
 import io.fabric8.kubernetes.api.model.HasMetadata
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -9,7 +10,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import kotlin.reflect.KClass
 
 fun <K, V> Map<K, V>.addIfNotNull(value: Pair<K, V>?): Map<K, V> {
     return value?.let {
