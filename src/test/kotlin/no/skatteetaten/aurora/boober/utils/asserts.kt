@@ -10,21 +10,21 @@ import assertk.assertions.support.expected
 import assertk.assertions.support.show
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
-import no.skatteetaten.aurora.boober.service.ContextErrors
+import no.skatteetaten.aurora.boober.model.InvalidDeploymentContext
 import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationResultException
 
-fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>>>>.singleApplicationErrorResult(
+fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentContext>>>>.singleApplicationErrorResult(
     expectedMessage: String
 ) {
     this.isSuccess()
         .transform { mae ->
-            val errors = mae.second.map { it.second }
+            val errors = mae.second.map { it.errors }
             if (errors.size > 1 && errors.isNotEmpty()) {
                 throw IllegalArgumentException("More than one error")
             } else {
-                errors.first()!!.errors.first()
+                errors.first().errors.first()
             }
         }
         .messageContains(expectedMessage)
@@ -50,7 +50,7 @@ fun <T> Assert<Result<T>>.singleApplicationValidationError(expectedMessage: Stri
         .transform { mae ->
             if (mae.invalid.size != 1) {
                 throw mae
-            } else mae.invalid.first().second!!.errors.first()
+            } else mae.invalid.first().errors.errors.first()
         }
         .messageContains(expectedMessage)
 }
@@ -68,12 +68,12 @@ fun <T> Assert<Result<T>>.singleApplicationDeployError(expectedMessage: String) 
         .messageContains(expectedMessage)
 }
 
-fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>>>>.applicationErrorResult(
+fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentContext>>>>.applicationErrorResult(
     vararg message: String
 ) {
     this.isSuccess()
         .transform { mae ->
-            val errors = mae.second.first().second!!.errors.map { it.localizedMessage }
+            val errors = mae.second.first().errors.errors.map { it.localizedMessage }
 
             errors.zip(message.toList()).forEach { (actual, expected) ->
                 println("$actual  :   $expected")

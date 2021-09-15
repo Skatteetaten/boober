@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.ConfigFieldErrorDetail
 import no.skatteetaten.aurora.boober.model.ErrorDetail
 import no.skatteetaten.aurora.boober.model.ErrorType.SKIPPED
+import no.skatteetaten.aurora.boober.model.InvalidDeploymentContext
 
 abstract class ServiceException(message: String?, cause: Throwable?) : RuntimeException(message, cause) {
     constructor(message: String) : this(message, null)
@@ -22,7 +23,18 @@ class UnauthorizedAccessException(message: String) : ServiceException(message)
 
 class ExceptionList(val exceptions: List<Exception>) : RuntimeException()
 
-data class ContextErrors(val command: AuroraContextCommand, val errors: List<Throwable>)
+sealed class ContextErrors(open val command: AuroraContextCommand, open val errors: List<Throwable>)
+
+data class ContextResourceValidationErrors(
+    override val command: AuroraContextCommand,
+    override val errors: List<Throwable>,
+    val context: AuroraDeploymentContext
+) : ContextErrors(command, errors)
+
+data class ContextCreationErrors(
+    override val command: AuroraContextCommand,
+    override val errors: List<Throwable>
+) : ContextErrors(command, errors)
 
 class MultiApplicationValidationException(
     val errors: List<ContextErrors> = listOf(),
@@ -38,18 +50,12 @@ class MultiApplicationValidationException(
 
 class MultiApplicationValidationResultException(
     val valid: List<AuroraDeploymentContext> = listOf(),
-    val invalid: List<Pair<AuroraDeploymentContext?, ContextErrors?>> = listOf(),
+    val invalid: List<InvalidDeploymentContext> = listOf(),
     val errorMessage: String = "An error occurred for one or more applications"
 ) : ServiceException(errorMessage) {
     fun toValidationErrors(): List<ApplicationError> = listOf(
-        invalid.map {
-            it.second?.asApplicationErrors() ?: listOf(
-                it.first!!.asSkippedApplicationError()
-            )
-        }.flatten(),
-        valid.map {
-            it.asSkippedApplicationError()
-        }
+        invalid.map { it.errors.asApplicationErrors() }.flatten(),
+        valid.map { it.asSkippedApplicationError() }
     ).flatten()
 }
 
