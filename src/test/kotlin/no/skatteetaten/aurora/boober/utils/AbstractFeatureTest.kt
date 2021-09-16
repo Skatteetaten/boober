@@ -48,12 +48,12 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.model.InvalidDeploymentContext
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
-import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.IdService
 import no.skatteetaten.aurora.boober.service.IdServiceFallback
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
@@ -244,7 +244,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createCustomAuroraDeploymentContext(
         adr: ApplicationDeploymentRef,
         vararg file: Pair<String, String>
-    ): Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>> {
+    ): Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentContext>> {
         val idService = mockk<IdService>()
 
         every {
@@ -272,7 +272,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         fullValidation: Boolean = true,
         files: List<AuroraConfigFile> = emptyList(),
         useHerkimerIdService: Boolean = true
-    ): Pair<List<AuroraDeploymentContext>, List<Pair<AuroraDeploymentContext?, ContextErrors?>>> {
+    ): Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentContext>> {
         val idService =
             if (useHerkimerIdService)
                 mockk<IdService>().also {
@@ -370,7 +370,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val (valid, invalid) = createAuroraDeploymentContext(app, files = files)
 
         if (invalid.isNotEmpty()) {
-            throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
+            throw MultiApplicationValidationException(invalid.map { it.errors })
         }
 
         val generated = valid.first().features.flatMap {
@@ -396,7 +396,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val (valid, invalid) = createAuroraDeploymentContext(app)
 
         if (invalid.isNotEmpty()) {
-            throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
+            throw MultiApplicationValidationException(invalid.map { it.errors })
         }
 
         return valid.first().features.values.first()

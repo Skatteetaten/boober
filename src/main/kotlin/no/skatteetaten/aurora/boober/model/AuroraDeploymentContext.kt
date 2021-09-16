@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.model
 
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
+import no.skatteetaten.aurora.boober.service.ContextCreationErrors
 import no.skatteetaten.aurora.boober.service.ContextErrors
 import no.skatteetaten.aurora.boober.service.ExceptionList
 import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
@@ -34,7 +35,7 @@ fun List<AuroraDeploymentContext>.createDeployCommand(
         when {
             errors.isNotEmpty() -> errors to null
             resourceResults == null -> listOf(
-                ContextErrors(
+                ContextCreationErrors(
                     context.cmd,
                     listOf(RuntimeException("No resources generated"))
                 )
@@ -83,9 +84,9 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
             null to feature.generate(adc, context)
         } catch (e: Throwable) {
             if (e is ExceptionList) {
-                ContextErrors(this.cmd, e.exceptions) to null
+                ContextCreationErrors(this.cmd, e.exceptions) to null
             } else {
-                ContextErrors(this.cmd, listOf(e)) to null
+                ContextCreationErrors(this.cmd, listOf(e)) to null
             }
         }
     }
@@ -110,7 +111,7 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
         val namesString = duplicatedNames.joinToString(", ").toLowerCase()
         val error: List<ContextErrors> =
             listOf(
-                ContextErrors(
+                ContextCreationErrors(
                     this.cmd,
                     listOf(RuntimeException("The following resources are generated more then once $namesString"))
                 )
@@ -128,9 +129,9 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
             null
         } catch (e: Throwable) {
             if (e is ExceptionList) {
-                ContextErrors(this.cmd, e.exceptions)
+                ContextCreationErrors(this.cmd, e.exceptions)
             } else {
-                ContextErrors(this.cmd, listOf(e))
+                ContextCreationErrors(this.cmd, listOf(e))
             }
         }
     }
@@ -146,4 +147,9 @@ data class AuroraDeploymentContext(
     val features: FeatureSpec,
     val featureContext: Map<Feature, Map<String, Any>>,
     val warnings: List<String> = emptyList()
+)
+
+data class InvalidDeploymentContext(
+    val cmd: AuroraContextCommand,
+    val errors: ContextErrors
 )

@@ -90,7 +90,7 @@ class AuroraConfigService(
         )
 
         if (invalid.isNotEmpty()) {
-            throw MultiApplicationValidationException(invalid.mapNotNull { it.second })
+            throw MultiApplicationValidationException(invalid.map { it.errors })
         }
         watch.stop()
 

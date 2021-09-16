@@ -130,7 +130,7 @@ fun <K, V> Map<out K, V?>.filterNullValues(): Map<K, V> {
 fun <T : Any, U : Any> List<Pair<T, U>>.toMultiMap() =
     this.groupBy(keySelector = { it.first }) { it.second }
 
-fun <T> Collection<T>?.takeIfNotEmpty(): Collection<T>? {
+fun <T : Collection<*>> T?.takeIfNotEmpty(): T? {
     return this.takeIf { it?.isEmpty() == false }
 }
 
