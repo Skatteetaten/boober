@@ -7,6 +7,7 @@ enum class ErrorType {
     MISSING,
     INVALID,
     GENERIC,
+    SKIPPED,
     WARNING
 }
 

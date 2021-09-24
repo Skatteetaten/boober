@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.io.ByteArrayInputStream
+import java.time.Duration
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.Secret
@@ -10,9 +13,6 @@ import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.time.Duration
 
 class StsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -78,7 +78,7 @@ class StsFeatureTest : AbstractFeatureTest() {
     @Test
     fun `Should use overridden cert name when set to default at higher level`() {
 
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{
             "groupId" : "org.simple",
             "sts" : {
@@ -87,13 +87,13 @@ class StsFeatureTest : AbstractFeatureTest() {
         }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : "true" }"""))
         )
 
-        assertThat(ctx.spec.stsCommonName).isEqualTo("fooo")
+        assertThat(valid.first().spec.stsCommonName).isEqualTo("fooo")
     }
 
     @Test
     fun `Should use overridden cert name when explicitly disabled at higher level`() {
 
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{
             "groupId" : "org.simple",
             "sts" : {
@@ -102,6 +102,6 @@ class StsFeatureTest : AbstractFeatureTest() {
         }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : false }"""))
         )
 
-        assertThat(ctx.spec.stsCommonName).isEqualTo("fooo")
+        assertThat(valid.first().spec.stsCommonName).isEqualTo("fooo")
     }
 }

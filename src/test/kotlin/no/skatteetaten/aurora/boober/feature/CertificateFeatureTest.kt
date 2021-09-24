@@ -1,5 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.io.ByteArrayInputStream
+import java.time.Duration
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.Secret
@@ -11,9 +14,6 @@ import no.skatteetaten.aurora.boober.model.Paths.secretsPath
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StsProvisioningResult
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import org.junit.jupiter.api.Test
-import java.io.ByteArrayInputStream
-import java.time.Duration
 
 class CertificateFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -81,7 +81,7 @@ class CertificateFeatureTest : AbstractFeatureTest() {
     @Test
     fun `Should use overridden cert name when set to default at higher level`() {
 
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{
             "groupId" : "org.simple",
             "certificate" : {
@@ -90,13 +90,13 @@ class CertificateFeatureTest : AbstractFeatureTest() {
         }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : "true" }"""))
         )
 
-        assertThat(ctx.spec.certificateCommonName).isEqualTo("fooo")
+        assertThat(valid.first().spec.certificateCommonName).isEqualTo("fooo")
     }
 
     @Test
     fun `Should use overridden cert name when explicitly disabled at higher level`() {
 
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{
             "groupId" : "org.simple",
             "certificate" : {
@@ -105,6 +105,6 @@ class CertificateFeatureTest : AbstractFeatureTest() {
         }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : false }"""))
         )
 
-        assertThat(ctx.spec.certificateCommonName).isEqualTo("fooo")
+        assertThat(valid.first().spec.certificateCommonName).isEqualTo("fooo")
     }
 }

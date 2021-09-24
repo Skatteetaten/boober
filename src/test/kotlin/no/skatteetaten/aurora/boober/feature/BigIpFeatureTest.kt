@@ -7,7 +7,7 @@ import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
 
 class BigIpFeatureTest : AbstractFeatureTest() {
@@ -26,7 +26,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                  }
                }"""
             )
-        }.singleApplicationError(BigIpFeature.Errors.MissingMultipleService.message)
+        }.singleApplicationErrorResult(BigIpFeature.Errors.MissingMultipleService.message)
     }
 
     @Test
@@ -42,7 +42,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                  }
                }"""
             )
-        }.singleApplicationError(BigIpFeature.Errors.BothLegacyAndMultipleConfigIsSet.message)
+        }.singleApplicationErrorResult(BigIpFeature.Errors.BothLegacyAndMultipleConfigIsSet.message)
     }
 
     @Test
@@ -223,7 +223,7 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                  }
                }"""
             )
-        }.singleApplicationError(BigIpFeature.Errors.MissingLegacyService.message)
+        }.singleApplicationErrorResult(BigIpFeature.Errors.MissingLegacyService.message)
     }
 
     @Test
