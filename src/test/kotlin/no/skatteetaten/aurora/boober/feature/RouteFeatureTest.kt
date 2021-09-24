@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -13,10 +17,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -41,7 +42,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Config for application simple in environment utv contains errors. Must be one of [edge, passthrough]."
         )
     }
@@ -60,7 +61,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Config for application simple in environment utv contains errors. Must be one of [Redirect, None, Allow]"
         )
     }
@@ -79,7 +80,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Config for application simple in environment utv contains errors. Annotation foo/bar cannot contain '/'. Use '|' instead."
         )
     }
@@ -99,7 +100,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Application simple in environment utv have a tls enabled route with a '.' in the host. Route name=simple-foo with tls uses '.' in host name."
         )
     }
@@ -120,7 +121,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Application simple in environment utv have duplicated host+path configurations. host=simple-paas-utv is not unique. Remove the configuration from one of the following routes simple-foo,simple-bar."
         )
     }
@@ -140,7 +141,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Application simple in environment utv have routes with duplicate names. Route name=simple is duplicated."
         )
     }
@@ -376,19 +377,19 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should create resource if route is simplified`() {
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{
                   "route" : true
                 }"""
         )
 
         val routeFeature: RouteFeature = feature as RouteFeature
-        assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isTrue()
+        assertThat(routeFeature.willCreateResource(valid.first().spec, valid.first().cmd)).isTrue()
     }
 
     @Test
     fun `should create route if simplified overwritten and enabled expanded`() {
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{
                      "route" : {
                               "foo" : {
@@ -405,12 +406,12 @@ class RouteFeatureTest : AbstractFeatureTest() {
         )
 
         val routeFeature: RouteFeature = feature as RouteFeature
-        assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isTrue()
+        assertThat(routeFeature.willCreateResource(valid.first().spec, valid.first().cmd)).isTrue()
     }
 
     @Test
     fun `should not create route if overrwritten and diabled`() {
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{
                   "route" : false
                 }""", files = listOf(
@@ -427,7 +428,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
         )
 
         val routeFeature: RouteFeature = feature as RouteFeature
-        assertThat(routeFeature.willCreateResource(ctx.spec, ctx.cmd)).isFalse()
+        assertThat(routeFeature.willCreateResource(valid.first().spec, valid.first().cmd)).isFalse()
     }
 
     @Test

@@ -9,7 +9,7 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class JobFeatureTest : AbstractFeatureTest() {
@@ -46,7 +46,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "type" : "cronjob"
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Cron schedule is required."
         )
     }
@@ -62,7 +62,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "successCount" : "foobar"
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Not a valid int value."
         )
     }
@@ -77,7 +77,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "schedule" : "0/5 * * *"
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Cron expression contains 4 parts but we expect one of [5]."
         )
     }
@@ -93,7 +93,7 @@ class JobFeatureTest : AbstractFeatureTest() {
                 "concurrentPolicy" : "Foobar"
         }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Must be one of [Allow, Replace, Forbid]"
         )
     }

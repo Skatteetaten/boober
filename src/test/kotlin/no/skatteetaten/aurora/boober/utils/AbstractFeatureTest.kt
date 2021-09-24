@@ -1,11 +1,8 @@
 package no.skatteetaten.aurora.boober.utils
 
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isInstanceOf
-import assertk.assertions.support.expected
-import assertk.assertions.support.show
+import java.time.Instant
+import kotlin.reflect.KClass
+import org.junit.jupiter.api.BeforeEach
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newEnvVar
@@ -27,6 +24,12 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
 import com.fkorotkov.openshift.to
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.VolumeProjection
@@ -36,6 +39,7 @@ import io.mockk.every
 import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
+import no.skatteetaten.aurora.boober.feature.HeaderHandlers
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -44,6 +48,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.model.InvalidDeploymentContext
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentSpec
@@ -51,13 +56,10 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.IdService
 import no.skatteetaten.aurora.boober.service.IdServiceFallback
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
-import org.junit.jupiter.api.BeforeEach
-import java.time.Instant
-import kotlin.reflect.KClass
-import no.skatteetaten.aurora.boober.feature.HeaderHandlers
 
 /*
   Abstract class to test a single feature
@@ -242,7 +244,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createCustomAuroraDeploymentContext(
         adr: ApplicationDeploymentRef,
         vararg file: Pair<String, String>
-    ): AuroraDeploymentContext {
+    ): Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentContext>> {
         val idService = mockk<IdService>()
 
         every {
@@ -259,7 +261,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
             overrides = emptyList()
         )
-        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true).first()
+        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true)
     }
 
     /*
@@ -270,7 +272,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         fullValidation: Boolean = true,
         files: List<AuroraConfigFile> = emptyList(),
         useHerkimerIdService: Boolean = true
-    ): AuroraDeploymentContext {
+    ): Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentContext>> {
         val idService =
             if (useHerkimerIdService)
                 mockk<IdService>().also {
@@ -301,7 +303,10 @@ abstract class AbstractFeatureTest : ResourceLoader() {
             auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
             overrides = files.filter { it.override }
         )
-        return service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), fullValidation).first()
+        return service.createValidatedAuroraDeploymentContexts(
+            listOf(deployCommand),
+            fullValidation
+        )
     }
 
     fun createAuroraDeploymentSpecForFeature(
@@ -310,16 +315,22 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         files: List<AuroraConfigFile> = emptyList()
     ): AuroraDeploymentSpec {
 
-        val ctx = createAuroraDeploymentContext(app, fullValidation, files)
+        val (valid, _) = createAuroraDeploymentContext(app, fullValidation, files)
 
-        val headers = ctx.cmd.applicationDeploymentRef.run { HeaderHandlers.create(application, environment) }.handlers.map {
-            it.name
-        }
-        val fields = ctx.spec.fields.filterNot {
+        val headers =
+            valid.first().cmd.applicationDeploymentRef.run {
+                HeaderHandlers.create(
+                    application,
+                    environment
+                )
+            }.handlers.map {
+                it.name
+            }
+        val fields = valid.first().spec.fields.filterNot {
             headers.contains(it.key)
         }.filterNot { it.key in listOf("applicationDeploymentRef", "configVersion") }
 
-        return ctx.spec.copy(fields = fields)
+        return valid.first().spec.copy(fields = fields)
     }
 
     fun generateResources(
@@ -356,10 +367,14 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     ): List<AuroraResource> {
 
         val numberOfEmptyResources = resources.size
-        val adc = createAuroraDeploymentContext(app, files = files)
+        val (valid, invalid) = createAuroraDeploymentContext(app, files = files)
 
-        val generated = adc.features.flatMap {
-            it.key.generate(it.value, adc.featureContext[it.key] ?: emptyMap())
+        if (invalid.isNotEmpty()) {
+            throw MultiApplicationValidationException(invalid.map { it.errors })
+        }
+
+        val generated = valid.first().features.flatMap {
+            it.key.generate(it.value, valid.first().featureContext[it.key] ?: emptyMap())
         }.toSet()
 
         if (resources.isEmpty()) {
@@ -368,8 +383,8 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
         resources.addAll(generated)
 
-        adc.features.forEach {
-            it.key.modify(it.value, resources, adc.featureContext[it.key] ?: emptyMap())
+        valid.first().features.forEach {
+            it.key.modify(it.value, resources, valid.first().featureContext[it.key] ?: emptyMap())
         }
         assertThat(resources.size, "Number of resources").isEqualTo(numberOfEmptyResources + createdResources)
         return resources.toList()
@@ -378,8 +393,13 @@ abstract class AbstractFeatureTest : ResourceLoader() {
     fun createAuroraConfigFieldHandlers(
         app: String = """{}"""
     ): AuroraDeploymentSpec {
-        val ctx = createAuroraDeploymentContext(app)
-        return ctx.features.values.first()
+        val (valid, invalid) = createAuroraDeploymentContext(app)
+
+        if (invalid.isNotEmpty()) {
+            throw MultiApplicationValidationException(invalid.map { it.errors })
+        }
+
+        return valid.first().features.values.first()
     }
 
     fun Assert<AuroraResource>.auroraResourceMountsAttachment(
