@@ -22,8 +22,6 @@ integrations:
         url: "http://cantus"
     bigbird:
         url: "https://bigbird-appsikk.${openshift.cluster}.paas.skead.no/.well-known/discovery"
-    s3:
-        variant: minio
     deployLog:
         git:
             project: "ao"
