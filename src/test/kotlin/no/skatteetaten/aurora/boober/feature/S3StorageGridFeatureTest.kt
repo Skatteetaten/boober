@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsAll
@@ -16,10 +18,8 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWith
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Test
 
 class S3StorageGridFeatureTest : AbstractFeatureTest() {
     private val provisioner = mockk<S3StorageGridProvisioner>()
@@ -49,7 +49,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 "s3": true
            }"""
             )
-        }.singleApplicationError("Missing field: bucketName for s3")
+        }.singleApplicationErrorResult("Missing field: bucketName for s3")
     }
 
     @Test
@@ -66,7 +66,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("Config for application simple in environment utv contains errors. s3 tenant must be on the form affiliation-cluster, specified value was: \"$tenant\".")
+        }.singleApplicationErrorResult("Config for application simple in environment utv contains errors. s3 tenant must be on the form affiliation-cluster, specified value was: \"$tenant\".")
     }
 
     @Test
@@ -85,7 +85,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("objectArea name=default used 2 times for same application")
+        }.singleApplicationErrorResult("objectArea name=default used 2 times for same application")
     }
 
     @Test
@@ -101,7 +101,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: \"$bucketName\"")
+        }.singleApplicationErrorResult("s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: \"$bucketName\"")
     }
 
     @Test
@@ -117,13 +117,13 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("combination of bucketName and tenantName must be between 3 and 63 chars, specified value was 76 chars long")
+        }.singleApplicationErrorResult("combination of bucketName and tenantName must be between 3 and 63 chars, specified value was 76 chars long")
     }
 
     @Test
     fun `verify setting tenant in AuroraConfig is overridden with default`() {
         val areaName = "default"
-        val spec = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             """{ 
                 "s3": {
                     "$areaName" : {
@@ -132,8 +132,8 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     }
                 }
            }"""
-        ).spec
-        assertThat(spec.s3ObjectAreas.find { it.area == areaName }?.tenant).isEqualTo("paas-utv")
+        )
+        assertThat(valid.first().spec.s3ObjectAreas.find { it.area == areaName }?.tenant).isEqualTo("paas-utv")
     }
 
     @Test
@@ -186,7 +186,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
             provisioner.getOrProvisionCredentials(any(), match { r ->
                 r.run {
                     find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null &&
-                            find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
+                        find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
                 }
             })
         } returns listOf(

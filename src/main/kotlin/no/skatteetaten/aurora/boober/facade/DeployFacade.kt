@@ -10,15 +10,16 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentContext
+import no.skatteetaten.aurora.boober.model.InvalidDeploymentContext
 import no.skatteetaten.aurora.boober.model.createDeployCommand
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.AuroraEnvironmentResult
-import no.skatteetaten.aurora.boober.service.ContextErrors
+import no.skatteetaten.aurora.boober.service.ContextCreationErrors
 import no.skatteetaten.aurora.boober.service.DeployLogService
-import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationResultException
 import no.skatteetaten.aurora.boober.service.NotificationService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftDeployer
@@ -139,26 +140,35 @@ class DeployFacade(
     }
 
     private fun createAuroraDeploymentContexts(commands: List<AuroraContextCommand>): List<AuroraDeploymentContext> {
-        val deploymentCtx = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands)
-        validateUnusedOverrideFiles(deploymentCtx)
+        val (valid, invalid) = auroraDeploymentContextService.createValidatedAuroraDeploymentContexts(commands)
 
-        val (validContexts, invalidContexts) = deploymentCtx.partition { it.spec.cluster == cluster }
+        if (invalid.isNotEmpty()) {
+            throw MultiApplicationValidationResultException(valid, invalid, "Validation error in AuroraConfig")
+        }
+
+        validateUnusedOverrideFiles(valid)
+
+        val (validContexts, invalidContexts) = valid.partition { it.spec.cluster == cluster }
 
         if (invalidContexts.isNotEmpty()) {
             val errors = invalidContexts.map {
-                ContextErrors(
+                InvalidDeploymentContext(
                     it.cmd,
-                    listOf(java.lang.IllegalArgumentException("Not valid in this cluster"))
+                    ContextCreationErrors(
+                        it.cmd,
+                        listOf(java.lang.IllegalArgumentException("Not valid in this cluster"))
+                    )
                 )
             }
-
             val errorMessages = errors.flatMap { err ->
-                err.errors.map { it.localizedMessage }
+                err.errors.errors.map { it.localizedMessage }
             }
+
             logger.debug("Validation errors: ${errorMessages.joinToString("\n", prefix = "\n")}")
 
-            throw MultiApplicationValidationException(errors)
+            throw MultiApplicationValidationResultException(validContexts, errors, "Invalid cluster configuration")
         }
+
         return validContexts
     }
 

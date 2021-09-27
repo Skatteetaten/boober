@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.EnumSource
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.mockk.every
@@ -10,12 +14,8 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftGroups
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.applicationErrors
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.EnumSource
-import org.springframework.security.core.authority.SimpleGrantedAuthority
+import no.skatteetaten.aurora.boober.utils.applicationErrorResult
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class EnvironmentFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -37,7 +37,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext()
-        }.singleApplicationError("User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]")
+        }.singleApplicationErrorResult("User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]")
     }
 
     @Test
@@ -54,7 +54,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext()
-        }.applicationErrors(
+        }.applicationErrorResult(
             "All groups=[APP_PaaS_drift, APP_PaaS_utv] are empty",
             "User=Jayne Cobb does not have access to admin this environment from the groups=[APP_PaaS_drift, APP_PaaS_utv]"
         )
@@ -83,7 +83,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     )
                 )
             )
-        }.singleApplicationError("permissions.admin cannot be empty")
+        }.singleApplicationErrorResult("permissions.admin cannot be empty")
     }
 
     @Test
@@ -99,7 +99,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
 
         assertThat {
             createAuroraDeploymentContext(fullValidation = false)
-        }.singleApplicationError("[APP_PaaS_drift, APP_PaaS_utv] are not valid groupNames")
+        }.singleApplicationErrorResult("[APP_PaaS_drift, APP_PaaS_utv] are not valid groupNames")
     }
 
     @Test
@@ -110,7 +110,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
              "name": "test%qwe)"
             }"""
             )
-        }.singleApplicationError("Name must be alphanumeric and no more than 40 characters")
+        }.singleApplicationErrorResult("Name must be alphanumeric and no more than 40 characters")
     }
 
     @Test
@@ -132,7 +132,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     )
                 )
             )
-        }.singleApplicationError("Invalid Source field=affiliation requires an about source. Actual source is source=utv/simple.json.")
+        }.singleApplicationErrorResult("Config for application simple in environment utv contains errors. Invalid Source field=affiliation. Actual source=utv/simple.json (File type: APP). Must be placed within files of type: [GLOBAL, ENV, INCLUDE_ENV].")
     }
 
     @Test
@@ -154,7 +154,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                     )
                 )
             )
-        }.singleApplicationError("Affiliation can only contain letters and must be no longer than 10 characters")
+        }.singleApplicationErrorResult("Affiliation can only contain letters and must be no longer than 10 characters")
     }
 
     @Test
@@ -169,7 +169,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
                     """{ "version" : "1" }"""
             )
-        }.singleApplicationError("Name must be alphanumeric and no more than 40 characters")
+        }.singleApplicationErrorResult("Name must be alphanumeric and no more than 40 characters")
     }
 
     enum class PermissionsTestData(val values: String) {
@@ -191,7 +191,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             )
         )
 
-        val ctx = createAuroraDeploymentContext(
+        val (valid, _) = createAuroraDeploymentContext(
             files = listOf(
                 AuroraConfigFile(
                     "about.json", """{
@@ -207,7 +207,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             )
         )
 
-        assertThat(ctx.spec.getDelimitedStringOrArrayAsSet("permissions/admin", " "))
+        assertThat(valid.first().spec.getDelimitedStringOrArrayAsSet("permissions/admin", " "))
             .isEqualTo(
                 setOf(
                     "APP_PaaS_utv",

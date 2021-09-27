@@ -28,6 +28,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 
@@ -271,7 +272,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 "s3": true
            }"""
             )
-        }.singleApplicationError("Missing field: bucketName for s3")
+        }.singleApplicationErrorResult("Missing field: bucketName for s3")
     }
 
     @Test
@@ -286,7 +287,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 "s3": true
            }"""
             )
-        }.singleApplicationError("s3 objectArea can only contain lower case characters,")
+        }.singleApplicationErrorResult("s3 objectArea can only contain lower case characters,")
     }
 
     @Test
@@ -300,7 +301,7 @@ class S3FeatureTest : AbstractFeatureTest() {
                 "s3": true
            }"""
             )
-        }.singleApplicationError("Missing field: objectArea for s3")
+        }.singleApplicationErrorResult("Missing field: objectArea for s3")
     }
 
     @Test

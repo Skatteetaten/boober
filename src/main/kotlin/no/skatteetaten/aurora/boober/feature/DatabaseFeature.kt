@@ -95,8 +95,17 @@ class DatabaseFeature(
                     val schema = databaseSchemaProvisioner.findSchema(request)
                         ?: databaseSchemaProvisioner.findCooldownSchemaIfTryReuseEnabled(request)
 
-                    if (schema == null) ProvisioningException("Could not find schema with name=${request.details.schemaName}")
-                    else null
+                    when {
+                        schema == null -> ProvisioningException(
+                            "Could not find schema with name=${request.details.schemaName}"
+                        )
+                        schema.affiliation != request.details.affiliation -> ProvisioningException(
+                            "Schema with id=${schema.id} is located in the affiliation=${schema.affiliation}, " +
+                                "current affiliation=${request.details.affiliation}. " +
+                                "Using schema with id across affiliations is not allowed"
+                        )
+                        else -> null
+                    }
                 } catch (e: Exception) {
                     e
                 }
@@ -224,7 +233,11 @@ class DatabaseFeature(
 
 abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
-    override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {
+    override fun createContext(
+        spec: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand,
+        validationContext: Boolean
+    ): Map<String, Any> {
         return mapOf("databases" to findDatabases(spec))
     }
 

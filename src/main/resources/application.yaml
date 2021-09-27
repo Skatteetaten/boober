@@ -60,6 +60,10 @@ boober:
         suffix: ".amutv.skead.no"
     productionlevel: "u"
 
+auroraconfig:
+    builder:
+        version: "1"
+
 aurora:
     token:
         location: /u01/secrets/app/aurora-token/token

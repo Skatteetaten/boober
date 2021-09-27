@@ -27,7 +27,8 @@ import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
 import no.skatteetaten.aurora.boober.utils.getResultFiles
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationDeployError
+import no.skatteetaten.aurora.boober.utils.singleApplicationValidationError
 import okhttp3.mockwebserver.MockResponse
 
 @SpringBootTest(
@@ -334,7 +335,7 @@ class DeployFacadeTest :
                     )
                 )
             )
-        }.singleApplicationError("Not valid in this cluster")
+        }.singleApplicationValidationError("Not valid in this cluster")
     }
 
     @Test
@@ -405,7 +406,7 @@ class DeployFacadeTest :
                     )
                 )
             )
-        }.singleApplicationError("The following resources are generated more then once route/ah")
+        }.singleApplicationDeployError("The following resources are generated more then once route/ah")
     }
 
     private fun mockHerkimerRequests() {

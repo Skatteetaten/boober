@@ -2,12 +2,16 @@ package no.skatteetaten.aurora.boober.feature
 
 import io.fabric8.kubernetes.api.model.HasMetadata
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.INCLUDE_ENV
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.AuroraResourceSource
+import no.skatteetaten.aurora.boober.model.ErrorType
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
@@ -143,9 +147,9 @@ val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["
 class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName: String) {
 
     val handlers: Set<AuroraConfigFieldHandler>
-    val globalFile = AuroraConfigFieldHandler(GLOBAL_FILE, allowedFilesTypes = setOf(BASE, ENV))
-    val envFile = AuroraConfigFieldHandler(ENV_FILE)
-    val baseFile = AuroraConfigFieldHandler(BASE_FILE)
+
+    val aboutFileTypes = setOf(GLOBAL, ENV, INCLUDE_ENV)
+    val appFileTypes = setOf(BASE, APP)
 
     companion object {
         fun create(defaultAppName: String, defaultEnvName: String) = HeaderHandlers(defaultAppName, defaultEnvName)
@@ -176,26 +180,30 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
                 "applicationPlatform",
                 defaultValue = "java",
                 validator = { node -> node.oneOf(ApplicationPlatform.values().map { it.toString() }) }),
-            AuroraConfigFieldHandler("affiliation", validator = {
-                it.pattern(
-                    "^[a-z]{1,10}$",
-                    "Affiliation can only contain letters and must be no longer than 10 characters"
-                )
-            }),
-            AuroraConfigFieldHandler("segment"),
             AuroraConfigFieldHandler(
-                "cluster",
-                validator = { it.notBlank("Cluster must be set") }),
-            AuroraConfigFieldHandler("permissions/admin"),
-            AuroraConfigFieldHandler("permissions/view"),
-            AuroraConfigFieldHandler("permissions/adminServiceAccount"),
+                "affiliation", validator = {
+                    it.pattern(
+                        "^[a-z]{1,10}$",
+                        "Affiliation can only contain letters and must be no longer than 10 characters"
+                    )
+                },
+                allowedFilesTypes = aboutFileTypes
+            ),
+            AuroraConfigFieldHandler("segment"),
+            AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
+            AuroraConfigFieldHandler("permissions/admin", allowedFilesTypes = aboutFileTypes),
+            AuroraConfigFieldHandler("permissions/view", allowedFilesTypes = aboutFileTypes),
+            AuroraConfigFieldHandler("permissions/adminServiceAccount", allowedFilesTypes = aboutFileTypes),
             // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
             AuroraConfigFieldHandler(
-                "envName", validator = { it.pattern(envNamePattern, envNameMessage) },
+                "envName",
+                validator = { it.pattern(envNamePattern, envNameMessage) },
                 defaultSource = "folderName",
-                defaultValue = defaultEnvName
+                defaultValue = defaultEnvName,
+                allowedFilesTypes = setOf(ENV)
             ),
-            AuroraConfigFieldHandler("name",
+            AuroraConfigFieldHandler(
+                "name",
                 defaultValue = defaultAppName,
                 defaultSource = "fileName",
                 validator = {
@@ -204,16 +212,33 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
                         "Name must be alphanumeric and no more than 40 characters",
                         false
                     )
-                }),
+                },
+                allowedFilesTypes = appFileTypes
+            ),
             AuroraConfigFieldHandler(
                 "env/name",
-                validator = { it.pattern(envNamePattern, envNameMessage, false) }),
-            AuroraConfigFieldHandler("env/ttl", validator = { it.durationString() }),
-            AuroraConfigFieldHandler("env/autoDeploy", validator = { it.boolean() }, defaultValue = false),
-            baseFile,
-            envFile,
-            globalFile,
-            AuroraConfigFieldHandler("includeEnvFile")
+                validator = { it.pattern(envNamePattern, envNameMessage, false) },
+                allowedFilesTypes = setOf(ENV)
+            ),
+            AuroraConfigFieldHandler(
+                "env/ttl",
+                validator = { it.durationString() },
+                allowedFilesTypes = aboutFileTypes
+            ),
+            AuroraConfigFieldHandler(
+                "env/autoDeploy",
+                validator = { it.boolean() },
+                defaultValue = false,
+                allowedFilesTypes = setOf(ENV, APP)
+            ),
+            AuroraConfigFieldHandler(GLOBAL_FILE, allowedFilesTypes = setOf(BASE, ENV)),
+            AuroraConfigFieldHandler(ENV_FILE, allowedFilesTypes = setOf(APP), validationSeverity = ErrorType.WARNING),
+            AuroraConfigFieldHandler(BASE_FILE, allowedFilesTypes = setOf(APP), validationSeverity = ErrorType.WARNING),
+            AuroraConfigFieldHandler(
+                "includeEnvFile",
+                allowedFilesTypes = setOf(ENV),
+                validationSeverity = ErrorType.WARNING
+            )
         )
     }
 }
