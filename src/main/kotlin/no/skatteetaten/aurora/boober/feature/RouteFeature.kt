@@ -109,7 +109,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val routes = context.routes
 
-        val auroraCnames = routes.generateCnames(adc.namespace)
+        // TODO: Do we need AuroraCname for Azure?
+        val auroraCnames = routes.filter { !it.shouldGenerateAzureRoute }.generateCnames(adc.namespace)
 
         val openshiftRoutes = routes.generateOpenshiftRoutes(adc.namespace, adc.name)
 
@@ -420,7 +421,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 )
 
                 val azureRouteResource = generateResource(azureOpenshiftRoute)
-                listOf(routeResource, azureRouteResource)
+                // TODO: Add routeResource
+                listOf(azureRouteResource)
             } else {
                 listOf(routeResource)
             }
