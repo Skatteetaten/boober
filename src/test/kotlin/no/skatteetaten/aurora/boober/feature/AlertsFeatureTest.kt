@@ -7,7 +7,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.openshift.Alerts
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.applicationErrors
+import no.skatteetaten.aurora.boober.utils.applicationErrorResult
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Test
 
@@ -45,13 +45,11 @@ class AlertsFeatureTest : AbstractFeatureTest() {
                       }
                     }"""
             )
-        }.applicationErrors(
-            listOf(
-                AlertsFeature.Errors.MissingAlertExpression.message,
-                AlertsFeature.Errors.MissingAlertConnectionProp.message,
-                AlertsFeature.Errors.MissingAlertDelayProp.message,
-                AlertsFeature.Errors.MissingAlertSeverity.message
-            )
+        }.applicationErrorResult(
+            AlertsFeature.Errors.MissingAlertExpression.message,
+            AlertsFeature.Errors.MissingAlertConnectionProp.message,
+            AlertsFeature.Errors.MissingAlertDelayProp.message,
+            AlertsFeature.Errors.MissingAlertSeverity.message
         )
     }
 
