@@ -14,7 +14,6 @@ import no.skatteetaten.aurora.boober.model.openshift.ApplicationConfig
 import no.skatteetaten.aurora.boober.model.openshift.PrometheusConfig
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.int
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.springframework.stereotype.Service
 
@@ -63,7 +62,7 @@ class AlertsFeature : Feature {
                     AuroraConfigFieldHandler("$defaultsName/delay"),
                     AuroraConfigFieldHandler("$featureName/$name/enabled", { it.boolean() }),
                     AuroraConfigFieldHandler("$featureName/$name/expr"),
-                    AuroraConfigFieldHandler("$featureName/$name/delay", { it.int() }),
+                    AuroraConfigFieldHandler("$featureName/$name/delay"),
                     AuroraConfigFieldHandler("$featureName/$name/connection"),
                     AuroraConfigFieldHandler("$featureName/$name/severity", validator = { node ->
                         node?.oneOf(listOf("warning", "critical"))
