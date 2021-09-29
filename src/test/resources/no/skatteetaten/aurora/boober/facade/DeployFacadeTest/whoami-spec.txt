@@ -1,10 +1,6 @@
         static | applicationDeploymentRef: "utv/whoami"
         static | configVersion: "master"
         static | applicationDeploymentId: "1234567890"
-               | notification:
-               |   mattermost:
-               |     test100:
-   whoami.json |       enabled: true
     about.json | schemaVersion: "v1"
    whoami.json | type: "deploy"
    whoami.json | deployState: "deployment"
@@ -15,6 +11,10 @@ utv/about.json | cluster: "utv"
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
       fileName | name: "whoami"
+               | notification:
+               |   mattermost:
+               |     test100:
+   whoami.json |       enabled: true
    whoami.json | groupId: "org.test"
    whoami.json | database: true
    whoami.json | version: "1"
