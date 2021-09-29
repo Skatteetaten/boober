@@ -1,5 +1,11 @@
 package no.skatteetaten.aurora.boober.feature
 
+import java.util.UUID
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.boot.web.client.RestTemplateBuilder
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.contains
@@ -7,7 +13,6 @@ import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isSuccess
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
@@ -15,6 +20,7 @@ import io.mockk.mockk
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.facade.json
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
@@ -28,13 +34,9 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.RestorableSche
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.boot.web.client.RestTemplateBuilder
-import java.util.UUID
 
 private val logger = KotlinLogging.logger { }
 
@@ -92,7 +94,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                 }
            }"""
             )
-        }.singleApplicationError("Could not find schema")
+        }.singleApplicationErrorResult("Could not find schema")
     }
 
     @Test
@@ -112,7 +114,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                }
            }"""
             )
-        }.singleApplicationError("Could not find schema")
+        }.singleApplicationErrorResult("Could not find schema")
     }
 
     @Test
@@ -164,6 +166,38 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
         assertThat(adResource).auroraDatabaseIdsAdded(listOf(secretResource))
+    }
+
+    @Test
+    fun `should get error if schema with id is not in the selected affiliation`() {
+        val uuid = UUID.randomUUID()
+
+        httpMockServer(5000) {
+            rule {
+                json(DbApiEnvelope("ok", listOf(createDbhSchema(uuid))))
+            }
+        }
+
+        assertThat {
+            generateResources(
+                """{ 
+               "database" : {
+                 "simple" : "$uuid"
+                }
+           }""",
+                resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig()),
+                files = listOf(
+                    AuroraConfigFile(
+                        "about.json", """{
+                         "schemaVersion": "v1",
+                         "type": "deploy",
+                         "cluster": "utv",
+                         "affiliation": "aurora"
+                    }"""
+                    )
+                )
+            )
+        }.singleApplicationError("Schema with id=$uuid is located in the affiliation=paas, current affiliation=aurora. Using schema with id across affiliations is not allowed")
     }
 
     @Test

@@ -8,7 +8,7 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
 
 class TemplateFeatureTest : AbstractFeatureTest() {
@@ -29,7 +29,7 @@ class TemplateFeatureTest : AbstractFeatureTest() {
             "type" : "template"
             }"""
             )
-        }.singleApplicationError("Template is required")
+        }.singleApplicationErrorResult("Template is required")
     }
 
     @Test
@@ -44,7 +44,7 @@ class TemplateFeatureTest : AbstractFeatureTest() {
             "template" : "atomhopper"
             }"""
             )
-        }.singleApplicationError("Required template parameters [FEED_NAME, DB_NAME] not set")
+        }.singleApplicationErrorResult("Required template parameters [FEED_NAME, DB_NAME] not set")
     }
 
     @Test
@@ -59,7 +59,7 @@ class TemplateFeatureTest : AbstractFeatureTest() {
             "template" : "atomhopper"
             }"""
             )
-        }.singleApplicationError("Could not find template=atomhopper")
+        }.singleApplicationErrorResult("Could not find template=atomhopper")
     }
 
     @Test

@@ -84,7 +84,7 @@ data class ResourceClaimHerkimer(
 )
 
 enum class ResourceKind {
-    MinioPolicy, MinioObjectArea, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema, PostgresDatabaseInstance, OracleDatabaseInstance
+    MinioPolicy, MinioObjectArea, ManagedPostgresDatabase, ManagedOracleSchema, ExternalSchema, PostgresDatabaseInstance, OracleDatabaseInstance, StorageGridTenant, StorageGridObjectArea
 }
 
 data class ResourcePayload(
@@ -169,6 +169,7 @@ class HerkimerService(
         ).body
 
         if (resourceResponse?.success != true) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=${resourceResponse.messageOrDefault}")
+        if (resourceResponse.items.isEmpty()) throw ProvisioningException("Unable to create resource of type=$resourceKind. cause=empty or malformed response from Herkimer")
 
         val resourceId = objectMapperWithTime.convertValue<ResourceHerkimer>(resourceResponse.items.single()).id
 

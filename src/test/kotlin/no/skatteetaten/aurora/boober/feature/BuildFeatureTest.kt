@@ -8,17 +8,17 @@ import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class BuildFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = BuildFeature("test.docker.com")
+        get() = BuildFeature("test.docker.com", "1")
 
     @Test
     fun `should disable feature if deploy type`() {
 
-        val adc = createAuroraDeploymentContext()
-        assertThat(adc.features.isEmpty())
+        val (valid, _) = createAuroraDeploymentContext()
+        assertThat(valid.first().features.isEmpty())
     }
 
     @Test
@@ -31,7 +31,7 @@ class BuildFeatureTest : AbstractFeatureTest() {
            "version" : "1"
         }"""
             )
-        }.singleApplicationError("GroupId must be set and be shorter then 200 characters.")
+        }.singleApplicationErrorResult("GroupId must be set and be shorter then 200 characters.")
     }
 
     @Test
@@ -46,7 +46,7 @@ class BuildFeatureTest : AbstractFeatureTest() {
            "groupId" : "$groupId"
         }"""
             )
-        }.singleApplicationError("GroupId must be set and be shorter then 200 characters.")
+        }.singleApplicationErrorResult("GroupId must be set and be shorter then 200 characters.")
     }
 
     @Test
@@ -59,7 +59,7 @@ class BuildFeatureTest : AbstractFeatureTest() {
            "groupId" : "org.test"
         }"""
             )
-        }.singleApplicationError("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes.")
+        }.singleApplicationErrorResult("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes.")
     }
 
     @Test

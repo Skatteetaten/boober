@@ -73,7 +73,7 @@ class AuroraConfigTest : ResourceLoader() {
                 .map { it.asJsonNode }
                 .first()
         }.isFailure().all {
-            isInstanceOf(AuroraConfigException::class)
+            this.isInstanceOf(AuroraConfigException::class)
             messageContains("not valid errorMessage=Duplicate field 'version'")
         }
     }
@@ -147,7 +147,7 @@ class AuroraConfigTest : ResourceLoader() {
         assertThat {
             auroraConfig.getFilesForApplication(referanseAid)
         }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
+            this.isInstanceOf(IllegalArgumentException::class)
             hasMessage("Should find applicationFile utv/simple.(json|yaml)")
         }
     }
@@ -180,8 +180,8 @@ class AuroraConfigTest : ResourceLoader() {
                 )
             )
         }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
-            hasMessage("Some required AuroraConfig (json|yaml) files missing. BASE file with name simple.")
+            this.isInstanceOf(IllegalArgumentException::class)
+            hasMessage("BaseFile simple.(json|yaml) missing for application: utv/simple")
         }
     }
 
@@ -274,7 +274,7 @@ class AuroraConfigTest : ResourceLoader() {
         assertThat {
             auroraConfig.updateFile("about.json", updates)
         }.isFailure().all {
-            isInstanceOf(PreconditionFailureException::class)
+            this.isInstanceOf(PreconditionFailureException::class)
             messageContains("The fileName=about.json already exists in this AuroraConfig.")
         }
     }
@@ -295,7 +295,7 @@ class AuroraConfigTest : ResourceLoader() {
         assertThat {
             auroraConfig.updateFile("about2.json", updates, "abc132")
         }.isFailure().all {
-            isInstanceOf(PreconditionFailureException::class)
+            this.isInstanceOf(PreconditionFailureException::class)
             messageContains("The fileName=about2.json does not exist with a version of (abc132).")
         }
     }

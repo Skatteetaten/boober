@@ -6,7 +6,7 @@ import no.skatteetaten.aurora.boober.controller.v1.AbstractControllerTest
 import no.skatteetaten.aurora.boober.facade.AuroraConfigFacade
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
-import no.skatteetaten.aurora.boober.service.ContextErrors
+import no.skatteetaten.aurora.boober.service.ContextCreationErrors
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentType
@@ -75,7 +75,7 @@ class AuroraConfigControllerV2Test : AbstractControllerTest() {
             facade.updateAuroraConfigFile(any(), any(), any(), any())
         } throws MultiApplicationValidationException(
             listOf(
-                ContextErrors(
+                ContextCreationErrors(
                     command = AuroraContextCommand(auroraConfig, adr, auroraConfigRef),
                     errors = listOf(RuntimeException("This is an error"))
                 )

@@ -1,14 +1,17 @@
 package no.skatteetaten.aurora.boober.model
 
+import java.io.File
+import java.nio.charset.Charset
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.fge.jsonpatch.JsonPatch
+import no.skatteetaten.aurora.boober.feature.HeaderHandlers.Companion.BASE_FILE
+import no.skatteetaten.aurora.boober.feature.HeaderHandlers.Companion.ENV_FILE
+import no.skatteetaten.aurora.boober.feature.HeaderHandlers.Companion.GLOBAL_FILE
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
 import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.removeExtension
-import java.io.File
-import java.nio.charset.Charset
 
 data class AuroraConfig(
     val files: List<AuroraConfigFile>,
@@ -172,10 +175,10 @@ data class AuroraConfig(
 
         val implementationFile = getApplicationFile(applicationDeploymentRef)
 
-        val baseFile = implementationFile.asJsonNode.get("baseFile")?.asText()?.removeExtension()
+        val baseFile = implementationFile.asJsonNode.get(BASE_FILE)?.asText()?.removeExtension()
             ?: applicationDeploymentRef.application
 
-        val envFile = implementationFile.asJsonNode.get("envFile")?.asText()?.removeExtension()
+        val envFile = implementationFile.asJsonNode.get(ENV_FILE)?.asText()?.removeExtension()
             ?: "about"
 
         require(envFile.startsWith("about")) { "envFile must start with about" }
@@ -185,7 +188,7 @@ data class AuroraConfig(
                 file.name.removePrefix("${applicationDeploymentRef.environment}/").removeExtension() == envFile &&
                 !file.override
         }?.asJsonNode
-            ?: throw java.lang.IllegalArgumentException("EnvFile $envFile.(json|yaml) missing for application: $applicationDeploymentRef")
+            ?: throw IllegalArgumentException("EnvFile $envFile.(json|yaml) missing for application: $applicationDeploymentRef")
 
         val include = envFileJson.get("includeEnvFile")?.asText()
 
@@ -193,19 +196,27 @@ data class AuroraConfig(
             require(it.substringAfterLast("/").startsWith(("about"))) { "included envFile must start with about" }
             AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
         }
+        val baseFileJson = files.find { file ->
+            file.name.removeExtension() == baseFile && !file.override
+        }?.asJsonNode
+            ?: throw IllegalArgumentException("BaseFile $baseFile.(json|yaml) missing for application: $applicationDeploymentRef")
+
+        val globalFile = envFileJson.get(GLOBAL_FILE)?.asText()?.removeExtension()
+            ?: baseFileJson.get(GLOBAL_FILE)?.asText()?.removeExtension() ?: "about"
 
         return setOf(
-            AuroraConfigFileSpec("about", AuroraConfigFileType.GLOBAL),
+            AuroraConfigFileSpec(globalFile, AuroraConfigFileType.GLOBAL),
             AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE)
-        ).addIfNotNull(envFiles).addIfNotNull(
-            setOf(
-                AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
-                AuroraConfigFileSpec(
-                    "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
-                    AuroraConfigFileType.APP
+        ).addIfNotNull(envFiles)
+            .addIfNotNull(
+                setOf(
+                    AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$envFile", AuroraConfigFileType.ENV),
+                    AuroraConfigFileSpec(
+                        "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}",
+                        AuroraConfigFileType.APP
+                    )
                 )
             )
-        )
     }
 
     fun merge(localAuroraConfig: AuroraConfig): AuroraConfig {

@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import io.fabric8.kubernetes.api.model.EnvVar
@@ -12,9 +13,8 @@ import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.VaultRequest
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.applicationErrors
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
+import no.skatteetaten.aurora.boober.utils.applicationErrorResult
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class SecretVaultFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -38,7 +38,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.singleApplicationError("The name of the secretVault=simple-this-secret-name-is-really-way-way-way-too-long-long-long-long is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
+        }.singleApplicationErrorResult("The name of the secretVault=simple-this-secret-name-is-really-way-way-way-too-long-long-long-long is too long. Max 63 characters. Note that we ensure that the name starts with @name@-")
     }
 
     @Test
@@ -58,7 +58,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "The secretVault keyMappings [BAR] were not found in keys"
         )
     }
@@ -83,7 +83,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               "secretVault" : "simple"
              }"""
             )
-        }.singleApplicationError(
+        }.singleApplicationErrorResult(
             "Your user does not have access"
         )
     }
@@ -105,7 +105,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "File with name=latest.properties is not present in vault=simple in collection=paas",
             "File with name=latest.properties is not present in vault=simple in collection=paas",
             "SecretVaults does not have unique names=[simple, simple]"
@@ -128,7 +128,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               }
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "The keys [MISSING] were not found in the secret vault=foo in collection=paas"
         )
     }
@@ -145,7 +145,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               "secretVault" : "foo" 
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "File with name=latest.properties is not present in vault=foo in collection=paas",
             "Vault=foo in VaultCollection=paas is public"
         )
@@ -163,7 +163,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
               "secretVault" : "foo" 
              }"""
             )
-        }.applicationErrors(
+        }.applicationErrorResult(
             "Referenced Vault foo in Vault Collection paas does not exist",
             "File with name=latest.properties is not present in vault=foo in collection=paas"
         )

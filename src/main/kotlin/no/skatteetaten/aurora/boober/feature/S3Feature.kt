@@ -27,11 +27,11 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Access
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3ProvisioningResult
-import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.pattern
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 
 private val logger = KotlinLogging.logger {}
 
@@ -42,17 +42,22 @@ private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea>
         BUCKET_OBJECT_AREA_CONTEXT_KEY
     )
 
-@ConditionalOnPropertyMissingOrEmpty("integrations.fiona.url", "integrations.herkimer.url")
+@ConditionalOnProperty(value = ["integrations.s3.variant"], havingValue = "none", matchIfMissing = true)
 @Service
 class S3DisabledFeature : S3FeatureTemplate() {
+
+    private val logger = KotlinLogging.logger { }
+
+    init {
+        logger.info("S3 support is disabled")
+    }
 
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        val isS3Enabled = adc.isSimplifiedAndEnabled(FEATURE_FIELD_NAME) ||
-            adc.getSubKeys(FEATURE_FIELD_NAME).isNotEmpty()
+        val isS3Enabled = adc.s3ObjectAreas.isNotEmpty()
 
         return if (isS3Enabled) {
             listOf(IllegalArgumentException("S3 storage is not available in this cluster=${adc.cluster}"))
@@ -62,7 +67,7 @@ class S3DisabledFeature : S3FeatureTemplate() {
     }
 }
 
-@ConditionalOnProperty(value = ["integrations.fiona.url", "integrations.herkimer.url"])
+@ConditionalOnBean(S3Provisioner::class)
 @Service
 class S3Feature(
     val s3Provisioner: S3Provisioner,
@@ -71,6 +76,12 @@ class S3Feature(
     @Value("\${openshift.cluster}") val cluster: String,
     @Value("\${minio.bucket.region:us-east-1}") val defaultBucketRegion: String
 ) : S3FeatureTemplate() {
+
+    private val logger = KotlinLogging.logger { }
+
+    init {
+        logger.info("Enabling Minio S3 Feature")
+    }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
@@ -395,7 +406,7 @@ abstract class S3FeatureTemplate : Feature {
     }
 }
 
-private data class S3BucketObjectArea(
+data class S3BucketObjectArea(
     val bucketName: String,
     val area: String,
     val tenant: String

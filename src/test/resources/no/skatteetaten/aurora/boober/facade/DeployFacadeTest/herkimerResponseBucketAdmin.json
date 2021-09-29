@@ -4,7 +4,7 @@
   "items": [
     {
       "id": "1",
-      "name": "myBucket",
+      "name": "mybucket",
       "kind": "MinioPolicy",
       "ownerId": "e89b5acc24",
       "claims": [
@@ -31,7 +31,7 @@
     },
     {
       "id": "2",
-      "name": "minYndlingsBucket",
+      "name": "minyndlingsbucket",
       "kind": "MinioPolicy",
       "ownerId": "e89b5acc24",
       "claims": [

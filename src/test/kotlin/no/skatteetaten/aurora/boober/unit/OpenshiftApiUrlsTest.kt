@@ -43,7 +43,7 @@ class OpenshiftApiUrlsTest {
         assertThat {
             OpenShiftResourceClient.generateUrl("applicationdeployment", null, null)
         }.isFailure().all {
-            isInstanceOf(IllegalArgumentException::class)
+            this.isInstanceOf(IllegalArgumentException::class)
             hasMessage("namespace required for resource kind applicationdeployment")
         }
     }
