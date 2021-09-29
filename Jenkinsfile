@@ -1,6 +1,6 @@
 def jenkinsfile
 
-ENV.OPENSHIFT_CLUSTER = "utv"
+env.OPENSHIFT_CLUSTER = "utv"
 
 def overrides = [
     scriptVersion  : 'v7',
