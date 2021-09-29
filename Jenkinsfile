@@ -1,5 +1,6 @@
 def jenkinsfile
 
+// Testene er avhengig av at cluster er satt til utv. Ellers feiler testene med "Invalid cluster configuration"
 env.OPENSHIFT_CLUSTER = "utv"
 
 def overrides = [
