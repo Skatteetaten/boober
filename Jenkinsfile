@@ -1,5 +1,7 @@
 def jenkinsfile
 
+ENV.OPENSHIFT_CLUSTER = "utv"
+
 def overrides = [
     scriptVersion  : 'v7',
     iqOrganizationName: "Team AOS",
