@@ -8,7 +8,7 @@ import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.openshift.Alerts
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrorResult
-import no.skatteetaten.aurora.boober.utils.singleApplicationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
 
 class AlertsFeatureTest : AbstractFeatureTest() {
@@ -30,7 +30,7 @@ class AlertsFeatureTest : AbstractFeatureTest() {
                   }
                 }"""
             )
-        }.singleApplicationError(AlertsFeature.Errors.MissingAlertExpression.message)
+        }.singleApplicationErrorResult(AlertsFeature.Errors.MissingAlertExpression.message)
     }
 
     @Test
