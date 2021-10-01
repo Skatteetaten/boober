@@ -22,8 +22,6 @@ integrations:
         url: "http://cantus"
     bigbird:
         url: "https://bigbird-appsikk.${openshift.cluster}.paas.skead.no/.well-known/discovery"
-    s3:
-        variant: minio
     deployLog:
         git:
             project: "ao"
@@ -50,6 +48,10 @@ integrations:
         backoff: 500
     docker:
         registry: "docker-registry.aurora.sits.no:5000"
+    operations:
+        scope: ""
+    s3:
+        variant: storagegrid
 
 boober:
     openshift:
@@ -104,8 +106,6 @@ integrations:
         url: https://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
         url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
-    s3:
-        variant: storagegrid
     skap:
         url: https://skap-aurora.${openshift.cluster}.paas.skead.no
     fiona:
