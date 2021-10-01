@@ -421,8 +421,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 )
 
                 val azureRouteResource = generateResource(azureOpenshiftRoute)
-                // TODO: Add routeResource
-                listOf(azureRouteResource)
+                listOf(routeResource, azureRouteResource)
             } else {
                 listOf(routeResource)
             }
