@@ -23,80 +23,6 @@
       "value" : "1234567890"
     } ]
   },
-  "message" : {
-    "source" : "complex.json",
-    "value" : "Aurora <3",
-    "sources" : [ {
-      "name" : "complex.json",
-      "value" : "Aurora <3"
-    } ]
-  },
-  "ttl" : {
-    "source" : "complex.json",
-    "value" : "1d",
-    "sources" : [ {
-      "name" : "complex.json",
-      "value" : "1d"
-    } ]
-  },
-  "notification" : {
-    "email" : {
-      "foo@bar.no" : {
-        "enabled" : {
-          "source" : "complex.json",
-          "value" : true,
-          "sources" : [ {
-            "name" : "default",
-            "value" : true
-          }, {
-            "name" : "complex.json",
-            "value" : true
-          } ]
-        }
-      },
-      "ola@nordmann.net" : {
-        "enabled" : {
-          "source" : "complex.json",
-          "value" : true,
-          "sources" : [ {
-            "name" : "default",
-            "value" : true
-          }, {
-            "name" : "complex.json",
-            "value" : true
-          } ]
-        }
-      }
-    },
-    "mattermost" : {
-      "test" : {
-        "enabled" : {
-          "source" : "complex.json",
-          "value" : true,
-          "sources" : [ {
-            "name" : "default",
-            "value" : true
-          }, {
-            "name" : "complex.json",
-            "value" : true
-          } ]
-        }
-      },
-      "test2" : {
-        "enabled" : {
-          "source" : "complex.json",
-          "value" : true,
-          "sources" : [ {
-            "name" : "default",
-            "value" : true
-          }, {
-            "name" : "complex.json",
-            "value" : true
-          } ]
-        }
-      }
-    }
-  },
   "schemaVersion" : {
     "source" : "about.json",
     "value" : "v1",
@@ -197,13 +123,15 @@
         "value" : "1d"
       } ]
     },
-    "autoDeploy" : {
-      "source" : "default",
-      "value" : false,
-      "sources" : [ {
-        "name" : "default",
-        "value" : false
-      } ]
+    "autoDeploy": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
     }
   },
   "envFile" : {
@@ -213,6 +141,96 @@
       "name" : "utv/complex.json",
       "value" : "about-alternate.json"
     } ]
+  },
+  "message": {
+    "source": "complex.json",
+    "value": "Aurora <3",
+    "sources": [
+      {
+        "name": "complex.json",
+        "value": "Aurora <3"
+      }
+    ]
+  },
+  "ttl": {
+    "source": "complex.json",
+    "value": "1d",
+    "sources": [
+      {
+        "name": "complex.json",
+        "value": "1d"
+      }
+    ]
+  },
+  "notification": {
+    "email": {
+      "foo@bar.no": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
+          ]
+        }
+      },
+      "ola@nordmann.net": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
+          ]
+        }
+      }
+    },
+    "mattermost": {
+      "test": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
+          ]
+        }
+      },
+      "test2": {
+        "enabled": {
+          "source": "complex.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "complex.json",
+              "value": true
+            }
+          ]
+        }
+      }
+    }
   },
   "bigip" : {
     "service" : {
@@ -1002,6 +1020,60 @@
             "value" : "30s"
           } ]
         }
+      ]
+    },
+    "tls": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "insecurePolicy": {
+        "source": "default",
+        "value": "None",
+        "sources": [
+          {
+            "name": "default",
+            "value": "None"
+          }
+        ]
+      },
+      "termination": {
+        "source": "default",
+        "value": "edge",
+        "sources": [
+          {
+            "name": "default",
+            "value": "edge"
+          }
+        ]
+      }
+    },
+    "cname": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ttl": {
+        "source": "default",
+        "value": 300,
+        "sources": [
+          {
+            "name": "default",
+            "value": 300
+          }
+        ]
       }
     }
   },

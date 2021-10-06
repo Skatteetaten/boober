@@ -1,19 +1,6 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
                   static | applicationDeploymentId: "1234567890"
-            complex.json | message: "Aurora <3"
-            complex.json | ttl: "1d"
-                         | notification:
-                         |   email:
-                         |     foo@bar.no:
-            complex.json |       enabled: true
-                         |     ola@nordmann.net:
-            complex.json |       enabled: true
-                         |   mattermost:
-                         |     test:
-            complex.json |       enabled: true
-                         |     test2:
-            complex.json |       enabled: true
               about.json | schemaVersion: "v1"
             complex.json | type: "development"
                  default | deployState: "deploymentConfig"
@@ -29,6 +16,19 @@ utv/about-alternate.json | cluster: "utv"
 utv/about-alternate.json |   ttl: "1d"
                  default |   autoDeploy: false
         utv/complex.json | envFile: "about-alternate.json"
+            complex.json | message: "Aurora <3"
+            complex.json | ttl: "1d"
+                         | notification:
+                         |   email:
+                         |     foo@bar.no:
+            complex.json |       enabled: true
+                         |     ola@nordmann.net:
+            complex.json |       enabled: true
+                         |   mattermost:
+                         |     test:
+            complex.json |       enabled: true
+                         |     test2:
+            complex.json |       enabled: true
                          | bigip:
             complex.json |   service: "simple-utv"
                 fileName | artifactId: "complex"

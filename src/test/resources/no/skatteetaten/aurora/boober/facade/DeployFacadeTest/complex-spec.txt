@@ -1,6 +1,18 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
                   static | applicationDeploymentId: "1234567890"
+              about.json | schemaVersion: "v1"
+            complex.json | type: "development"
+              about.json | affiliation: "paas"
+              about.json | segment: "aurora"
+utv/about-alternate.json | cluster: "utv"
+                         | permissions:
+              about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+              folderName | envName: "utv"
+            complex.json | name: "komplex"
+                         | env:
+utv/about-alternate.json |   ttl: "1d"
+        utv/complex.json | envFile: "about-alternate.json"
             complex.json | message: "Aurora <3"
             complex.json | ttl: "1d"
                          | notification:
@@ -14,18 +26,6 @@
             complex.json |       enabled: true
                          |     test2:
             complex.json |       enabled: true
-              about.json | schemaVersion: "v1"
-            complex.json | type: "development"
-              about.json | affiliation: "paas"
-              about.json | segment: "aurora"
-utv/about-alternate.json | cluster: "utv"
-                         | permissions:
-              about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
-              folderName | envName: "utv"
-            complex.json | name: "komplex"
-                         | env:
-utv/about-alternate.json |   ttl: "1d"
-        utv/complex.json | envFile: "about-alternate.json"
                          | bigip:
             complex.json |   service: "simple-utv"
                 fileName | artifactId: "complex"

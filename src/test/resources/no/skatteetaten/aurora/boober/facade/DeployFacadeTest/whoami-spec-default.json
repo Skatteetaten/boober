@@ -29,26 +29,6 @@
       }
     ]
   },
-  "notification": {
-    "mattermost": {
-      "test100": {
-        "enabled": {
-          "source": "whoami.json",
-          "value": true,
-          "sources": [
-            {
-              "name": "default",
-              "value": true
-            },
-            {
-              "name": "whoami.json",
-              "value": true
-            }
-          ]
-        }
-      }
-    }
-  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1",
@@ -173,6 +153,26 @@
           "value": false
         }
       ]
+    }
+  },
+  "notification": {
+    "mattermost": {
+      "test100": {
+        "enabled": {
+          "source": "whoami.json",
+          "value": true,
+          "sources": [
+            {
+              "name": "default",
+              "value": true
+            },
+            {
+              "name": "whoami.json",
+              "value": true
+            }
+          ]
+        }
+      }
     }
   },
   "certificate": {

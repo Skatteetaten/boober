@@ -193,6 +193,6 @@ class S3StorageGridProvisioner(
     }
 }
 
-private fun HasMetadata.toGetCommand() = OpenshiftCommand(GET, this.toJson().appropriateNamedUrl)
+private fun HasMetadata.toGetCommand() = OpenshiftCommand(GET, this.toJson().appropriateNamedUrl, this.toJson())
 
 private fun HasMetadata.toJson() = jacksonObjectMapper().convertValue<JsonNode>(this)
