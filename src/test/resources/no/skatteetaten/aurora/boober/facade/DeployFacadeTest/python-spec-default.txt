@@ -54,6 +54,9 @@ utv/python.json | route: true
                 |   cname:
         default |     enabled: false
         default |     ttl: 300
+                |   azure:
+        default |     enabled: false
+        default |     cnameTtl: 300
 utv/python.json | s3: true
                 | s3Defaults:
 utv/python.json |   bucketName: "mybucket"

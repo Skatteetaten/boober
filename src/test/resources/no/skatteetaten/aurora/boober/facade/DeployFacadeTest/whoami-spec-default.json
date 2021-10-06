@@ -575,6 +575,28 @@
           }
         ]
       }
+    },
+    "azure": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "cnameTtl": {
+        "source": "default",
+        "value": 300,
+        "sources": [
+          {
+            "name": "default",
+            "value": 300
+          }
+        ]
+      }
     }
   },
   "s3": {

@@ -1003,128 +1003,6 @@
       }
     }
   },
-  "route": {
-    "@name@": {
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "tls": {
-        "insecurePolicy": {
-          "source": "complex.json",
-          "value": "Allow",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "Allow"
-            }
-          ]
-        },
-        "termination": {
-          "source": "complex.json",
-          "value": "edge",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "edge"
-            }
-          ]
-        }
-      }
-    },
-    "path": {
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "host": {
-        "source": "complex.json",
-        "value": "pathroute",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "pathroute"
-          }
-        ]
-      },
-      "path": {
-        "source": "complex.json",
-        "value": "/path",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "/path"
-          }
-        ]
-      }
-    },
-    "foobar": {
-      "enabled": {
-        "source": "default",
-        "value": true,
-        "sources": [
-          {
-            "name": "default",
-            "value": true
-          }
-        ]
-      },
-      "host": {
-        "source": "complex.json",
-        "value": "foobar",
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": "foobar"
-          }
-        ]
-      },
-      "annotations": {
-        "wembley.sits.no|externalHost": {
-          "source": "complex.json",
-          "value": "test.ske",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "test.ske"
-            }
-          ]
-        },
-        "wembley.sits.no|apiPaths": {
-          "source": "complex.json",
-          "value": "/api",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "/api"
-            }
-          ]
-        },
-        "haproxy.router.openshift.io|timeout": {
-          "source": "complex.json",
-          "value": "30s",
-          "sources": [
-            {
-              "name": "complex.json",
-              "value": "30s"
-            }
-          ]
-        }
-      }
-    }
-  },
   "routeDefaults": {
     "host": {
       "source": "default",
@@ -1188,6 +1066,180 @@
             "value": 300
           }
         ]
+      }
+    },
+    "azure": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "cnameTtl": {
+        "source": "default",
+        "value": 300,
+        "sources": [
+          {
+            "name": "default",
+            "value": 300
+          }
+        ]
+      }
+    }
+  },
+  "route": {
+    "@name@": {
+      "enabled": {
+        "source": "default",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          }
+        ]
+      },
+      "fullyQualifiedHost": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "tls": {
+        "insecurePolicy": {
+          "source": "complex.json",
+          "value": "Allow",
+          "sources": [
+            {
+              "name": "complex.json",
+              "value": "Allow"
+            }
+          ]
+        },
+        "termination": {
+          "source": "complex.json",
+          "value": "edge",
+          "sources": [
+            {
+              "name": "complex.json",
+              "value": "edge"
+            }
+          ]
+        }
+      }
+    },
+    "path": {
+      "enabled": {
+        "source": "default",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          }
+        ]
+      },
+      "host": {
+        "source": "complex.json",
+        "value": "pathroute",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "pathroute"
+          }
+        ]
+      },
+      "fullyQualifiedHost": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "path": {
+        "source": "complex.json",
+        "value": "/path",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "/path"
+          }
+        ]
+      }
+    },
+    "foobar": {
+      "enabled": {
+        "source": "default",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          }
+        ]
+      },
+      "host": {
+        "source": "complex.json",
+        "value": "foobar",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "foobar"
+          }
+        ]
+      },
+      "fullyQualifiedHost": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "annotations": {
+        "wembley.sits.no|externalHost": {
+          "source": "complex.json",
+          "value": "test.ske",
+          "sources": [
+            {
+              "name": "complex.json",
+              "value": "test.ske"
+            }
+          ]
+        },
+        "wembley.sits.no|apiPaths": {
+          "source": "complex.json",
+          "value": "/api",
+          "sources": [
+            {
+              "name": "complex.json",
+              "value": "/api"
+            }
+          ]
+        },
+        "haproxy.router.openshift.io|timeout": {
+          "source": "complex.json",
+          "value": "30s",
+          "sources": [
+            {
+              "name": "complex.json",
+              "value": "30s"
+            }
+          ]
+        }
       }
     }
   },

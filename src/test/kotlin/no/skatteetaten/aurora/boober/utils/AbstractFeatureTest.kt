@@ -318,17 +318,12 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val (valid, _) = createAuroraDeploymentContext(app, fullValidation, files)
 
         val headers =
-            valid.first().cmd.applicationDeploymentRef.run {
-                HeaderHandlers.create(
-                    application,
-                    environment
-                )
-            }.handlers.map {
-                it.name
-            }
-        val fields = valid.first().spec.fields.filterNot {
-            headers.contains(it.key)
-        }.filterNot { it.key in listOf("applicationDeploymentRef", "configVersion") }
+            valid.first().cmd.applicationDeploymentRef
+            .run { HeaderHandlers.create(application, environment) }
+            .handlers.map { it.name }
+        val fields = valid.first().spec.fields
+            .filterNot { headers.contains(it.key) }
+            .filterNot { it.key in listOf("applicationDeploymentRef", "configVersion") }
 
         return valid.first().spec.copy(fields = fields)
     }

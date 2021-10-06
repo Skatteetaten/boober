@@ -9,7 +9,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.RetryLogger
-import no.skatteetaten.aurora.boober.utils.compareJson
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.jupiter.api.Test
@@ -44,7 +43,7 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
                 RequestEntity<Any>(HttpMethod.GET, URI(resourceUrl)), true
             )
 
-            compareJson(resource, entity.body!!, "ResourceMergerTest/deploymentconfig.json")
+            assertThat(resource).jsonEquals(entity.body!!, "ResourceMergerTest/deploymentconfig.json", allowOverwrite = false)
         }
     }
 

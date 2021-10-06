@@ -6,8 +6,12 @@
     "namespace": "paas-utv"
   },
   "spec": {
-    "cname": "not-just-default.utv.apps.paas.skead.no",
     "host": "test.foo",
-    "ttl": 150
+    "cname": "not-just-default.utv.apps.paas.skead.no",
+    "ttl": 150,
+    "msDns" : {
+      "enabled" : true,
+      "ttl" : 150
+    }
   }
 }

@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import assertk.Assert
@@ -14,7 +13,6 @@ import assertk.assertions.support.show
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
@@ -64,6 +62,91 @@ class RouteFeatureTest : AbstractFeatureTest() {
         }.singleApplicationErrorResult(
             "Config for application simple in environment utv contains errors. Must be one of [Redirect, None, Allow]"
         )
+    }
+
+    @Test
+    fun `separate routes for onprem and azure with cname`() {
+        val (dcResource, routeResource, azureRouteResource, auroraCname) = generateResources(
+            """{
+            "route" : {
+               "simple" : {
+                    "host": "simple-specific-cname.foo.no",
+                    "azure": {
+                       "enabled": true,
+                       "cnameTtl": 100
+                    },
+                    "cname": {
+                       "enabled": true,
+                       "ttl": 150
+                    }
+               }
+            }
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 3
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-specific-cname.json")
+
+        assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-azure-specific-host.json")
+
+        assertThat(auroraCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-azure-specific-host.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-specific-cname.foo.no")
+    }
+
+    @Test
+    fun `should be able to disable azure route`() {
+        val (dcResource, routeResource) = generateResources(
+            """{
+            "routeDefaults" : { 
+                "azure": {
+                    "enabled": true
+                }
+            },
+            "route" : {
+               "simple" : {
+                    "azure": {
+                       "enabled": false
+                    }
+               }
+            }
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 1
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
+    }
+
+    @Test
+    fun `should have separate routes for onprem and azure with azure defaults`() {
+        val (dcResource, routeResource, azureRouteResource, auroraCname) = generateResources(
+            """{
+            "routeDefaults" : { 
+                "azure": {
+                    "enabled": true
+                }
+            },
+            "route" : true
+        }""", createEmptyDeploymentConfig(),
+            createdResources = 3
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
+
+        assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-azure.json")
+
+        assertThat(auroraCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-azure.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
     }
 
     @Test
@@ -339,15 +422,20 @@ class RouteFeatureTest : AbstractFeatureTest() {
 
         val (dcResource, routeResource, route2Resource) = generateResources(
             """{
+            "routeDefaults": {
+              "tls": {
+                "enabled": true
+              }
+            },
             "route" : {
                "foo" : {
-                 "host" : "simple-foo",
-                 "tls" : {
-                   "enabled" : true
-                 }
+                 "host" : "simple-foo"
                }, 
                "bar" : {
-                 "enabled" : true
+                 "enabled" : true,
+                 "tls" : {
+                   "enabled" : false
+                 }
                }
             }
         }""",
@@ -358,21 +446,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
         assertThat(routeResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("foo-tls-route.json")
         assertThat(route2Resource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("bar-route.json")
         assertThat(dcResource).auroraRouteEnvAdded("simple-foo.test.foo", "https")
-    }
-
-    fun Assert<AuroraResource>.auroraRouteEnvAdded(host: String, protocol: String = "http") = transform { ar ->
-
-        assertThat(ar).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
-        val dc = ar.resource as DeploymentConfig
-
-        val actual = dc.spec.template.spec.containers.first().env.associate { it.name to it.value }
-        val expected = mapOf(
-            "ROUTE_NAME" to host,
-            "ROUTE_URL" to "$protocol://$host"
-        )
-        if (expected != actual) {
-            this.expected(":${show(actual)} to be:${show(expected)}")
-        }
     }
 
     @Test
@@ -608,29 +681,6 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `cname and fullyQualifiedHost cannot be set simultaneously`() {
-        val ex: MultiApplicationValidationException = assertThrows {
-            generateResources(
-                """{
-            "route" : { 
-                "foo" : {
-                    "enabled" : "true",
-                    "fullyQualifiedHost": "true",
-                    "host": "simple-foo-specific-cname",
-                    "cname" : {
-                      "enabled" : "true"
-                    }
-                }
-            }
-            }""",
-                resource = createEmptyDeploymentConfig(),
-                createdResources = 2
-            )
-        }
-        assertThat { ex.message?.contains("configurations simultaneously") }
-    }
-
-    @Test
     fun `cname gets generated just enabling it`() {
         val (dcResource, routeResource, cnameResource) = generateResources(
             """{
@@ -688,7 +738,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 createEmptyDeploymentConfig(),
                 createdResources = 1
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -724,7 +774,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 """.trimIndent(),
                 createEmptyDeploymentConfig()
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -746,7 +796,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 """.trimIndent(),
                 resource = createEmptyDeploymentConfig(), createdResources = 3
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -764,7 +814,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 }
                 """.trimIndent(), createEmptyDeploymentConfig()
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @Test
@@ -788,16 +838,23 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 """.trimIndent(),
                 createEmptyDeploymentConfig()
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
 
     @ParameterizedTest
     @CsvSource(value = ["x.xx", "x1.xx", "x-1.xx", "some-x.org"])
     fun `valid host names should not fail`(dns: String) {
         val (dcResource) = generateResources(
-            """{"route" : {"foo" : {
-                  "host": """" + dns + """", "cname" : { "enabled" : "true" }
-                }}}""".trimIndent(),
+            """{
+                  "route": {
+                    "foo": {
+                      "host": "$dns",
+                      "cname": {
+                        "enabled": "true"
+                      }
+                    }
+                  }
+                }""".trimIndent(),
             createEmptyDeploymentConfig(),
             createdResources = 2
         )
@@ -809,12 +866,34 @@ class RouteFeatureTest : AbstractFeatureTest() {
     fun `invalid host names should fail`(dns: String) {
         assertThat {
             generateResources(
-                """{"route" : {"foo" : {
-                  "host": """" + dns + """", "cname" : { "enabled" : "true" }
-                }}}""".trimIndent(),
+                """{
+                    "route": {
+                        "foo" : {
+                            "host": "$dns",
+                            "cname" : { 
+                                "enabled" : "true" 
+                            }
+                        }
+                    }
+                }""".trimIndent(),
                 createEmptyDeploymentConfig(),
                 createdResources = 2
             )
-        }.singleApplicationError("Invalid DNS node entry")
+        }.singleApplicationError("Application simple in environment utv has invalid dns name")
+    }
+
+    fun Assert<AuroraResource>.auroraRouteEnvAdded(host: String, protocol: String = "http") = transform { ar ->
+
+        assertThat(ar).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
+        val dc = ar.resource as DeploymentConfig
+
+        val actual = dc.spec.template.spec.containers.first().env.associate { it.name to it.value }
+        val expected = mapOf(
+            "ROUTE_NAME" to host,
+            "ROUTE_URL" to "$protocol://$host"
+        )
+        if (expected != actual) {
+            this.expected(":${show(actual)} to be:${show(expected)}")
+        }
     }
 }
