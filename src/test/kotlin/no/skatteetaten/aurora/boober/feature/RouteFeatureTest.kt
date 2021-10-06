@@ -67,7 +67,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
     @Test
     fun `separate routes for onprem and azure with cname`() {
         // TODO: Fix test
-        val (dcResource, azureRouteResource) = generateResources(
+        val (dcResource, routeResource, azureRouteResource) = generateResources(
             """{
             "route" : {
                "simple" : {
@@ -83,11 +83,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
                }
             }
         }""", createEmptyDeploymentConfig(),
-            createdResources = 1
+            createdResources = 2
         )
 
-        // assertThat(routeResource).auroraResourceCreatedByThisFeature()
-        //     .auroraResourceMatchesFile("route-with-specific-cname.json")
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-specific-cname.json")
 
         assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-with-azure-specific-host.json")
@@ -127,7 +127,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
     @Test
     fun `should have separate routes for onprem and azure with azure defaults`() {
         // TODO: Fix test
-        val (dcResource, azureRouteResource) = generateResources(
+        val (dcResource, routeResource, azureRouteResource) = generateResources(
             """{
             "routeDefaults" : { 
                 "azure": {
@@ -136,11 +136,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
             },
             "route" : true
         }""", createEmptyDeploymentConfig(),
-            createdResources = 1
+            createdResources = 2
         )
 
-        // assertThat(routeResource).auroraResourceCreatedByThisFeature()
-        //     .auroraResourceMatchesFile("route.json")
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route.json")
 
         assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("route-with-azure.json")
