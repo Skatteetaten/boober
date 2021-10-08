@@ -282,8 +282,11 @@ fun JsonNode?.validUrl(required: Boolean = true): Exception? {
             null
         }
     }
-    // Create will throw IllegalArgumentException if not valid URI
-    URI.create(this.textValue())
+    try {
+        URI.create(this.textValue())
+    } catch (e: IllegalArgumentException) {
+        return e
+    }
     return null
 }
 

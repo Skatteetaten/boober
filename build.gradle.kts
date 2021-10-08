@@ -31,7 +31,7 @@ dependencies {
     // The above library uses an vulnerable bcprov, set the fixed version here, hopefully this will work.
     // pr is sent to maintainer
     implementation("org.bouncycastle:bcprov-jdk15on:1.69")
-    implementation("com.github.ben-manes.caffeine:caffeine:3.0.3")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.0.4")
     implementation("org.apache.commons:commons-text:1.9")
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
