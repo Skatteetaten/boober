@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.validUrl
+import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.clingerSidecar: String?
     get() =
@@ -30,7 +31,8 @@ val AuroraDeploymentSpec.clingerSidecar: String?
 
 @org.springframework.stereotype.Service
 class ClingerSidecarFeature(
-    cantusService: CantusService
+    cantusService: CantusService,
+    @Value("\${clinger.sidecar.default.version:0.3.1}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         val clingerSidecar = spec.clingerSidecar
@@ -77,7 +79,7 @@ class ClingerSidecarFeature(
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/version",
-                defaultValue = "0.3.1"
+                defaultValue = sidecarVersion
             ),
             AuroraConfigFieldHandler(
                 "azure/proxySidecar/discoveryUrl",

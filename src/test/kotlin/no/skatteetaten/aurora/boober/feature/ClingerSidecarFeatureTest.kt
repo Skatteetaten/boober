@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test
 
 class ClingerSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = ClingerSidecarFeature(cantusService)
+        get() = ClingerSidecarFeature(cantusService, "0.3.1")
 
     private val cantusService: CantusService = mockk()
 
