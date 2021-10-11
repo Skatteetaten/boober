@@ -422,14 +422,16 @@
     }
   },
   "azure": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+    "jwtToStsConverter": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    }
   },
   "route": {
     "source": "web.json",

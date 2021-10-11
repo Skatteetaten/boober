@@ -45,7 +45,8 @@ utv/about.json | cluster: "utv"
        default |     max: "512Mi"
                | logging:
        default |   bufferSize: 20
-       default | azure: false
+               | azure:
+       default |   jwtToStsConverter: false
       web.json | route: true
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"

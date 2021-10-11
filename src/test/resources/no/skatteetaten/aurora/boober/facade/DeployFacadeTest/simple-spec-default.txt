@@ -44,7 +44,8 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
-       default | azure: false
+               | azure:
+       default |   jwtToStsConverter: false
    simple.json | route: true
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"

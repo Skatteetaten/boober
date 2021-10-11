@@ -66,12 +66,6 @@ class JwtToStsConverterFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
-                "azure",
-                defaultValue = false,
-                validator = { it.boolean() },
-                canBeSimplifiedConfig = true
-            ),
-            AuroraConfigFieldHandler(
                 "azure/jwtToStsConverter",
                 defaultValue = false,
                 validator = { it.boolean() },

@@ -501,13 +501,17 @@
       }
     ]
   },
-  "azure" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
+  "azure": {
+    "jwtToStsConverter": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    }
   },
   "route": {
     "source": "default",

@@ -83,7 +83,8 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   port: "8082"
                  default | readiness: true
             complex.json | liveness: true
-                 default | azure: false
+                         | azure:
+                 default |   jwtToStsConverter: false
                          | mounts:
                          |   aurora-token:
                  default |     enabled: true
