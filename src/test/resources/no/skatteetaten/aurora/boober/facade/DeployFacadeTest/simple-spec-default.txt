@@ -16,7 +16,6 @@ utv/about.json | cluster: "utv"
        default |   autoDeploy: false
        default | certificate: false
    simple.json | groupId: "org.test"
-       default | azure: false
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
@@ -45,6 +44,7 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
+       default | azure: false
    simple.json | route: true
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"

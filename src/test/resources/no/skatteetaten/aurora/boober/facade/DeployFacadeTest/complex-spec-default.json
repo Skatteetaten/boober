@@ -363,14 +363,6 @@
       ]
     }
   },
-  "azure" : {
-    "source" : "default",
-    "value" : false,
-    "sources" : [ {
-      "name" : "default",
-      "value" : false
-    } ]
-  },
   "config": {
     "FOO": {
       "source": "complex.json",
@@ -804,6 +796,16 @@
         }
       ]
     }
+  },
+  "azure": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   },
   "mounts": {
     "aurora-token": {

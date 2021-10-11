@@ -15,7 +15,6 @@ utv/about.json | cluster: "utv"
                | env:
        default |   autoDeploy: false
        default | certificate: false
-       default | azure: false
                | config:
        ah.json |   FOO: "bar"
                | databaseDefaults:
@@ -31,6 +30,7 @@ utv/about.json | cluster: "utv"
        default | management: false
                | logging:
        default |   bufferSize: 20
+       default | azure: false
                | parameters:
        ah.json |   FEED_NAME: "feed"
        ah.json |   DOMAIN_NAME: "localhost"

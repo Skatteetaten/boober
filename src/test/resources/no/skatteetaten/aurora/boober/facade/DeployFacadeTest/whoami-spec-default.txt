@@ -20,7 +20,6 @@ utv/about.json | cluster: "utv"
    whoami.json |       enabled: true
        default | certificate: false
    whoami.json | groupId: "org.test"
-       default | azure: false
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
@@ -49,6 +48,7 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
+       default | azure: false
        default | route: false
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"

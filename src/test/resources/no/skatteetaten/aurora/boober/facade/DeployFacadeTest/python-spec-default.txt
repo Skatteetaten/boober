@@ -16,7 +16,6 @@ utv/python.json | applicationPlatform: "python"
         default |   autoDeploy: false
         default | certificate: false
 utv/python.json | groupId: "org.test"
-        default | azure: false
                 | databaseDefaults:
         default |   flavor: "ORACLE_MANAGED"
         default |   generate: true
@@ -37,6 +36,7 @@ utv/python.json | version: "1"
         default |     max: "512Mi"
                 | logging:
         default |   bufferSize: 20
+        default | azure: false
        fileName | artifactId: "python"
                 | deployStrategy:
         default |   type: "rolling"

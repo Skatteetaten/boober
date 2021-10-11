@@ -25,12 +25,12 @@ import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.clingerSidecar: String?
     get() =
-        this.featureEnabled("azure/proxySidecar") {
-            this["azure/proxySidecar/version"]
+        this.featureEnabled("azure/jwtToStsConverter") {
+            this["azure/jwtToStsConverter/version"]
         }
 
 @org.springframework.stereotype.Service
-class ClingerSidecarFeature(
+class JwtToStsConverterFeature(
     cantusService: CantusService,
     @Value("\${clinger.sidecar.default.version:0.3.1}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
@@ -72,21 +72,21 @@ class ClingerSidecarFeature(
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler(
-                "azure/proxySidecar",
+                "azure/jwtToStsConverter",
                 defaultValue = false,
                 validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler(
-                "azure/proxySidecar/version",
+                "azure/jwtToStsConverter/version",
                 defaultValue = sidecarVersion
             ),
             AuroraConfigFieldHandler(
-                "azure/proxySidecar/discoveryUrl",
+                "azure/jwtToStsConverter/discoveryUrl",
                 validator = { it.validUrl(required = false) }),
 
             AuroraConfigFieldHandler(
-                "azure/proxySidecar/ivGroupsRequired",
+                "azure/jwtToStsConverter/ivGroupsRequired",
                 defaultValue = false,
                 validator = { it.boolean() })
         )
@@ -153,10 +153,10 @@ class ClingerSidecarFeature(
                     EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
                         .withValue(ports.first().containerPort.toString())
                         .build(),
-                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["azure/proxySidecar/discoveryUrl"])
+                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["azure/jwtToStsConverter/discoveryUrl"])
                         .build(),
                     EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
-                        .withValue(adc["azure/proxySidecar/ivGroupsRequired"])
+                        .withValue(adc["azure/jwtToStsConverter/ivGroupsRequired"])
                         .build()
                 )
             )

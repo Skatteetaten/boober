@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-class ClingerSidecarFeatureTest : AbstractFeatureTest() {
+class JwtToStsConverterFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = ClingerSidecarFeature(cantusService, "0.3.1")
+        get() = JwtToStsConverterFeature(cantusService, "0.3.1")
 
     private val cantusService: CantusService = mockk()
 
@@ -45,7 +45,7 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
         val (serviceResource, dcResource) = modifyResources(
             """{
              "azure" : {
-                "proxySidecar": {
+                "jwtToStsConverter": {
                     "version": "0.3.1", 
                     "discoveryUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
@@ -71,7 +71,7 @@ class ClingerSidecarFeatureTest : AbstractFeatureTest() {
         val (serviceResource, dcResource) = modifyResources(
             """{
              "azure" : {
-                "proxySidecar": {
+                "jwtToStsConverter": {
                     "discoveryUrl": "https://endpoint"
                 }
               }
