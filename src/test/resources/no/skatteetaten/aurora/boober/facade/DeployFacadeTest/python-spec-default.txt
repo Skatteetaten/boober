@@ -37,7 +37,10 @@ utv/python.json | version: "1"
                 | logging:
         default |   bufferSize: 20
                 | azure:
-        default |   jwtToStsConverter: false
+                |   jwtToStsConverter:
+        default |     enabled: false
+        default |     version: "0.3.1"
+        default |     ivGroupsRequired: false
        fileName | artifactId: "python"
                 | deployStrategy:
         default |   type: "rolling"

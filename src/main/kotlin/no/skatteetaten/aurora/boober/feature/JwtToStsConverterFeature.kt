@@ -23,11 +23,10 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.validUrl
 import org.springframework.beans.factory.annotation.Value
 
-val AuroraDeploymentSpec.clingerSidecar: String?
-    get() =
-        this.featureEnabled("azure/jwtToStsConverter") {
-            this["azure/jwtToStsConverter/version"]
-        }
+const val JwtToStsConverterRoot = "azure/jwtToStsConverter"
+
+val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
+    get() = this.getOrNull("$JwtToStsConverterRoot/enabled") ?: false
 
 @org.springframework.stereotype.Service
 class JwtToStsConverterFeature(
@@ -35,9 +34,7 @@ class JwtToStsConverterFeature(
     @Value("\${clinger.sidecar.default.version:0.3.1}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        val clingerSidecar = spec.clingerSidecar
-
-        return clingerSidecar != null
+        return spec.isJwtToStsConverterEnabled
     }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -50,7 +47,7 @@ class JwtToStsConverterFeature(
         validationContext: Boolean
     ): Map<String, Any> {
 
-        val clingerTag = spec.clingerSidecar
+        val clingerTag = spec.getOrNull<String>("$JwtToStsConverterRoot/version")
 
         if (validationContext || clingerTag == null) {
             return emptyMap()
@@ -66,21 +63,20 @@ class JwtToStsConverterFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter",
+                "$JwtToStsConverterRoot/enabled",
                 defaultValue = false,
-                validator = { it.boolean() },
-                canBeSimplifiedConfig = true
+                validator = { it.boolean() }
             ),
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter/version",
+                "$JwtToStsConverterRoot/version",
                 defaultValue = sidecarVersion
             ),
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter/discoveryUrl",
+                "$JwtToStsConverterRoot/discoveryUrl",
                 validator = { it.validUrl(required = false) }),
 
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter/ivGroupsRequired",
+                "$JwtToStsConverterRoot/ivGroupsRequired",
                 defaultValue = false,
                 validator = { it.boolean() })
         )
@@ -92,7 +88,9 @@ class JwtToStsConverterFeature(
         context: FeatureContext
     ) {
 
-        adc.clingerSidecar ?: return
+        if (!adc.isJwtToStsConverterEnabled) {
+            return
+        }
 
         val container = createClingerProxyContainer(adc, context)
         resources.forEach {
@@ -147,10 +145,10 @@ class JwtToStsConverterFeature(
                     EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
                         .withValue(ports.first().containerPort.toString())
                         .build(),
-                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["azure/jwtToStsConverter/discoveryUrl"])
+                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["$JwtToStsConverterRoot/discoveryUrl"])
                         .build(),
                     EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
-                        .withValue(adc["azure/jwtToStsConverter/ivGroupsRequired"])
+                        .withValue(adc["$JwtToStsConverterRoot/ivGroupsRequired"])
                         .build()
                 )
             )
