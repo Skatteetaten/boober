@@ -46,6 +46,7 @@ class JwtToStsConverterFeatureTest : AbstractFeatureTest() {
             """{
              "azure" : {
                 "jwtToStsConverter": {
+                    "enabled": true,
                     "version": "0.3.1", 
                     "discoveryUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
@@ -72,6 +73,7 @@ class JwtToStsConverterFeatureTest : AbstractFeatureTest() {
             """{
              "azure" : {
                 "jwtToStsConverter": {
+                    "enabled": true,
                     "discoveryUrl": "https://endpoint"
                 }
               }

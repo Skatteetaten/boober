@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.httpGet
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
@@ -21,23 +22,25 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.validUrl
-import org.springframework.beans.factory.annotation.Value
 
-val AuroraDeploymentSpec.clingerSidecar: String?
-    get() =
-        this.featureEnabled("azure/jwtToStsConverter") {
-            this["azure/jwtToStsConverter/version"]
-        }
+val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
+    get() = this.getOrNull(JwtToStsConverterFeature.ConfigPath.enabled) ?: false
 
 @org.springframework.stereotype.Service
 class JwtToStsConverterFeature(
     cantusService: CantusService,
     @Value("\${clinger.sidecar.default.version:0.3.1}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
-    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        val clingerSidecar = spec.clingerSidecar
+    object ConfigPath {
+        private const val root = "azure/jwtToStsConverter"
+        const val enabled = "$root/enabled"
+        const val version = "$root/version"
+        const val discoveryUrl = "$root/discoveryUrl"
+        const val ivGroupsRequired = "$root/ivGroupsRequired"
+    }
 
-        return clingerSidecar != null
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        return spec.isJwtToStsConverterEnabled
     }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -50,7 +53,7 @@ class JwtToStsConverterFeature(
         validationContext: Boolean
     ): Map<String, Any> {
 
-        val clingerTag = spec.clingerSidecar
+        val clingerTag = spec.getOrNull<String>(ConfigPath.version)
 
         if (validationContext || clingerTag == null) {
             return emptyMap()
@@ -66,21 +69,20 @@ class JwtToStsConverterFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter",
+                ConfigPath.enabled,
                 defaultValue = false,
-                validator = { it.boolean() },
-                canBeSimplifiedConfig = true
+                validator = { it.boolean() }
             ),
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter/version",
+                ConfigPath.version,
                 defaultValue = sidecarVersion
             ),
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter/discoveryUrl",
+                ConfigPath.discoveryUrl,
                 validator = { it.validUrl(required = false) }),
 
             AuroraConfigFieldHandler(
-                "azure/jwtToStsConverter/ivGroupsRequired",
+                ConfigPath.ivGroupsRequired,
                 defaultValue = false,
                 validator = { it.boolean() })
         )
@@ -92,7 +94,9 @@ class JwtToStsConverterFeature(
         context: FeatureContext
     ) {
 
-        adc.clingerSidecar ?: return
+        if (!adc.isJwtToStsConverterEnabled) {
+            return
+        }
 
         val container = createClingerProxyContainer(adc, context)
         resources.forEach {
@@ -147,10 +151,10 @@ class JwtToStsConverterFeature(
                     EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
                         .withValue(ports.first().containerPort.toString())
                         .build(),
-                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["azure/jwtToStsConverter/discoveryUrl"])
+                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc[ConfigPath.discoveryUrl])
                         .build(),
                     EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
-                        .withValue(adc["azure/jwtToStsConverter/ivGroupsRequired"])
+                        .withValue(adc[ConfigPath.ivGroupsRequired])
                         .build()
                 )
             )
