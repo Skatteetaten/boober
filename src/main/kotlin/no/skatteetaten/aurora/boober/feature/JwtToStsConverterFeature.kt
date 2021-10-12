@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.httpGet
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
@@ -21,18 +22,23 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.validUrl
-import org.springframework.beans.factory.annotation.Value
-
-const val JwtToStsConverterRoot = "azure/jwtToStsConverter"
 
 val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
-    get() = this.getOrNull("$JwtToStsConverterRoot/enabled") ?: false
+    get() = this.getOrNull(JwtToStsConverterFeature.ConfigPath.enabled) ?: false
 
 @org.springframework.stereotype.Service
 class JwtToStsConverterFeature(
     cantusService: CantusService,
     @Value("\${clinger.sidecar.default.version:0.3.1}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
+    object ConfigPath {
+        private const val root = "azure/jwtToStsConverter"
+        const val enabled = "$root/enabled"
+        const val version = "$root/version"
+        const val discoveryUrl = "$root/discoveryUrl"
+        const val ivGroupsRequired = "$root/ivGroupsRequired"
+    }
+
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         return spec.isJwtToStsConverterEnabled
     }
@@ -47,7 +53,7 @@ class JwtToStsConverterFeature(
         validationContext: Boolean
     ): Map<String, Any> {
 
-        val clingerTag = spec.getOrNull<String>("$JwtToStsConverterRoot/version")
+        val clingerTag = spec.getOrNull<String>(ConfigPath.version)
 
         if (validationContext || clingerTag == null) {
             return emptyMap()
@@ -63,20 +69,20 @@ class JwtToStsConverterFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
             AuroraConfigFieldHandler(
-                "$JwtToStsConverterRoot/enabled",
+                ConfigPath.enabled,
                 defaultValue = false,
                 validator = { it.boolean() }
             ),
             AuroraConfigFieldHandler(
-                "$JwtToStsConverterRoot/version",
+                ConfigPath.version,
                 defaultValue = sidecarVersion
             ),
             AuroraConfigFieldHandler(
-                "$JwtToStsConverterRoot/discoveryUrl",
+                ConfigPath.discoveryUrl,
                 validator = { it.validUrl(required = false) }),
 
             AuroraConfigFieldHandler(
-                "$JwtToStsConverterRoot/ivGroupsRequired",
+                ConfigPath.ivGroupsRequired,
                 defaultValue = false,
                 validator = { it.boolean() })
         )
@@ -145,10 +151,10 @@ class JwtToStsConverterFeature(
                     EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
                         .withValue(ports.first().containerPort.toString())
                         .build(),
-                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc["$JwtToStsConverterRoot/discoveryUrl"])
+                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc[ConfigPath.discoveryUrl])
                         .build(),
                     EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
-                        .withValue(adc["$JwtToStsConverterRoot/ivGroupsRequired"])
+                        .withValue(adc[ConfigPath.ivGroupsRequired])
                         .build()
                 )
             )
