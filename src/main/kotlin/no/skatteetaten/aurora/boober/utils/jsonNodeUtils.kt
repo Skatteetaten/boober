@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.utils
 
-import org.springframework.boot.convert.DurationStyle
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
@@ -16,6 +15,8 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.kotlin.treeToValue
+import org.springframework.boot.convert.DurationStyle
+import java.net.URI
 
 inline fun <reified T : Any> JsonNode.convert(): T = jacksonObjectMapper().convertValue(this)
 
@@ -270,6 +271,22 @@ fun JsonNode?.notBlank(message: String): Exception? {
         return IllegalArgumentException(message)
     }
 
+    return null
+}
+
+fun JsonNode?.validUrl(required: Boolean = true): Exception? {
+    if (this == null || !this.isTextual || this.textValue().isBlank()) {
+        return if (required) {
+            IllegalArgumentException("Need to set a valid URL.")
+        } else {
+            null
+        }
+    }
+    try {
+        URI.create(this.textValue())
+    } catch (e: IllegalArgumentException) {
+        return e
+    }
     return null
 }
 

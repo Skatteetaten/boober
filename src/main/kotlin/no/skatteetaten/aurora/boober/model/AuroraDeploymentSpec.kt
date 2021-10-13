@@ -77,7 +77,7 @@ data class AuroraDeploymentSpec(
 
     /*
     In order to know if this is simplified config or not we need to find out what instruction is
-    specified in the most specific place. Each AuroraConfigFieldSource has a a presedence accoring to the
+    specified in the most specific place. Each AuroraConfigFieldSource has a a precedence according to the
     AuroraConfigFileType enum.
      */
     fun isSimplifiedConfig(name: String): Boolean {
