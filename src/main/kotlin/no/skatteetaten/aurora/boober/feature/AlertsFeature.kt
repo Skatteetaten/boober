@@ -54,12 +54,17 @@ class AlertsFeature : Feature {
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        val definedAlerts = cmd.applicationFiles.getDefinedAlerts()
-            .flatMap { name ->
+        val alertsDefaults = cmd.applicationFiles.getAlertsDefaults()
+            .flatMap {
                 setOf(
                     AuroraConfigFieldHandler("$defaultsName/enabled"),
                     AuroraConfigFieldHandler("$defaultsName/connection"),
-                    AuroraConfigFieldHandler("$defaultsName/delay"),
+                    AuroraConfigFieldHandler("$defaultsName/delay")
+                )
+            }.toSet()
+        val definedAlerts = cmd.applicationFiles.getDefinedAlerts()
+            .flatMap { name ->
+                setOf(
                     AuroraConfigFieldHandler("$featureName/$name/enabled", { it.boolean() }),
                     AuroraConfigFieldHandler("$featureName/$name/expr"),
                     AuroraConfigFieldHandler("$featureName/$name/delay"),
@@ -71,7 +76,7 @@ class AlertsFeature : Feature {
                     AuroraConfigFieldHandler("$featureName/$name/description")
                 )
             }.toSet()
-        return definedAlerts
+        return definedAlerts.union(alertsDefaults)
     }
 
     override fun validate(
@@ -132,6 +137,10 @@ class AlertsFeature : Feature {
         return adc.getDefinedAlerts()
             .flatMap { generateAlertResources(it, adc) }
             .toSet()
+    }
+
+    private fun List<AuroraConfigFile>.getAlertsDefaults(): Set<String> {
+        return this.findSubKeys(defaultsName).filter { alertsConfigKeys.contains(it) }.toSet()
     }
 
     private fun List<AuroraConfigFile>.getDefinedAlerts(): Set<String> {
