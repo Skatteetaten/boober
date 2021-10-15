@@ -91,4 +91,23 @@ class JwtToStsConverterFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
             .auroraResourceMatchesFile("dc.json")
     }
+
+    @Test
+    fun `clinger is not confused by AzureAppConfig`() {
+        val (_, dcResource) = modifyResources(
+            """{
+             "azure" : {
+                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "groups": [],
+                "jwtToStsConverter": {
+                    "enabled": true,
+                    "discoveryUrl": "https://endpoint"
+                }
+              }
+           }""", createEmptyService(), createEmptyDeploymentConfig()
+        )
+
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
+            .auroraResourceMatchesFile("dc.json")
+    }
 }

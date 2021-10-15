@@ -8,6 +8,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.AuroreAzureApp
 import no.skatteetaten.aurora.boober.model.openshift.AzureAppSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.isListOrEmpty
 import no.skatteetaten.aurora.boober.utils.isValidDns
 
@@ -24,9 +25,7 @@ val AuroraDeploymentSpec.azureAppGroups: List<String>?
     }
 
 @org.springframework.stereotype.Service
-class AuroraAzureAppFeature(
-    val sidecar: JwtToStsConverterFeature
-) : Feature {
+class AuroraAzureAppFeature : Feature {
     object ConfigPath {
         private const val root = "azure"
         const val azureAppFqdn = "$root/azureAppFqdn"
@@ -46,8 +45,16 @@ class AuroraAzureAppFeature(
             AuroraConfigFieldHandler(
                 ConfigPath.groups,
                 validator = { it.isListOrEmpty(required = false) }
-            )
-        ) + sidecar.handlers(header, cmd)
+            ),
+            AuroraConfigFieldHandler(
+                JwtToStsConverterFeature.ConfigPath.enabled,
+                defaultValue = false,
+                validator = { it.boolean(required = false) }
+            ),
+            AuroraConfigFieldHandler(JwtToStsConverterFeature.ConfigPath.version),
+            AuroraConfigFieldHandler(JwtToStsConverterFeature.ConfigPath.discoveryUrl),
+            AuroraConfigFieldHandler(JwtToStsConverterFeature.ConfigPath.ivGroupsRequired)
+        )
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {

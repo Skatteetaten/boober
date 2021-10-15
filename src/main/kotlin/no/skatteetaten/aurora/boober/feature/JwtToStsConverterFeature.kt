@@ -1,6 +1,5 @@
 package no.skatteetaten.aurora.boober.feature
 
-import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.httpGet
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
@@ -22,6 +21,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.validUrl
+import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
     get() = this.getOrNull(JwtToStsConverterFeature.ConfigPath.enabled) ?: false
@@ -84,7 +84,9 @@ class JwtToStsConverterFeature(
             AuroraConfigFieldHandler(
                 ConfigPath.ivGroupsRequired,
                 defaultValue = false,
-                validator = { it.boolean() })
+                validator = { it.boolean() }),
+            AuroraConfigFieldHandler(AuroraAzureAppFeature.ConfigPath.azureAppFqdn),
+            AuroraConfigFieldHandler(AuroraAzureAppFeature.ConfigPath.groups)
         )
     }
 
