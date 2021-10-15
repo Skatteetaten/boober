@@ -24,7 +24,9 @@ val AuroraDeploymentSpec.azureAppGroups: List<String>?
     }
 
 @org.springframework.stereotype.Service
-class AuroraAzureAppFeature() : Feature {
+class AuroraAzureAppFeature(
+    val sidecar: JwtToStsConverterFeature
+) : Feature {
     object ConfigPath {
         private const val root = "azure"
         const val azureAppFqdn = "$root/azureAppFqdn"
@@ -44,12 +46,8 @@ class AuroraAzureAppFeature() : Feature {
             AuroraConfigFieldHandler(
                 ConfigPath.groups,
                 validator = { it.isListOrEmpty(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                JwtToStsConverterFeature.ConfigPath.enabled,
-                defaultValue = false
             )
-        )
+        ) + sidecar.handlers(header, cmd)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {

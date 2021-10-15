@@ -1,6 +1,8 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
+import io.mockk.mockk
+import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import org.junit.jupiter.api.Assertions
@@ -8,7 +10,9 @@ import org.junit.jupiter.api.Test
 
 class AuroraAzureAppFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = AuroraAzureAppFeature()
+        get() = AuroraAzureAppFeature(JwtToStsConverterFeature(cantusService, "0.3.1"))
+
+    private val cantusService: CantusService = mockk()
 
     @Test
     fun `if minimal AuroraAzureApp is configured nothing goes wrong`() {
@@ -37,6 +41,26 @@ class AuroraAzureAppFeatureTest : AbstractFeatureTest() {
                 }
               }
            }""", createEmptyDeploymentConfig(), createdResources = 1
+        )
+
+        assertThat(auroraAzureApp).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-azure-app-with-clinger.json")
+    }
+
+    @Test
+    fun `2 elements configured, azureapp and clinger sidecar`() {
+        val (_, auroraAzureApp) = generateResources(
+            """{
+              "azure": {
+                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "groups": [],
+                "jwtToStsConverter": {
+                  "discoveryUrl": "http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys",
+                  "enabled": true,
+                  "version": "0.3.1"
+                }
+              }
+        }""", createEmptyDeploymentConfig(), createdResources = 1
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByThisFeature()
