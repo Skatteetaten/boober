@@ -14,6 +14,11 @@ utv/about.json | cluster: "utv"
       fileName | name: "simple"
                | env:
        default |   autoDeploy: false
+               | azure:
+               |   jwtToStsConverter:
+       default |     enabled: false
+       default |     version: "0.3.1"
+       default |     ivGroupsRequired: false
        default | certificate: false
    simple.json | groupId: "org.test"
                | databaseDefaults:
@@ -44,11 +49,6 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
-               | azure:
-               |   jwtToStsConverter:
-       default |     enabled: false
-       default |     version: "0.3.1"
-       default |     ivGroupsRequired: false
    simple.json | route: true
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"

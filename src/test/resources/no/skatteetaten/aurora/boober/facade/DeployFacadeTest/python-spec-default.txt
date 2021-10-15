@@ -14,6 +14,11 @@ utv/python.json | applicationPlatform: "python"
        fileName | name: "python"
                 | env:
         default |   autoDeploy: false
+                | azure:
+                |   jwtToStsConverter:
+        default |     enabled: false
+        default |     version: "0.3.1"
+        default |     ivGroupsRequired: false
         default | certificate: false
 utv/python.json | groupId: "org.test"
                 | databaseDefaults:
@@ -36,11 +41,6 @@ utv/python.json | version: "1"
         default |     max: "512Mi"
                 | logging:
         default |   bufferSize: 20
-                | azure:
-                |   jwtToStsConverter:
-        default |     enabled: false
-        default |     version: "0.3.1"
-        default |     ivGroupsRequired: false
        fileName | artifactId: "python"
                 | deployStrategy:
         default |   type: "rolling"

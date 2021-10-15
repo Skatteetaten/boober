@@ -175,6 +175,40 @@
       }
     }
   },
+  "azure": {
+    "jwtToStsConverter": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "version": {
+        "source": "default",
+        "value": "0.3.1",
+        "sources": [
+          {
+            "name": "default",
+            "value": "0.3.1"
+          }
+        ]
+      },
+      "ivGroupsRequired": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      }
+    }
+  },
   "certificate": {
     "source": "default",
     "value": false,
@@ -500,40 +534,6 @@
         "value": false
       }
     ]
-  },
-  "azure": {
-    "jwtToStsConverter": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "version": {
-        "source": "default",
-        "value": "0.3.1",
-        "sources": [
-          {
-            "name": "default",
-            "value": "0.3.1"
-          }
-        ]
-      },
-      "ivGroupsRequired": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      }
-    }
   },
   "route": {
     "source": "default",
