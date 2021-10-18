@@ -169,6 +169,7 @@ class OpenShiftCommandService(
         "Service",
         "Route",
         "AuroraCname",
+        "AuroraAzureApp",
         "ImageStream",
         "BigIp",
         "CronJob",

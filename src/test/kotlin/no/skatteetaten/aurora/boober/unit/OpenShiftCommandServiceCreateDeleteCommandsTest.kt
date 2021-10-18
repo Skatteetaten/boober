@@ -74,6 +74,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
             .addIfNotNull("job" to jsonMapper().convertValue(jobList))
             .addIfNotNull("cronjob" to jsonMapper().convertValue(cronJobList))
             .addIfNotNull("auroracname" to mapper.valueToTree<JsonNode>(auroraCnameList))
+            .addIfNotNull("auroraazureapp" to mapper.valueToTree<JsonNode>(auroraCnameList))
 
         responses.forEach {
             val kind = it.key
