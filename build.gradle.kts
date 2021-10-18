@@ -1,7 +1,7 @@
 import com.adarshr.gradle.testlogger.theme.ThemeType
 
 plugins {
-    id("org.springframework.cloud.contract")
+    id("org.springframework.cloud.contract") version "2.1.5.RELEASE"
     id("org.jetbrains.kotlin.jvm") version "1.3.72"
     id("org.jetbrains.kotlin.plugin.spring") version "1.3.72"
     id("org.jlleitschuh.gradle.ktlint") version "9.2.1"
