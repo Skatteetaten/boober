@@ -7,7 +7,7 @@
   },
   "spec": {
     "azureAppFqdn": "saksmappa.amutv.skead.no",
-    "appName": "simple",
+    "azureAppName": "simple",
     "groups": [],
     "noProxy": false
   }

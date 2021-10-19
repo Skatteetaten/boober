@@ -68,7 +68,7 @@ class AuroraAzureAppFeature : Feature {
                             namespace = adc.namespace
                         },
                         spec = AzureAppSpec(
-                            appName = adc.name,
+                            azureAppName = adc.name,
                             azureAppFqdn = adc.azureAppFqdn!!,
                             groups = adc.azureAppGroups!!,
                             noProxy = !clinger
