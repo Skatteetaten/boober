@@ -44,7 +44,7 @@ data class AuroraAzureApp(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class AzureAppSpec(
     val azureAppFqdn: String,
-    val azureAppName: String,
+    val appName: String,
     val groups: List<String>,
     val noProxy: Boolean
 )
