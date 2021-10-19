@@ -10,12 +10,12 @@ import io.fabric8.kubernetes.api.model.ObjectMeta
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder(value = ["apiVersion", "kind", "metadata", "spec"])
-data class AuroreAzureApp(
+data class AuroraAzureApp(
     val spec: AzureAppSpec,
     @JsonIgnore
     var _metadata: ObjectMeta?,
     @JsonIgnore
-    val _kind: String = "AuroreAzureApp",
+    val _kind: String = "AuroraAzureApp",
     @JsonIgnore
     var _apiVersion: String = "skatteetaten.no/v1"
 ) : HasMetadata {

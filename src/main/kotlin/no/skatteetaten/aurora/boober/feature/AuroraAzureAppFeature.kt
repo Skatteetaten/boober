@@ -5,7 +5,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.openshift.AuroreAzureApp
+import no.skatteetaten.aurora.boober.model.openshift.AuroraAzureApp
 import no.skatteetaten.aurora.boober.model.openshift.AzureAppSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.boolean
@@ -62,7 +62,7 @@ class AuroraAzureAppFeature : Feature {
             val clinger: Boolean = adc[JwtToStsConverterFeature.ConfigPath.enabled]
             setOf(
                 generateResource(
-                    AuroreAzureApp(
+                    AuroraAzureApp(
                         _metadata = newObjectMeta {
                             name = adc.name
                             namespace = adc.namespace

@@ -1,6 +1,6 @@
 {
   "apiVersion": "skatteetaten.no/v1",
-  "kind": "AuroreAzureApp",
+  "kind": "AuroraAzureApp",
   "metadata": {
     "name": "simple",
     "namespace": "paas-utv"
