@@ -59,7 +59,7 @@ class AuroraAzureAppFeature : Feature {
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         return adc.azureAppFqdn?.let {
-            val clinger: Boolean = adc[JwtToStsConverterFeature.ConfigPath.enabled]
+            val clinger: Boolean = adc.isJwtToStsConverterEnabled
             setOf(
                 generateResource(
                     AuroraAzureApp(
