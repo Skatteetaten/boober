@@ -153,7 +153,7 @@ class AlertsFeature : Feature {
 
         val alerts = Alerts(
             _metadata = newObjectMeta {
-                name = alertName
+                name = "${adc.name}-$alertName"
                 namespace = adc.namespace
             },
             spec = AlertSpec(

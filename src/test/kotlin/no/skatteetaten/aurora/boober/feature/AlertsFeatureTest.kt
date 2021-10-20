@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
@@ -96,9 +97,12 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(generatedResources).hasSize(1)
-        val alertSpec = (generatedResources[0].resource as Alerts).spec
+        val resource = generatedResources[0].resource as Alerts
+        val alertSpec = resource.spec
+        val metadata = resource.metadata
         assertThat(alertSpec.prometheus.expr).isEqualTo("av")
         assertThat(alertSpec.alert.enabled).isTrue()
+        assertThat(metadata.name).contains("simple-")
     }
 
     @Test
