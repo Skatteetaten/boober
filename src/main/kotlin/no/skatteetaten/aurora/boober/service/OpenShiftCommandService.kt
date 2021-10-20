@@ -173,8 +173,7 @@ class OpenShiftCommandService(
         "BigIp",
         "CronJob",
         "Job",
-        "Deployment",
-        "Alert"
+        "Deployment"
     )
 
     fun createOpenShiftDeleteCommands(
