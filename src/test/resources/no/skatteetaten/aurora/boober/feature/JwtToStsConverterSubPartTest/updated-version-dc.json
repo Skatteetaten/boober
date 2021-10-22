@@ -45,6 +45,9 @@
                 "name": "CLINGER_PROXY_SERVER_PORT",
                 "value" : "8100"
               }, {
+                "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
+                "value" : "false"
+              }, {
                 "name": "CLINGER_DISCOVERY_URL",
                 "value" : "https://endpoint"
               }, {

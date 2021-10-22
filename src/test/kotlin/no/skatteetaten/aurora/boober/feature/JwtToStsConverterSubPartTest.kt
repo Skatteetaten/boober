@@ -65,6 +65,10 @@ class JwtToStsConverterSubPartTest : AbstractFeatureTest() {
            }""", createEmptyService(), createEmptyDeploymentConfig()
         )
 
+        /*
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
+            .auroraResourceHasEnvironment("CLINGER_WEBSEAL_TRAFFIC_ACCEPTED", "false")
+        */
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
             .auroraResourceMatchesFile("dc.json")
     }

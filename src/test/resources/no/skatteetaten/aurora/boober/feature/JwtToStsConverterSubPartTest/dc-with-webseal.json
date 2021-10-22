@@ -45,11 +45,11 @@
                 "name": "CLINGER_PROXY_SERVER_PORT",
                 "value" : "8100"
               }, {
-                "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
-                "value" : "false"
-              }, {
                 "name": "CLINGER_DISCOVERY_URL",
                 "value" : "https://endpoint"
+              }, {
+                "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
+                "value" : "false"
               }, {
                 "name": "CLINGER_IV_GROUPS_REQUIRED",
                 "value" : "false"

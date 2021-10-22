@@ -95,22 +95,7 @@ class JwtToStsConverterSubPart {
                 }
             }
 
-            env = (containerPorts.map {
-                val portName = if (it.key == "http") "CLINGER_PROXY_SERVER_PORT" else "CLINGER_MANAGEMENT_SERVER_PORT"
-                EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
-            }).addIfNotNull(
-                listOf(
-                    EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
-                    EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")
-                        .withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
-                        .build(),
-                    EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
-                        .withValue(ports.first().containerPort.toString())
-                        .build()
-                )
-            ).addIfNotNull(createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.discoveryUrl))
-            ).addIfNotNull(
-                createEnvOrNull("CLINGER_IV_GROUPS_REQUIRED", adc.getOrNull<String>(ConfigPath.ivGroupsRequired)))
+            createEnvForContainer(containerPorts, adc)
 
             resources {
                 limits = mapOf(
@@ -140,6 +125,37 @@ class JwtToStsConverterSubPart {
                 timeoutSeconds = 2
             }
         }
+    }
+
+    private fun Container.createEnvForContainer(
+        containerPorts: Map<String, Int>,
+        adc: AuroraDeploymentSpec
+    ) {
+        val websealEnabled = adc.getOrNull<String>("webseal")?.let {
+            adc.featureEnabled("webseal") { "true" } ?: "false"
+        }
+
+        env = (containerPorts.map {
+            val portName = if (it.key == "http") "CLINGER_PROXY_SERVER_PORT" else "CLINGER_MANAGEMENT_SERVER_PORT"
+            EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
+        }).addIfNotNull(
+            listOf(
+                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
+                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")
+                    .withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
+                    .withValue(ports.first().containerPort.toString())
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_WEBSEAL_TRAFFIC_ACCEPTED")
+                    .withValue(websealEnabled ?: "false")
+                    .build()
+            )
+        ).addIfNotNull(
+            createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.discoveryUrl))
+        ).addIfNotNull(
+            createEnvOrNull("CLINGER_IV_GROUPS_REQUIRED", adc.getOrNull<String>(ConfigPath.ivGroupsRequired))
+        )
     }
 
     private fun createEnvOrNull(key: String, value: String?): EnvVar? {
