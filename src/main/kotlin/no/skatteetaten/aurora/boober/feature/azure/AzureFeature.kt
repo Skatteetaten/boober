@@ -13,7 +13,9 @@ import no.skatteetaten.aurora.boober.utils.isListOrEmpty
 import no.skatteetaten.aurora.boober.utils.isValidDns
 import no.skatteetaten.aurora.boober.utils.validUrl
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
+@Service
 class AzureFeature(
     cantusService: CantusService,
     @Value("\${clinger.sidecar.default.version:0.4.0}") val sidecarVersion: String

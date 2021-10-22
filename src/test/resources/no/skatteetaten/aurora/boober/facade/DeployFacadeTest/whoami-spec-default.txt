@@ -69,3 +69,8 @@ utv/about.json | cluster: "utv"
        default | sts: false
    whoami.json | toxiproxy: true
        default | webseal: false
+               | azure:
+               |   jwtToStsConverter:
+       default |     enabled: false
+       default |     version: "0.4.0"
+       default |     ivGroupsRequired: false
