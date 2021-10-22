@@ -1,9 +1,5 @@
 package no.skatteetaten.aurora.boober.feature.azure
 
-import io.fabric8.kubernetes.api.model.IntOrString
-import io.fabric8.kubernetes.api.model.Service
-import io.fabric8.kubernetes.api.model.apps.Deployment
-import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
 import no.skatteetaten.aurora.boober.feature.isJob
@@ -11,9 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.isListOrEmpty
 import no.skatteetaten.aurora.boober.utils.isValidDns
@@ -89,31 +83,7 @@ class AzureFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        if (!adc.isJwtToStsConverterEnabled) {
-            return
-        }
-
-        val container = jwtToStsConverter.createClingerProxyContainer(adc, context)
-        resources.forEach {
-            if (it.resource.kind == "DeploymentConfig") {
-                modifyResource(it, "Added clinger sidecar container")
-                val dc: DeploymentConfig = it.resource as DeploymentConfig
-                val podSpec = dc.spec.template.spec
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Deployment") {
-                modifyResource(it, "Added clinger sidecar container")
-                val dc: Deployment = it.resource as Deployment
-                val podSpec = dc.spec.template.spec
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Service") {
-                val service: Service = it.resource as Service
-                service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
-                    port.targetPort = IntOrString(PortNumbers.CLINGER_PROXY_SERVER_PORT)
-                }
-
-                modifyResource(it, "Changed targetPort to point to clinger")
-            }
-        }
+        jwtToStsConverter.modify(adc, resources, context, this)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
