@@ -5,6 +5,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import com.fkorotkov.kubernetes.newContainer
+import io.fabric8.kubernetes.api.model.EnvVar
+import io.fabric8.kubernetes.api.model.EnvVarSource
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Service
 import io.mockk.every
@@ -57,5 +60,36 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("dc.json")
 
         assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
+    }
+
+    @Test
+    fun `Should add toxiproxy to dc and map endpoints from container`() {
+
+        val (serviceResource, dcResource, configResource) = generateResources(
+            """{
+                "toxiproxy": {
+                    "endpoints": [{"varName": "TEST", "port": 123}]
+                }
+            }""",
+            createEmptyService(),
+            createDeploymentConfigWithContainer(newContainer {
+                name = "simple"
+                env = listOf(EnvVar("TEST", "http://test.test", EnvVarSource()))
+            })
+        )
+
+        assertThat(serviceResource)
+            .auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to toxiproxy")
+
+        val service = serviceResource.resource as Service
+        assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
+
+        assertThat(dcResource)
+            .auroraResourceModifiedByThisFeatureWithComment("Added toxiproxy volume and sidecar container")
+            .auroraResourceMatchesFile("dcWithEndpointMapping.json")
+
+        assertThat(configResource)
+            .auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("configWithEndpointMapping.json")
     }
 }

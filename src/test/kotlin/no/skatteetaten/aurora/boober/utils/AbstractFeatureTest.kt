@@ -30,6 +30,7 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
+import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.VolumeProjection
@@ -181,6 +182,9 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
     // TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
     fun createEmptyDeploymentConfig() =
+        createDeploymentConfigWithContainer(newContainer { name = "simple" })
+
+    fun createDeploymentConfigWithContainer(container: Container) =
         AuroraResource(newDeploymentConfig {
 
             metadata {
@@ -216,11 +220,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
                 selector = mapOf("name" to "simple")
                 template {
                     spec {
-                        containers = listOf(
-                            newContainer {
-                                name = "simple"
-                            }
-                        )
+                        containers = listOf(container)
                         restartPolicy = "Always"
                         dnsPolicy = "ClusterFirst"
                     }
