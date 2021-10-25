@@ -36,11 +36,6 @@ utv/python.json | version: "1"
         default |     max: "512Mi"
                 | logging:
         default |   bufferSize: 20
-                | azure:
-                |   jwtToStsConverter:
-        default |     enabled: false
-        default |     version: "0.3.1"
-        default |     ivGroupsRequired: false
        fileName | artifactId: "python"
                 | deployStrategy:
         default |   type: "rolling"
@@ -70,3 +65,8 @@ utv/python.json |   tenant: "paas-utv"
 utv/python.json | sts: true
         default | toxiproxy: false
         default | webseal: false
+                | azure:
+                |   jwtToStsConverter:
+        default |     enabled: false
+        default |     version: "0.4.0"
+        default |     ivGroupsRequired: false

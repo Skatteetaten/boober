@@ -44,11 +44,6 @@ utv/about.json | cluster: "utv"
        default | prometheus: true
        default | readiness: true
        default | liveness: false
-               | azure:
-               |   jwtToStsConverter:
-       default |     enabled: false
-       default |     version: "0.3.1"
-       default |     ivGroupsRequired: false
    simple.json | route: true
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"
@@ -70,3 +65,8 @@ utv/about.json | cluster: "utv"
    simple.json | sts: true
        default | toxiproxy: false
        default | webseal: false
+               | azure:
+               |   jwtToStsConverter:
+       default |     enabled: false
+       default |     version: "0.4.0"
+       default |     ivGroupsRequired: false

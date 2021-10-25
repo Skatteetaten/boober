@@ -1,8 +1,11 @@
 package no.skatteetaten.aurora.boober.utils
 
-import java.time.Instant
-import kotlin.reflect.KClass
-import org.junit.jupiter.api.BeforeEach
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newEnvVar
@@ -24,12 +27,6 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
 import com.fkorotkov.openshift.to
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isInstanceOf
-import assertk.assertions.support.expected
-import assertk.assertions.support.show
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.VolumeProjection
@@ -37,7 +34,6 @@ import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.HeaderHandlers
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
@@ -60,6 +56,9 @@ import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import org.junit.jupiter.api.BeforeEach
+import java.time.Instant
+import kotlin.reflect.KClass
 
 /*
   Abstract class to test a single feature
@@ -68,8 +67,6 @@ import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuro
   Look at the helper methods in this class to create handlers/resources for this feature
 
  */
-
-private val logger = KotlinLogging.logger {}
 
 class TestDefaultFeature : Feature {
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {

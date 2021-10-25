@@ -83,11 +83,6 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   port: "8082"
                  default | readiness: true
             complex.json | liveness: true
-                         | azure:
-                         |   jwtToStsConverter:
-                 default |     enabled: false
-                 default |     version: "0.3.1"
-                 default |     ivGroupsRequired: false
                          | mounts:
                          |   aurora-token:
                  default |     enabled: true
@@ -164,3 +159,8 @@ utv/about-alternate.json |   ttl: "1d"
                          | webseal:
             complex.json |   host: "test"
             complex.json |   roles: "admin,dev,@name@"
+                         | azure:
+                         |   jwtToStsConverter:
+                 default |     enabled: false
+                 default |     version: "0.4.0"
+                 default |     ivGroupsRequired: false

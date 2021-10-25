@@ -30,11 +30,6 @@ utv/about.json | cluster: "utv"
        default | management: false
                | logging:
        default |   bufferSize: 20
-               | azure:
-               |   jwtToStsConverter:
-       default |     enabled: false
-       default |     version: "0.3.1"
-       default |     ivGroupsRequired: false
                | parameters:
        ah.json |   FEED_NAME: "feed"
        ah.json |   DOMAIN_NAME: "localhost"
@@ -61,3 +56,8 @@ utv/about.json | cluster: "utv"
        default | sts: false
        default | toxiproxy: false
        default | webseal: false
+               | azure:
+               |   jwtToStsConverter:
+       default |     enabled: false
+       default |     version: "0.4.0"
+       default |     ivGroupsRequired: false
