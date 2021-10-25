@@ -68,6 +68,11 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
             "kind" to "AuroraCnameList",
             "items" to ArrayList<String>()
         )
+        val alertList = mapOf(
+            "apiVersion" to "v1",
+            "kind" to "Alert",
+            "items" to ArrayList<String>()
+        )
         val responses = createResponsesFromResultFiles(adr)
             .addIfNotNull("configmap" to jsonMapper().convertValue(configMapList))
             .addIfNotNull("deployment" to jsonMapper().convertValue(deploymentList))
@@ -75,6 +80,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
             .addIfNotNull("cronjob" to jsonMapper().convertValue(cronJobList))
             .addIfNotNull("auroracname" to mapper.valueToTree<JsonNode>(auroraCnameList))
             .addIfNotNull("auroraazureapp" to mapper.valueToTree<JsonNode>(auroraCnameList))
+            .addIfNotNull("alert" to mapper.valueToTree<JsonNode>(alertList))
 
         responses.forEach {
             val kind = it.key
