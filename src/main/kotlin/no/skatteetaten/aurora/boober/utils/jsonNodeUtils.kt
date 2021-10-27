@@ -274,6 +274,38 @@ fun JsonNode?.notBlank(message: String): Exception? {
     return null
 }
 
+fun JsonNode?.isValidDns(required: Boolean = false): Exception? {
+    if (this == null || !this.isTextual || this.textValue().isBlank()) {
+        return if (required) {
+            IllegalArgumentException("Need to set a valid host dns name")
+        } else {
+            null
+        }
+    }
+    return if (this.textValue().isValidDns()) {
+        null
+    } else {
+        IllegalArgumentException("${this.textValue()} is not a valid dns name.")
+    }
+}
+
+/**
+ * Will give error if supplied entry is not a list, does not care about contents.
+ */
+fun JsonNode?.isListOrEmpty(required: Boolean = false): Exception? {
+    if (this == null) {
+        return if (required) {
+            IllegalArgumentException("Need to give list entries")
+        } else {
+            null
+        }
+    }
+    if (!this.isContainerNode) {
+        return IllegalArgumentException("Parameter not a list. TextValue: ${this.textValue()}")
+    }
+    return null
+}
+
 fun JsonNode?.validUrl(required: Boolean = true): Exception? {
     if (this == null || !this.isTextual || this.textValue().isBlank()) {
         return if (required) {

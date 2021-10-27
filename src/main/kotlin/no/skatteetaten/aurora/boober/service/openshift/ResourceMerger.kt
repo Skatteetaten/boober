@@ -28,6 +28,7 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
         "namespace" -> updateNamespace(mergedResource, existingResource)
         "auroracname" -> updateAuroraCname(mergedResource, existingResource)
+        "auroraazureapp" -> updateAuroraAzureApp(mergedResource, existingResource)
     }
     return mergedResource
 }
@@ -59,4 +60,7 @@ private fun updateNamespace(mergedResource: ObjectNode, existingResource: Object
     mergedResource.mergeField(existingResource, "/metadata", "annotations")
 
 private fun updateAuroraCname(mergedResource: ObjectNode, existingResource: ObjectNode) =
+    mergedResource.mergeField(existingResource, "/metadata", "annotations")
+
+private fun updateAuroraAzureApp(mergedResource: ObjectNode, existingResource: ObjectNode) =
     mergedResource.mergeField(existingResource, "/metadata", "annotations")
