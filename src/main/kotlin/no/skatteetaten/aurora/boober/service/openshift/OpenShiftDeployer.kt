@@ -10,13 +10,13 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
 import com.fkorotkov.kubernetes.newObjectReference
 import com.fkorotkov.openshift.metadata
-import com.fkorotkov.openshift.newOpenshiftRoleBinding
+import com.fkorotkov.openshift.newRoleBinding
 import com.fkorotkov.openshift.newProjectRequest
 import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.ObjectReference
-import io.fabric8.openshift.api.model.OpenshiftRoleBinding
+import io.fabric8.openshift.api.model.RoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
@@ -331,7 +331,7 @@ fun generateProjectRequest(adc: EnvironmentSpec): ProjectRequest {
     }
 }
 
-fun generateRolebindings(adc: EnvironmentSpec): Set<OpenshiftRoleBinding> {
+fun generateRolebindings(adc: EnvironmentSpec): Set<RoleBinding> {
 
     val permissions = adc.permissions
 
@@ -348,9 +348,9 @@ fun createRoleBinding(
     rolebindingName: String,
     permission: Permission,
     rolebindingNamespace: String
-): OpenshiftRoleBinding {
+): RoleBinding {
 
-    return newOpenshiftRoleBinding {
+    return newRoleBinding {
         metadata {
             name = rolebindingName
             namespace = rolebindingNamespace
