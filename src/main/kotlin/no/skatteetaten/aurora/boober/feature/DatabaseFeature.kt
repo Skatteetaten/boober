@@ -185,13 +185,13 @@ class DatabaseFeature(
         }
 
     fun SchemaProvisionRequest.getSecretName(prefix: String): String {
-        val secretName = this.details.schemaName.replace("_", "-").toLowerCase().ensureStartWith(prefix, "-")
+        val secretName = this.details.schemaName.replace("_", "-").lowercase().ensureStartWith(prefix, "-")
         return "$secretName-db"
     }
 
     fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
-        val mountName = "${this.name}-db".toLowerCase()
-        val volumeName = mountName.replace("_", "-").toLowerCase().ensureStartWith(appName, "-")
+        val mountName = "${this.name}-db".lowercase()
+        val volumeName = mountName.replace("_", "-").lowercase().ensureStartWith(appName, "-")
 
         val mount = newVolumeMount {
             name = volumeName
@@ -453,15 +453,15 @@ data class DatabaseInstance(
 
 fun Database.createSchemaDetails(affiliation: String) =
     SchemaRequestDetails(
-        schemaName = this.name.toLowerCase(),
+        schemaName = this.name.lowercase(),
         databaseInstance = this.instance,
         affiliation = affiliation,
         engine = this.flavor.engine
     )
 
 fun createDbEnv(name: String, envName: String = name): List<Pair<String, String>> {
-    val path = "$secretsPath/${name.toLowerCase()}"
-    val envName = envName.replace("-", "_").toUpperCase()
+    val path = "$secretsPath/${name.lowercase()}"
+    val envName = envName.replace("-", "_").uppercase()
 
     return listOf(
         envName to "$path/info",

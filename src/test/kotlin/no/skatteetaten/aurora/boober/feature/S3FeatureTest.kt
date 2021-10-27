@@ -425,7 +425,7 @@ class S3FeatureTest : AbstractFeatureTest() {
 
             val container = dc.spec.template.spec.containers.first()
             val secretName = "$appName-$bucketObjectArea-s3"
-            val bucketObjectAreaUpper = bucketObjectArea.toUpperCase()
+            val bucketObjectAreaUpper = bucketObjectArea.uppercase()
             val actualEnvs = container.env
                 .map { envVar -> envVar.name to envVar.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
                 .filter { (name, _) ->

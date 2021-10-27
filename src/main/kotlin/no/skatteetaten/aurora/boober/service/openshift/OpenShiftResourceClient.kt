@@ -100,7 +100,7 @@ open class OpenShiftResourceClient(
     companion object {
         fun generateUrl(kind: String, namespace: String? = null, name: String? = null): String {
 
-            val kinds = kind.toLowerCase() + "s"
+            val kinds = kind.lowercase() + "s"
 
             if (kinds !in kindsWithoutNamespace && namespace == null) {
                 throw IllegalArgumentException("namespace required for resource kind $kind")

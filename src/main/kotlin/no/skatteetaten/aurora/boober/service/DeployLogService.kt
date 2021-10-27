@@ -76,7 +76,7 @@ class DeployLogService(
     private fun filterOpenshiftResponses(responses: List<OpenShiftResponse>): List<OpenShiftResponse> {
         return responses.filter { it.responseBody?.openshiftKind != "secret" }
             .filter { it.command.payload.openshiftKind != "secret" }
-            .filter { it.command.previous?.get("kind")?.asText()?.toLowerCase() != "secret" }
+            .filter { it.command.previous?.get("kind")?.asText()?.lowercase() != "secret" }
     }
 
     fun deployHistory(ref: AuroraConfigRef): List<DeployHistoryEntry> {

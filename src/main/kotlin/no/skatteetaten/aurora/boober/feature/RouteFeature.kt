@@ -577,7 +577,7 @@ data class ConfiguredRoute(
                 route.tls?.let {
                     tls {
                         insecureEdgeTerminationPolicy = it.insecurePolicy.name
-                        termination = it.termination.name.toLowerCase()
+                        termination = it.termination.name.lowercase()
                     }
                 }
                 port {

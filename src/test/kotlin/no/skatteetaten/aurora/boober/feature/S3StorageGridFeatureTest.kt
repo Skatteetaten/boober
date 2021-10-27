@@ -281,7 +281,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
 
             val container = dc.spec.template.spec.containers.first()
             val secretName = "$appName-$objectAreaName-s3"
-            val objectAreaNameUpper = objectAreaName.toUpperCase()
+            val objectAreaNameUpper = objectAreaName.uppercase()
             val actualS3Envs = container.env
                 .map { envVar -> envVar.name to envVar.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
                 .filter { (name, _) -> name.startsWith("S3") }

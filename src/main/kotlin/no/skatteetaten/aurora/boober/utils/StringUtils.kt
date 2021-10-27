@@ -37,7 +37,7 @@ fun String.truncateStringAndHashTrailingCharacters(maxLength: Int, delimiter: Ch
 }
 
 // A kubernetes name must lowercase and cannot contain _.
-fun String.normalizeKubernetesName() = this.toLowerCase().replace("_", "-")
+fun String.normalizeKubernetesName() = this.lowercase().replace("_", "-")
 
 fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
     if (this.startsWith(startWith)) {

@@ -97,7 +97,7 @@ class HerkimerVaultFeature(
                     vaultCredential.resourceKind
                 )
                     .map { generateKubernetesSecret(it, spec) }
-            }.groupBy { (vaultCredential, secrets) -> vaultCredential.prefix }
+            }.groupBy { (vaultCredential, _) -> vaultCredential.prefix }
 
         return featureContext + mapOf(CONTEXT_SECRETS_KEY to secrets)
     }
@@ -128,7 +128,7 @@ class HerkimerVaultFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        return context.herkimerVaultCredentials.values.flatten().flatMap { (vaultCredential, secrets) ->
+        return context.herkimerVaultCredentials.values.flatten().flatMap { (_, secrets) ->
             secrets.map { it.generateAuroraResource() }
         }.toSet()
     }
@@ -139,7 +139,7 @@ class HerkimerVaultFeature(
             metadata {
                 name = response.name.ensureStartWith(adc.name, "-")
                     .ensureEndsWith(FEATURE_FIELD, "-")
-                    .toLowerCase().replace("_", "-")
+                    .lowercase().replace("_", "-")
                 namespace = adc.namespace
             }
             data = values.mapValues { content -> Base64.encodeBase64String(content.value.toByteArray()) }

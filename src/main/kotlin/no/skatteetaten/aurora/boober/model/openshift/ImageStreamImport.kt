@@ -7,7 +7,7 @@ fun ImageStreamImport.findErrorMessage(): String? {
     val errorStatuses = listOf("false", "failure")
     val tag = this.findImportStatusTag()
     return tag?.conditions
-        ?.firstOrNull { errorStatuses.contains(it.status.toLowerCase()) }
+        ?.firstOrNull { errorStatuses.contains(it.status.lowercase()) }
         ?.message
 }
 

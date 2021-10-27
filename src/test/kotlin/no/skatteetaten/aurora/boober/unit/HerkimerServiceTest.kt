@@ -127,7 +127,7 @@ class HerkimerServiceTest {
 
                         assertThat(resource.ownerId).isEqualTo(adId)
 
-                        assertThat(resource.claims?.singleOrNull()?.credentials)
+                        assertThat(resource.claims.singleOrNull()?.credentials)
                             .isNotNull()
                             .isEqualTo(credentials)
                     }

@@ -247,7 +247,7 @@ class SecretVaultFeature(
                     secret.secretVaultName
                         .ensureStartWith(adc.name, "-")
                         .ensureEndsWith("vault", "-")
-                        .toLowerCase().replace("_", "-"),
+                        .lowercase().replace("_", "-"),
                     it.toMap()
                 )
             }

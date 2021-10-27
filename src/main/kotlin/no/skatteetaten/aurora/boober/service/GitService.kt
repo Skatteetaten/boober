@@ -60,7 +60,7 @@ open class GitService(
             .setCredentialsProvider(cp)
             .call()
 
-        if (git.repository.allRefs.isEmpty()) return git
+        if (git.repository.refDatabase.refs.isEmpty()) return git
 
         val ref = findRef(git, refName)
         val branchList = git.branchList().call()

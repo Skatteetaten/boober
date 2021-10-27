@@ -133,7 +133,7 @@ class MountFeature(
             val volumeMounts = mounts.volumeMount()
 
             val envVars = mounts.map {
-                "VOLUME_${it.volumeName}".toUpperCase() to it.path
+                "VOLUME_${it.volumeName}".uppercase() to it.path
             }.toMap().toEnvVars()
 
             resources.addVolumesAndMounts(envVars, volumes, volumeMounts, this::class.java)
@@ -319,8 +319,8 @@ data class Mount(
         } else {
             this.volumeName.ensureStartWith(appName, "-")
         }
-        return name.replace("_", "-").toLowerCase()
+        return name.replace("_", "-").lowercase()
     }
 
-    fun normalizeMountName() = mountName.replace("_", "-").toLowerCase()
+    fun normalizeMountName() = mountName.replace("_", "-").lowercase()
 }

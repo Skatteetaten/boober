@@ -421,7 +421,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val podSpec = dc.spec.template.spec
 
         val volumeName = podSpec.volumes[0].name
-        val volumeEnvName = "VOLUME_$volumeName".replace("-", "_").toUpperCase()
+        val volumeEnvName = "VOLUME_$volumeName".replace("-", "_").uppercase()
         val volumeEnvValue = podSpec.containers[0].volumeMounts[0].mountPath
 
         val expectedEnv = additionalEnv.addIfNotNull(volumeEnvName to volumeEnvValue)
@@ -493,4 +493,7 @@ inline fun <reified T : HasMetadata> List<AuroraResource>.findResourcesByType():
 
 fun <T : Any> List<AuroraResource>.findResourceByType(kclass: KClass<T>): List<T> =
     filter { it.resource::class == kclass }
-        .map { @Suppress("UNCHECKED_CAST") it.resource as T }
+        .map {
+            @Suppress("UNCHECKED_CAST")
+            it.resource as T
+        }

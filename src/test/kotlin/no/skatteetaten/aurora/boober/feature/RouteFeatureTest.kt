@@ -733,7 +733,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             createEmptyDeploymentConfig(),
             createdResources = 1
         )
-        assertThat(dcResource).auroraRouteEnvAdded("$twoHundred53")
+        assertThat(dcResource).auroraRouteEnvAdded(twoHundred53)
     }
 
     @Test

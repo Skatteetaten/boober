@@ -354,7 +354,7 @@ fun ApplicationDeploymentRef.getResultFiles(): Map<String, TestFile?> {
             content = json
         )
 
-        file.toLowerCase() to testFile
+        file.lowercase() to testFile
     }
 }
 

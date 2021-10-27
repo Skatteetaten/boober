@@ -32,7 +32,7 @@ class ResourceMergerTest : ResourceLoader() {
     @EnumSource(OpenShiftResourceTypeTestData::class)
     fun `Should update`(test: OpenShiftResourceTypeTestData) {
 
-        val type = test.name.toLowerCase()
+        val type = test.name.lowercase()
         val oldResource = loadJsonResource("$type.json")
         val newResource = loadJsonResource("$type-new.json")
         val merged = mergeWithExistingResource(newResource, oldResource)
@@ -44,7 +44,7 @@ class ResourceMergerTest : ResourceLoader() {
     @ParameterizedTest
     @EnumSource(OpenShiftResourceTypeTestData::class)
     fun `Should accept that element to retain might be missing for `(test: OpenShiftResourceTypeTestData) {
-        val type = test.name.toLowerCase()
+        val type = test.name.lowercase()
         val oldResource = loadJsonResource("$type-new.json")
         val newResource = loadJsonResource("$type-new.json")
         val merged = mergeWithExistingResource(newResource, oldResource)
