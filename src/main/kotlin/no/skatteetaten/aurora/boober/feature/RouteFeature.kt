@@ -285,11 +285,13 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             AuroraConfigFieldHandler(
                 "$ROUTE_DEFAULTS_FEATURE_FIELD/tls/insecurePolicy",
                 defaultValue = InsecurePolicy.valueOf(applicationPlatform.insecurePolicy),
-                validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) }),
+                validator = { it.oneOf(InsecurePolicy.values().map { v -> v.name }) }
+            ),
             AuroraConfigFieldHandler(
                 "$ROUTE_DEFAULTS_FEATURE_FIELD/tls/termination",
                 defaultValue = TlsTermination.edge,
-                validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) })
+                validator = { it.oneOf(TlsTermination.values().map { v -> v.name }) }
+            )
         )
     }
 

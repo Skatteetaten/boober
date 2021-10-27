@@ -28,11 +28,11 @@ class JwtToStsConverterFeatureTest : AbstractFeatureTest() {
                 "no_skatteetaten_aurora", "clinger", "0.3.1"
             )
         } returns
-                ImageMetadata(
-                    "docker.registry/no_skatteetaten_aurora/clinger",
-                    "0.3.1",
-                    "sha:1234567"
-                )
+            ImageMetadata(
+                "docker.registry/no_skatteetaten_aurora/clinger",
+                "0.3.1",
+                "sha:1234567"
+            )
     }
 
     @AfterEach
@@ -52,7 +52,8 @@ class JwtToStsConverterFeatureTest : AbstractFeatureTest() {
                     "ivGroupsRequired": "false"
                 }
               }
-           }""", createEmptyService(), createEmptyDeploymentConfig()
+           }""",
+            createEmptyService(), createEmptyDeploymentConfig()
         )
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to clinger")
@@ -77,7 +78,8 @@ class JwtToStsConverterFeatureTest : AbstractFeatureTest() {
                     "discoveryUrl": "https://endpoint"
                 }
               }
-           }""", createEmptyService(), createEmptyDeploymentConfig()
+           }""",
+            createEmptyService(), createEmptyDeploymentConfig()
         )
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to clinger")

@@ -37,7 +37,8 @@ class AuroraConfigFieldTypeTest {
                     value,
                     false
                 )
-            ), substitutor
+            ),
+            substitutor
         )
 
         assertThat(acf.fileType).isEqualTo(it.field.type)

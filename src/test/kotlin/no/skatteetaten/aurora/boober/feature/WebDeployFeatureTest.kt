@@ -20,16 +20,19 @@ class WebDeployFeatureTest : AbstractFeatureTest() {
           "version" : "1",
           "groupId" : "org.test",
           "applicationPlatform" : "web"
-      }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyBuildConfig()),
+      }""",
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyBuildConfig()),
             createdResources = 3
         )
 
         assertThat(bcResource).auroraResourceModifiedByThisFeatureWithComment("Set applicationType in build")
         val bc = bcResource.resource as BuildConfig
-        assertThat(bc.spec.strategy.customStrategy.env.last()).isEqualTo(newEnvVar {
-            name = "APPLICATION_TYPE"
-            value = "nodejs"
-        })
+        assertThat(bc.spec.strategy.customStrategy.env.last()).isEqualTo(
+            newEnvVar {
+                name = "APPLICATION_TYPE"
+                value = "nodejs"
+            }
+        )
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added application name and id")
         val ad = adResource.resource as ApplicationDeployment

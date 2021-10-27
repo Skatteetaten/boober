@@ -51,13 +51,16 @@ class MountFeature(
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/enabled",
                     defaultValue = true,
-                    validator = { it.boolean() }),
+                    validator = { it.boolean() }
+                ),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/path",
-                    validator = { it.required("Path is required for mount") }),
+                    validator = { it.required("Path is required for mount") }
+                ),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/type",
-                    validator = { json -> json.oneOf(MountType.values().map { it.name }) }),
+                    validator = { json -> json.oneOf(MountType.values().map { it.name }) }
+                ),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/mountName",
                     defaultValue = mountName

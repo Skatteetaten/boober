@@ -61,7 +61,8 @@ class DeployLogServiceTest : ResourceLoader() {
     @BeforeEach
     fun setup() {
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
-            "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
+            "hero", "token", "Jayne Cobb",
+            grantedAuthorities = listOf(
                 SimpleGrantedAuthority("APP_PaaS_utv"), SimpleGrantedAuthority("APP_PaaS_drift")
             )
         )

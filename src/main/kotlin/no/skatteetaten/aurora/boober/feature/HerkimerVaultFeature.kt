@@ -57,19 +57,23 @@ class HerkimerVaultFeature(
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/enabled",
                     defaultValue = true,
-                    validator = { it.boolean() }),
+                    validator = { it.boolean() }
+                ),
                 AuroraConfigFieldHandler("$FEATURE_FIELD/$key/prefix"),
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/resourceKind",
-                    validator = { node -> node.oneOf(ResourceKind.values().map { it.toString() }) }),
+                    validator = { node -> node.oneOf(ResourceKind.values().map { it.toString() }) }
+                ),
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/multiple",
                     defaultValue = false,
-                    validator = { it.boolean() }),
+                    validator = { it.boolean() }
+                ),
                 AuroraConfigFieldHandler(
                     "$FEATURE_FIELD/$key/uppercaseEnvVarsSuffix",
                     defaultValue = true,
-                    validator = { it.boolean() })
+                    validator = { it.boolean() }
+                )
             )
         }.toSet()
     }

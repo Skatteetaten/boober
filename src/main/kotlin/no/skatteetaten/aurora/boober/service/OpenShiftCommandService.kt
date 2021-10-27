@@ -275,20 +275,22 @@ object ImageStreamImportGenerator {
             }
             spec {
                 import = true
-                images = listOf(newImageImportSpec {
-                    from {
-                        kind = "DockerImage"
-                        name = dockerImageUrl
-                    }
+                images = listOf(
+                    newImageImportSpec {
+                        from {
+                            kind = "DockerImage"
+                            name = dockerImageUrl
+                        }
 
-                    to {
-                        name = "default"
-                    }
+                        to {
+                            name = "default"
+                        }
 
-                    importPolicy {
-                        scheduled = true
+                        importPolicy {
+                            scheduled = true
+                        }
                     }
-                })
+                )
             }
         }
     }

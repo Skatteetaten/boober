@@ -33,7 +33,8 @@ val AuroraDeploymentSpec.ttl: Duration? get() = this.getOrNull<String>("ttl")?.l
 private const val APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY = "applicationDeploymentCommand"
 
 private val FeatureContext.applicationDeploymentCommand: ApplicationDeploymentCommand get() = this.getContextKey(
-    APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY)
+    APPLICATION_DEPLOYMENT_COMMAND_CONTEXT_KEY
+)
 
 val emailRegex: Pattern = compile(
     "[a-zA-Z0-9\\+\\.\\_\\%\\-\\+]{1,256}" +
@@ -169,7 +170,8 @@ class ApplicationDeploymentFeature : Feature {
         resources.addEnvVarsToMainContainers(
             listOf(
                 EnvVar("APPLICATION_DEPLOYMENT_ID", adc.applicationDeploymentId, null)
-            ), this::class.java
+            ),
+            this::class.java
         )
         resources.forEach {
             if (it.resource.metadata.namespace != null && it.resource.kind !in listOf(

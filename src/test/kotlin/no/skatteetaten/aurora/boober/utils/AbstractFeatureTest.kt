@@ -95,38 +95,44 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         ?: throw RuntimeException("Could not find about.json")
 
     fun createEmptyImageStream() =
-        AuroraResource(newImageStream {
+        AuroraResource(
+            newImageStream {
+                metadata {
+                    name = appName
+                    namespace = kubeNs
+                }
+                spec {
+                    dockerImageRepository = "docker.registry/org_test/simple"
+                }
+            },
+            createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
+        )
+
+    fun createEmptyService() = AuroraResource(
+        newService {
             metadata {
-                name = appName
+                name = "simple"
                 namespace = kubeNs
             }
+
             spec {
-                dockerImageRepository = "docker.registry/org_test/simple"
+                ports = listOf(
+                    newServicePort {
+                        name = "http"
+                        protocol = "TCP"
+                        port = PortNumbers.HTTP_PORT
+                        targetPort = IntOrString(PortNumbers.INTERNAL_HTTP_PORT)
+                        nodePort = 0
+                    }
+                )
+
+                selector = mapOf("name" to "simple")
+                type = "ClusterIP"
+                sessionAffinity = "None"
             }
-        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
-
-    fun createEmptyService() = AuroraResource(newService {
-        metadata {
-            name = "simple"
-            namespace = kubeNs
-        }
-
-        spec {
-            ports = listOf(
-                newServicePort {
-                    name = "http"
-                    protocol = "TCP"
-                    port = PortNumbers.HTTP_PORT
-                    targetPort = IntOrString(PortNumbers.INTERNAL_HTTP_PORT)
-                    nodePort = 0
-                }
-            )
-
-            selector = mapOf("name" to "simple")
-            type = "ClusterIP"
-            sessionAffinity = "None"
-        }
-    }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
+        },
+        createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
+    )
 
     fun createEmptyBuildConfig() = AuroraResource(
         newBuildConfig {
@@ -167,7 +173,8 @@ abstract class AbstractFeatureTest : ResourceLoader() {
                     }
                 }
             }
-        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
+        },
+        createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
     )
 
     fun createEmptyApplicationDeployment() = AuroraResource(
@@ -177,56 +184,61 @@ abstract class AbstractFeatureTest : ResourceLoader() {
                 name = "simple"
                 namespace = kubeNs
             }
-        ), createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
+        ),
+        createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
+    )
 
     // TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
     fun createEmptyDeploymentConfig() =
-        AuroraResource(newDeploymentConfig {
+        AuroraResource(
+            newDeploymentConfig {
 
-            metadata {
-                name = "simple"
-                namespace = kubeNs
-            }
-            spec {
-                strategy {
-                    type = "Rolling"
-                    rollingParams {
-                        intervalSeconds = 1
-                        maxSurge = IntOrString("25%")
-                        maxUnavailable = IntOrString(0)
-                        timeoutSeconds = 180
-                        updatePeriodSeconds = 1L
-                    }
+                metadata {
+                    name = "simple"
+                    namespace = kubeNs
                 }
-                triggers = listOf(
-                    newDeploymentTriggerPolicy {
-                        type = "ImageChange"
-                        imageChangeParams {
-                            automatic = true
-                            containerNames = listOf("simple")
-                            from {
-                                name = "simple:default"
-                                kind = "ImageStreamTag"
-                            }
+                spec {
+                    strategy {
+                        type = "Rolling"
+                        rollingParams {
+                            intervalSeconds = 1
+                            maxSurge = IntOrString("25%")
+                            maxUnavailable = IntOrString(0)
+                            timeoutSeconds = 180
+                            updatePeriodSeconds = 1L
                         }
                     }
-
-                )
-                replicas = 1
-                selector = mapOf("name" to "simple")
-                template {
-                    spec {
-                        containers = listOf(
-                            newContainer {
-                                name = "simple"
+                    triggers = listOf(
+                        newDeploymentTriggerPolicy {
+                            type = "ImageChange"
+                            imageChangeParams {
+                                automatic = true
+                                containerNames = listOf("simple")
+                                from {
+                                    name = "simple:default"
+                                    kind = "ImageStreamTag"
+                                }
                             }
-                        )
-                        restartPolicy = "Always"
-                        dnsPolicy = "ClusterFirst"
+                        }
+
+                    )
+                    replicas = 1
+                    selector = mapOf("name" to "simple")
+                    template {
+                        spec {
+                            containers = listOf(
+                                newContainer {
+                                    name = "simple"
+                                }
+                            )
+                            restartPolicy = "Always"
+                            dnsPolicy = "ClusterFirst"
+                        }
                     }
                 }
-            }
-        }, createdSource = AuroraResourceSource(TestDefaultFeature::class.java))
+            },
+            createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
+        )
 
     val config = mutableMapOf(
         "about.json" to FEATURE_ABOUT,
@@ -319,8 +331,8 @@ abstract class AbstractFeatureTest : ResourceLoader() {
 
         val headers =
             valid.first().cmd.applicationDeploymentRef
-            .run { HeaderHandlers.create(application, environment) }
-            .handlers.map { it.name }
+                .run { HeaderHandlers.create(application, environment) }
+                .handlers.map { it.name }
         val fields = valid.first().spec.fields
             .filterNot { headers.contains(it.key) }
             .filterNot { it.key in listOf("applicationDeploymentRef", "configVersion") }

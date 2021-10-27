@@ -65,21 +65,22 @@ class HerkimerServiceTest {
     fun `Should create ApplicationDeployment`() {
         val adPayload = createAdPayload()
 
-        val herkimerResponse = HerkimerResponse(items = listOf(
-            adPayload.run {
-                ApplicationDeploymentHerkimer(
-                    "0123456789",
-                    name,
-                    environmentName,
-                    cluster,
-                    businessGroup,
-                    LocalDateTime.now(),
-                    LocalDateTime.now(),
-                    "aurora",
-                    "aurora"
-                )
-            }
-        )
+        val herkimerResponse = HerkimerResponse(
+            items = listOf(
+                adPayload.run {
+                    ApplicationDeploymentHerkimer(
+                        "0123456789",
+                        name,
+                        environmentName,
+                        cluster,
+                        businessGroup,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        "aurora",
+                        "aurora"
+                    )
+                }
+            )
         )
 
         server.execute(herkimerResponse) {

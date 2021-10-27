@@ -34,7 +34,8 @@ class CertificateFeatureTest : AbstractFeatureTest() {
             """{
             "certificate" : true,
             "groupId" : "org.test"
-           }""", createEmptyDeploymentConfig()
+           }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(resources.size).isEqualTo(2)
@@ -87,7 +88,8 @@ class CertificateFeatureTest : AbstractFeatureTest() {
             "certificate" : {
               "commonName" : "fooo"
             }
-        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : "true" }"""))
+        }""",
+            files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : "true" }"""))
         )
 
         assertThat(valid.first().spec.certificateCommonName).isEqualTo("fooo")
@@ -102,7 +104,8 @@ class CertificateFeatureTest : AbstractFeatureTest() {
             "certificate" : {
               "commonName" : "fooo"
             }
-        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : false }"""))
+        }""",
+            files = listOf(AuroraConfigFile("utv/about.json", """{ "certificate" : false }"""))
         )
 
         assertThat(valid.first().spec.certificateCommonName).isEqualTo("fooo")

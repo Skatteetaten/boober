@@ -79,12 +79,14 @@ class JwtToStsConverterFeature(
             ),
             AuroraConfigFieldHandler(
                 ConfigPath.discoveryUrl,
-                validator = { it.validUrl(required = false) }),
+                validator = { it.validUrl(required = false) }
+            ),
 
             AuroraConfigFieldHandler(
                 ConfigPath.ivGroupsRequired,
                 defaultValue = false,
-                validator = { it.boolean() })
+                validator = { it.boolean() }
+            )
         )
     }
 
@@ -139,10 +141,12 @@ class JwtToStsConverterFeature(
                 }
             }
 
-            env = (containerPorts.map {
-                val portName = if (it.key == "http") "CLINGER_PROXY_SERVER_PORT" else "CLINGER_MANAGEMENT_SERVER_PORT"
-                EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
-            }).addIfNotNull(
+            env = (
+                containerPorts.map {
+                    val portName = if (it.key == "http") "CLINGER_PROXY_SERVER_PORT" else "CLINGER_MANAGEMENT_SERVER_PORT"
+                    EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
+                }
+                ).addIfNotNull(
                 listOf(
                     EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
                     EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")

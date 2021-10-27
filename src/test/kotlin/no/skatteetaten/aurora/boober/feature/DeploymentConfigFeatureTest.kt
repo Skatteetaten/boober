@@ -109,7 +109,8 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         val (dcResource, adResource) = modifyResources(
             """{ 
                 "version" : "1"
-           }""", createEmptyDeploymentConfig(), createEmptyApplicationDeployment()
+           }""",
+            createEmptyDeploymentConfig(), createEmptyApplicationDeployment()
         )
 
         assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Added information from deployment")

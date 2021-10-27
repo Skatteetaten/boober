@@ -57,10 +57,10 @@ private fun List<S3ObjectArea>.validateBucketNames() = runValidators(
             "s3 bucketName can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: \"${it.bucketName}\""
         else null
     }, { s3ObjectArea ->
-        "${s3ObjectArea.tenant}-${s3ObjectArea.bucketName}"
-            .takeIf { it.length < 3 || it.length >= 63 }
-            ?.let { "combination of bucketName and tenantName must be between 3 and 63 chars, specified value was ${it.length} chars long" }
-    }
+    "${s3ObjectArea.tenant}-${s3ObjectArea.bucketName}"
+        .takeIf { it.length < 3 || it.length >= 63 }
+        ?.let { "combination of bucketName and tenantName must be between 3 and 63 chars, specified value was ${it.length} chars long" }
+}
 )
 
 private fun List<S3ObjectArea>.validateRequiredFieldsArePresent() = runValidators(

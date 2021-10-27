@@ -51,7 +51,7 @@ fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
  */
 private val dnsMatcher: Pattern = Pattern.compile(
     "^((?!-)[A-Za-z0-9-]" +
-            "{1,63}(?<!-))"
+        "{1,63}(?<!-))"
 )
 
 fun String.isValidDns(): Boolean {

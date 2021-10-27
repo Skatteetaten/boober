@@ -37,9 +37,11 @@ class AuroraDeploymentSpecControllerV1(
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val contexts = facade.findAuroraDeploymentSpec(ref, adrList)
 
-        return Response(items = contexts.map {
-            renderSpecAsJson(it, includeDefaults)
-        })
+        return Response(
+            items = contexts.map {
+                renderSpecAsJson(it, includeDefaults)
+            }
+        )
     }
 
     @GetMapping("/{environment}/")

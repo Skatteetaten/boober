@@ -100,7 +100,7 @@ open class GitService(
         val ref = git.repository.findRef(refName)
 
         return ref ?: git.repository.findRef("origin/$refName")
-        ?: throw GitReferenceException("No git reference with refName=$refName")
+            ?: throw GitReferenceException("No git reference with refName=$refName")
     }
 
     private fun cloneAndCheckout(

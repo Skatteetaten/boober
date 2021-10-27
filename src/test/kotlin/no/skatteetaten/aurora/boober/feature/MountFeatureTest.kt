@@ -129,7 +129,8 @@ class MountFeatureTest : AbstractFeatureTest() {
                 ${data.jsonFragment}
                 }
               }  
-             }""".trimIndent(),
+             }
+                """.trimIndent(),
                 fullValidation = false
             )
         }.singleApplicationErrorResult(data.errorMessage)
@@ -221,7 +222,7 @@ class MountFeatureTest : AbstractFeatureTest() {
         val auroraResource = resource.first()
         val satp = ServiceAccountTokenProjection("dummy-audience", 600L, "psat")
         val psat = newVolumeProjection {
-                serviceAccountToken = satp
+            serviceAccountToken = satp
         }
 
         assertThat(auroraResource).auroraResourceMountsPsat(psat)
@@ -260,7 +261,8 @@ class MountFeatureTest : AbstractFeatureTest() {
                   "expirationSeconds": 599,
                 }
               }  
-             }""", createEmptyDeploymentConfig()
+             }""",
+                createEmptyDeploymentConfig()
             )
         }
         Assertions.assertEquals(
@@ -284,7 +286,8 @@ class MountFeatureTest : AbstractFeatureTest() {
                   "expirationSeconds": 600
                 }
               }  
-             }""", createEmptyDeploymentConfig()
+             }""",
+            createEmptyDeploymentConfig()
         )
         // ,second,third
         val auroraResource = resource.first()

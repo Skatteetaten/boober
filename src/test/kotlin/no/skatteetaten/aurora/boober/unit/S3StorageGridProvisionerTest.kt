@@ -45,7 +45,7 @@ class S3StorageGridProvisionerTest {
         val requests = listOf(SgProvisioningRequest("", objectAreaName, "", "", ""))
 
         every { herkimerService.getClaimedResources(aId, StorageGridObjectArea) } returns
-                listOf(sgAdminCreds(aId, objectAreaName))
+            listOf(sgAdminCreds(aId, objectAreaName))
 
         val response = provisioner.getOrProvisionCredentials(aId, requests)
         assertThat(response.size).isEqualTo(1)
@@ -61,7 +61,8 @@ private fun sgAdminCreds(aId: String, objectAreaName: String): ResourceHerkimer 
     val user = "aurora"
     val created = now()
     return ResourceHerkimer(
-        "$resourceId", objectAreaName, StorageGridObjectArea, aId, listOf(
+        "$resourceId", objectAreaName, StorageGridObjectArea, aId,
+        listOf(
             ResourceClaimHerkimer(
                 credId.toString(),
                 aId,
@@ -73,6 +74,7 @@ private fun sgAdminCreds(aId: String, objectAreaName: String): ResourceHerkimer 
                 user,
                 user
             )
-        ), null, created, created, user, user
+        ),
+        null, created, created, user, user
     )
 }

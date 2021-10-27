@@ -248,14 +248,16 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
         val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
 
-        return (dbDefaultsHandlers + dbHandlers + listOf(
-            AuroraConfigFieldHandler(
-                "database",
-                validator = { it.boolean() },
-                defaultValue = false,
-                canBeSimplifiedConfig = true
+        return (
+            dbDefaultsHandlers + dbHandlers + listOf(
+                AuroraConfigFieldHandler(
+                    "database",
+                    validator = { it.boolean() },
+                    defaultValue = false,
+                    canBeSimplifiedConfig = true
+                )
             )
-        )).toSet()
+            ).toSet()
     }
 
     fun findDatabases(adc: AuroraDeploymentSpec): List<Database> {
@@ -366,7 +368,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler(
                 "$db/flavor", validator = { node ->
                     node?.oneOf(DatabaseFlavor.values().map { it.toString() })
-                })
+                }
+            )
         )
 
         val instanceHandlers = findInstanceHandlers(db, applicationFiles)
@@ -382,7 +385,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 defaultValue = DatabaseFlavor.ORACLE_MANAGED,
                 validator = { node ->
                     node.oneOf(DatabaseFlavor.values().map { it.toString() })
-                }),
+                }
+            ),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/generate",
                 validator = { it.boolean() },
@@ -391,7 +395,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/tryReuse",
                 defaultValue = false,
-                validator = { it.boolean() }),
+                validator = { it.boolean() }
+            ),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/name",
                 defaultValue = "@name@"
