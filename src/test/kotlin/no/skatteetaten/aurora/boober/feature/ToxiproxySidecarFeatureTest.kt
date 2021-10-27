@@ -68,13 +68,20 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
         val (serviceResource, dcResource, configResource) = generateResources(
             """{
                 "toxiproxy": {
-                    "endpoints": [{"varName": "TEST", "port": 123}]
+                    "version": "2.1.3",
+                    "endpoints": {
+                        "TEST_WITH_PROXYNAME": {"proxyname": "test"},
+                        "TEST_WITHOUT_PROXYNAME": true
+                    }
                 }
             }""",
             createEmptyService(),
             createDeploymentConfigWithContainer(newContainer {
                 name = "simple"
-                env = listOf(EnvVar("TEST", "http://test.test", EnvVarSource()))
+                env = listOf(
+                    EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
+                    EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource())
+                )
             })
         )
 

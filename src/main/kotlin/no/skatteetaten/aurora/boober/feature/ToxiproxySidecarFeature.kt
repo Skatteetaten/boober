@@ -20,11 +20,14 @@ import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
@@ -36,13 +39,13 @@ val AuroraDeploymentSpec.toxiProxy: String?
             this["toxiproxy/version"]
         }
 
-val AuroraDeploymentSpec.toxiproxyEndpoints: ArrayList<LinkedHashMap<String, Any>>?
-    get() = this.featureEnabled("toxiproxy") { this["toxiproxy/endpoints"] }
-
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService
 ) : AbstractResolveTagFeature(cantusService) {
+
+    private val startPort = 18000 // Porter f.o.m. denne tildeles til toxiproxyproxies
+    private var newPort = startPort - 1
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         val toxiProxy = spec.toxiProxy
@@ -74,7 +77,11 @@ class ToxiproxySidecarFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
+        // TODO: Legge til alle endpoints fra cmd.auroraConfig.files[3]
+
+        val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
+
+        return (endpointHandlers + listOf(
             AuroraConfigFieldHandler(
                 "toxiproxy",
                 defaultValue = false,
@@ -82,9 +89,21 @@ class ToxiproxySidecarFeature(
                 canBeSimplifiedConfig = true
             ),
             AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3"),
-            AuroraConfigFieldHandler("toxiproxy/endpoints", defaultValue = emptyList<LinkedHashMap<String, Any>>())
-        )
+            AuroraConfigFieldHandler("toxiproxy/endpoints")
+        )).toSet()
     }
+
+    fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+        applicationFiles.findSubKeysExpanded("toxiproxy/endpoints").flatMap { endpoint ->
+            val expandedEndpointKeys = applicationFiles.findSubKeys(endpoint)
+            listOf(
+                if (expandedEndpointKeys.isEmpty()) {
+                    AuroraConfigFieldHandler(endpoint, defaultValue = false, validator = { it.boolean() })
+                } else {
+                    AuroraConfigFieldHandler("$endpoint/proxyname", defaultValue = endpoint)
+                }
+            )
+        }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
@@ -124,14 +143,15 @@ class ToxiproxySidecarFeature(
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 dc.allNonSideCarContainers.forEach { container ->
-                    adc.toxiproxyEndpoints?.forEach { e ->
-                        val url = container.env.find { v -> v.name == e["varName"] }?.value
+                    adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
+                        val url = container.env.find { v -> v.name == varname }?.value
+                        newPort++
                         toxiproxyConfigs.add(ToxiProxyConfig(
-                            name = e["varName"] as String,
-                            listen = "0.0.0.0:" + e["port"],
+                            name = proxyname,
+                            listen = "0.0.0.0:$newPort",
                             upstream = url!!
                         ))
-                        container.env.find { v -> v.name == e["varName"] }?.value = "0.0.0.0:" + e["port"]
+                        container.env.find { v -> v.name == varname }?.value = "0.0.0.0:$newPort"
                     }
                 }
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
@@ -142,14 +162,15 @@ class ToxiproxySidecarFeature(
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 dc.allNonSideCarContainers.forEach { container ->
-                    adc.toxiproxyEndpoints?.forEach { e ->
-                        val url = container.env.find { v -> v.name == e["varName"] }?.value
+                    adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
+                        val url = container.env.find { v -> v.name == varname }?.value
+                        newPort++
                         toxiproxyConfigs.add(ToxiProxyConfig(
-                            name = e["varName"] as String,
-                            listen = "0.0.0.0:" + e["port"],
+                            name = proxyname,
+                            listen = "0.0.0.0:$newPort",
                             upstream = url!!
                         ))
-                        container.env.find { v -> v.name == e["varName"] }?.value = "0.0.0.0:" + e["port"]
+                        container.env.find { v -> v.name == varname }?.value = "0.0.0.0:$newPort"
                     }
                 }
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
@@ -231,3 +252,19 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
 
 fun getDefaultToxiProxyConfigAsString() =
     jacksonObjectMapper().writeValueAsString(listOf(getDefaultToxiProxyConfig()))
+
+// Return a list of proxynames and corresponding environment variable names
+// If proxyname is not set, it defaults to "endpoint_<variable name>"
+fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
+    .getSubKeys("toxiproxy/endpoints")
+    .map { (fieldName, field) ->
+        if (fieldName.endsWith("/proxyname")) {
+            Pair(
+                field.value() as String,
+                Regex("(?<=^toxiproxy\\/endpoints\\/)(.*)(?=\\/proxyname\$)").find(fieldName)!!.value
+            )
+        } else {
+            val varname = Regex("(?<=^toxiproxy\\/endpoints\\/).*\$").find(fieldName)!!.value
+            Pair("endpoint_$varname", varname)
+        }
+    }
