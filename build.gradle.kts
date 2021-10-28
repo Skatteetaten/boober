@@ -7,7 +7,7 @@ plugins {
     id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
     id("org.sonarqube") version "3.3"
 
-    id("org.springframework.boot") version "2.5.5"
+    id("org.springframework.boot") version "2.5.6"
     id("org.asciidoctor.jvm.convert") version "3.3.2"
 
     id("com.gorylenko.gradle-git-properties") version "2.3.1"
