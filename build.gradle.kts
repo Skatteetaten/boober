@@ -1,21 +1,14 @@
-import com.adarshr.gradle.testlogger.theme.ThemeType
-
 plugins {
-    id("org.springframework.cloud.contract")
-    id("org.jetbrains.kotlin.jvm") version "1.5.31"
-    id("org.jetbrains.kotlin.plugin.spring") version "1.5.31"
-    id("org.jlleitschuh.gradle.ktlint") version "10.2.0"
-    id("org.sonarqube") version "3.3"
-
-    id("org.springframework.boot") version "2.5.6"
-    id("org.asciidoctor.jvm.convert") version "3.3.2"
-
-    id("com.gorylenko.gradle-git-properties") version "2.3.1"
-    id("com.github.ben-manes.versions") version "0.39.0"
-    id("se.patrikerdes.use-latest-versions") version "0.2.17"
-    id("com.adarshr.test-logger") version "3.0.0"
-
+    id("java")
     id("no.skatteetaten.gradle.aurora") version "4.3.20"
+}
+
+aurora {
+    useKotlinDefaults
+    useSpringBootDefaults
+    useSpringBoot {
+        useCloudContract
+    }
 }
 
 dependencies {
@@ -55,10 +48,6 @@ dependencies {
     testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.7")
     testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.1.8")
     testImplementation("com.ninja-squad:springmockk:3.0.1")
-}
-
-testlogger {
-    theme = ThemeType.PLAIN
 }
 
 /*
