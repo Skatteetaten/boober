@@ -1,36 +1,41 @@
-package no.skatteetaten.aurora.boober.feature
+package no.skatteetaten.aurora.boober.feature.azure
 
-import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.httpGet
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newProbe
 import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.Container
+import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
-import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.feature.Feature
+import no.skatteetaten.aurora.boober.feature.FeatureContext
+import no.skatteetaten.aurora.boober.feature.getContextKey
+import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.PortNumbers
-import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.validUrl
 
 val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
-    get() = this.getOrNull(JwtToStsConverterFeature.ConfigPath.enabled) ?: false
+    get() = this.getOrNull(JwtToStsConverterSubPart.ConfigPath.enabled) ?: false
 
-@org.springframework.stereotype.Service
-class JwtToStsConverterFeature(
-    cantusService: CantusService,
-    @Value("\${clinger.sidecar.default.version:0.3.1}") val sidecarVersion: String
-) : AbstractResolveTagFeature(cantusService) {
+// Copied from AbstractResolveTagFeature in order to avoid inheriting from Feature
+private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
+
+// Copied from AbstractResolveTagFeature in order to avoid inheriting from Feature
+internal val FeatureContext.imageMetadata: ImageMetadata
+    get() = this.getContextKey(
+        IMAGE_METADATA_CONTEXT_KEY
+    )
+
+class JwtToStsConverterSubPart {
     object ConfigPath {
         private const val root = "azure/jwtToStsConverter"
         const val enabled = "$root/enabled"
@@ -39,61 +44,12 @@ class JwtToStsConverterFeature(
         const val ivGroupsRequired = "$root/ivGroupsRequired"
     }
 
-    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        return spec.isJwtToStsConverterEnabled
-    }
-
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return !header.isJob
-    }
-
-    override fun createContext(
-        spec: AuroraDeploymentSpec,
-        cmd: AuroraContextCommand,
-        validationContext: Boolean
-    ): Map<String, Any> {
-
-        val clingerTag = spec.getOrNull<String>(ConfigPath.version)
-
-        if (validationContext || clingerTag == null) {
-            return emptyMap()
-        }
-
-        return createImageMetadataContext(
-            repo = "no_skatteetaten_aurora",
-            name = "clinger",
-            tag = clingerTag
-        )
-    }
-
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
-            AuroraConfigFieldHandler(
-                ConfigPath.enabled,
-                defaultValue = false,
-                validator = { it.boolean() }
-            ),
-            AuroraConfigFieldHandler(
-                ConfigPath.version,
-                defaultValue = sidecarVersion
-            ),
-            AuroraConfigFieldHandler(
-                ConfigPath.discoveryUrl,
-                validator = { it.validUrl(required = false) }),
-
-            AuroraConfigFieldHandler(
-                ConfigPath.ivGroupsRequired,
-                defaultValue = false,
-                validator = { it.boolean() })
-        )
-    }
-
-    override fun modify(
+    fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: FeatureContext
+        context: FeatureContext,
+        parent: Feature
     ) {
-
         if (!adc.isJwtToStsConverterEnabled) {
             return
         }
@@ -101,12 +57,12 @@ class JwtToStsConverterFeature(
         val container = createClingerProxyContainer(adc, context)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
-                modifyResource(it, "Added clinger sidecar container")
+                parent.modifyResource(it, "Added clinger sidecar container")
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
                 val podSpec = dc.spec.template.spec
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Deployment") {
-                modifyResource(it, "Added clinger sidecar container")
+                parent.modifyResource(it, "Added clinger sidecar container")
                 val dc: Deployment = it.resource as Deployment
                 val podSpec = dc.spec.template.spec
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
@@ -116,12 +72,12 @@ class JwtToStsConverterFeature(
                     port.targetPort = IntOrString(PortNumbers.CLINGER_PROXY_SERVER_PORT)
                 }
 
-                modifyResource(it, "Changed targetPort to point to clinger")
+                parent.modifyResource(it, "Changed targetPort to point to clinger")
             }
         }
     }
 
-    private fun createClingerProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
+    internal fun createClingerProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val containerPorts = mapOf(
             "http" to PortNumbers.CLINGER_PROXY_SERVER_PORT,
             "management" to PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT
@@ -139,25 +95,7 @@ class JwtToStsConverterFeature(
                 }
             }
 
-            env = (containerPorts.map {
-                val portName = if (it.key == "http") "CLINGER_PROXY_SERVER_PORT" else "CLINGER_MANAGEMENT_SERVER_PORT"
-                EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
-            }).addIfNotNull(
-                listOf(
-                    EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
-                    EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")
-                        .withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
-                        .build(),
-                    EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
-                        .withValue(ports.first().containerPort.toString())
-                        .build(),
-                    EnvVarBuilder().withName("CLINGER_DISCOVERY_URL").withValue(adc[ConfigPath.discoveryUrl])
-                        .build(),
-                    EnvVarBuilder().withName("CLINGER_IV_GROUPS_REQUIRED")
-                        .withValue(adc[ConfigPath.ivGroupsRequired])
-                        .build()
-                )
-            )
+            createEnvForContainer(containerPorts, adc)
 
             resources {
                 limits = mapOf(
@@ -186,6 +124,45 @@ class JwtToStsConverterFeature(
                 initialDelaySeconds = 10
                 timeoutSeconds = 2
             }
+        }
+    }
+
+    private fun Container.createEnvForContainer(
+        containerPorts: Map<String, Int>,
+        adc: AuroraDeploymentSpec
+    ) {
+        val websealEnabled = adc.getOrNull<String>("webseal")?.let {
+            adc.featureEnabled("webseal") { "true" } ?: "false"
+        }
+
+        env = (containerPorts.map {
+            val portName = if (it.key == "http") "CLINGER_PROXY_SERVER_PORT" else "CLINGER_MANAGEMENT_SERVER_PORT"
+            EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
+        }).addIfNotNull(
+            listOf(
+                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_HOST").withValue("0.0.0.0").build(),
+                EnvVarBuilder().withName("CLINGER_PROXY_BACKEND_PORT")
+                    .withValue(PortNumbers.INTERNAL_HTTP_PORT.toString())
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
+                    .withValue(ports.first().containerPort.toString())
+                    .build(),
+                EnvVarBuilder().withName("CLINGER_WEBSEAL_TRAFFIC_ACCEPTED")
+                    .withValue(websealEnabled ?: "false")
+                    .build()
+            )
+        ).addIfNotNull(
+            createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.discoveryUrl))
+        ).addIfNotNull(
+            createEnvOrNull("CLINGER_IV_GROUPS_REQUIRED", adc.getOrNull<String>(ConfigPath.ivGroupsRequired))
+        )
+    }
+
+    private fun createEnvOrNull(key: String, value: String?): EnvVar? {
+        return if (value == null) {
+            null
+        } else {
+            EnvVarBuilder().withName(key).withValue(value).build()
         }
     }
 }
