@@ -6,6 +6,7 @@ plugins {
 aurora {
     useKotlinDefaults
     useSpringBootDefaults
+    useAsciiDoctor
     useSpringBoot {
         useCloudContract
     }
