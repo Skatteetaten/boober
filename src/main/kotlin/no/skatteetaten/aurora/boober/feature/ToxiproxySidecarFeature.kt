@@ -77,7 +77,6 @@ class ToxiproxySidecarFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        // TODO: Legge til alle endpoints fra cmd.auroraConfig.files[3]
 
         val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
 
@@ -183,12 +182,11 @@ class ToxiproxySidecarFeature(
                 modifyResource(it, "Changed targetPort to point to toxiproxy")
             }
             resources
-                .filter { it.resource.kind == "ConfigMap" }
+                .filter { it.resource.kind == "ConfigMap" && it.resource.metadata.name == "simple-toxiproxy-config" }
                 .forEach {
                     val configMap = it.resource as ConfigMap
                     configMap.data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(toxiproxyConfigs))
                 }
-            resources
         }
     }
 
