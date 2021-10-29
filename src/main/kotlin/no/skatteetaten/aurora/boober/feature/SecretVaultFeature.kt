@@ -204,9 +204,9 @@ class SecretVaultFeature(
         return if (secretNames.size != secretNames.toSet().size) {
             AuroraDeploymentSpecValidationException(
                 "SecretVaults does not have unique names=[${
-                    secretNames.joinToString(
-                        ", "
-                    )
+                secretNames.joinToString(
+                    ", "
+                )
                 }]"
             )
         } else null
@@ -247,7 +247,7 @@ class SecretVaultFeature(
                     secret.secretVaultName
                         .ensureStartWith(adc.name, "-")
                         .ensureEndsWith("vault", "-")
-                        .toLowerCase().replace("_", "-"),
+                        .lowercase().replace("_", "-"),
                     it.toMap()
                 )
             }

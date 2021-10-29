@@ -51,13 +51,16 @@ class MountFeature(
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/enabled",
                     defaultValue = true,
-                    validator = { it.boolean() }),
+                    validator = { it.boolean() }
+                ),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/path",
-                    validator = { it.required("Path is required for mount") }),
+                    validator = { it.required("Path is required for mount") }
+                ),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/type",
-                    validator = { json -> json.oneOf(MountType.values().map { it.name }) }),
+                    validator = { json -> json.oneOf(MountType.values().map { it.name }) }
+                ),
                 AuroraConfigFieldHandler(
                     "mounts/$mountName/mountName",
                     defaultValue = mountName
@@ -130,7 +133,7 @@ class MountFeature(
             val volumeMounts = mounts.volumeMount()
 
             val envVars = mounts.map {
-                "VOLUME_${it.volumeName}".toUpperCase() to it.path
+                "VOLUME_${it.volumeName}".uppercase() to it.path
             }.toMap().toEnvVars()
 
             resources.addVolumesAndMounts(envVars, volumes, volumeMounts, this::class.java)
@@ -316,8 +319,8 @@ data class Mount(
         } else {
             this.volumeName.ensureStartWith(appName, "-")
         }
-        return name.replace("_", "-").toLowerCase()
+        return name.replace("_", "-").lowercase()
     }
 
-    fun normalizeMountName() = mountName.replace("_", "-").toLowerCase()
+    fun normalizeMountName() = mountName.replace("_", "-").lowercase()
 }

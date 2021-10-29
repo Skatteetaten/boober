@@ -81,7 +81,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                     }
                }
             }
-        }""", createEmptyDeploymentConfig(),
+        }""",
+            createEmptyDeploymentConfig(),
             createdResources = 3
         )
 
@@ -113,7 +114,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                     }
                }
             }
-        }""", createEmptyDeploymentConfig(),
+        }""",
+            createEmptyDeploymentConfig(),
             createdResources = 1
         )
 
@@ -133,7 +135,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 }
             },
             "route" : true
-        }""", createEmptyDeploymentConfig(),
+        }""",
+            createEmptyDeploymentConfig(),
             createdResources = 3
         )
 
@@ -247,7 +250,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
         val (dcResource, routeResource) = generateResources(
             """{
             "route" : "true"
-        }""", createEmptyDeploymentConfig()
+        }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -267,7 +271,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 "fullyQualifiedHost" : true
               }
             }
-        }""", createEmptyDeploymentConfig()
+        }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -286,7 +291,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 "path" : "/foo"
               }
             }
-        }""", createEmptyDeploymentConfig()
+        }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -312,7 +318,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 "foo|baz" : "baz"
               }
              }
-        }""", createEmptyDeploymentConfig()
+        }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -339,7 +346,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 "foo|baz" : "bal"
               }
              }
-        }""", createEmptyDeploymentConfig()
+        }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -359,7 +367,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                 "enabled" : true
               }
             }
-        }""", createEmptyDeploymentConfig()
+        }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -381,7 +390,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                  "enabled" : false
                }
             }
-        }""", createEmptyDeploymentConfig()
+        }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -469,9 +479,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
                                 "enabled" : true
                               }
                             }
-                }""", files = listOf(
+                }""",
+            files = listOf(
                 AuroraConfigFile(
-                    "utv/about.json", contents = """{
+                    "utv/about.json",
+                    contents = """{
                         "route" : false
                          }"""
                 )
@@ -487,9 +499,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
         val (valid, _) = createAuroraDeploymentContext(
             """{
                   "route" : false
-                }""", files = listOf(
+                }""",
+            files = listOf(
                 AuroraConfigFile(
-                    "utv/about.json", contents = """{
+                    "utv/about.json",
+                    contents = """{
                             "route" : {
                               "foo" : {
                                 "enabled" : true
@@ -690,7 +704,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                  "enabled": "true"
               }
             }
-        }""", createEmptyDeploymentConfig(),
+        }""",
+            createEmptyDeploymentConfig(),
             createdResources = 2
         )
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -714,11 +729,11 @@ class RouteFeatureTest : AbstractFeatureTest() {
                     }
                   }
                 }
-                """.trimIndent(),
+            """.trimIndent(),
             createEmptyDeploymentConfig(),
             createdResources = 1
         )
-        assertThat(dcResource).auroraRouteEnvAdded("$twoHundred53")
+        assertThat(dcResource).auroraRouteEnvAdded(twoHundred53)
     }
 
     @Test
@@ -752,7 +767,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
                     }
                   }
                 }
-                """.trimIndent(),
+            """.trimIndent(),
             createEmptyDeploymentConfig(),
             createdResources = 1
         )
@@ -812,7 +827,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                     }
                   }
                 }
-                """.trimIndent(), createEmptyDeploymentConfig()
+                """.trimIndent(),
+                createEmptyDeploymentConfig()
             )
         }.singleApplicationError("Application simple in environment utv has invalid dns name")
     }
@@ -854,7 +870,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                       }
                     }
                   }
-                }""".trimIndent(),
+                }
+            """.trimIndent(),
             createEmptyDeploymentConfig(),
             createdResources = 2
         )
@@ -875,7 +892,8 @@ class RouteFeatureTest : AbstractFeatureTest() {
                             }
                         }
                     }
-                }""".trimIndent(),
+                }
+                """.trimIndent(),
                 createEmptyDeploymentConfig(),
                 createdResources = 2
             )

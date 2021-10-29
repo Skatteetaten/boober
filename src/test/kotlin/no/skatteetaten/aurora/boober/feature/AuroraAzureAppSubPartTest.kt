@@ -25,11 +25,11 @@ class AuroraAzureAppSubPartTest : AbstractFeatureTest() {
                 "no_skatteetaten_aurora", "clinger", "0.4.0"
             )
         } returns
-                ImageMetadata(
-                    "docker.registry/no_skatteetaten_aurora/clinger",
-                    "0.4.0",
-                    "sha:1234567"
-                )
+            ImageMetadata(
+                "docker.registry/no_skatteetaten_aurora/clinger",
+                "0.4.0",
+                "sha:1234567"
+            )
     }
 
     @Test
@@ -40,7 +40,8 @@ class AuroraAzureAppSubPartTest : AbstractFeatureTest() {
                 "azureAppFqdn": "saksmappa.amutv.skead.no",
                 "groups": [] 
               }
-           }""", createEmptyDeploymentConfig(), createdResources = 1
+           }""",
+            createEmptyDeploymentConfig(), createdResources = 1
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByThisFeature()
@@ -58,7 +59,8 @@ class AuroraAzureAppSubPartTest : AbstractFeatureTest() {
                     "enabled": true
                 }
               }
-           }""", createEmptyDeploymentConfig(), createdResources = 1
+           }""",
+            createEmptyDeploymentConfig(), createdResources = 1
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByThisFeature()
@@ -78,7 +80,8 @@ class AuroraAzureAppSubPartTest : AbstractFeatureTest() {
                   "version": "0.4.0"
                 }
               }
-        }""", createEmptyDeploymentConfig(), createdResources = 1
+        }""",
+            createEmptyDeploymentConfig(), createdResources = 1
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByThisFeature()
@@ -93,7 +96,8 @@ class AuroraAzureAppSubPartTest : AbstractFeatureTest() {
              "azure" : {
                 "groups": [] 
               }
-           }""", createEmptyDeploymentConfig(), createdResources = 0
+           }""",
+                createEmptyDeploymentConfig(), createdResources = 0
             )
         }
     }
@@ -106,7 +110,8 @@ class AuroraAzureAppSubPartTest : AbstractFeatureTest() {
              "azure" : {
                 "azureAppFqdn": "a.b.c.d" 
               }
-           }""", createEmptyDeploymentConfig(), createdResources = 0
+           }""",
+                createEmptyDeploymentConfig(), createdResources = 0
             )
         }
     }

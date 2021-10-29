@@ -66,7 +66,7 @@ abstract class AbstractTemplateFeature(
         val type = adc.type
         val template = context.template
         val name = template.openshiftName
-        val id = DigestUtils.sha1Hex("${type.name.toLowerCase()}-$name")
+        val id = DigestUtils.sha1Hex("${type.name.lowercase()}-$name")
         resources.forEach {
             if (it.resource.kind == "ApplicationDeployment") {
                 val labels = mapOf("applicationId" to id).normalizeLabels()
@@ -146,7 +146,7 @@ abstract class AbstractTemplateFeature(
                 name to value
             }
 
-        val replacer: StringSubstitutor = StringSubstitutor(valueParameters + input, "\${", "}")
+        val replacer = StringSubstitutor(valueParameters + input, "\${", "}")
         val replacedText = replacer.replace(mapper.writeValueAsString(templateJson))
 
         val result: JsonNode = mapper.readTree(replacedText)

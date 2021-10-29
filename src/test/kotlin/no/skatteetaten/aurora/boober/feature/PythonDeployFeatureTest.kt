@@ -17,7 +17,8 @@ class PythonDeployFeatureTest : AbstractFeatureTest() {
           "version" : "1",
           "groupId" : "org.test",
           "applicationPlatform" : "python"
-      }""", resource = createEmptyApplicationDeployment(),
+      }""",
+            resource = createEmptyApplicationDeployment(),
             createdResources = 3
         )
 

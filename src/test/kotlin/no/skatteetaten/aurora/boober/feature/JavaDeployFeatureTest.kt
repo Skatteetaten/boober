@@ -20,7 +20,8 @@ class JavaDeployFeatureTest : AbstractFeatureTest() {
             """{
           "version" : "SNAPSHOT-feature_FOO_1001_FIX_STUPID_STUFF_20190402.113042-26-b1.18.1-wingnut8-1.3.0",
           "groupId" : "org.test"
-      }""", resource = createEmptyApplicationDeployment(),
+      }""",
+            resource = createEmptyApplicationDeployment(),
             createdResources = 3
         )
 

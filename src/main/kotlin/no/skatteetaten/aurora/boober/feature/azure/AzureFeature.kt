@@ -44,12 +44,14 @@ class AzureFeature(
             ),
             AuroraConfigFieldHandler(
                 JwtToStsConverterSubPart.ConfigPath.discoveryUrl,
-                validator = { it.validUrl(required = false) }),
+                validator = { it.validUrl(required = false) }
+            ),
 
             AuroraConfigFieldHandler(
                 JwtToStsConverterSubPart.ConfigPath.ivGroupsRequired,
                 defaultValue = false,
-                validator = { it.boolean() }),
+                validator = { it.boolean() }
+            ),
 
             AuroraConfigFieldHandler(
                 AuroraAzureAppSubPart.ConfigPath.azureAppFqdn,

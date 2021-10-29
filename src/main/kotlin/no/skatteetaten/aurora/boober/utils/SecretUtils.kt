@@ -11,8 +11,8 @@ fun Secret.createEnvVarRefs(
     uppercaseSuffix: Boolean = true
 ) =
     properties.map { propertyName ->
-        val formattedPropertyName = if (uppercaseSuffix) propertyName.toUpperCase() else propertyName
-        val envVarName = "${prefix.toUpperCase()}$formattedPropertyName"
+        val formattedPropertyName = if (uppercaseSuffix) propertyName.uppercase() else propertyName
+        val envVarName = "${prefix.uppercase()}$formattedPropertyName"
         val secretName = this.metadata.name
         newEnvVar {
             name = envVarName

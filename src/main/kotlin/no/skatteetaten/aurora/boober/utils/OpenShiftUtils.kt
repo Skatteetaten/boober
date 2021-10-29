@@ -20,7 +20,7 @@ val kindsWithoutNamespace = listOf(
 
 fun findOpenShiftApiPrefix(apiVersion: String, kind: String) =
     if (apiVersion == "v1") {
-        if (kind.toLowerCase() in kubernetesNonApiGroupResources) {
+        if (kind.lowercase() in kubernetesNonApiGroupResources) {
             "api"
         } else {
             "oapi"
@@ -31,7 +31,7 @@ fun findOpenShiftApiPrefix(apiVersion: String, kind: String) =
 
 fun findApiVersion(kind: String): String =
     apiGroups
-        .filter { it.value.contains(kind.toLowerCase()) }
+        .filter { it.value.contains(kind.lowercase()) }
         .map { it.key }
         .firstOrNull() ?: "v1"
 

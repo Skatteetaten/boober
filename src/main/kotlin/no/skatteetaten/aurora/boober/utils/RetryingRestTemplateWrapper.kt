@@ -113,9 +113,11 @@ open class RetryingRestTemplateWrapper(
                 setRetryPolicy(NeverRetryPolicy())
             } else {
                 setRetryPolicy(SimpleRetryPolicy(retries))
-                setBackOffPolicy(FixedBackOffPolicy().apply {
-                    backOffPeriod = backoff
-                })
+                setBackOffPolicy(
+                    FixedBackOffPolicy().apply {
+                        backOffPeriod = backoff
+                    }
+                )
             }
         }
 

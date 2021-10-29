@@ -160,14 +160,16 @@ fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
 
 val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
     get() =
-        AuroraConfigFieldHandler("version",
+        AuroraConfigFieldHandler(
+            "version",
             validator = {
                 it.pattern(
                     pattern = "^[\\w][\\w.-]{0,127}$",
                     message = "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
                     required = this.type.versionAndGroupRequired
                 )
-            })
+            }
+        )
 
 val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
     get() = AuroraConfigFieldHandler(
@@ -178,7 +180,8 @@ val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
                 message = "GroupId must be set and be shorter then 200 characters",
                 required = this.type.versionAndGroupRequired
             )
-        })
+        }
+    )
 
 fun gavHandlers(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
@@ -219,7 +222,8 @@ abstract class AbstractDeployFeature(
             AuroraConfigFieldHandler(
                 "deployStrategy/type",
                 defaultValue = "rolling",
-                validator = { it.oneOf(listOf("recreate", "rolling")) }),
+                validator = { it.oneOf(listOf("recreate", "rolling")) }
+            ),
             AuroraConfigFieldHandler("deployStrategy/timeout", defaultValue = 180),
             AuroraConfigFieldHandler("replicas", defaultValue = 1),
             AuroraConfigFieldHandler("serviceAccount"),
@@ -402,7 +406,7 @@ abstract class AbstractDeployFeature(
             args = containerArgs
 
             val portEnv = containerPorts.map {
-                val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
+                val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".uppercase()
                 EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
             }
             env = podEnvVariables + portEnv

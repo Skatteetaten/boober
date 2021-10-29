@@ -65,9 +65,11 @@ class UserAnnotationFacade(
 private data class UserAnnotation(val metadata: ObjectMeta) {
     companion object {
         fun create(key: String, annotation: String?) =
-            UserAnnotation(metadata = newObjectMeta {
-                annotations = mapOf(key to annotation)
-            })
+            UserAnnotation(
+                metadata = newObjectMeta {
+                    annotations = mapOf(key to annotation)
+                }
+            )
 
         fun emptyAnnotation(key: String) = UserAnnotation.create(key, null)
     }

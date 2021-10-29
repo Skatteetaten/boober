@@ -29,21 +29,21 @@ class JwtToStsConverterSubPartTest : AbstractFeatureTest() {
                 "no_skatteetaten_aurora", "clinger", "0.4.0"
             )
         } returns
-                ImageMetadata(
-                    "docker.registry/no_skatteetaten_aurora/clinger",
-                    "0.4.0",
-                    "sha:1234567"
-                )
+            ImageMetadata(
+                "docker.registry/no_skatteetaten_aurora/clinger",
+                "0.4.0",
+                "sha:1234567"
+            )
         every {
             cantusService.getImageMetadata(
                 "no_skatteetaten_aurora", "clinger", "0.3.2"
             )
         } returns
-                ImageMetadata(
-                    "docker.registry/no_skatteetaten_aurora/clinger",
-                    "0.3.2",
-                    "sha:11223344"
-                )
+            ImageMetadata(
+                "docker.registry/no_skatteetaten_aurora/clinger",
+                "0.3.2",
+                "sha:11223344"
+            )
     }
 
     @AfterEach
@@ -62,7 +62,8 @@ class JwtToStsConverterSubPartTest : AbstractFeatureTest() {
                     "ivGroupsRequired": "false"
                 }
               }
-           }""", createEmptyService(), createEmptyDeploymentConfig()
+           }""",
+            createEmptyService(), createEmptyDeploymentConfig()
         )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
@@ -81,7 +82,8 @@ class JwtToStsConverterSubPartTest : AbstractFeatureTest() {
                     "ivGroupsRequired": "false"
                 }
               }
-           }""", createEmptyService(), createEmptyDeploymentConfig()
+           }""",
+            createEmptyService(), createEmptyDeploymentConfig()
         )
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to clinger")
@@ -108,7 +110,8 @@ class JwtToStsConverterSubPartTest : AbstractFeatureTest() {
                     "ivGroupsRequired": "false"
                 }
               }
-           }""", createEmptyService(), createEmptyDeploymentConfig()
+           }""",
+            createEmptyService(), createEmptyDeploymentConfig()
         )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
@@ -124,7 +127,8 @@ class JwtToStsConverterSubPartTest : AbstractFeatureTest() {
                     "enabled": true
                 }
               }
-           }""", createEmptyService(), createEmptyDeploymentConfig()
+           }""",
+            createEmptyService(), createEmptyDeploymentConfig()
         )
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to clinger")
@@ -151,7 +155,8 @@ class JwtToStsConverterSubPartTest : AbstractFeatureTest() {
                     "discoveryUrl": "https://endpoint"
                 }
               }
-           }""", createdResources = 1, resources = mutableSetOf(createEmptyService(), createEmptyDeploymentConfig())
+           }""",
+            createdResources = 1, resources = mutableSetOf(createEmptyService(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")

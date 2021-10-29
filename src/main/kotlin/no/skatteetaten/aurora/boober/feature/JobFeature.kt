@@ -91,10 +91,12 @@ class JobFeature(
                 AuroraConfigFieldHandler("failureCount", defaultValue = 1, validator = { it.int() }),
                 AuroraConfigFieldHandler("startingDeadline", defaultValue = 60, validator = { it.int() }),
                 AuroraConfigFieldHandler("successCount", defaultValue = 3, validator = { it.int() }),
-                AuroraConfigFieldHandler("concurrentPolicy", defaultValue = ConcurrencyPolicies.Forbid.toString(),
+                AuroraConfigFieldHandler(
+                    "concurrentPolicy", defaultValue = ConcurrencyPolicies.Forbid.toString(),
                     validator = { node ->
                         node?.oneOf(ConcurrencyPolicies.values().map { it.toString() })
-                    })
+                    }
+                )
             )
         } else {
             null
@@ -115,11 +117,13 @@ class JobFeature(
                 }
                 spec {
 
-                    containers = listOf(newContainer {
-                        image = imageMetadata.getFullImagePath()
-                        imagePullPolicy = "Always"
-                        name = adc.name
-                    })
+                    containers = listOf(
+                        newContainer {
+                            image = imageMetadata.getFullImagePath()
+                            imagePullPolicy = "Always"
+                            name = adc.name
+                        }
+                    )
                     restartPolicy = "Never"
                     dnsPolicy = "ClusterFirst"
                     adc.getOrNull<String>("serviceAccount")?.let {

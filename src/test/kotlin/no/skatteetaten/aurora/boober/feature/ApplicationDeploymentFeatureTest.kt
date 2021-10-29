@@ -41,7 +41,8 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
                       "bat@skatt.no": false
                     }
                 }
-                }""", createEmptyDeploymentConfig()
+                }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(ad).auroraResourceCreatedByThisFeature()
@@ -52,12 +53,14 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
             comment = "Set owner reference to ApplicationDeployment",
             index = 1
         )
-        assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(newOwnerReference {
-            apiVersion = "skatteetaten.no/v1"
-            kind = "ApplicationDeployment"
-            name = ad.resource.metadata.name
-            uid = "123-123"
-        })
+        assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(
+            newOwnerReference {
+                apiVersion = "skatteetaten.no/v1"
+                kind = "ApplicationDeployment"
+                name = ad.resource.metadata.name
+                uid = "123-123"
+            }
+        )
     }
 
     @Test

@@ -46,9 +46,11 @@ class AuroraConfigControllerV1(
         val adr = ApplicationDeploymentRef(environment, application)
         val files = auroraConfigFacade.findAuroraConfigFilesForApplicationDeployment(ref, adr)
 
-        return Response(items = files.map {
-            AuroraConfigFileResource(it.name, it.contents, it.version, it.type)
-        })
+        return Response(
+            items = files.map {
+                AuroraConfigFileResource(it.name, it.contents, it.version, it.type)
+            }
+        )
     }
 
     @GetMapping
@@ -64,9 +66,11 @@ class AuroraConfigControllerV1(
             val adr = ApplicationDeploymentRef(environment, application)
             val files = auroraConfigFacade.findAuroraConfigFilesForApplicationDeployment(ref, adr)
 
-            return Response(items = files.map {
-                AuroraConfigFileResource(it.name, it.contents, it.version, it.type)
-            })
+            return Response(
+                items = files.map {
+                    AuroraConfigFileResource(it.name, it.contents, it.version, it.type)
+                }
+            )
         }
         if (application != null || environment != null) {
             throw IllegalArgumentException("Either both application and environment must be set or none of them")
@@ -199,7 +203,8 @@ data class AuroraConfigResource(
                 auroraConfig.name,
                 auroraConfig.ref,
                 auroraConfig.resolvedRef,
-                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.version, it.type) })
+                auroraConfig.files.map { AuroraConfigFileResource(it.name, it.contents, it.version, it.type) }
+            )
         }
     }
 }

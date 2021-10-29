@@ -36,7 +36,7 @@ class ApplicationDeploymentController(private val deploymenFacade: DeploymentFac
         return Response(
             items = deleteResponses,
             success = !deleteResponses.any { !it.success },
-            message = deleteResponses.find { it.reason.toUpperCase() != "OK" }?.reason ?: "OK"
+            message = deleteResponses.find { it.reason.uppercase() != "OK" }?.reason ?: "OK"
         )
     }
 
@@ -62,7 +62,7 @@ class ApplicationDeploymentController(private val deploymenFacade: DeploymentFac
         return Response(
             items = existsResponse,
             success = !existsResponse.any { !it.success },
-            message = existsResponse.find { it.message.toUpperCase() != "OK" }?.message ?: "OK"
+            message = existsResponse.find { it.message.uppercase() != "OK" }?.message ?: "OK"
         )
     }
 }

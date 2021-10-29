@@ -19,14 +19,16 @@ class LocalTemplateFeature(
         files: List<AuroraConfigFile>,
         auroraConfig: AuroraConfig
     ): Set<AuroraConfigFieldHandler> {
-        return setOf(AuroraConfigFieldHandler("templateFile", validator = { json ->
-            val fileName = json?.textValue()
-            if (auroraConfig.files.none { it.name == fileName }) {
-                IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
-            } else {
-                null
-            }
-        }))
+        return setOf(
+            AuroraConfigFieldHandler("templateFile", validator = { json ->
+                val fileName = json?.textValue()
+                if (auroraConfig.files.none { it.name == fileName }) {
+                    IllegalArgumentException("The file named $fileName does not exist in AuroraConfig")
+                } else {
+                    null
+                }
+            })
+        )
     }
 
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean): Map<String, Any> {

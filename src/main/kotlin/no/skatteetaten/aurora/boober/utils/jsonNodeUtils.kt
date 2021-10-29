@@ -114,7 +114,7 @@ val JsonNode.appropriateResourceAndNamedUrl get() = if (this.namespace.isEmpty()
 val JsonNode.appropriateNamedUrl: String get() = appropriateResourceAndNamedUrl.second
 
 val JsonNode.openshiftKind: String
-    get() = this.get("kind")?.asText()?.toLowerCase()
+    get() = this.get("kind")?.asText()?.lowercase()
         ?: throw IllegalArgumentException("Kind must be set in file=$this")
 
 val JsonNode.openshiftName: String
@@ -239,7 +239,7 @@ fun JsonNode?.boolean(required: Boolean = false): Exception? {
         return null
     }
 
-    if (!candidates.contains(this.textValue().toLowerCase())) {
+    if (!candidates.contains(this.textValue().lowercase())) {
         return IllegalArgumentException("Not a valid boolean value.")
     }
     return null

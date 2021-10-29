@@ -154,9 +154,12 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     fun `verify is able to disable s3 when expanded config`() {
 
         every {
-            provisioner.getOrProvisionCredentials(any(), match {
-                it.size == 1 && it.find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
-            })
+            provisioner.getOrProvisionCredentials(
+                any(),
+                match {
+                    it.size == 1 && it.find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
+                }
+            )
         } returns listOf(sgRequestsWithCredentials(area1Name, bucket1Name))
 
         val resources = generateResources(
@@ -183,12 +186,15 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
         val bucket2Name = "anotherbucket"
 
         every {
-            provisioner.getOrProvisionCredentials(any(), match { r ->
-                r.run {
-                    find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null &&
-                        find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
+            provisioner.getOrProvisionCredentials(
+                any(),
+                match { r ->
+                    r.run {
+                        find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null &&
+                            find { it.bucketPostfix == bucket2Name && it.objectAreaName == area2Name } != null
+                    }
                 }
-            })
+            )
         } returns listOf(
             sgRequestsWithCredentials(area1Name, bucket1Name),
             sgRequestsWithCredentials(area2Name, bucket2Name)
@@ -275,7 +281,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
 
             val container = dc.spec.template.spec.containers.first()
             val secretName = "$appName-$objectAreaName-s3"
-            val objectAreaNameUpper = objectAreaName.toUpperCase()
+            val objectAreaNameUpper = objectAreaName.uppercase()
             val actualS3Envs = container.env
                 .map { envVar -> envVar.name to envVar.valueFrom.secretKeyRef.let { "${it.name}/${it.key}" } }
                 .filter { (name, _) -> name.startsWith("S3") }

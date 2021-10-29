@@ -35,7 +35,8 @@ class StsFeatureTest : AbstractFeatureTest() {
             """{
             "sts" : true,
             "groupId" : "org.test"
-           }""", createEmptyDeploymentConfig()
+           }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(resources.size).isEqualTo(2)
@@ -84,7 +85,8 @@ class StsFeatureTest : AbstractFeatureTest() {
             "sts" : {
               "cn" : "fooo"
             }
-        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : "true" }"""))
+        }""",
+            files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : "true" }"""))
         )
 
         assertThat(valid.first().spec.stsCommonName).isEqualTo("fooo")
@@ -99,7 +101,8 @@ class StsFeatureTest : AbstractFeatureTest() {
             "sts" : {
               "cn" : "fooo"
             }
-        }""", files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : false }"""))
+        }""",
+            files = listOf(AuroraConfigFile("utv/about.json", """{ "sts" : false }"""))
         )
 
         assertThat(valid.first().spec.stsCommonName).isEqualTo("fooo")

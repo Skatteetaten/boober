@@ -60,7 +60,7 @@ open class GitService(
             .setCredentialsProvider(cp)
             .call()
 
-        if (git.repository.allRefs.isEmpty()) return git
+        if (git.repository.refDatabase.refs.isEmpty()) return git
 
         val ref = findRef(git, refName)
         val branchList = git.branchList().call()
@@ -100,7 +100,7 @@ open class GitService(
         val ref = git.repository.findRef(refName)
 
         return ref ?: git.repository.findRef("origin/$refName")
-        ?: throw GitReferenceException("No git reference with refName=$refName")
+            ?: throw GitReferenceException("No git reference with refName=$refName")
     }
 
     private fun cloneAndCheckout(

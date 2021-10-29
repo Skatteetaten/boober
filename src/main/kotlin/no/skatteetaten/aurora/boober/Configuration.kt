@@ -151,16 +151,18 @@ class Configuration {
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
             .rootUri(cantusUrl)
-            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
-                request.headers.apply {
-                    set(HttpHeaders.AUTHORIZATION, "Bearer $cantusToken")
-                    set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                    set(clientIdHeaderName, applicationName)
-                    set("Meldingsid", UUID.randomUUID().toString())
-                }
+            .interceptors(
+                ClientHttpRequestInterceptor { request, body, execution ->
+                    request.headers.apply {
+                        set(HttpHeaders.AUTHORIZATION, "Bearer $cantusToken")
+                        set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
+                        set(clientIdHeaderName, applicationName)
+                        set("Meldingsid", UUID.randomUUID().toString())
+                    }
 
-                execution.execute(request, body)
-            }).build()
+                    execution.execute(request, body)
+                }
+            ).build()
     }
 
     @Bean
@@ -174,22 +176,24 @@ class Configuration {
         val clientIdHeaderName = "KlientID"
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
-            .interceptors(ClientHttpRequestInterceptor { request, body, execution ->
-                request.headers.apply {
-                    set(
-                        HttpHeaders.AUTHORIZATION,
-                        "aurora-token ${sharedSecretReader.secret}"
-                    )
-                    set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                    set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                    set(
-                        clientIdHeaderName, applicationName
-                    )
-                    set("Meldingsid", UUID.randomUUID().toString())
-                }
+            .interceptors(
+                ClientHttpRequestInterceptor { request, body, execution ->
+                    request.headers.apply {
+                        set(
+                            HttpHeaders.AUTHORIZATION,
+                            "aurora-token ${sharedSecretReader.secret}"
+                        )
+                        set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                        set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
+                        set(
+                            clientIdHeaderName, applicationName
+                        )
+                        set("Meldingsid", UUID.randomUUID().toString())
+                    }
 
-                execution.execute(request, body)
-            }).build()
+                    execution.execute(request, body)
+                }
+            ).build()
     }
 
     @Bean

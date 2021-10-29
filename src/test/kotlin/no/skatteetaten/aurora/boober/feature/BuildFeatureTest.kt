@@ -70,7 +70,8 @@ class BuildFeatureTest : AbstractFeatureTest() {
            "type": "development", 
            "groupId": "org.test",
            "version" : "1"
-        }""", createEmptyDeploymentConfig(), createEmptyImageStream()
+        }""",
+            createEmptyDeploymentConfig(), createEmptyImageStream()
         )
 
         assertThat(bcResource).auroraResourceCreatedByThisFeature()
