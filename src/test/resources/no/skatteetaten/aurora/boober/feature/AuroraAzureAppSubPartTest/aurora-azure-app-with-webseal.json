@@ -1,0 +1,14 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "AuroraAzureApp",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "azureAppFqdn": "saksmappa.amutv.skead.no",
+    "appName": "simple",
+    "groups": ["APP_dev","APP_DRIFT"],
+    "noProxy": true
+  }
+}

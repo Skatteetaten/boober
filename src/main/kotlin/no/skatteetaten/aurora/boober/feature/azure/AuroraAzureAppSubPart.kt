@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature.azure
 
 import com.fkorotkov.kubernetes.newObjectMeta
+import no.skatteetaten.aurora.boober.feature.isWebsealEnabled
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -31,6 +32,7 @@ class AuroraAzureAppSubPart {
         private const val root = "azure"
         const val azureAppFqdn = "$root/azureAppFqdn"
         const val groups = "$root/groups"
+        const val managedRoute = "$root/managedRoute"
     }
 
     fun generate(adc: AuroraDeploymentSpec, azureFeature: AzureFeature): Set<AuroraResource> {
@@ -58,11 +60,21 @@ class AuroraAzureAppSubPart {
     fun validate(
         adc: AuroraDeploymentSpec
     ): List<Exception> {
+        val errors = ArrayList<Exception>()
         if (adc.azureAppFqdn == null || adc.azureAppGroups == null) {
             if (!(adc.azureAppFqdn == null && adc.azureAppGroups == null)) {
-                return listOf(AuroraDeploymentSpecValidationException("You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"))
+                errors.add(AuroraDeploymentSpecValidationException("You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"))
             }
         }
-        return ArrayList()
+
+        if (adc.getOrNull<Boolean?>(ConfigPath.managedRoute) == true && adc.isWebsealEnabled) {
+            errors.add(
+                AuroraDeploymentSpecValidationException(
+                    "You cannot have a managedRoute route and webseal enabled simultaneously"
+                )
+            )
+        }
+
+        return errors
     }
 }

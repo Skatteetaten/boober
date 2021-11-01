@@ -1,0 +1,25 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "annotations": {
+      "marjory.sits.no/isOpen": "false",
+      "marjory.sits.no/route.roles": ""
+    },
+    "labels": {
+      "type": "webseal"
+    },
+    "name": "simple-webseal",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "host": "simple-paas-utv.test.skead.no",
+    "port": {
+      "targetPort": "http"
+    },
+    "to": {
+      "kind": "Service",
+      "name": "simple"
+    }
+  }
+}
