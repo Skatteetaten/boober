@@ -2,7 +2,6 @@ package no.skatteetaten.aurora.boober.feature.azure
 
 import com.fkorotkov.kubernetes.newObjectMeta
 import no.skatteetaten.aurora.boober.feature.ConfiguredRoute
-import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.azureAppFqdn
 import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.managedRoute
 import no.skatteetaten.aurora.boober.feature.isWebsealEnabled
 import no.skatteetaten.aurora.boober.feature.name
@@ -75,25 +74,26 @@ class AuroraAzureAppSubPart {
         adc: AuroraDeploymentSpec,
         azureFeature: AzureFeature
     ): AuroraResource? {
-        if (adc.isAzureRouteManaged) {
-            val configuredRoute = ConfiguredRoute(
-                objectName = "${adc.name}-managed",
-                host = adc.getOrNull<String>(azureAppFqdn)!!,
-                annotations = emptyMap(),
-                fullyQualifiedHost = true,
-                labels = mapOf(
-                    "type" to "webseal"
-                )
-            )
-
-            val openshiftRoute = configuredRoute.generateOpenShiftRoute(
-                routeNamespace = adc.namespace,
-                serviceName = adc.name,
-                routeSuffix = ""
-            )
-            return azureFeature.generateResource(openshiftRoute)
+        if (!adc.isAzureRouteManaged) {
+            return null
         }
-        return null
+        val configuredRoute = ConfiguredRoute(
+            objectName = "${adc.name}-managed",
+            host = adc.getOrNull<String>(ConfigPath.azureAppFqdn)!!,
+            annotations = emptyMap(),
+            fullyQualifiedHost = true,
+            labels = mapOf(
+                "type" to "webseal",
+                "azureManaged" to "true"
+            )
+        )
+
+        val openshiftRoute = configuredRoute.generateOpenShiftRoute(
+            routeNamespace = adc.namespace,
+            serviceName = adc.name,
+            routeSuffix = ""
+        )
+        return azureFeature.generateResource(openshiftRoute)
     }
 
     fun validate(
