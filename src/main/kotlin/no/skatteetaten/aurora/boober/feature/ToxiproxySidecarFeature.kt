@@ -11,7 +11,6 @@ import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.tcpSocket
-import io.fabric8.kubernetes.api.model.ConfigMap
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
@@ -47,6 +46,8 @@ class ToxiproxySidecarFeature(
     private val startPort = 18000 // Porter f.o.m. denne tildeles til toxiproxyproxies
     private var newPort = startPort - 1
 
+    val toxiproxyConfigs: MutableList<ToxiProxyConfig> = mutableListOf(getDefaultToxiProxyConfig())
+
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         val toxiProxy = spec.toxiProxy
 
@@ -79,8 +80,9 @@ class ToxiproxySidecarFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
+        val envVariables = findEnvVariables(cmd.applicationFiles)
 
-        return (endpointHandlers + listOf(
+        return (endpointHandlers + envVariables + listOf(
             AuroraConfigFieldHandler(
                 "toxiproxy",
                 defaultValue = false,
@@ -104,17 +106,37 @@ class ToxiproxySidecarFeature(
             )
         }
 
+    fun findEnvVariables(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
+        applicationFiles.findSubKeysExpanded("config").flatMap { variable ->
+            listOf(
+                AuroraConfigFieldHandler(variable)
+            )
+        }
+
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         adc.toxiProxy ?: return emptySet()
+
+        adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
+            val url = adc.fields["config/$varname"]?.value<String>()
+            if (url != null) {
+                newPort++
+                toxiproxyConfigs.add(ToxiProxyConfig(
+                    name = proxyname,
+                    listen = "0.0.0.0:$newPort",
+                    upstream = url
+                ))
+            }
+        }
 
         val configMap = newConfigMap {
             metadata {
                 name = "${adc.name}-toxiproxy-config"
                 namespace = adc.namespace
             }
-            data = mapOf("config.json" to getDefaultToxiProxyConfigAsString())
+            data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(toxiproxyConfigs))
         }
+
         return setOf(generateResource(configMap))
     }
 
@@ -134,7 +156,6 @@ class ToxiproxySidecarFeature(
         }
 
         val container = createToxiProxyContainer(adc, context)
-        val toxiproxyConfigs: MutableList<ToxiProxyConfig> = mutableListOf(getDefaultToxiProxyConfig())
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
@@ -143,14 +164,10 @@ class ToxiproxySidecarFeature(
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 dc.allNonSideCarContainers.forEach { container ->
                     adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-                        val url = container.env.find { v -> v.name == varname }?.value
-                        newPort++
-                        toxiproxyConfigs.add(ToxiProxyConfig(
-                            name = proxyname,
-                            listen = "0.0.0.0:$newPort",
-                            upstream = url!!
-                        ))
-                        container.env.find { v -> v.name == varname }?.value = "0.0.0.0:$newPort"
+                        val proxyAddress = toxiproxyConfigs
+                            .find { toxiProxyConfig -> toxiProxyConfig.name == proxyname }!!
+                            .listen
+                        container.env.find { v -> v.name == varname }?.value = proxyAddress
                     }
                 }
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
@@ -162,14 +179,10 @@ class ToxiproxySidecarFeature(
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 dc.allNonSideCarContainers.forEach { container ->
                     adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-                        val url = container.env.find { v -> v.name == varname }?.value
-                        newPort++
-                        toxiproxyConfigs.add(ToxiProxyConfig(
-                            name = proxyname,
-                            listen = "0.0.0.0:$newPort",
-                            upstream = url!!
-                        ))
-                        container.env.find { v -> v.name == varname }?.value = "0.0.0.0:$newPort"
+                        val proxyAddress = toxiproxyConfigs
+                            .find { toxiProxyConfig -> toxiProxyConfig.name == proxyname }!!
+                            .listen
+                        container.env.find { v -> v.name == varname }?.value = proxyAddress
                     }
                 }
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
@@ -181,12 +194,6 @@ class ToxiproxySidecarFeature(
 
                 modifyResource(it, "Changed targetPort to point to toxiproxy")
             }
-            resources
-                .filter { it.resource.kind == "ConfigMap" && it.resource.metadata.name == "simple-toxiproxy-config" }
-                .forEach {
-                    val configMap = it.resource as ConfigMap
-                    configMap.data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(toxiproxyConfigs))
-                }
         }
     }
 
@@ -247,9 +254,6 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
     listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
     upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT
 )
-
-fun getDefaultToxiProxyConfigAsString() =
-    jacksonObjectMapper().writeValueAsString(listOf(getDefaultToxiProxyConfig()))
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"

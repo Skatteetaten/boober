@@ -73,6 +73,10 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                         "TEST_WITH_PROXYNAME": {"proxyname": "test"},
                         "TEST_WITHOUT_PROXYNAME": true
                     }
+                },
+                "config": {
+                    "TEST_WITH_PROXYNAME": "http://test1.test",
+                    "TEST_WITHOUT_PROXYNAME": "http://test2.test"
                 }
             }""",
             createEmptyService(),
