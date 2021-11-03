@@ -141,7 +141,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         assertThat(websealRoute).auroraResourceCreatedByTarget(WebsealFeature::class.java)
             .auroraResourceMatchesFile("webseal-route.json")
 
-        // Trying to document that assert fails, not entirely sure if it is the best way:
+        // Trying to document that assert fails:
         Assertions.assertThrows(AssertionFailedError::class.java) {
             assertThat(auroraAzureApp).auroraResourceCreatedByTarget(DatabaseFeature::class.java)
         }
