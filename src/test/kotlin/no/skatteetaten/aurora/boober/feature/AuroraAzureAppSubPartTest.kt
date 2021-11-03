@@ -10,7 +10,6 @@ import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.opentest4j.AssertionFailedError
 
@@ -217,7 +216,6 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    @Disabled(value = "This is WIP, disabled just to push buildable version of work")
     fun `AuroraAzureApp without clinger, with managedRoute, and no webseal is valid`() {
         val (_, auroraAzureApp, alternativeRoute) = generateResources(
             """{
@@ -227,12 +225,12 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
                 "groups": []
               }
             }""",
-            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 1
+            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 2
         )
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app.json")
-        assertThat(alternativeRoute).auroraResourceCreatedByTarget(WebsealFeature::class.java)
+        assertThat(alternativeRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
             // WIP Possibly a differently formatted file:
-            .auroraResourceMatchesFile("webseal-saksmappe-route.json")
+            .auroraResourceMatchesFile("webseal-replacement-route.json")
     }
 }

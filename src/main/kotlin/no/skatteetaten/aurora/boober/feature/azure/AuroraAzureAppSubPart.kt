@@ -1,6 +1,9 @@
 package no.skatteetaten.aurora.boober.feature.azure
 
 import com.fkorotkov.kubernetes.newObjectMeta
+import no.skatteetaten.aurora.boober.feature.ConfiguredRoute
+import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.azureAppFqdn
+import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.managedRoute
 import no.skatteetaten.aurora.boober.feature.isWebsealEnabled
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
@@ -9,6 +12,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.AuroraAzureApp
 import no.skatteetaten.aurora.boober.model.openshift.AzureAppSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 val AuroraDeploymentSpec.azureAppFqdn: String?
     get() {
@@ -25,6 +29,11 @@ val AuroraDeploymentSpec.azureAppGroups: List<String>?
         //  Somewhat strange construction in order to avoid error with null as typeCast
         val rawGroup = this.getOrNull<Any>(AuroraAzureAppSubPart.ConfigPath.groups) ?: return null
         return rawGroup as List<String>
+    }
+
+val AuroraDeploymentSpec.isAzureRouteManaged: Boolean
+    get() {
+        return (this.getOrNull<Boolean?>(managedRoute) == true)
     }
 
 class AuroraAzureAppSubPart {
@@ -53,8 +62,38 @@ class AuroraAzureAppSubPart {
                         )
                     )
                 )
-            )
+            ).addIfNotNull(createManagedRouteIfApplicable(adc, azureFeature))
         } ?: emptySet()
+    }
+
+    /**
+     * Create a replacement for the webseal route as part
+     * of migrating away from webseal
+     * @return New webseal route or null if not applicable
+     */
+    private fun createManagedRouteIfApplicable(
+        adc: AuroraDeploymentSpec,
+        azureFeature: AzureFeature
+    ): AuroraResource? {
+        if (adc.isAzureRouteManaged) {
+            val configuredRoute = ConfiguredRoute(
+                objectName = "${adc.name}-webseal",
+                host = adc.getOrNull<String>(azureAppFqdn)!!,
+                annotations = emptyMap(),
+                fullyQualifiedHost = true,
+                labels = mapOf(
+                    "type" to "webseal"
+                )
+            )
+
+            val openshiftRoute = configuredRoute.generateOpenShiftRoute(
+                routeNamespace = adc.namespace,
+                serviceName = adc.name,
+                routeSuffix = ""
+            )
+            return azureFeature.generateResource(openshiftRoute)
+        }
+        return null
     }
 
     fun validate(
@@ -67,7 +106,7 @@ class AuroraAzureAppSubPart {
             }
         }
 
-        if (adc.getOrNull<Boolean?>(ConfigPath.managedRoute) == true && adc.isWebsealEnabled) {
+        if (adc.isAzureRouteManaged && adc.isWebsealEnabled) {
             errors.add(
                 AuroraDeploymentSpecValidationException(
                     "You cannot have a managedRoute route and webseal enabled simultaneously"
