@@ -5,7 +5,7 @@
     "labels": {
       "type": "webseal"
     },
-    "name": "simple-webseal",
+    "name": "simple-managed",
     "namespace": "paas-utv"
   },
   "spec": {

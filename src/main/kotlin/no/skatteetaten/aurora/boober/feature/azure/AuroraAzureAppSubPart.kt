@@ -77,7 +77,7 @@ class AuroraAzureAppSubPart {
     ): AuroraResource? {
         if (adc.isAzureRouteManaged) {
             val configuredRoute = ConfiguredRoute(
-                objectName = "${adc.name}-webseal",
+                objectName = "${adc.name}-managed",
                 host = adc.getOrNull<String>(azureAppFqdn)!!,
                 annotations = emptyMap(),
                 fullyQualifiedHost = true,
