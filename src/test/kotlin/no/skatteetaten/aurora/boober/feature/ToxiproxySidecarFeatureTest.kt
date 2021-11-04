@@ -70,8 +70,10 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 "toxiproxy": {
                     "version": "2.1.3",
                     "endpoints": {
-                        "TEST_WITH_PROXYNAME": {"proxyname": "test"},
-                        "TEST_WITHOUT_PROXYNAME": true
+                        "TEST_WITH_PROXYNAME": {"proxyname": "test", "enabled": true},
+                        "TEST_WITHOUT_PROXYNAME": true,
+                        "DISABLED_TEST_WITH_PROXYNAME": {"proxyname": "test", "enabled": false},
+                        "DISABLED_TEST_WITHOUT_PROXYNAME": false
                     }
                 },
                 "config": {

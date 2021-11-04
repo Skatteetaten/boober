@@ -97,13 +97,14 @@ class ToxiproxySidecarFeature(
     fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
         applicationFiles.findSubKeysExpanded("toxiproxy/endpoints").flatMap { endpoint ->
             val expandedEndpointKeys = applicationFiles.findSubKeys(endpoint)
-            listOf(
-                if (expandedEndpointKeys.isEmpty()) {
-                    AuroraConfigFieldHandler(endpoint, defaultValue = false, validator = { it.boolean() })
-                } else {
-                    AuroraConfigFieldHandler("$endpoint/proxyname", defaultValue = endpoint)
-                }
-            )
+            if (expandedEndpointKeys.isEmpty()) {
+                listOf(AuroraConfigFieldHandler(endpoint, defaultValue = false, validator = { it.boolean() }))
+            } else {
+                listOf(
+                    AuroraConfigFieldHandler("$endpoint/proxyname", defaultValue = endpoint),
+                    AuroraConfigFieldHandler("$endpoint/enabled", defaultValue = true)
+                )
+            }
         }
 
     fun findEnvVariables(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
@@ -255,18 +256,27 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
     upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT
 )
 
+// Regex for matching a variable name in a field name
+val varNameInFieldNameRegex = Regex("(?<=^toxiproxy\\/endpoints\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
+
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
 fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
     .getSubKeys("toxiproxy/endpoints")
-    .map { (fieldName, field) ->
-        if (fieldName.endsWith("/proxyname")) {
-            Pair(
-                field.value() as String,
-                Regex("(?<=^toxiproxy\\/endpoints\\/)(.*)(?=\\/proxyname\$)").find(fieldName)!!.value
-            )
+    .map { it }
+    .groupBy { varNameInFieldNameRegex.find(it.key)!!.value }
+    .filter { (varName, fields) ->
+        if (fields.size == 1 && fields[0].key.endsWith(varName)) {
+            fields[0]
         } else {
-            val varname = Regex("(?<=^toxiproxy\\/endpoints\\/).*\$").find(fieldName)!!.value
-            Pair("endpoint_$varname", varname)
-        }
+            fields.find { it.key.endsWith("/enabled") }
+        }!!.value.value()
+    }
+    .map { (varName, fields) ->
+        val proxyName = fields
+            .find { it.key.endsWith("/proxyname") }
+            ?.value
+            ?.value<String>()
+            ?: "endpoint_$varName"
+        Pair(proxyName, varName)
     }
