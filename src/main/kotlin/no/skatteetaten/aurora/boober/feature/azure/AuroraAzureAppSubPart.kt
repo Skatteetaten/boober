@@ -99,7 +99,7 @@ class AuroraAzureAppSubPart {
     fun validate(
         adc: AuroraDeploymentSpec
     ): List<Exception> {
-        val errors = ArrayList<Exception>()
+        val errors = mutableListOf<Exception>()
         if (adc.azureAppFqdn == null || adc.azureAppGroups == null) {
             if (!(adc.azureAppFqdn == null && adc.azureAppGroups == null)) {
                 errors.add(AuroraDeploymentSpecValidationException("You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"))
