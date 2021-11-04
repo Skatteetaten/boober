@@ -164,14 +164,7 @@ class ToxiproxySidecarFeature(
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
-                dc.allNonSideCarContainers.forEach { container ->
-                    adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-                        val proxyAddress = toxiproxyConfigs
-                            .find { toxiProxyConfig -> toxiProxyConfig.name == proxyname }!!
-                            .listen
-                        container.env.find { v -> v.name == varname }?.value = proxyAddress
-                    }
-                }
+                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc)
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Deployment") {
                 // TODO: refactor
@@ -179,14 +172,7 @@ class ToxiproxySidecarFeature(
                 val dc: Deployment = it.resource as Deployment
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
-                dc.allNonSideCarContainers.forEach { container ->
-                    adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-                        val proxyAddress = toxiproxyConfigs
-                            .find { toxiProxyConfig -> toxiProxyConfig.name == proxyname }!!
-                            .listen
-                        container.env.find { v -> v.name == varname }?.value = proxyAddress
-                    }
-                }
+                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc)
                 podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Service") {
                 val service: Service = it.resource as Service
@@ -245,6 +231,15 @@ class ToxiproxySidecarFeature(
                 timeoutSeconds = 1
             }
             args = listOf("-config", "$configPath/toxiproxy/config.json")
+        }
+    }
+
+    fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec) = this.forEach {
+        adc.extractToxiproxyEndpoints().forEach { (proxyName, varName) ->
+            val proxyAddress = toxiproxyConfigs
+                .find { toxiProxyConfig -> toxiProxyConfig.name == proxyName }!!
+                .listen
+            it.env.find { v -> v.name == varName }?.value = proxyAddress
         }
     }
 }
