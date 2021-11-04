@@ -43,8 +43,9 @@ class ToxiproxySidecarFeature(
     cantusService: CantusService
 ) : AbstractResolveTagFeature(cantusService) {
 
-    private val startPort = 18000 // Porter f.o.m. denne tildeles til toxiproxyproxies
-    private var newPort = startPort - 1
+    // Variable for the port number that Toxiproxy will listen to
+    // An addition of 1 to the value is made for each proxy
+    private var port = 18000
 
     val toxiproxyConfigs: MutableList<ToxiProxyConfig> = mutableListOf(getDefaultToxiProxyConfig())
 
@@ -121,12 +122,12 @@ class ToxiproxySidecarFeature(
         adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
             val url = adc.fields["config/$varname"]?.value<String>()
             if (url != null) {
-                newPort++
                 toxiproxyConfigs.add(ToxiProxyConfig(
                     name = proxyname,
-                    listen = "0.0.0.0:$newPort",
+                    listen = "0.0.0.0:$port",
                     upstream = url
                 ))
+                port++
             }
         }
 
