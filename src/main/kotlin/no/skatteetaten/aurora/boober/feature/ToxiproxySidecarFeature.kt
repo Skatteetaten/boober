@@ -45,7 +45,7 @@ class ToxiproxySidecarFeature(
     cantusService: CantusService
 ) : AbstractResolveTagFeature(cantusService) {
 
-    val toxiproxyConfigs: MutableList<ToxiProxyConfig> = mutableListOf(getDefaultToxiProxyConfig())
+    val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         val toxiProxy = spec.toxiProxy
@@ -120,6 +120,9 @@ class ToxiproxySidecarFeature(
         // Variable for the port number that Toxiproxy will listen to
         // An addition of 1 to the value is made for each proxy
         var port = FIRST_PORT_NUMBER
+
+        toxiproxyConfigs.clear()
+        toxiproxyConfigs.add(getDefaultToxiProxyConfig())
 
         adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
             val url = adc.fields["config/$varname"]?.value<String>()
