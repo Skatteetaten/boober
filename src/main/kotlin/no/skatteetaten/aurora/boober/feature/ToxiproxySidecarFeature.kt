@@ -241,6 +241,7 @@ class ToxiproxySidecarFeature(
             val proxyAddress = toxiproxyConfigs
                 .find { toxiProxyConfig -> toxiProxyConfig.name == proxyName }!!
                 .listen
+                .replace(Regex("^0\\.0\\.0\\.0"), "http://localhost")
             it.env.find { v -> v.name == varName }?.value = proxyAddress
         }
     }

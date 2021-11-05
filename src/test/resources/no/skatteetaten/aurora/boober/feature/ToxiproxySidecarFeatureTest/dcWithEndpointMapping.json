@@ -27,12 +27,12 @@
             "env": [
               {
                 "name": "TEST_WITH_PROXYNAME",
-                "value": "0.0.0.0:18000",
+                "value": "http://localhost:18000",
                 "valueFrom": {}
               },
               {
                 "name": "TEST_WITHOUT_PROXYNAME",
-                "value": "0.0.0.0:18001",
+                "value": "http://localhost:18001",
                 "valueFrom": {}
               }
             ],
