@@ -38,14 +38,12 @@ val AuroraDeploymentSpec.toxiProxy: String?
             this["toxiproxy/version"]
         }
 
+const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
+
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService
 ) : AbstractResolveTagFeature(cantusService) {
-
-    // Variable for the port number that Toxiproxy will listen to
-    // An addition of 1 to the value is made for each proxy
-    private var port = 18000
 
     val toxiproxyConfigs: MutableList<ToxiProxyConfig> = mutableListOf(getDefaultToxiProxyConfig())
 
@@ -118,6 +116,10 @@ class ToxiproxySidecarFeature(
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
         adc.toxiProxy ?: return emptySet()
+
+        // Variable for the port number that Toxiproxy will listen to
+        // An addition of 1 to the value is made for each proxy
+        var port = FIRST_PORT_NUMBER
 
         adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
             val url = adc.fields["config/$varname"]?.value<String>()
