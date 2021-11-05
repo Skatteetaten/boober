@@ -60,7 +60,19 @@ class AzureFeature(
             AuroraConfigFieldHandler(
                 AuroraAzureAppSubPart.ConfigPath.groups,
                 validator = { it.isListOrEmpty(required = false) }
-            )
+            ),
+            AuroraConfigFieldHandler(
+                AuroraAzureAppSubPart.ConfigPath.managedRoute,
+                defaultValue = false,
+                validator = { it.boolean() }
+            ),
+            AuroraConfigFieldHandler(
+                "webseal",
+                defaultValue = false,
+                validator = { it.boolean() },
+                canBeSimplifiedConfig = true
+            ),
+            AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
         )
     }
 

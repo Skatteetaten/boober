@@ -58,13 +58,15 @@ import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createA
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
+import java.util.Locale
+import java.util.stream.Collectors
 import kotlin.reflect.KClass
 
-/*
-  Abstract class to test a single feature
-  Override the feature variable with the Feature you want to test
+/**
+ Abstract class to test a single feature
+ Override the feature variable with the Feature you want to test
 
-  Look at the helper methods in this class to create handlers/resources for this feature
+ Look at the helper methods in this class to create handlers/resources for this feature
 
  */
 
@@ -74,9 +76,23 @@ class TestDefaultFeature : Feature {
     }
 }
 
-abstract class AbstractFeatureTest : ResourceLoader() {
+/**
+ * Test single feature. This what you usually want.
+ */
+abstract class AbstractFeatureTest : AbstractMultiFeatureTest() {
 
     abstract val feature: Feature
+
+    override val features: List<Feature>
+        get() = listOf(feature)
+}
+
+/**
+ * You need to test more than 1 feature at a time. This is when your
+ * new feature needs state or information from a different feature.
+ */
+abstract class AbstractMultiFeatureTest : ResourceLoader() {
+    abstract val features: List<Feature>
 
     val cluster = "utv"
     val affiliation = "paas"
@@ -261,7 +277,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         } returns "1234567890"
 
         val service =
-            AuroraDeploymentContextService(features = listOf(feature), idService = idService, idServiceFallback = null)
+            AuroraDeploymentContextService(features = features, idService = idService, idServiceFallback = null)
         val auroraConfig = createAuroraConfig(file.toMap())
 
         val deployCommand = AuroraContextCommand(
@@ -299,7 +315,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
                 } else null
         val service =
             AuroraDeploymentContextService(
-                features = listOf(feature),
+                features = features,
                 idService = idService,
                 idServiceFallback = idServiceFallback
             )
@@ -374,12 +390,20 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val (valid, invalid) = createAuroraDeploymentContext(app, files = files)
 
         if (invalid.isNotEmpty()) {
-            throw MultiApplicationValidationException(invalid.map { it.errors })
+            throw MultiApplicationValidationException(
+                errors = invalid.map { it.errors },
+                errorMessage = invalid.flatMap { it.errors.errors }.map { it.message ?: "" }.joinToString(separator = ",")
+            )
         }
 
-        val generated = valid.first().features.flatMap {
-            it.key.generate(it.value, valid.first().featureContext[it.key] ?: emptyMap())
-        }.toSet()
+        val generated = valid.stream()
+            .map { adc ->
+                adc.features.flatMap {
+                    it.key.generate(it.value, valid.first().featureContext[it.key] ?: emptyMap())
+                }
+            }
+            .flatMap { it.stream() }
+            .collect(Collectors.toList())
 
         if (resources.isEmpty()) {
             return generated.toList()
@@ -448,7 +472,7 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         val podSpec = dc.spec.template.spec
 
         val volumeName = podSpec.volumes[0].name
-        val volumeEnvName = "VOLUME_$volumeName".replace("-", "_").toUpperCase()
+        val volumeEnvName = "VOLUME_$volumeName".replace("-", "_").uppercase(Locale.getDefault())
         val volumeEnvValue = podSpec.containers[0].volumeMounts[0].mountPath
 
         val expectedEnv = additionalEnv.addIfNotNull(volumeEnvName to volumeEnvValue)
@@ -461,19 +485,37 @@ abstract class AbstractFeatureTest : ResourceLoader() {
         actual
     }
 
+    fun Assert<AuroraResource>.auroraResourceCreatedByTarget(target: Class<*>): Assert<AuroraResource> = transform { actual ->
+        val expected = features.stream()
+            .map { it::class.java }
+            .filter { it == target }
+            .findFirst()
+        if (expected.isPresent && expected.get() == actual.createdSource.feature) {
+            actual
+        } else if (expected.isPresent) {
+            this.expected(":${show(expected.get())} and:${show(actual.createdSource.feature)} to be the same")
+        } else {
+            this.expected("Could not find feature ${target.simpleName} as part of the features under test")
+        }
+    }
+
     fun Assert<AuroraResource>.auroraResourceCreatedByThisFeature(): Assert<AuroraResource> = transform { actual ->
-        val expected = feature::class.java
-        if (expected == actual.createdSource.feature) {
+        val expected = features.stream()
+            .filter { it::class.java == actual.createdSource.feature }
+            .findFirst()
+
+        if (expected.isPresent) {
             actual
         } else {
-            this.expected(":${show(expected)} and:${show(actual.createdSource.feature)} to be the same")
+            // The error message is no longer precise as it refers to the first element, when target might have been another
+            this.expected(":${show(features.first()::class.java)} and:${show(actual.createdSource.feature)} to be the same")
         }
     }
 
     fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String, index: Int = 0) =
         transform { ar ->
             val actual = ar.sources.toList()[index]
-            val expected = AuroraResourceSource(feature::class.java, comment)
+            val expected = AuroraResourceSource(features.first()::class.java, comment)
             if (actual == expected) {
                 ar
             } else {

@@ -16,6 +16,14 @@ import org.springframework.stereotype.Service
 val WEBSEAL_ROLES_ANNOTATION: String = "marjory.sits.no/route.roles"
 val WEBSEAL_DONE_ANNOTATION: String = "marjory.sits.no-routes-config.done"
 
+val AuroraDeploymentSpec.isWebsealEnabled: Boolean
+    get() {
+        return (
+            this.getOrNull<String>("webseal")?.let { it == "true" } == true ||
+                this.getOrNull<String>("webseal/host") != null
+            )
+    }
+
 @ConditionalOnPropertyMissingOrEmpty("integrations.skap.url")
 @Service
 class WebsealDisabledFeature : AbstractWebsealFeature("") {

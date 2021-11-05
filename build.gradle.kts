@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("no.skatteetaten.gradle.aurora") version "4.3.20"
+    id("no.skatteetaten.gradle.aurora") version "4.3.22"
 }
 
 aurora {
@@ -46,7 +46,7 @@ dependencies {
     testImplementation("io.mockk:mockk:1.12.0")
     testImplementation("com.willowtreeapps.assertk:assertk-jvm:0.25")
     testImplementation("no.skatteetaten.aurora:mockmvc-extensions-kotlin:1.1.7")
-    testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.1.8")
+    testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.2.0")
     testImplementation("com.ninja-squad:springmockk:3.0.1")
 }
 
