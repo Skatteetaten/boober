@@ -150,12 +150,12 @@ class MountFeature(
 
         val errors = validateExistinAndSecretVault(mounts)
             .addIfNotNull(validatePSATMounts(mounts))
-            .addIfNotNull(ensureCompatibleKuberntesForPSATMounts(mounts))
         // .addIfNotNull(validatePVCMounts(mounts))
         if (!fullValidation || adc.cluster != cluster) {
             return errors
         }
         return errors
+            .addIfNotNull(ensureCompatibleKuberntesForPSATMounts(mounts))
             .addIfNotNull(validateExistingMounts(mounts, adc))
             .addIfNotNull(validateVaultExistence(mounts, adc))
     }
