@@ -31,6 +31,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
+import java.net.URI
 
 val AuroraDeploymentSpec.toxiProxy: String?
     get() =
@@ -127,10 +128,16 @@ class ToxiproxySidecarFeature(
         adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
             val url = adc.fields["config/$varname"]?.value<String>()
             if (url != null) {
+                val uri = URI(url)
+                val upstreamPort = if (uri.port == -1) {
+                    if (uri.scheme == "https") { 443 } else { 80 }
+                } else {
+                    uri.port
+                }
                 toxiproxyConfigs.add(ToxiProxyConfig(
                     name = proxyname,
                     listen = "0.0.0.0:$port",
-                    upstream = url
+                    upstream = uri.host + ":" + upstreamPort
                 ))
                 port++
             }
