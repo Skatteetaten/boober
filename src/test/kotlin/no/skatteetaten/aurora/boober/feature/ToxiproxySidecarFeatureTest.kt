@@ -15,8 +15,10 @@ import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
+import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
+import org.junit.jupiter.api.assertThrows
 
 class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -78,7 +80,9 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 },
                 "config": {
                     "TEST_WITH_PROXYNAME": "http://test1.test",
-                    "TEST_WITHOUT_PROXYNAME": "http://test2.test"
+                    "TEST_WITHOUT_PROXYNAME": "http://test2.test",
+                    "DISABLED_TEST_WITH_PROXYNAME": "http://test3.test",
+                    "DISABLED_TEST_WITHOUT_PROXYNAME": "http://test4.test"
                 }
             }""",
             createEmptyService(),
@@ -86,7 +90,9 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 name = "simple"
                 env = listOf(
                     EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
-                    EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource())
+                    EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource()),
+                    EnvVar("DISABLED_TEST_WITH_PROXYNAME", "http://test3.test", EnvVarSource()),
+                    EnvVar("DISABLED_TEST_WITHOUT_PROXYNAME", "http://test4.test", EnvVarSource())
                 )
             })
         )
@@ -104,5 +110,28 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("configWithEndpointMapping.json")
+    }
+
+    @Test
+    fun `Should fail with an error message when an endpoint with no corresponding environment variable is given`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "endpoints": {
+                            "NOT_EXISTING_VAR": {"proxyname": "test", "enabled": true}
+                        }
+                    }
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "Found Toxiproxy config for endpoint named NOT_EXISTING_VAR, but there is no such environment variable."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }
 }

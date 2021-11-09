@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -27,6 +28,7 @@ import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
@@ -113,6 +115,21 @@ class ToxiproxySidecarFeature(
                 AuroraConfigFieldHandler(variable)
             )
         }
+
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        context: FeatureContext
+    ): List<Exception> = if (fullValidation) {
+        // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable
+        adc.groupToxiproxyEndpointFields().keys.filter {
+            varName -> !adc.getSubKeys("config").keys.map { it.removePrefix("config/") }.contains(varName)
+        }.map {
+            AuroraDeploymentSpecValidationException(
+                "Found Toxiproxy config for endpoint named $it, but there is no such environment variable."
+            )
+        }
+    } else { emptyList() }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
@@ -268,12 +285,16 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
 // Regex for matching a variable name in a field name
 val varNameInFieldNameRegex = Regex("(?<=^toxiproxy\\/endpoints\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
 
-// Return a list of proxynames and corresponding environment variable names
-// If proxyname is not set, it defaults to "endpoint_<variable name>"
-fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
+// Return lists of AuroraConfigFields grouped by environment variable name
+fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
     .getSubKeys("toxiproxy/endpoints")
     .map { it }
     .groupBy { varNameInFieldNameRegex.find(it.key)!!.value }
+
+// Return a list of proxynames and corresponding environment variable names
+// If proxyname is not set, it defaults to "endpoint_<variable name>"
+fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
+    .groupToxiproxyEndpointFields()
     .filter { (varName, fields) ->
         if (fields.size == 1 && fields[0].key.endsWith(varName)) {
             fields[0]
