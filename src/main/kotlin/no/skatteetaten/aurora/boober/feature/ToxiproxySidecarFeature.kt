@@ -254,7 +254,7 @@ class ToxiproxySidecarFeature(
             image = imageMetadata.getFullImagePath()
             readinessProbe = newProbe {
                 tcpSocket {
-                    port = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
+                    port = IntOrString(PortNumbers.TOXIPROXY_ADMIN_PORT)
                 }
                 initialDelaySeconds = 10
                 timeoutSeconds = 1

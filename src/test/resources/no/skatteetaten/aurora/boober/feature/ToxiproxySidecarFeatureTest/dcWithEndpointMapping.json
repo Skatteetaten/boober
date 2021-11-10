@@ -81,7 +81,7 @@
             "readinessProbe": {
               "initialDelaySeconds": 10,
               "tcpSocket": {
-                "port": 8090
+                "port": 8474
               },
               "timeoutSeconds": 1
             },
