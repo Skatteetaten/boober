@@ -24,31 +24,6 @@
       "spec": {
         "containers": [
           {
-            "env": [
-              {
-                "name": "TEST_WITH_PROXYNAME",
-                "value": "http://localhost:18000",
-                "valueFrom": {}
-              },
-              {
-                "name": "TEST_WITHOUT_PROXYNAME",
-                "value": "http://localhost:18001",
-                "valueFrom": {}
-              },
-              {
-                "name": "DISABLED_TEST_WITH_PROXYNAME",
-                "value": "http://test3.test",
-                "valueFrom": {}
-              },
-              {
-                "name": "DISABLED_TEST_WITHOUT_PROXYNAME",
-                "value": "http://test4.test",
-                "valueFrom": {}
-              }
-            ],
-            "name": "simple"
-          },
-          {
             "args": [
               "-config",
               "/u01/config/toxiproxy/config.json",
@@ -101,6 +76,31 @@
                 "name": "simple-toxiproxy-config"
               }
             ]
+          },
+          {
+            "env": [
+              {
+                "name": "TEST_WITH_PROXYNAME",
+                "value": "http://localhost:18000",
+                "valueFrom": {}
+              },
+              {
+                "name": "TEST_WITHOUT_PROXYNAME",
+                "value": "http://localhost:18001",
+                "valueFrom": {}
+              },
+              {
+                "name": "DISABLED_TEST_WITH_PROXYNAME",
+                "value": "http://test3.test",
+                "valueFrom": {}
+              },
+              {
+                "name": "DISABLED_TEST_WITHOUT_PROXYNAME",
+                "value": "http://test4.test",
+                "valueFrom": {}
+              }
+            ],
+            "name": "simple"
           }
         ],
         "dnsPolicy": "ClusterFirst",
