@@ -123,7 +123,7 @@ class ToxiproxySidecarFeature(
     ): List<Exception> = if (fullValidation) {
         // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable
         adc.groupToxiproxyEndpointFields().keys.filter {
-            varName -> !adc.getSubKeys("config").keys.map { it.removePrefix("config/") }.contains(varName)
+            varName -> !adc.getSubKeys("config").keys.any { it.removePrefix("config/").equals(varName) }
         }.map {
             AuroraDeploymentSpecValidationException(
                 "Found Toxiproxy config for endpoint named $it, but there is no such environment variable."
