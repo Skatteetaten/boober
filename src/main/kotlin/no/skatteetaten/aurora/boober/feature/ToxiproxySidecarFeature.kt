@@ -147,7 +147,7 @@ class ToxiproxySidecarFeature(
             if (url != null) {
                 val uri = URI(url)
                 val upstreamPort = if (uri.port == -1) {
-                    if (uri.scheme == "https") { 443 } else { 80 }
+                    if (uri.scheme == "https") { PortNumbers.HTTPS_PORT } else { PortNumbers.HTTP_PORT }
                 } else {
                     uri.port
                 }
