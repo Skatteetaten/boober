@@ -259,7 +259,7 @@ class ToxiproxySidecarFeature(
                 initialDelaySeconds = 10
                 timeoutSeconds = 1
             }
-            args = listOf("-config", "$configPath/toxiproxy/config.json")
+            args = listOf("-config", "$configPath/toxiproxy/config.json", "-host=0.0.0.0")
         }
     }
 
