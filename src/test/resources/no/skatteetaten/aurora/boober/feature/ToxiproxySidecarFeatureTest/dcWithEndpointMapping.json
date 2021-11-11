@@ -98,6 +98,21 @@
                 "name": "DISABLED_TEST_WITHOUT_PROXYNAME",
                 "value": "http://test4.test",
                 "valueFrom": {}
+              },
+              {
+                "name": "HTTPS_URL",
+                "value": "http://localhost:18002",
+                "valueFrom": {}
+              },
+              {
+                "name": "URL_WITH_PORT",
+                "value": "http://localhost:18003",
+                "valueFrom": {}
+              },
+              {
+                "name": "URL_WITH_PATH",
+                "value": "http://localhost:18004",
+                "valueFrom": {}
               }
             ],
             "name": "simple"

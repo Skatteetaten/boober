@@ -72,27 +72,36 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 "toxiproxy": {
                     "version": "2.1.3",
                     "endpoints": {
-                        "TEST_WITH_PROXYNAME": {"proxyname": "test", "enabled": true},
+                        "TEST_WITH_PROXYNAME": {"proxyname": "test1", "enabled": true},
                         "TEST_WITHOUT_PROXYNAME": true,
-                        "DISABLED_TEST_WITH_PROXYNAME": {"proxyname": "test", "enabled": false},
-                        "DISABLED_TEST_WITHOUT_PROXYNAME": false
+                        "DISABLED_TEST_WITH_PROXYNAME": {"proxyname": "test3", "enabled": false},
+                        "DISABLED_TEST_WITHOUT_PROXYNAME": false,
+                        "HTTPS_URL": {"proxyname": "test5", "enabled": true},
+                        "URL_WITH_PORT": {"proxyname": "test6", "enabled": true},
+                        "URL_WITH_PATH": {"proxyname": "test7", "enabled": true}
                     }
                 },
                 "config": {
                     "TEST_WITH_PROXYNAME": "http://test1.test",
                     "TEST_WITHOUT_PROXYNAME": "http://test2.test",
                     "DISABLED_TEST_WITH_PROXYNAME": "http://test3.test",
-                    "DISABLED_TEST_WITHOUT_PROXYNAME": "http://test4.test"
+                    "DISABLED_TEST_WITHOUT_PROXYNAME": "http://test4.test",
+                    "HTTPS_URL": "https://test5.test",
+                    "URL_WITH_PORT": "http://test6.test:1234",
+                    "URL_WITH_PATH": "http://test7.test/path"
                 }
             }""",
             createEmptyService(),
             createDeploymentConfigWithContainer(newContainer {
                 name = "simple"
                 env = listOf(
-                    EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
-                    EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource()),
-                    EnvVar("DISABLED_TEST_WITH_PROXYNAME", "http://test3.test", EnvVarSource()),
-                    EnvVar("DISABLED_TEST_WITHOUT_PROXYNAME", "http://test4.test", EnvVarSource())
+                        EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
+                        EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource()),
+                        EnvVar("DISABLED_TEST_WITH_PROXYNAME", "http://test3.test", EnvVarSource()),
+                        EnvVar("DISABLED_TEST_WITHOUT_PROXYNAME", "http://test4.test", EnvVarSource()),
+                        EnvVar("HTTPS_URL", "https://test5.test", EnvVarSource()),
+                        EnvVar("URL_WITH_PORT", "http://test6.test:1234", EnvVarSource()),
+                        EnvVar("URL_WITH_PATH", "http://test7.test/path", EnvVarSource())
                 )
             })
         )
