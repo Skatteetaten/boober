@@ -121,14 +121,44 @@ class ToxiproxySidecarFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> = if (fullValidation) {
+        val groupedFields = adc.groupToxiproxyEndpointFields()
+
         // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable
-        adc.groupToxiproxyEndpointFields().keys.filter {
-            varName -> !adc.getSubKeys("config").keys.any { it.removePrefix("config/").equals(varName) }
-        }.map {
-            AuroraDeploymentSpecValidationException(
-                "Found Toxiproxy config for endpoint named $it, but there is no such environment variable."
-            )
-        }
+        val missingVariableErrors = groupedFields
+            .keys
+            .mapNotNull {
+                varName -> if (
+                    !adc.getSubKeys("config")
+                        .keys
+                        .any { it.removePrefix("config/") == varName }
+                ) {
+                    AuroraDeploymentSpecValidationException(
+                        "Found Toxiproxy config for endpoint named $varName, " +
+                            "but there is no such environment variable."
+                    )
+                } else null
+            }
+
+        // There should be no proxyname duplicates
+        val proxynameDuplicateErrors = groupedFields
+            .map {
+                (varName, fields) -> fields
+                    .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }
+                    ?.value
+                    ?.value<String>()
+                    ?: generateProxyNameFromVarName(varName)
+            }
+            .groupingBy { it }
+            .eachCount()
+            .filter { it.value > 1 }
+            .map {
+                AuroraDeploymentSpecValidationException(
+                    "Found ${it.value} Toxiproxy configs with the proxy name \"${it.key}\". " +
+                        "Proxy names have to be unique."
+                )
+            }
+
+        listOf(missingVariableErrors, proxynameDuplicateErrors).flatten()
     } else { emptyList() }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -307,6 +337,10 @@ fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>>
             .find { it.key.endsWith("/proxyname") }
             ?.value
             ?.value<String>()
-            ?: "endpoint_$varName"
+            ?: generateProxyNameFromVarName(varName)
         Pair(proxyName, varName)
     }
+
+// Generate a default proxy name based on the variable name
+// To be used when there is no proxy name specified by the user
+fun generateProxyNameFromVarName(varName: String) = "endpoint_$varName"

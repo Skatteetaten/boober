@@ -139,7 +139,43 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
             )
         }.errors.first().errors.first().message
 
-        val expectedErrorMessage = "Found Toxiproxy config for endpoint named NOT_EXISTING_VAR, but there is no such environment variable."
+        val expectedErrorMessage =
+            "Found Toxiproxy config for endpoint named NOT_EXISTING_VAR, but there is no such environment variable."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when there are proxyname duplicates`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                    """{
+                        "toxiproxy": {
+                            "version": "2.1.3",
+                            "endpoints": {
+                                "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
+                                "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
+                            }
+                        },
+                        "config": {
+                            "TEST_WITH_PROXYNAME": "http://test1.test",
+                            "TEST_WITH_SAME_PROXYNAME": "http://test2.test"
+                        }
+                    }""",
+                    createEmptyService(),
+                    createDeploymentConfigWithContainer(newContainer {
+                        name = "simple"
+                        env = listOf(
+                                EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
+                                EnvVar("TEST_WITH_SAME_PROXYNAME", "http://test2.test", EnvVarSource())
+                        )
+                    })
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage =
+            "Found 2 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
 
         assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }
