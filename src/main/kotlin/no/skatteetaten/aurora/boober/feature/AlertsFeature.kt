@@ -49,10 +49,6 @@ class AlertsFeature : Feature {
         "severity"
     )
 
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return !header.isJob
-    }
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val alertsDefaults = setOf(
             AuroraConfigFieldHandler("$defaultsName/enabled"),
