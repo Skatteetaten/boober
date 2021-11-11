@@ -36,7 +36,8 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
                 """{ 
             "type" : "localTemplate", 
             "templateFile" : "templates/atomhopper.json"
-            }""", files = templateFile
+            }""",
+                files = templateFile
             )
         }.singleApplicationErrorResult("Required template parameters [FEED_NAME, DB_NAME] not set")
     }
@@ -52,7 +53,8 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
               "FEED_NAME" : "simple", 
               "DB_NAME" : "simple"
              }
-           }""", files = templateFile,
+           }""",
+            files = templateFile,
             resource = createEmptyApplicationDeployment(),
             createdResources = 4
         )

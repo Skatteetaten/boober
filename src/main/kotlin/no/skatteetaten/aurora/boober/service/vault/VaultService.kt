@@ -73,8 +73,10 @@ class VaultService(
     }
 
     fun findVault(vaultCollection: VaultCollection, vaultName: String) =
-        (findVaultByNameIfAllowed(vaultCollection, vaultName)
-            ?: throw IllegalArgumentException("Vault not found name=$vaultName"))
+        (
+            findVaultByNameIfAllowed(vaultCollection, vaultName)
+                ?: throw IllegalArgumentException("Vault not found name=$vaultName")
+            )
 
     fun vaultExists(vaultCollectionName: String, vaultName: String): Boolean {
         return withVaultCollectionAndRepoForUpdate(vaultCollectionName) { vaultCollection, _ ->

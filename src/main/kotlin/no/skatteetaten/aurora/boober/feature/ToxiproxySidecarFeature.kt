@@ -262,7 +262,7 @@ class ToxiproxySidecarFeature(
                 }
             }
             env = containerPorts.map {
-                val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".toUpperCase()
+                val portName = if (it.key == "http") "HTTP_PORT" else "${it.key}_HTTP_PORT".uppercase()
                 EnvVarBuilder().withName(portName).withValue(it.value.toString()).build()
             }
             volumeMounts = listOf(

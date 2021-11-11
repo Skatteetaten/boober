@@ -49,15 +49,12 @@ class AlertsFeature : Feature {
         "severity"
     )
 
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return !header.isJob
-    }
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val alertsDefaults = setOf(
             AuroraConfigFieldHandler("$defaultsName/enabled"),
             AuroraConfigFieldHandler("$defaultsName/connection"),
-            AuroraConfigFieldHandler("$defaultsName/delay"))
+            AuroraConfigFieldHandler("$defaultsName/delay")
+        )
         val definedAlerts = cmd.applicationFiles.getDefinedAlerts()
             .flatMap { name ->
                 setOf(
@@ -88,17 +85,17 @@ class AlertsFeature : Feature {
 
         val isEnabledPropertyMissing = alarms.any {
             adc.getOrNull<String>("$featureName/$it/enabled").isNullOrEmpty() &&
-                    adc.getOrNull<String>("$defaultsName/enabled").isNullOrEmpty()
+                adc.getOrNull<String>("$defaultsName/enabled").isNullOrEmpty()
         }
 
         val isConnectionPropertyMissing = alarms.any {
             adc.getOrNull<String>("$featureName/$it/connection").isNullOrEmpty() &&
-                    adc.getOrNull<String>("$defaultsName/connection").isNullOrEmpty()
+                adc.getOrNull<String>("$defaultsName/connection").isNullOrEmpty()
         }
 
         val isDelayPropertyMissing = alarms.any {
             adc.getOrNull<String>("$featureName/$it/delay").isNullOrEmpty() &&
-                    adc.getOrNull<String>("$defaultsName/delay").isNullOrEmpty()
+                adc.getOrNull<String>("$defaultsName/delay").isNullOrEmpty()
         }
 
         val isSeverityMissing = alarms.any {
@@ -189,7 +186,7 @@ class AlertsFeature : Feature {
         val defaultEnabled = this.getOrNull<Boolean>("$defaultsName/enabled") ?: false
         val defaultDelay = this.getOrNull<String>("$defaultsName/delay") ?: "1"
         val connection = alertConnection ?: this.getOrNull<String>("$defaultsName/connection")
-        ?: throw IllegalStateException("Missing $confPath/connection value, check validation-logic")
+            ?: throw IllegalStateException("Missing $confPath/connection value, check validation-logic")
 
         return AlertConfiguration(
             enabled = alertEnabled ?: defaultEnabled,

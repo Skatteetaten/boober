@@ -45,7 +45,8 @@ class PreStopFeatureTest : AbstractFeatureTest() {
                "lifecycle" : {
                       "preStopDuration" : "10s"
                     }
-           }""", createEmptyDeploymentConfig()
+           }""",
+            createEmptyDeploymentConfig()
         )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added preStop exec")

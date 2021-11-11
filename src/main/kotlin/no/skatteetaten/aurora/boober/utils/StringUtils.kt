@@ -37,7 +37,7 @@ fun String.truncateStringAndHashTrailingCharacters(maxLength: Int, delimiter: Ch
 }
 
 // A kubernetes name must lowercase and cannot contain _.
-fun String.normalizeKubernetesName() = this.toLowerCase().replace("_", "-")
+fun String.normalizeKubernetesName() = this.lowercase().replace("_", "-")
 
 fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
     if (this.startsWith(startWith)) {
@@ -51,7 +51,7 @@ fun String.ensureStartWith(startWith: String, seperator: String = ""): String {
  */
 private val dnsMatcher: Pattern = Pattern.compile(
     "^((?!-)[A-Za-z0-9-]" +
-            "{1,63}(?<!-))"
+        "{1,63}(?<!-))"
 )
 
 fun String.isValidDns(): Boolean {

@@ -185,13 +185,13 @@ class DatabaseFeature(
         }
 
     fun SchemaProvisionRequest.getSecretName(prefix: String): String {
-        val secretName = this.details.schemaName.replace("_", "-").toLowerCase().ensureStartWith(prefix, "-")
+        val secretName = this.details.schemaName.replace("_", "-").lowercase().ensureStartWith(prefix, "-")
         return "$secretName-db"
     }
 
     fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
-        val mountName = "${this.name}-db".toLowerCase()
-        val volumeName = mountName.replace("_", "-").toLowerCase().ensureStartWith(appName, "-")
+        val mountName = "${this.name}-db".lowercase()
+        val volumeName = mountName.replace("_", "-").lowercase().ensureStartWith(appName, "-")
 
         val mount = newVolumeMount {
             name = volumeName
@@ -248,14 +248,16 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
         val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
 
-        return (dbDefaultsHandlers + dbHandlers + listOf(
-            AuroraConfigFieldHandler(
-                "database",
-                validator = { it.boolean() },
-                defaultValue = false,
-                canBeSimplifiedConfig = true
+        return (
+            dbDefaultsHandlers + dbHandlers + listOf(
+                AuroraConfigFieldHandler(
+                    "database",
+                    validator = { it.boolean() },
+                    defaultValue = false,
+                    canBeSimplifiedConfig = true
+                )
             )
-        )).toSet()
+            ).toSet()
     }
 
     fun findDatabases(adc: AuroraDeploymentSpec): List<Database> {
@@ -366,7 +368,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler(
                 "$db/flavor", validator = { node ->
                     node?.oneOf(DatabaseFlavor.values().map { it.toString() })
-                })
+                }
+            )
         )
 
         val instanceHandlers = findInstanceHandlers(db, applicationFiles)
@@ -382,7 +385,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
                 defaultValue = DatabaseFlavor.ORACLE_MANAGED,
                 validator = { node ->
                     node.oneOf(DatabaseFlavor.values().map { it.toString() })
-                }),
+                }
+            ),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/generate",
                 validator = { it.boolean() },
@@ -391,7 +395,8 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/tryReuse",
                 defaultValue = false,
-                validator = { it.boolean() }),
+                validator = { it.boolean() }
+            ),
             AuroraConfigFieldHandler(
                 "$databaseDefaultsKey/name",
                 defaultValue = "@name@"
@@ -448,15 +453,15 @@ data class DatabaseInstance(
 
 fun Database.createSchemaDetails(affiliation: String) =
     SchemaRequestDetails(
-        schemaName = this.name.toLowerCase(),
+        schemaName = this.name.lowercase(),
         databaseInstance = this.instance,
         affiliation = affiliation,
         engine = this.flavor.engine
     )
 
 fun createDbEnv(name: String, envName: String = name): List<Pair<String, String>> {
-    val path = "$secretsPath/${name.toLowerCase()}"
-    val envName = envName.replace("-", "_").toUpperCase()
+    val path = "$secretsPath/${name.lowercase()}"
+    val envName = envName.replace("-", "_").uppercase()
 
     return listOf(
         envName to "$path/info",

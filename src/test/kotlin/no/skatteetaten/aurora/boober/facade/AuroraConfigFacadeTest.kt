@@ -244,15 +244,18 @@ class AuroraConfigFacadeTest(
             }
         }
         val config = getAuroraConfigSamples()
-        val newConfig = config.copy(files = config.files.filter { it.name != "utv/ah.json" } + AuroraConfigFile(
-            "utv/ah.json", """
+        val newConfig = config.copy(
+            files = config.files.filter { it.name != "utv/ah.json" } + AuroraConfigFile(
+                "utv/ah.json",
+                """
             {
             "config" : {
                "FOO" : "BAR", 
                "BAR" : "BAZ",
             }
         """
-        ))
+            )
+        )
 
         assertThat {
             facade.validateAuroraConfig(
@@ -329,14 +332,18 @@ class AuroraConfigFacadeTest(
             }
         }
         val config = getAuroraConfigSamples()
-        val newConfig = config.copy(files = config.files.filter { it.name != "utv/simple.json" } + AuroraConfigFile(
-            "utv/simple.yaml", """
+        val newConfig = config.copy(
+            files = config.files.filter { it.name != "utv/simple.json" } + AuroraConfigFile(
+                "utv/simple.yaml",
+                """
               "bigip" : {
                 "service" : "simple-utv",
                 "externalHost" :"test.ske",
                 "apiPaths": ["/api"]
-              }""".trimIndent()
-        ))
+              }
+                """.trimIndent()
+            )
+        )
 
         val validated = facade.validateAuroraConfig(
             newConfig,
@@ -362,11 +369,13 @@ class AuroraConfigFacadeTest(
             }
         }
         val config = getAuroraConfigSamples()
-        val newConfig = config.copy(files = config.files
-            .filter { it.name != "utv/simple.json" }
-            .filter { it.name != "utv/whoami.json" } +
-            AuroraConfigFile(
-                "utv/simple.json", """
+        val newConfig = config.copy(
+            files = config.files
+                .filter { it.name != "utv/simple.json" }
+                .filter { it.name != "utv/whoami.json" } +
+                AuroraConfigFile(
+                    "utv/simple.json",
+                    """
               {
                 "route" : {
                     "simple" : {
@@ -374,10 +383,12 @@ class AuroraConfigFacadeTest(
                         "fullyQualifiedHost" : true
                     }
                 }
-              }""".trimIndent()
-            ) +
-            AuroraConfigFile(
-                "utv/whoami.json", """
+              }
+                    """.trimIndent()
+                ) +
+                AuroraConfigFile(
+                    "utv/whoami.json",
+                    """
               {
                 "route" : {
                     "whoami" : {
@@ -385,8 +396,10 @@ class AuroraConfigFacadeTest(
                         "fullyQualifiedHost" : true
                     }
                 }
-              }""".trimIndent()
-            ))
+              }
+                    """.trimIndent()
+                )
+        )
 
         val validated = facade.validateAuroraConfig(
             newConfig,
@@ -663,17 +676,19 @@ class AuroraConfigFacadeTest(
     @Test
     fun `Should throw error if globalFile field is placed illegally`() {
 
-        assertThat { facade.findAuroraDeploymentSpecSingle(
-            ref = auroraConfigRef,
-            adr = ApplicationDeploymentRef("include", "include"),
-            overrideFiles = listOf(
-                AuroraConfigFile(
-                    "include/include.json",
-                    override = true,
-                    contents = """{ "globalFile": "about-alternative1.json"}"""
-                )
-            ),
-            errorsAsWarnings = false)
+        assertThat {
+            facade.findAuroraDeploymentSpecSingle(
+                ref = auroraConfigRef,
+                adr = ApplicationDeploymentRef("include", "include"),
+                overrideFiles = listOf(
+                    AuroraConfigFile(
+                        "include/include.json",
+                        override = true,
+                        contents = """{ "globalFile": "about-alternative1.json"}"""
+                    )
+                ),
+                errorsAsWarnings = false
+            )
         }.isNotNull().isFailure()
             .messageContains("Config for application include in environment include contains errors. Invalid Source field=globalFile. Actual source=include/include.json.override (File type: APP). Must be placed within files of type: [BASE, ENV].")
     }

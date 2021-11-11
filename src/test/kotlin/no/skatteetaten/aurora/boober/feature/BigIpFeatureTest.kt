@@ -82,7 +82,8 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                 }
               }
             }
-        }""", createdResources = 2
+        }""",
+            createdResources = 2
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -127,7 +128,8 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                 }
             }
         }
-        """, createdResources = 2
+        """,
+            createdResources = 2
         )
 
         val routeSpec = (route.resource as Route).spec
@@ -155,7 +157,8 @@ class BigIpFeatureTest : AbstractFeatureTest() {
              }
            }
         }
-        """, createdResources = 4
+        """,
+            createdResources = 4
         )
 
         val bigIpSpec1: BigIpSpec = (bigip1.resource as BigIp).spec
@@ -199,7 +202,8 @@ class BigIpFeatureTest : AbstractFeatureTest() {
              }
            }
         }
-        """, createdResources = 2
+        """,
+            createdResources = 2
         )
 
         val bigIpSpec1: BigIpSpec = (bigip.resource as BigIp).spec
@@ -259,7 +263,8 @@ class BigIpFeatureTest : AbstractFeatureTest() {
                 "haproxy.router.openshift.io|timeout" : "30s"
                }
             }
-        }""", createdResources = 2
+        }""",
+            createdResources = 2
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()

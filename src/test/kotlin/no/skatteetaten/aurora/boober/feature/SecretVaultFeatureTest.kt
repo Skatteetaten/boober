@@ -177,7 +177,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         val resource = generateResources(
             """{
               "secretVault" : "foo" 
-             }""", createEmptyDeploymentConfig()
+             }""",
+            createEmptyDeploymentConfig()
         )
         assertThat(resource.size).isEqualTo(2)
         val dcResource = resource.first()
@@ -199,7 +200,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         val resource = generateResources(
             """{
               "secretVault" : "Foo_Bar" 
-             }""", createEmptyDeploymentConfig()
+             }""",
+            createEmptyDeploymentConfig()
         )
         assertThat(resource.size).isEqualTo(2)
         val dcResource = resource.first()
@@ -210,7 +212,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
         val foo = env.first()
 
         val attachmentResource = resource.last()
-        assertThat(attachmentResource.resource.metadata.name).isEqualTo(attachmentResource.resource.metadata.name.toLowerCase())
+        assertThat(attachmentResource.resource.metadata.name).isEqualTo(attachmentResource.resource.metadata.name.lowercase())
         assertThat(attachmentResource.resource.metadata.name).isEqualTo("simple-foo-bar-vault")
         assertEnvVarMounted(attachmentResource, "FOO_BAR", foo)
     }
@@ -228,7 +230,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                 "name" : "foo",
                 "keys" : ["FOO"] 
                }
-             }""", createEmptyDeploymentConfig()
+             }""",
+            createEmptyDeploymentConfig()
         )
         assertThat(resource.size).isEqualTo(2)
         val dcResource = resource.first()
@@ -255,7 +258,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                   "keys" : ["@name@"]
                 }
               }
-             }""", createEmptyDeploymentConfig()
+             }""",
+            createEmptyDeploymentConfig()
         )
         assertThat(resource.size).isEqualTo(2)
         val dcResource = resource.first()
@@ -281,7 +285,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                   "keyMappings" : { "@name@" : "SIMPLE_2" }
                 }
               }
-             }""", createEmptyDeploymentConfig()
+             }""",
+            createEmptyDeploymentConfig()
         )
         assertThat(resource.size).isEqualTo(2)
         val dcResource = resource.first()
@@ -308,7 +313,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                   "file" : "foo.properties"
                 }
               }
-             }""", createEmptyDeploymentConfig()
+             }""",
+            createEmptyDeploymentConfig()
         )
         assertThat(resource.size).isEqualTo(2)
         val dcResource = resource.first()
@@ -355,7 +361,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                    "enabled" : true
                  }
               }
-             }""", createdResources = 2, resource = createEmptyDeploymentConfig()
+             }""",
+            createdResources = 2, resource = createEmptyDeploymentConfig()
         )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
@@ -383,7 +390,8 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
                    "enabled" : true
                  }
               }
-             }""", createdResources = 2, resource = createEmptyDeploymentConfig()
+             }""",
+            createdResources = 2, resource = createEmptyDeploymentConfig()
         )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added env vars")
@@ -400,7 +408,7 @@ class SecretVaultFeatureTest : AbstractFeatureTest() {
     private fun mockVault(
         name: String,
         fileName: String = "latest.properties",
-        contents: String = "${name.toUpperCase()}=secretValue\n"
+        contents: String = "${name.uppercase()}=secretValue\n"
     ) {
         val vaultContents1 = contents.toByteArray()
         every { vaultProvider.vaultExists("paas", name) } returns true

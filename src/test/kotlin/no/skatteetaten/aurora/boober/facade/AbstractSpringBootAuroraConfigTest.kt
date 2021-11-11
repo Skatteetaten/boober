@@ -142,13 +142,13 @@ fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boo
 }
 
 fun JsonNode.getKey(): String {
-    val kind = this.get("kind").asText().toLowerCase()
+    val kind = this.get("kind").asText().lowercase()
     val metadata = this.get("metadata")
 
     val name = if (metadata == null) {
-        this.get("name").asText().toLowerCase()
+        this.get("name").asText().lowercase()
     } else {
-        metadata.get("name").asText().toLowerCase()
+        metadata.get("name").asText().lowercase()
     }
 
     return "$kind/$name"

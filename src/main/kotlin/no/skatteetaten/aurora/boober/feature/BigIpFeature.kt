@@ -140,7 +140,8 @@ class BigIpFeature(
                 namespace = adc.namespace
             },
             spec = BigIpSpec(
-                routeName, BigIpKonfigurasjonstjenesten(
+                routeName,
+                BigIpKonfigurasjonstjenesten(
                     service = adc["bigip/$host/service"],
                     asmPolicy = adc.getOrNull("bigip/$host/asmPolicy"),
                     oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/$host/oauthScopes"),
@@ -179,7 +180,8 @@ class BigIpFeature(
                 namespace = adc.namespace
             },
             spec = BigIpSpec(
-                routeName, BigIpKonfigurasjonstjenesten(
+                routeName,
+                BigIpKonfigurasjonstjenesten(
                     service = adc["bigip/service"],
                     asmPolicy = adc.getOrNull("bigip/asmPolicy"),
                     oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/oauthScopes"),

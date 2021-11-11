@@ -1,0 +1,120 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
+    },
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "spec": {
+        "containers": [
+          {
+            "name": "simple"
+          },
+          {
+            "env": [
+              {
+                "name": "CLINGER_PROXY_SERVER_PORT",
+                "value": "8100"
+              },
+              {
+                "name": "CLINGER_MANAGEMENT_SERVER_PORT",
+                "value": "8101"
+              }, {
+                "name": "CLINGER_PROXY_BACKEND_HOST",
+                "value" : "0.0.0.0"
+              }, {
+                "name": "CLINGER_PROXY_BACKEND_PORT",
+                "value" : "8080"
+              }, {
+                "name": "CLINGER_PROXY_SERVER_PORT",
+                "value" : "8100"
+              }, {
+                "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
+                "value" : "true"
+              }, {
+                "name": "CLINGER_DISCOVERY_URL",
+                "value" : "https://endpoint"
+              }, {
+                "name": "CLINGER_IV_GROUPS_REQUIRED",
+                "value" : "false"
+              }
+            ],
+            "image": "docker.registry/no_skatteetaten_aurora/clinger@sha:1234567",
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/liveness",
+                "port": 8101
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 2
+            },
+            "name": "simple-clinger-mix",
+            "ports": [
+              {
+                "containerPort": 8100,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8101,
+                "name": "management",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/ready",
+                "port": 8101
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 2
+            },
+            "resources": {
+              "limits": {
+                "memory": "256Mi",
+                "cpu": "1"
+              },
+              "requests": {
+                "memory": "128Mi",
+                "cpu": "25m"
+              }
+            }
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always"
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

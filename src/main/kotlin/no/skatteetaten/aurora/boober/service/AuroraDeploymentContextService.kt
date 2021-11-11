@@ -171,7 +171,7 @@ class AuroraDeploymentContextService(
                     businessGroup = affiliation
                 )
             ) ?: idServiceFallback?.generateOrFetchId(name, namespace)
-            ?: throw RuntimeException("Unable to generate applicationDeploymentId, no idService available")
+                ?: throw RuntimeException("Unable to generate applicationDeploymentId, no idService available")
         }
 
         val spec = AuroraDeploymentSpec.create(
@@ -189,7 +189,7 @@ class AuroraDeploymentContextService(
             fields = spec.fields
         ).validate()
 
-val filteredErrors = errors.filter { it.type != ErrorType.WARNING }
+        val filteredErrors = errors.filter { it.type != ErrorType.WARNING }
         // throws exception for  errors that are not warnings
         if (!deployCommand.errorsAsWarnings && filteredErrors.isNotEmpty()) {
             throw AuroraConfigException(

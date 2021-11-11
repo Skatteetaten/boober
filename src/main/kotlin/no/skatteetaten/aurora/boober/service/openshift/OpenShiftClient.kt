@@ -247,7 +247,7 @@ class OpenShiftClient(
      * the request.
      */
     private fun getClientForKind(kind: String): OpenShiftResourceClient {
-        return if (listOf("namespace", "route", "auroracname", "auroraazureapp").contains(kind.toLowerCase())) {
+        return if (listOf("namespace", "route", "auroracname", "auroraazureapp").contains(kind.lowercase())) {
             serviceAccountClient
         } else {
             userClient

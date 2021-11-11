@@ -65,7 +65,8 @@ class DeploymentConfigFeature : Feature {
                     "management",
                     defaultValue = true,
                     canBeSimplifiedConfig = true,
-                    validator = { it.boolean() })
+                    validator = { it.boolean() }
+                )
             )
         } else {
             setOf(
@@ -78,7 +79,8 @@ class DeploymentConfigFeature : Feature {
                     "management",
                     defaultValue = false,
                     canBeSimplifiedConfig = true,
-                    validator = { it.boolean() })
+                    validator = { it.boolean() }
+                )
             )
         }
         return setOf(

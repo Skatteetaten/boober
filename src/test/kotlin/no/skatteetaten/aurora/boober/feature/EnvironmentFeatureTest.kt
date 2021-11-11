@@ -75,7 +75,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 files = listOf(
                     AuroraConfigFile(
-                        "utv/about.json", contents = """{
+                        "utv/about.json",
+                        contents = """{
                   "permissions": {
                     "admin" : ""
                    }
@@ -121,7 +122,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 """{ "affiliation" : "foo"}""",
                 files = listOf(
                     AuroraConfigFile(
-                        "about.json", """{
+                        "about.json",
+                        """{
                          "schemaVersion": "v1",
                          "permissions": {
                            "admin": "APP_PaaS_utv"
@@ -142,7 +144,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 files = listOf(
                     AuroraConfigFile(
-                        "about.json", """{
+                        "about.json",
+                        """{
                          "schemaVersion": "v1",
                          "affiliation" : "this-is-too-damn-long",
                          "permissions": {
@@ -186,7 +189,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         )
 
         every { userDetailsProvider.getAuthenticatedUser() } returns User(
-            "hero", "token", "Jayne Cobb", grantedAuthorities = listOf(
+            "hero", "token", "Jayne Cobb",
+            grantedAuthorities = listOf(
                 SimpleGrantedAuthority("APP_PaaS_utv")
             )
         )
@@ -194,7 +198,8 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
         val (valid, _) = createAuroraDeploymentContext(
             files = listOf(
                 AuroraConfigFile(
-                    "about.json", """{
+                    "about.json",
+                    """{
                "schemaVersion": "v1",
                "affiliation" : "paas",
                "permissions": {

@@ -38,7 +38,7 @@ fun renderJsonForAuroraDeploymentSpecPointers(deploymentSpec: AuroraDeploymentSp
         renderJson(0, it as Map.Entry<String, Map<String, Any?>>)
     }
 
-    val maxSource: Int = sources.map { it.source.length }.max() ?: 0
+    val maxSource: Int = sources.map { it.source.length }.maxOrNull() ?: 0
 
     val lines = sources.map { line ->
         val whitespace = "".padStart(line.indent)

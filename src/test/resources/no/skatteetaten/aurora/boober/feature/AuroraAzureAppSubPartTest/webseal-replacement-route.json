@@ -1,0 +1,22 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "labels": {
+      "type": "webseal",
+      "azureManaged": "true"
+    },
+    "name": "simple-managed",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "host": "saksmappa.amutv.skead.no",
+    "port": {
+      "targetPort": "http"
+    },
+    "to": {
+      "kind": "Service",
+      "name": "simple"
+    }
+  }
+}

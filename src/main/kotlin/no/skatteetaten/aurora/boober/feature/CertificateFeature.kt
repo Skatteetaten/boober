@@ -142,7 +142,7 @@ object StsSecretGenerator {
             "STS_CERTIFICATE_URL" to "$baseUrl/certificate.crt",
             "STS_PRIVATE_KEY_URL" to "$baseUrl/privatekey.key",
             "STS_KEYSTORE_DESCRIPTOR" to "$baseUrl/descriptor.properties",
-            "VOLUME_$sName".toUpperCase() to baseUrl
+            "VOLUME_$sName".uppercase() to baseUrl
         ).addIfNotNull(additionalEnv)
             .toEnvVars()
 

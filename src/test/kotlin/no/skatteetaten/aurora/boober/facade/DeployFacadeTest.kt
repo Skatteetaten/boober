@@ -122,15 +122,17 @@ class DeployFacadeTest :
             rule({ method == "GET" }) {
                 path?.let { it ->
                     if (it.endsWith("/projects/paas-utv")) {
-                        json(newProject {
-                            metadata {
-                                name = "paas-utv"
-                                labels = mapOf("affiliation" to "paas")
+                        json(
+                            newProject {
+                                metadata {
+                                    name = "paas-utv"
+                                    labels = mapOf("affiliation" to "paas")
+                                }
+                                status {
+                                    phase = "Active"
+                                }
                             }
-                            status {
-                                phase = "Active"
-                            }
-                        })
+                        )
                     } else if (it.endsWith("/applicationdeployments/easy")) {
                         val ad = resultFiles["applicationdeployment/easy"]!!.content
                         (ad.at("/metadata") as ObjectNode).replace("uid", TextNode("old-124"))

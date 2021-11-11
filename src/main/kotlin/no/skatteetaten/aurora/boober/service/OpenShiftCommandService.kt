@@ -187,8 +187,8 @@ class OpenShiftCommandService(
 
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
-            .filter { kind -> kind.toLowerCase() != "auroracname" || openShiftClient.k8sVersionOfAtLeast("1.16") }
-            .filter { kind -> kind.toLowerCase() != "alert" || openShiftClient.k8sVersionOfAtLeast("1.16") }
+            .filter { kind -> kind.lowercase() != "auroracname" || openShiftClient.k8sVersionOfAtLeast("1.16") }
+            .filter { kind -> kind.lowercase() != "alert" || openShiftClient.k8sVersionOfAtLeast("1.16") }
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
             .map {
                 try {
@@ -278,20 +278,22 @@ object ImageStreamImportGenerator {
             }
             spec {
                 import = true
-                images = listOf(newImageImportSpec {
-                    from {
-                        kind = "DockerImage"
-                        name = dockerImageUrl
-                    }
+                images = listOf(
+                    newImageImportSpec {
+                        from {
+                            kind = "DockerImage"
+                            name = dockerImageUrl
+                        }
 
-                    to {
-                        name = "default"
-                    }
+                        to {
+                            name = "default"
+                        }
 
-                    importPolicy {
-                        scheduled = true
+                        importPolicy {
+                            scheduled = true
+                        }
                     }
-                })
+                )
             }
         }
     }

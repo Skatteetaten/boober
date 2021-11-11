@@ -108,7 +108,7 @@ fun AuroraDeploymentContext.createResources(): Pair<List<ContextErrors>, Set<Aur
 
     // TODO: This failed Test this
     if (duplicatedNames.isNotEmpty()) {
-        val namesString = duplicatedNames.joinToString(", ").toLowerCase()
+        val namesString = duplicatedNames.joinToString(", ").lowercase()
         val error: List<ContextErrors> =
             listOf(
                 ContextCreationErrors(

@@ -70,3 +70,4 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
        default |     version: "0.4.0"
        default |     ivGroupsRequired: false
+       default |   managedRoute: false

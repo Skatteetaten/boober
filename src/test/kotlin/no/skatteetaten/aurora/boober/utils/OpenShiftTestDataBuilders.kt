@@ -33,9 +33,11 @@ object OpenShiftTestDataBuilders {
             metadata {
                 namespace = "aos-test"
                 name = "foobar"
-                ownerReferences = listOf(newOwnerReference {
-                    name = "referanse:default"
-                })
+                ownerReferences = listOf(
+                    newOwnerReference {
+                        name = "referanse:default"
+                    }
+                )
             }
             spec {
                 replicas = dcReplicas
@@ -116,17 +118,23 @@ object OpenShiftTestDataBuilders {
         val status = newImageStreamImportStatus {
             _import {
                 status {
-                    tags = listOf(newNamedTagEventList {
-                        items = listOf(newTagEvent {
-                            created = "true"
-                            image = imageHash
-                            tag = "default"
-                        })
-                        conditions = listOf(newTagEventCondition {
-                            status = imageStatus.toString()
-                            message = imageErrorMessage
-                        })
-                    })
+                    tags = listOf(
+                        newNamedTagEventList {
+                            items = listOf(
+                                newTagEvent {
+                                    created = "true"
+                                    image = imageHash
+                                    tag = "default"
+                                }
+                            )
+                            conditions = listOf(
+                                newTagEventCondition {
+                                    status = imageStatus.toString()
+                                    message = imageErrorMessage
+                                }
+                            )
+                        }
+                    )
                 }
             }
         }
@@ -145,7 +153,8 @@ object OpenShiftTestDataBuilders {
                 OperationType.CREATE,
                 isiJson.namespacedResourceUrl,
                 NullNode.instance
-            ), isiJson
+            ),
+            isiJson
         )
     }
 }

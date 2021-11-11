@@ -71,7 +71,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
         val (adResource, dcResource, secretResource) = generateResources(
             """{ 
                "database" : true
-           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+           }""",
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
@@ -141,7 +142,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                     }
                   }
                 }
-           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+           }""",
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
@@ -161,7 +163,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                "database" : {
                  "simple" : "123456"
                 }
-           }""", resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+           }""",
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(secretResource))
@@ -188,7 +191,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                 resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig()),
                 files = listOf(
                     AuroraConfigFile(
-                        "about.json", """{
+                        "about.json",
+                        """{
                          "schemaVersion": "v1",
                          "type": "deploy",
                          "cluster": "utv",
@@ -237,7 +241,8 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
                     },
                     "cluster": "notsamecluster",
                    "database": true
-                   } """.trimIndent()
+                   } 
+                """.trimIndent()
             )
         }.isSuccess()
     }

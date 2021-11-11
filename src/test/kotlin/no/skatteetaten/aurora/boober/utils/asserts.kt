@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
-import assertk.Result
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isSuccess

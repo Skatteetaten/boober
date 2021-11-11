@@ -28,7 +28,7 @@ import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind
 import no.skatteetaten.aurora.boober.service.objectMapperWithTime
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import no.skatteetaten.aurora.mockmvc.extensions.TestObjectMapperConfigurer
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.TestObjectMapperConfigurer
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.execute
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.url
 import okhttp3.mockwebserver.MockWebServer
@@ -65,21 +65,22 @@ class HerkimerServiceTest {
     fun `Should create ApplicationDeployment`() {
         val adPayload = createAdPayload()
 
-        val herkimerResponse = HerkimerResponse(items = listOf(
-            adPayload.run {
-                ApplicationDeploymentHerkimer(
-                    "0123456789",
-                    name,
-                    environmentName,
-                    cluster,
-                    businessGroup,
-                    LocalDateTime.now(),
-                    LocalDateTime.now(),
-                    "aurora",
-                    "aurora"
-                )
-            }
-        )
+        val herkimerResponse = HerkimerResponse(
+            items = listOf(
+                adPayload.run {
+                    ApplicationDeploymentHerkimer(
+                        "0123456789",
+                        name,
+                        environmentName,
+                        cluster,
+                        businessGroup,
+                        LocalDateTime.now(),
+                        LocalDateTime.now(),
+                        "aurora",
+                        "aurora"
+                    )
+                }
+            )
         )
 
         server.execute(herkimerResponse) {
@@ -126,7 +127,7 @@ class HerkimerServiceTest {
 
                         assertThat(resource.ownerId).isEqualTo(adId)
 
-                        assertThat(resource.claims?.singleOrNull()?.credentials)
+                        assertThat(resource.claims.singleOrNull()?.credentials)
                             .isNotNull()
                             .isEqualTo(credentials)
                     }
