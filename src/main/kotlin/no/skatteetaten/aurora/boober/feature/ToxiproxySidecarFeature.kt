@@ -33,6 +33,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
+import org.springframework.beans.factory.annotation.Value
 import java.net.URI
 
 val AuroraDeploymentSpec.toxiProxy: String?
@@ -45,7 +46,8 @@ const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to t
 
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
-    cantusService: CantusService
+    cantusService: CantusService,
+    @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
 
     val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
@@ -91,7 +93,7 @@ class ToxiproxySidecarFeature(
                 validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
-            AuroraConfigFieldHandler("toxiproxy/version", defaultValue = "2.1.3"),
+            AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
             AuroraConfigFieldHandler("toxiproxy/endpoints")
         )).toSet()
     }

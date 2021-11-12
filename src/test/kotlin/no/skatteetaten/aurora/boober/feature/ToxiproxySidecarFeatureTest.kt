@@ -22,7 +22,7 @@ import org.junit.jupiter.api.assertThrows
 
 class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = ToxiproxySidecarFeature(cantusService)
+        get() = ToxiproxySidecarFeature(cantusService, "2.1.3")
 
     private val cantusService: CantusService = mockk()
 
@@ -151,27 +151,27 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
 
         val errorMessage = assertThrows<MultiApplicationValidationException> {
             generateResources(
-                    """{
-                        "toxiproxy": {
-                            "version": "2.1.3",
-                            "endpoints": {
-                                "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
-                                "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
-                            }
-                        },
-                        "config": {
-                            "TEST_WITH_PROXYNAME": "http://test1.test",
-                            "TEST_WITH_SAME_PROXYNAME": "http://test2.test"
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "endpoints": {
+                            "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
+                            "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
                         }
-                    }""",
-                    createEmptyService(),
-                    createDeploymentConfigWithContainer(newContainer {
-                        name = "simple"
-                        env = listOf(
-                                EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
-                                EnvVar("TEST_WITH_SAME_PROXYNAME", "http://test2.test", EnvVarSource())
-                        )
-                    })
+                    },
+                    "config": {
+                        "TEST_WITH_PROXYNAME": "http://test1.test",
+                        "TEST_WITH_SAME_PROXYNAME": "http://test2.test"
+                    }
+                }""",
+                createEmptyService(),
+                createDeploymentConfigWithContainer(newContainer {
+                    name = "simple"
+                    env = listOf(
+                            EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
+                            EnvVar("TEST_WITH_SAME_PROXYNAME", "http://test2.test", EnvVarSource())
+                    )
+                })
             )
         }.errors.first().errors.first().message
 
