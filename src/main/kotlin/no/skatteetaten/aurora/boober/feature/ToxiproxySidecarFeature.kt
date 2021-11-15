@@ -44,6 +44,10 @@ val AuroraDeploymentSpec.toxiProxy: String?
 
 const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
+private const val DATABASE_CONTEXT_KEY = "databases"
+
+private val FeatureContext.databases: List<Database> get() = this.getContextKey(DATABASE_CONTEXT_KEY)
+
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
@@ -75,7 +79,7 @@ class ToxiproxySidecarFeature(
             return emptyMap()
         }
 
-        return createImageMetadataContext(
+        return super.createContext(spec, cmd, validationContext) + createImageMetadataContext(
             repo = "shopify",
             name = "toxiproxy",
             tag = toxiProxyTag
@@ -84,12 +88,13 @@ class ToxiproxySidecarFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
+        val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpoints")
+        val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("db")
         val envVariables = findEnvVariables(cmd.applicationFiles)
         val dbHandlers = super.handlers(header, cmd)
 
         return (
-            endpointHandlers + envVariables + listOf(
+            endpointHandlers + toxiproxyDbHandlers + envVariables + listOf(
                 AuroraConfigFieldHandler(
                     "toxiproxy",
                     defaultValue = false,
@@ -103,15 +108,15 @@ class ToxiproxySidecarFeature(
         ).toSet()
     }
 
-    fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded("toxiproxy/endpoints").flatMap { endpoint ->
-            val expandedEndpointKeys = applicationFiles.findSubKeys(endpoint)
+    fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(type: String): List<AuroraConfigFieldHandler> =
+        this.findSubKeysExpanded("toxiproxy/$type").flatMap { endpointsOrDbOrS3 ->
+            val expandedEndpointKeys = this.findSubKeys(endpointsOrDbOrS3)
             if (expandedEndpointKeys.isEmpty()) {
-                listOf(AuroraConfigFieldHandler(endpoint, defaultValue = false, validator = { it.boolean() }))
+                listOf(AuroraConfigFieldHandler(endpointsOrDbOrS3, defaultValue = false, validator = { it.boolean() }))
             } else {
                 listOf(
-                    AuroraConfigFieldHandler("$endpoint/proxyname", defaultValue = endpoint),
-                    AuroraConfigFieldHandler("$endpoint/enabled", defaultValue = true)
+                    AuroraConfigFieldHandler("$endpointsOrDbOrS3/proxyname", defaultValue = endpointsOrDbOrS3),
+                    AuroraConfigFieldHandler("$endpointsOrDbOrS3/enabled", defaultValue = true)
                 )
             }
         }
@@ -181,6 +186,8 @@ class ToxiproxySidecarFeature(
         toxiproxyConfigs.clear()
         toxiproxyConfigs.add(getDefaultToxiProxyConfig())
 
+        // Endpoints:
+
         adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
             val url = adc.fields["config/$varname"]?.value<String>()
             if (url != null) {
@@ -207,6 +214,13 @@ class ToxiproxySidecarFeature(
                 namespace = adc.namespace
             }
             data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(toxiproxyConfigs))
+        }
+
+        // Databases:
+
+        if (adc.fields["toxiproxy/database"]?.value<Boolean>() == true) {
+            val databases = context.databases
+            databases.forEach { }
         }
 
         return setOf(generateResource(configMap))
