@@ -44,7 +44,7 @@ enum class ConcurrencyPolicies {
 class JobFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistry: String,
     cantusService: CantusService
-) : AbstractResolveTagFeature(cantusService) {
+) : AbstractResolveTagFeature(cantusService, "") {
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         return spec.isJob

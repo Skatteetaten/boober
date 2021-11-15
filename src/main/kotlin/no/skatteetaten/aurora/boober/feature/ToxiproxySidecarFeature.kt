@@ -47,8 +47,9 @@ const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to t
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
-    @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String
-) : AbstractResolveTagFeature(cantusService) {
+    @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String,
+    @Value("\${openshift.cluster}") cluster: String
+) : AbstractResolveTagFeature(cantusService, cluster) {
 
     val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
 
@@ -85,17 +86,21 @@ class ToxiproxySidecarFeature(
 
         val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
         val envVariables = findEnvVariables(cmd.applicationFiles)
+        val dbHandlers = super.handlers(header, cmd)
 
-        return (endpointHandlers + envVariables + listOf(
-            AuroraConfigFieldHandler(
-                "toxiproxy",
-                defaultValue = false,
-                validator = { it.boolean() },
-                canBeSimplifiedConfig = true
-            ),
-            AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
-            AuroraConfigFieldHandler("toxiproxy/endpoints")
-        )).toSet()
+        return (
+            endpointHandlers + envVariables + listOf(
+                AuroraConfigFieldHandler(
+                    "toxiproxy",
+                    defaultValue = false,
+                    validator = { it.boolean() },
+                    canBeSimplifiedConfig = true
+                ),
+                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
+                AuroraConfigFieldHandler("toxiproxy/endpoints"),
+                AuroraConfigFieldHandler("toxiproxy/database", defaultValue = false)
+            ) + dbHandlers
+        ).toSet()
     }
 
     fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
@@ -129,7 +134,8 @@ class ToxiproxySidecarFeature(
         val missingVariableErrors = groupedFields
             .keys
             .mapNotNull {
-                varName -> if (
+                varName ->
+                if (
                     !adc.getSubKeys("config")
                         .keys
                         .any { it.removePrefix("config/") == varName }
@@ -144,7 +150,8 @@ class ToxiproxySidecarFeature(
         // There should be no proxyname duplicates
         val proxynameDuplicateErrors = groupedFields
             .map {
-                (varName, fields) -> fields
+                (varName, fields) ->
+                fields
                     .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }
                     ?.value
                     ?.value<String>()
@@ -183,11 +190,13 @@ class ToxiproxySidecarFeature(
                 } else {
                     uri.port
                 }
-                toxiproxyConfigs.add(ToxiProxyConfig(
-                    name = proxyname,
-                    listen = "0.0.0.0:$port",
-                    upstream = uri.host + ":" + upstreamPort
-                ))
+                toxiproxyConfigs.add(
+                    ToxiProxyConfig(
+                        name = proxyname,
+                        listen = "0.0.0.0:$port",
+                        upstream = uri.host + ":" + upstreamPort
+                    )
+                )
                 port++
             }
         }

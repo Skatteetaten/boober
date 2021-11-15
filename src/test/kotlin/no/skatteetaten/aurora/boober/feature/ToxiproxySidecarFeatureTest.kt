@@ -22,7 +22,7 @@ import org.junit.jupiter.api.assertThrows
 
 class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = ToxiproxySidecarFeature(cantusService, "2.1.3")
+        get() = ToxiproxySidecarFeature(cantusService, "2.1.3", "utv")
 
     private val cantusService: CantusService = mockk()
 
@@ -50,9 +50,10 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
 
         val (serviceResource, dcResource, configResource) = generateResources(
             """{
-             "toxiproxy" : true 
-           }""",
-            createEmptyService(), createEmptyDeploymentConfig()
+                "toxiproxy" : true 
+            }""",
+            createEmptyService(),
+            createEmptyDeploymentConfig()
         )
 
         assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to toxiproxy")
@@ -93,9 +94,10 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 }
             }""",
             createEmptyService(),
-            createDeploymentConfigWithContainer(newContainer {
-                name = "simple"
-                env = listOf(
+            createDeploymentConfigWithContainer(
+                newContainer {
+                    name = "simple"
+                    env = listOf(
                         EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
                         EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource()),
                         EnvVar("DISABLED_TEST_WITH_PROXYNAME", "http://test3.test", EnvVarSource()),
@@ -103,8 +105,9 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                         EnvVar("HTTPS_URL", "https://test5.test", EnvVarSource()),
                         EnvVar("URL_WITH_PORT", "http://test6.test:1234", EnvVarSource()),
                         EnvVar("URL_WITH_PATH", "http://test7.test/path", EnvVarSource())
-                )
-            })
+                    )
+                }
+            )
         )
 
         assertThat(serviceResource)
@@ -165,13 +168,15 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                     }
                 }""",
                 createEmptyService(),
-                createDeploymentConfigWithContainer(newContainer {
-                    name = "simple"
-                    env = listOf(
+                createDeploymentConfigWithContainer(
+                    newContainer {
+                        name = "simple"
+                        env = listOf(
                             EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
                             EnvVar("TEST_WITH_SAME_PROXYNAME", "http://test2.test", EnvVarSource())
-                    )
-                })
+                        )
+                    }
+                )
             )
         }.errors.first().errors.first().message
 
@@ -179,5 +184,27 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
             "Found 2 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
 
         assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun databasetest() {
+        val (serviceResource, dcResource, configResource) = generateResources(
+            """{
+                "toxiproxy": {
+                    "database": true
+                },
+                "database": true
+            }""",
+            createEmptyService(),
+            createDeploymentConfigWithContainer(
+                newContainer {
+                    name = "simple"
+                    env = listOf(
+                        EnvVar("DB", "/u01/secrets/app/foo-db/info", EnvVarSource()),
+                        EnvVar("DB_PROPERTIES", "/u01/secrets/app/foo-db/db.properties", EnvVarSource())
+                    )
+                }
+            )
+        )
     }
 }
