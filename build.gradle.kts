@@ -1,14 +1,11 @@
 plugins {
     id("java")
-    id("no.skatteetaten.gradle.aurora") version "4.3.22"
+    id("no.skatteetaten.gradle.aurora") version "4.3.23"
 }
 
 aurora {
     useKotlinDefaults
     useSpringBootDefaults
-    useSpringBoot {
-        useCloudContract
-    }
 }
 
 dependencies {
