@@ -17,7 +17,8 @@ def overrides = [
     versionStrategy: [
       [branch: 'master', versionHint: '3'],
       [branch: 'release/v2', versionHint: '2'],
-    ]
+    ],
+    uploadLeveransepakke: true
 ]
 
 fileLoader.withGit(overrides.pipelineScript,, overrides.scriptVersion) {
