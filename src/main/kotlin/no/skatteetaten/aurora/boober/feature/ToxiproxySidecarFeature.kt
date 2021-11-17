@@ -26,7 +26,6 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
-import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.CantusService
@@ -36,7 +35,7 @@ import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
 import java.net.URI
 
-val AuroraDeploymentSpec.toxiProxy: String?
+val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() =
         this.featureEnabled("toxiproxy") {
             this["toxiproxy/version"]
@@ -53,9 +52,9 @@ class ToxiproxySidecarFeature(
     val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        val toxiProxy = spec.toxiProxy
+        val toxiproxyVersion = spec.toxiproxyVersion
 
-        return toxiProxy != null
+        return toxiproxyVersion != null
     }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -68,7 +67,7 @@ class ToxiproxySidecarFeature(
         validationContext: Boolean
     ): Map<String, Any> {
 
-        val toxiProxyTag = spec.toxiProxy
+        val toxiProxyTag = spec.toxiproxyVersion
 
         if (validationContext || toxiProxyTag == null) {
             return emptyMap()
@@ -86,29 +85,39 @@ class ToxiproxySidecarFeature(
         val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
         val envVariables = findEnvVariables(cmd.applicationFiles)
 
-        return (endpointHandlers + envVariables + listOf(
-            AuroraConfigFieldHandler(
-                "toxiproxy",
-                defaultValue = false,
-                validator = { it.boolean() },
-                canBeSimplifiedConfig = true
-            ),
-            AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
-            AuroraConfigFieldHandler("toxiproxy/endpoints")
-        )).toSet()
+        return (
+            endpointHandlers + envVariables + listOf(
+                AuroraConfigFieldHandler(
+                    "toxiproxy",
+                    defaultValue = false,
+                    validator = { it.boolean() },
+                    canBeSimplifiedConfig = true
+                ),
+                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
+                AuroraConfigFieldHandler("toxiproxy/endpoints")
+            )
+        ).toSet()
     }
 
     fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
         applicationFiles.findSubKeysExpanded("toxiproxy/endpoints").flatMap { endpoint ->
-            val expandedEndpointKeys = applicationFiles.findSubKeys(endpoint)
-            if (expandedEndpointKeys.isEmpty()) {
-                listOf(AuroraConfigFieldHandler(endpoint, defaultValue = false, validator = { it.boolean() }))
-            } else {
-                listOf(
-                    AuroraConfigFieldHandler("$endpoint/proxyname", defaultValue = endpoint),
-                    AuroraConfigFieldHandler("$endpoint/enabled", defaultValue = true)
+            listOf(
+                AuroraConfigFieldHandler(
+                    endpoint,
+                    defaultValue = true,
+                    validator = { it.boolean() },
+                    canBeSimplifiedConfig = true
+                ),
+                AuroraConfigFieldHandler(
+                    "$endpoint/proxyname",
+                    defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(endpoint))
+                ),
+                AuroraConfigFieldHandler(
+                    "$endpoint/enabled",
+                    defaultValue = true,
+                    validator = { it.boolean() }
                 )
-            }
+            )
         }
 
     fun findEnvVariables(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
@@ -129,7 +138,8 @@ class ToxiproxySidecarFeature(
         val missingVariableErrors = groupedFields
             .keys
             .mapNotNull {
-                varName -> if (
+                varName ->
+                if (
                     !adc.getSubKeys("config")
                         .keys
                         .any { it.removePrefix("config/") == varName }
@@ -144,7 +154,8 @@ class ToxiproxySidecarFeature(
         // There should be no proxyname duplicates
         val proxynameDuplicateErrors = groupedFields
             .map {
-                (varName, fields) -> fields
+                (varName, fields) ->
+                fields
                     .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }
                     ?.value
                     ?.value<String>()
@@ -165,7 +176,7 @@ class ToxiproxySidecarFeature(
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
-        adc.toxiProxy ?: return emptySet()
+        adc.toxiproxyVersion ?: return emptySet()
 
         // Variable for the port number that Toxiproxy will listen to
         // An addition of 1 to the value is made for each proxy
@@ -183,11 +194,13 @@ class ToxiproxySidecarFeature(
                 } else {
                     uri.port
                 }
-                toxiproxyConfigs.add(ToxiProxyConfig(
-                    name = proxyname,
-                    listen = "0.0.0.0:$port",
-                    upstream = uri.host + ":" + upstreamPort
-                ))
+                toxiproxyConfigs.add(
+                    ToxiProxyConfig(
+                        name = proxyname,
+                        listen = "0.0.0.0:$port",
+                        upstream = uri.host + ":" + upstreamPort
+                    )
+                )
                 port++
             }
         }
@@ -209,7 +222,7 @@ class ToxiproxySidecarFeature(
         context: FeatureContext
     ) {
 
-        adc.toxiProxy ?: return
+        adc.toxiproxyVersion ?: return
 
         val volume = newVolume {
             name = "${adc.name}-toxiproxy-config"
@@ -316,30 +329,27 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
 
 // Regex for matching a variable name in a field name
 val varNameInFieldNameRegex = Regex("(?<=^toxiproxy\\/endpoints\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
+fun findVarNameInFieldName(fieldName: String) = varNameInFieldNameRegex.find(fieldName)!!.value
 
 // Return lists of AuroraConfigFields grouped by environment variable name
 fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
     .getSubKeys("toxiproxy/endpoints")
     .map { it }
-    .groupBy { varNameInFieldNameRegex.find(it.key)!!.value }
+    .groupBy { findVarNameInFieldName(it.key) }
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
 fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
     .groupToxiproxyEndpointFields()
     .filter { (varName, fields) ->
-        if (fields.size == 1 && fields[0].key.endsWith(varName)) {
-            fields[0]
-        } else {
-            fields.find { it.key.endsWith("/enabled") }
-        }!!.value.value()
+        fields.find { it.key == "toxiproxy/endpoints/$varName" }!!.value.value() &&
+            fields.find { it.key == "toxiproxy/endpoints/$varName/enabled" }!!.value.value()
     }
     .map { (varName, fields) ->
         val proxyName = fields
-            .find { it.key.endsWith("/proxyname") }
-            ?.value
-            ?.value<String>()
-            ?: generateProxyNameFromVarName(varName)
+            .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }!!
+            .value
+            .value<String>()
         Pair(proxyName, varName)
     }
 

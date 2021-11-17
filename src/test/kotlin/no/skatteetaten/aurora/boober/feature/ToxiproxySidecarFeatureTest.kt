@@ -93,9 +93,10 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 }
             }""",
             createEmptyService(),
-            createDeploymentConfigWithContainer(newContainer {
-                name = "simple"
-                env = listOf(
+            createDeploymentConfigWithContainer(
+                newContainer {
+                    name = "simple"
+                    env = listOf(
                         EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
                         EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource()),
                         EnvVar("DISABLED_TEST_WITH_PROXYNAME", "http://test3.test", EnvVarSource()),
@@ -103,8 +104,9 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                         EnvVar("HTTPS_URL", "https://test5.test", EnvVarSource()),
                         EnvVar("URL_WITH_PORT", "http://test6.test:1234", EnvVarSource()),
                         EnvVar("URL_WITH_PATH", "http://test7.test/path", EnvVarSource())
-                )
-            })
+                    )
+                }
+            )
         )
 
         assertThat(serviceResource)
@@ -165,13 +167,15 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                     }
                 }""",
                 createEmptyService(),
-                createDeploymentConfigWithContainer(newContainer {
-                    name = "simple"
-                    env = listOf(
+                createDeploymentConfigWithContainer(
+                    newContainer {
+                        name = "simple"
+                        env = listOf(
                             EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
                             EnvVar("TEST_WITH_SAME_PROXYNAME", "http://test2.test", EnvVarSource())
-                    )
-                })
+                        )
+                    }
+                )
             )
         }.errors.first().errors.first().message
 
