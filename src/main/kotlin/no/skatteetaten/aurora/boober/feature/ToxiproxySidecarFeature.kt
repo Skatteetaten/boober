@@ -30,6 +30,11 @@ import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
@@ -51,6 +56,8 @@ private val FeatureContext.databases: List<Database> get() = this.getContextKey(
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
+    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val userDetailsProvider: UserDetailsProvider,
     @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String,
     @Value("\${openshift.cluster}") cluster: String
 ) : AbstractResolveTagFeature(cantusService, cluster) {
@@ -105,7 +112,7 @@ class ToxiproxySidecarFeature(
                 AuroraConfigFieldHandler("toxiproxy/endpoints"),
                 AuroraConfigFieldHandler("toxiproxy/database", defaultValue = false)
             ) + dbHandlers
-        ).toSet()
+        ).toSet() // ktlint-disable
     }
 
     fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(type: String): List<AuroraConfigFieldHandler> =
@@ -208,19 +215,31 @@ class ToxiproxySidecarFeature(
             }
         }
 
+        // Databases:
+
+        if (adc.fields["toxiproxy/database"]?.value<Boolean>() == true) {
+            context
+                .databases
+                .createSchemaRequests(adc)
+                .mapNotNull { databaseSchemaProvisioner.findSchema(it) }
+                .forEach {
+                    toxiproxyConfigs.add(
+                        ToxiProxyConfig(
+                            name = "database_" + it.name,
+                            listen = "0.0.0.0:$port",
+                            upstream = it.databaseInstance.host + ":" + it.databaseInstance.port
+                        )
+                    )
+                    port++
+                }
+        }
+
         val configMap = newConfigMap {
             metadata {
                 name = "${adc.name}-toxiproxy-config"
                 namespace = adc.namespace
             }
             data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(toxiproxyConfigs))
-        }
-
-        // Databases:
-
-        if (adc.fields["toxiproxy/database"]?.value<Boolean>() == true) {
-            val databases = context.databases
-            databases.forEach { }
         }
 
         return setOf(generateResource(configMap))
@@ -325,6 +344,29 @@ class ToxiproxySidecarFeature(
                 .listen
                 .replace(Regex("^0\\.0\\.0\\.0"), "http://localhost")
             it.env.find { v -> v.name == varName }?.value = proxyAddress
+        }
+    }
+
+    // TODO: Duplikat, bør forenkles
+    fun List<Database>.createSchemaRequests(adc: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
+        return this.map {
+            val details = it.createSchemaDetails(adc.affiliation)
+            if (it.id != null) {
+                SchemaIdRequest(
+                    id = it.id,
+                    details = details,
+                    tryReuse = it.tryReuse
+                )
+            } else {
+                SchemaForAppRequest(
+                    environment = adc.envName,
+                    application = it.applicationLabel ?: adc.name,
+                    details = details,
+                    generate = it.generate,
+                    tryReuse = it.tryReuse,
+                    user = userDetailsProvider.getAuthenticatedUser()
+                )
+            }
         }
     }
 }

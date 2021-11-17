@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.newContainer
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarSource
@@ -12,19 +13,39 @@ import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Service
 import io.mockk.every
 import io.mockk.mockk
+import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.facade.json
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbApiEnvelope
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhRestTemplateWrapper
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
+import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 import org.junit.jupiter.api.assertThrows
+import org.springframework.boot.web.client.RestTemplateBuilder
+import java.util.UUID
 
 class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
+
+    val provisioner = DatabaseSchemaProvisioner(
+        DbhRestTemplateWrapper(RestTemplateBuilder().build(), "http://localhost:5000", 0),
+        jacksonObjectMapper()
+    )
+
     override val feature: Feature
-        get() = ToxiproxySidecarFeature(cantusService, "2.1.3", "utv")
+        get() = ToxiproxySidecarFeature(cantusService, provisioner, userDetailsProvider, "2.1.3", "utv")
 
     private val cantusService: CantusService = mockk()
+
+    private val userDetailsProvider: UserDetailsProvider = mockk()
 
     @BeforeEach
     fun setupMock() {
@@ -38,6 +59,8 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 "2.1.3",
                 "sha:1234"
             )
+
+        every { userDetailsProvider.getAuthenticatedUser() } returns User("username", "token")
     }
 
     @AfterEach
@@ -188,6 +211,30 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun databasetest() {
+
+        httpMockServer(5000) {
+            rule {
+                json(
+                    DbApiEnvelope(
+                        "ok",
+                        listOf(
+                            DbhSchema(
+                                id = UUID.randomUUID().toString(),
+                                type = "SCHEMA",
+                                databaseInstance = DatabaseSchemaInstance(1512, "testhost"),
+                                jdbcUrl = "foo/bar/baz",
+                                labels = mapOf(
+                                    "affiliation" to "paas",
+                                    "name" to "testname"
+                                ),
+                                users = listOf(DbhUser("username", "password", type = "SCHEMA"))
+                            )
+                        )
+                    )
+                )
+            }
+        }
+
         val (serviceResource, dcResource, configResource) = generateResources(
             """{
                 "toxiproxy": {
@@ -200,11 +247,19 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 newContainer {
                     name = "simple"
                     env = listOf(
-                        EnvVar("DB", "/u01/secrets/app/foo-db/info", EnvVarSource()),
-                        EnvVar("DB_PROPERTIES", "/u01/secrets/app/foo-db/db.properties", EnvVarSource())
+                        EnvVar("DB", "/u01/secrets/app/testname-db/info", EnvVarSource()),
+                        EnvVar("DB_PROPERTIES", "/u01/secrets/app/testname-db/db.properties", EnvVarSource())
                     )
                 }
             )
         )
+
+        assertThat(dcResource)
+            .auroraResourceModifiedByThisFeatureWithComment("Added toxiproxy volume and sidecar container")
+            .auroraResourceMatchesFile("dcWithDatabaseMapping.json")
+
+        assertThat(configResource)
+            .auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("configWithDatabaseMapping.json")
     }
 }
