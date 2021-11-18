@@ -15,6 +15,7 @@ import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -125,7 +126,7 @@ class ToxiproxySidecarFeature(
                 ),
                 AuroraConfigFieldHandler(
                     "$endpointsOrDbOrS3/proxyname",
-                    defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(endpointsOrDbOrS3))
+                    defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(type, endpointsOrDbOrS3))
                 ),
                 AuroraConfigFieldHandler(
                     "$endpointsOrDbOrS3/enabled",
@@ -289,8 +290,15 @@ class ToxiproxySidecarFeature(
                 service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
                     port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
                 }
-
                 modifyResource(it, "Changed targetPort to point to toxiproxy")
+            } else if (it.resource.kind == "Secret") {
+                val secret: Secret = it.resource as Secret
+                toxiproxyConfigs.find { tc -> tc.name.equals("database_" + secret.metadata.name) }
+                secret.data["jdbcurl"] = toxiproxyConfigs
+                    .find { tc -> tc.name.equals("database_" + secret.metadata.name) }
+                    ?.listen
+                    ?.replace(Regex("^0\\.0\\.0\\.0"), "localhost")
+                // TODO: Må tilpasse dette til egendefinerte proxynavn
             }
         }
     }
@@ -387,14 +395,17 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
 )
 
 // Regex for matching a variable name in a field name
-val varNameInFieldNameRegex = Regex("(?<=^toxiproxy\\/endpoints\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
-fun findVarNameInFieldName(fieldName: String) = varNameInFieldNameRegex.find(fieldName)!!.value
+fun varNameInFieldNameRegex(type: String) =
+    Regex("(?<=^toxiproxy\\/$type\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
+
+fun findVarNameInFieldName(type: String, fieldName: String) =
+    varNameInFieldNameRegex(type).find(fieldName)!!.value
 
 // Return lists of AuroraConfigFields grouped by environment variable name
 fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
     .getSubKeys("toxiproxy/endpoints")
     .map { it }
-    .groupBy { findVarNameInFieldName(it.key) }
+    .groupBy { findVarNameInFieldName("endpoints", it.key) }
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
