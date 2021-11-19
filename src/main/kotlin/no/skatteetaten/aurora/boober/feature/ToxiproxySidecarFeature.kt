@@ -38,6 +38,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisio
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
+import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import java.net.URI
 
@@ -292,13 +293,17 @@ class ToxiproxySidecarFeature(
                 }
                 modifyResource(it, "Changed targetPort to point to toxiproxy")
             } else if (it.resource.kind == "Secret") {
+                // TODO: Finne en måte å teste dette på
                 val secret: Secret = it.resource as Secret
                 toxiproxyConfigs.find { tc -> tc.name.equals("database_" + secret.metadata.name) }
-                secret.data["jdbcurl"] = toxiproxyConfigs
-                    .find { tc -> tc.name.equals("database_" + secret.metadata.name) }
+                val jdbcUrlByteArray = toxiproxyConfigs
+                    .find { tc -> tc.name.equals("database_" + secret.metadata.name) }  // TODO: Tilpasse dette til egendefinerte proxynavn
                     ?.listen
                     ?.replace(Regex("^0\\.0\\.0\\.0"), "localhost")
-                // TODO: Må tilpasse dette til egendefinerte proxynavn
+                    ?.toByteArray()
+                if (jdbcUrlByteArray != null) {
+                    secret.data["jdbcurl"] = Base64.encodeBase64String(jdbcUrlByteArray)
+                }
             }
         }
     }
