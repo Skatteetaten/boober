@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -142,25 +141,6 @@ class AuroraConfigControllerV1(
         val fileName = extractFileName(name, request)
         val auroraConfigFile =
             auroraConfigFacade.updateAuroraConfigFile(ref, fileName, payload.content, clearQuotes(ifMatchHeader))
-        return createAuroraConfigFileResponse(auroraConfigFile)
-    }
-
-    @PatchMapping("/**")
-    fun patchAuroraConfigFile(
-        @PathVariable name: String,
-        request: HttpServletRequest,
-        @RequestBody @Valid payload: ContentPayload
-    ): ResponseEntity<Response> {
-
-        val ref = AuroraConfigRef(name, getRefNameFromRequest())
-        val fileName = extractFileName(name, request)
-
-        val auroraConfigFile = auroraConfigFacade.patchAuroraConfigFile(
-            ref = ref,
-            filename = fileName,
-            jsonPatchOp = payload.content
-        )
-
         return createAuroraConfigFileResponse(auroraConfigFile)
     }
 
