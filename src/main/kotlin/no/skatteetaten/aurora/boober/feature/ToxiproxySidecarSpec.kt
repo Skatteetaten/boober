@@ -19,14 +19,17 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
 )
 
 // Regex for matching a variable name in a field name
-val varNameInFieldNameRegex = Regex("(?<=^toxiproxy\\/endpoints\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
-fun findVarNameInFieldName(fieldName: String) = varNameInFieldNameRegex.find(fieldName)!!.value
+fun varNameInFieldNameRegex(type: String) =
+    Regex("(?<=^toxiproxy\\/$type\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
+
+fun findVarNameInFieldName(type: String, fieldName: String) =
+    varNameInFieldNameRegex(type).find(fieldName)!!.value
 
 // Return lists of AuroraConfigFields grouped by environment variable name
 fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
     .getSubKeys("toxiproxy/endpoints")
     .map { it }
-    .groupBy { findVarNameInFieldName(it.key) }
+    .groupBy { findVarNameInFieldName("endpoints", it.key) }
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"

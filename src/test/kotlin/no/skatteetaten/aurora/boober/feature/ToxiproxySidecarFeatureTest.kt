@@ -242,15 +242,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 "database": true
             }""",
             createEmptyService(),
-            createDeploymentConfigWithContainer(
-                newContainer {
-                    name = "simple"
-                    env = listOf(
-                        EnvVar("DB", "/u01/secrets/app/testname-db/info", EnvVarSource()),
-                        EnvVar("DB_PROPERTIES", "/u01/secrets/app/testname-db/db.properties", EnvVarSource())
-                    )
-                }
-            )
+            createEmptyDeploymentConfig()
         )
 
         assertThat(dcResource)
