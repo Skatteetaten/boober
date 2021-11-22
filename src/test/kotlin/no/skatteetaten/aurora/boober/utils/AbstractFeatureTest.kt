@@ -27,7 +27,6 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
 import com.fkorotkov.openshift.to
-import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.VolumeProjection
@@ -202,13 +201,11 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
         createdSource = AuroraResourceSource(TestDefaultFeature::class.java)
     )
 
-    fun createEmptyDeploymentConfig() =
-        createDeploymentConfigWithContainer(newContainer { name = "simple" })
-
     // TODO: This should be read from a file, we should also provide IS, Service and AD objects that can be modified.
-    fun createDeploymentConfigWithContainer(container: Container) =
+    fun createEmptyDeploymentConfig() =
         AuroraResource(
             newDeploymentConfig {
+
                 metadata {
                     name = "simple"
                     namespace = kubeNs
@@ -242,7 +239,11 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
                     selector = mapOf("name" to "simple")
                     template {
                         spec {
-                            containers = listOf(container)
+                            containers = listOf(
+                                newContainer {
+                                    name = "simple"
+                                }
+                            )
                             restartPolicy = "Always"
                             dnsPolicy = "ClusterFirst"
                         }
