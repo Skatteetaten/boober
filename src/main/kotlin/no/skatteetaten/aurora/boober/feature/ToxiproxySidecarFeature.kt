@@ -27,6 +27,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.CantusService
@@ -98,7 +99,7 @@ class ToxiproxySidecarFeature(
 
         val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpoints")
         val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("db")
-        val envVariables = findEnvVariables(cmd.applicationFiles)
+        val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
         val dbHandlers = super.handlers(header, cmd)
 
         return (
@@ -134,13 +135,6 @@ class ToxiproxySidecarFeature(
                     defaultValue = true,
                     validator = { it.boolean() }
                 )
-            )
-        }
-
-    fun findEnvVariables(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded("config").flatMap { variable ->
-            listOf(
-                AuroraConfigFieldHandler(variable)
             )
         }
 

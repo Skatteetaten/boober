@@ -81,38 +81,31 @@
             "env": [
               {
                 "name": "TEST_WITH_PROXYNAME",
-                "value": "http://localhost:18000",
-                "valueFrom": {}
+                "value": "http://localhost:18000"
               },
               {
                 "name": "TEST_WITHOUT_PROXYNAME",
-                "value": "http://localhost:18001",
-                "valueFrom": {}
+                "value": "http://localhost:18001"
               },
               {
                 "name": "DISABLED_TEST_WITH_PROXYNAME",
-                "value": "http://test3.test",
-                "valueFrom": {}
+                "value": "http://test3.test"
               },
               {
                 "name": "DISABLED_TEST_WITHOUT_PROXYNAME",
-                "value": "http://test4.test",
-                "valueFrom": {}
+                "value": "http://test4.test"
               },
               {
                 "name": "HTTPS_URL",
-                "value": "http://localhost:18002",
-                "valueFrom": {}
+                "value": "http://localhost:18002"
               },
               {
                 "name": "URL_WITH_PORT",
-                "value": "http://localhost:18003",
-                "valueFrom": {}
+                "value": "http://localhost:18003"
               },
               {
                 "name": "URL_WITH_PATH",
-                "value": "http://localhost:18004",
-                "valueFrom": {}
+                "value": "http://localhost:18004"
               }
             ],
             "name": "simple"
