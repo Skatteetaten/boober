@@ -511,10 +511,14 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
         }
     }
 
-    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String, index: Int = 0) =
+    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(
+        comment: String,
+        sourceIndex: Int = 0,
+        featureIndex: Int = 0
+    ) =
         transform { ar ->
-            val actual = ar.sources.toList()[index]
-            val expected = AuroraResourceSource(features.first()::class.java, comment)
+            val actual = ar.sources.toList()[sourceIndex]
+            val expected = AuroraResourceSource(features[featureIndex]::class.java, comment)
             if (actual == expected) {
                 ar
             } else {

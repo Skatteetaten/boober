@@ -5,9 +5,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import com.fkorotkov.kubernetes.newContainer
-import io.fabric8.kubernetes.api.model.EnvVar
-import io.fabric8.kubernetes.api.model.EnvVarSource
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Service
 import io.mockk.every
@@ -16,13 +13,16 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
-import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import org.junit.jupiter.api.assertThrows
 
-class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
-    override val feature: Feature
-        get() = ToxiproxySidecarFeature(cantusService, "2.1.3")
+class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
+    override val features: List<Feature>
+        get() = listOf(
+            ConfigFeature(),
+            ToxiproxySidecarFeature(cantusService, "2.1.3")
+        )
 
     private val cantusService: CantusService = mockk()
 
@@ -50,16 +50,27 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
 
         val (serviceResource, dcResource, configResource) = generateResources(
             """{
-             "toxiproxy" : true 
-           }""",
-            createEmptyService(), createEmptyDeploymentConfig()
+                "toxiproxy" : true 
+            }""",
+            createEmptyService(),
+            createEmptyDeploymentConfig()
         )
 
-        assertThat(serviceResource).auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to toxiproxy")
+        assertThat(serviceResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed targetPort to point to toxiproxy",
+                featureIndex = 1
+            )
+
         val service = serviceResource.resource as Service
         assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
 
-        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added toxiproxy volume and sidecar container")
+        assertThat(dcResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Added toxiproxy volume and sidecar container",
+                sourceIndex = 1,
+                featureIndex = 1
+            )
             .auroraResourceMatchesFile("dc.json")
 
         assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
@@ -93,30 +104,24 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                 }
             }""",
             createEmptyService(),
-            createDeploymentConfigWithContainer(
-                newContainer {
-                    name = "simple"
-                    env = listOf(
-                        EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
-                        EnvVar("TEST_WITHOUT_PROXYNAME", "http://test2.test", EnvVarSource()),
-                        EnvVar("DISABLED_TEST_WITH_PROXYNAME", "http://test3.test", EnvVarSource()),
-                        EnvVar("DISABLED_TEST_WITHOUT_PROXYNAME", "http://test4.test", EnvVarSource()),
-                        EnvVar("HTTPS_URL", "https://test5.test", EnvVarSource()),
-                        EnvVar("URL_WITH_PORT", "http://test6.test:1234", EnvVarSource()),
-                        EnvVar("URL_WITH_PATH", "http://test7.test/path", EnvVarSource())
-                    )
-                }
-            )
+            createEmptyDeploymentConfig()
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment("Changed targetPort to point to toxiproxy")
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed targetPort to point to toxiproxy",
+                featureIndex = 1
+            )
 
         val service = serviceResource.resource as Service
         assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment("Added toxiproxy volume and sidecar container")
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Added toxiproxy volume and sidecar container",
+                sourceIndex = 1,
+                featureIndex = 1
+            )
             .auroraResourceMatchesFile("dcWithEndpointMapping.json")
 
         assertThat(configResource)
@@ -167,15 +172,7 @@ class ToxiproxySidecarFeatureTest : AbstractFeatureTest() {
                     }
                 }""",
                 createEmptyService(),
-                createDeploymentConfigWithContainer(
-                    newContainer {
-                        name = "simple"
-                        env = listOf(
-                            EnvVar("TEST_WITH_PROXYNAME", "http://test1.test", EnvVarSource()),
-                            EnvVar("TEST_WITH_SAME_PROXYNAME", "http://test2.test", EnvVarSource())
-                        )
-                    }
-                )
+                createEmptyDeploymentConfig()
             )
         }.errors.first().errors.first().message
 
