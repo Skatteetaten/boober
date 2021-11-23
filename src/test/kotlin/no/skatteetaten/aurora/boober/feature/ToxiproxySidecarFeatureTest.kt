@@ -6,9 +6,6 @@ import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fkorotkov.kubernetes.newContainer
-import io.fabric8.kubernetes.api.model.EnvVar
-import io.fabric8.kubernetes.api.model.EnvVarSource
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.Service
 import io.mockk.every
@@ -20,18 +17,14 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbApiEnvelope
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhRestTemplateWrapper
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhSchema
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhUser
 import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
 import org.junit.jupiter.api.assertThrows
 import org.springframework.boot.web.client.RestTemplateBuilder
-import java.util.UUID
 
 class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
 
@@ -43,6 +36,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
             ConfigFeature(),
+            DatabaseFeature(provisioner, userDetailsProvider, "utv"),
             ToxiproxySidecarFeature(cantusService, provisioner, userDetailsProvider, "2.1.3", "utv")
         )
 
@@ -85,7 +79,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         assertThat(serviceResource)
             .auroraResourceModifiedByThisFeatureWithComment(
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 1
+                featureIndex = 2
             )
 
         val service = serviceResource.resource as Service
@@ -95,7 +89,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             .auroraResourceModifiedByThisFeatureWithComment(
                 comment = "Added toxiproxy volume and sidecar container",
                 sourceIndex = 1,
-                featureIndex = 1
+                featureIndex = 2
             )
             .auroraResourceMatchesFile("dc.json")
 
@@ -136,7 +130,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         assertThat(serviceResource)
             .auroraResourceModifiedByThisFeatureWithComment(
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 1
+                featureIndex = 2
             )
 
         val service = serviceResource.resource as Service
@@ -146,7 +140,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             .auroraResourceModifiedByThisFeatureWithComment(
                 comment = "Added toxiproxy volume and sidecar container",
                 sourceIndex = 1,
-                featureIndex = 1
+                featureIndex = 2
             )
             .auroraResourceMatchesFile("dcWithEndpointMapping.json")
 
@@ -212,37 +206,18 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     fun databasetest() {
 
         httpMockServer(5000) {
-            rule {
-                json(
-                    DbApiEnvelope(
-                        "ok",
-                        listOf(
-                            DbhSchema(
-                                id = UUID.randomUUID().toString(),
-                                type = "SCHEMA",
-                                databaseInstance = DatabaseSchemaInstance(1512, "testhost"),
-                                jdbcUrl = "foo/bar/baz",
-                                labels = mapOf(
-                                    "affiliation" to "paas",
-                                    "name" to "testname"
-                                ),
-                                users = listOf(DbhUser("username", "password", type = "SCHEMA"))
-                            )
-                        )
-                    )
-                )
-            }
+            rule { json(DbApiEnvelope("ok", listOf(createDbhSchema()))) }
         }
 
-        val (serviceResource, dcResource, configResource) = generateResources(
+        val (serviceResource, dcResource, secretResource, configResource) = generateResources(
             """{
                 "toxiproxy": {
                     "database": true
                 },
                 "database": true
             }""",
-            createEmptyService(),
-            createEmptyDeploymentConfig()
+            mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
+            createdResources = 2
         )
 
         assertThat(dcResource)

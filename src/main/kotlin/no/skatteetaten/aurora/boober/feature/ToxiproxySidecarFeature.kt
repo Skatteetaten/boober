@@ -58,6 +58,7 @@ class ToxiproxySidecarFeature(
 ) : AbstractResolveTagFeature(cantusService, cluster) {
 
     val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
+    val secretNameToPortMap = mutableMapOf<String, Int>()
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         val toxiproxyVersion = spec.toxiproxyVersion
@@ -217,15 +218,17 @@ class ToxiproxySidecarFeature(
             context
                 .databases
                 .createSchemaRequests(adc)
-                .mapNotNull { databaseSchemaProvisioner.findSchema(it) }
-                .forEach {
+                .associateWith { databaseSchemaProvisioner.findSchema(it) }
+                .filterNot { it.value == null }
+                .forEach { (request, schema) ->
                     toxiproxyConfigs.add(
                         ToxiProxyConfig(
-                            name = "database_" + it.name,
+                            name = "database_" + schema!!.name,
                             listen = "0.0.0.0:$port",
-                            upstream = it.databaseInstance.host + ":" + it.databaseInstance.port
+                            upstream = schema.databaseInstance.host + ":" + schema.databaseInstance.port
                         )
                     )
+                    secretNameToPortMap[request.getSecretName(prefix = adc.name)] = port
                     port++
                 }
         }
@@ -280,16 +283,11 @@ class ToxiproxySidecarFeature(
                 }
                 modifyResource(it, "Changed targetPort to point to toxiproxy")
             } else if (it.resource.kind == "Secret") {
-                // TODO: Finne en måte å teste dette på
                 val secret: Secret = it.resource as Secret
-                toxiproxyConfigs.find { tc -> tc.name.equals("database_" + secret.metadata.name) }
-                val jdbcUrlByteArray = toxiproxyConfigs
-                    .find { tc -> tc.name.equals("database_" + secret.metadata.name) }  // TODO: Tilpasse dette til egendefinerte proxynavn
-                    ?.listen
-                    ?.replace(Regex("^0\\.0\\.0\\.0"), "localhost")
-                    ?.toByteArray()
-                if (jdbcUrlByteArray != null) {
-                    secret.data["jdbcurl"] = Base64.encodeBase64String(jdbcUrlByteArray)
+                val toxiproxyPort = secretNameToPortMap[secret.metadata.name]
+                if (toxiproxyPort != null) {
+                    secret.data["jdbcurl"] = Base64.encodeBase64String(("localhost:$toxiproxyPort").toByteArray())
+                    modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
                 }
             }
         }

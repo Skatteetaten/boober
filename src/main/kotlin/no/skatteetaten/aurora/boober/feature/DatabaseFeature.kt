@@ -184,11 +184,6 @@ class DatabaseFeature(
             )
         }
 
-    fun SchemaProvisionRequest.getSecretName(prefix: String): String {
-        val secretName = this.details.schemaName.replace("_", "-").lowercase().ensureStartWith(prefix, "-")
-        return "$secretName-db"
-    }
-
     fun Database.createDatabaseVolumesAndMounts(appName: String): Pair<Volume, VolumeMount> {
         val mountName = "${this.name}-db".lowercase()
         val volumeName = mountName.replace("_", "-").lowercase().ensureStartWith(appName, "-")
@@ -420,6 +415,11 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
             }
         }
     }
+}
+
+fun SchemaProvisionRequest.getSecretName(prefix: String): String {
+    val secretName = this.details.schemaName.replace("_", "-").lowercase().ensureStartWith(prefix, "-")
+    return "$secretName-db"
 }
 
 enum class DatabaseFlavor(val engine: DatabaseEngine, val managed: Boolean, val defaultFallback: Boolean) {
