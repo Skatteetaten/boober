@@ -165,25 +165,40 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
         }
     }
 
+    /*
+    @Test
+    fun `blabla`() {
+        every {
+            facade.getAdr(auroraConfigRef)
+        } returns auroraConfig.files.map { it.name }
+
+        mockMvc.get(Path("/v1/auroraconfig/{auroraConfig}/filenames", auroraConfigRef.name)) {
+            statusIsOk()
+            responseJsonPath("$.success").isTrue()
+            responseJsonPath("$.items").isNotEmpty()
+        }
+    }
+     */
+
     @Test
     fun `Update aurora config file`() {
 
         // This cannot contain a /, the wiremock test framework we use here will not support it
-        val fileName = "simple.json"
+        val fileæName = "simple.json"
         val content = """{ "version" : "test" }"""
 
         every {
-            facade.updateAuroraConfigFile(auroraConfigRef, fileName, content, null)
-        } returns AuroraConfigFile(fileName, content)
+            facade.updateAuroraConfigFile(auroraConfigRef, fileæName, content, null)
+        } returns AuroraConfigFile(fileæName, content)
 
         mockMvc.put(
-            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),
+            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileæName),
             headers = HttpHeaders().contentType(),
             body = mapOf("content" to content)
         ) {
             statusIsOk()
             responseJsonPath("$.success").isTrue()
-            responseJsonPath("$.items[0].name").equalsValue(fileName)
+            responseJsonPath("$.items[0].name").equalsValue(fileæName)
             responseJsonPath("$.items[0].contents").equalsValue(content)
         }
     }
