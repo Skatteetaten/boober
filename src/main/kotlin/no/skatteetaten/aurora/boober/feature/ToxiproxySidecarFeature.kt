@@ -1,3 +1,5 @@
+// ktlint-disable indent
+
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -108,7 +110,7 @@ class ToxiproxySidecarFeature(
                 AuroraConfigFieldHandler("toxiproxy/endpoints"),
                 AuroraConfigFieldHandler("toxiproxy/database", defaultValue = false)
             ) + dbHandlers
-        ).toSet() // ktlint-disable
+        ).toSet()
     }
 
     fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(type: String): List<AuroraConfigFieldHandler> =
