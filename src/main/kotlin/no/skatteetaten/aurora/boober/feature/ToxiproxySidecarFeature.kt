@@ -94,7 +94,7 @@ class ToxiproxySidecarFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpoints")
-        val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("db")
+        val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("database")
         val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
         val dbHandlers = super.handlers(header, cmd)
 
@@ -216,7 +216,8 @@ class ToxiproxySidecarFeature(
 
         // Databases:
 
-        if (adc.fields["toxiproxy/database"]?.value<Boolean>() == true) {
+        // TODO: Mye duplikasjon - bør bli mer ryddig
+        if (adc.fields["toxiproxy/database"]?.value?.booleanValue() == true) {
             context
                 .databases
                 .createSchemaRequests(adc)
@@ -225,9 +226,31 @@ class ToxiproxySidecarFeature(
                 .forEach { (request, schema) ->
                     toxiproxyConfigs.add(
                         ToxiProxyConfig(
-                            name = "database_" + schema!!.name,
+                            name = "database_" + schema!!.id,
                             listen = "0.0.0.0:$port",
                             upstream = schema.databaseInstance.host + ":" + schema.databaseInstance.port
+                        )
+                    )
+                    secretNameToPortMap[request.getSecretName(prefix = adc.name)] = port
+                    port++
+                }
+        } else {
+            context
+                .databases
+                .filter { adc.fields["toxiproxy/database/" + it.name + "/enabled"]?.value?.booleanValue() == true }
+                .createSchemaRequests(adc)
+                .associateWith { databaseSchemaProvisioner.findSchema(it) }
+                .filterNot { it.value == null }
+                .forEach { (request, schema) ->
+                    val proxyname = adc
+                        .fields["toxiproxy/database/" + (request as SchemaForAppRequest).labels["name"] + "/proxyname"]
+                        ?.value<String>()
+                        ?: "database_" + schema!!.id
+                    toxiproxyConfigs.add(
+                        ToxiProxyConfig(
+                            name = proxyname,
+                            listen = "0.0.0.0:$port",
+                            upstream = schema!!.databaseInstance.host + ":" + schema.databaseInstance.port
                         )
                     )
                     secretNameToPortMap[request.getSecretName(prefix = adc.name)] = port

@@ -1,0 +1,11 @@
+{
+  "apiVersion": "v1",
+  "kind": "ConfigMap",
+  "metadata": {
+    "name": "simple-toxiproxy-config",
+    "namespace": "paas-utv"
+  },
+  "data": {
+    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\"},{\"name\":\"proxy1\",\"listen\":\"0.0.0.0:18000\",\"upstream\":\"localhost:1512\"},{\"name\":\"proxy2\",\"listen\":\"0.0.0.0:18001\",\"upstream\":\"localhost:1512\"}]"
+  }
+}

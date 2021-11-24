@@ -28,6 +28,7 @@ import org.apache.commons.codec.binary.Base64
 import org.junit.jupiter.api.assertThrows
 import org.springframework.boot.web.client.RestTemplateBuilder
 import java.nio.charset.Charset
+import java.util.UUID
 
 class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
 
@@ -208,7 +209,16 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     @Test
     fun `Should map database secret to Toxiproxy`() {
 
-        httpMockServer(5000) { rule { json(DbApiEnvelope("ok", listOf(createDbhSchema()))) } }
+        httpMockServer(5000) {
+            rule {
+                json(
+                    DbApiEnvelope(
+                        "ok",
+                        listOf(createDbhSchema(UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060")))
+                    )
+                )
+            }
+        }
 
         val (serviceResource, dcResource, secretResource, configResource) = generateResources(
             """{
@@ -249,5 +259,151 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("configWithDatabaseMapping.json")
+    }
+
+    @Test
+    fun `Should map multiple database secrets to Toxiproxy`() {
+
+        httpMockServer(5000) {
+            rule {
+                json(
+                    DbApiEnvelope(
+                        "ok",
+                        listOf(createDbhSchema(UUID.fromString("db651af4-5fec-4875-bdef-0651b9b72691")))
+                    )
+                )
+            }
+        }
+
+        val (serviceResource, dcResource, secretResource1, secretResource2, configResource) = generateResources(
+            """{
+                "toxiproxy": {
+                    "database": true
+                },
+                "database": {
+                    "db1": {
+                        "enabled": true
+                    },
+                    "db2": {
+                        "enabled": true
+                    }
+                }
+            }""",
+            mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
+            createdResources = 3
+        )
+
+        assertThat(serviceResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed targetPort to point to toxiproxy",
+                featureIndex = 2
+            )
+
+        assertThat(dcResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Added toxiproxy volume and sidecar container",
+                sourceIndex = 2,
+                featureIndex = 2
+            )
+
+        assertThat(secretResource1)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed JDBC URL to point to Toxiproxy",
+                featureIndex = 2
+            )
+
+        assertThat(secretResource2)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed JDBC URL to point to Toxiproxy",
+                featureIndex = 2
+            )
+
+        val jdbcUrl1 = Base64
+            .decodeBase64((secretResource1.resource as Secret).data["jdbcurl"])
+            .toString(Charset.defaultCharset())
+
+        val jdbcUrl2 = Base64
+            .decodeBase64((secretResource2.resource as Secret).data["jdbcurl"])
+            .toString(Charset.defaultCharset())
+
+        assertThat(jdbcUrl1).isEqualTo("localhost:18000")
+        assertThat(jdbcUrl2).isEqualTo("localhost:18001")
+
+        assertThat(configResource)
+            .auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("configWithMultipleDatabasesMapping.json")
+    }
+
+    @Test
+    fun `Should map database secrets to named Toxiproxies`() {
+
+        httpMockServer(5000) { rule { json(DbApiEnvelope("ok", listOf(createDbhSchema()))) } }
+
+        val (serviceResource, dcResource, secretResource1, secretResource2, configResource) = generateResources(
+            """{
+                "toxiproxy": {
+                    "database": {
+                        "db1": {
+                            "enabled": true,
+                            "proxyname": "proxy1"
+                        },
+                        "db2": {
+                            "enabled": true,
+                            "proxyname": "proxy2"
+                        }
+                    }
+                },
+                "database": {
+                    "db1": {
+                        "enabled": true
+                    },
+                    "db2": {
+                        "enabled": true
+                    }
+                }
+            }""",
+            mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
+            createdResources = 3
+        )
+
+        assertThat(serviceResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed targetPort to point to toxiproxy",
+                featureIndex = 2
+            )
+
+        assertThat(dcResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Added toxiproxy volume and sidecar container",
+                sourceIndex = 2,
+                featureIndex = 2
+            )
+
+        assertThat(secretResource1)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed JDBC URL to point to Toxiproxy",
+                featureIndex = 2
+            )
+
+        assertThat(secretResource2)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed JDBC URL to point to Toxiproxy",
+                featureIndex = 2
+            )
+
+        val jdbcUrl1 = Base64
+            .decodeBase64((secretResource1.resource as Secret).data["jdbcurl"])
+            .toString(Charset.defaultCharset())
+
+        val jdbcUrl2 = Base64
+            .decodeBase64((secretResource2.resource as Secret).data["jdbcurl"])
+            .toString(Charset.defaultCharset())
+
+        assertThat(jdbcUrl1).isEqualTo("localhost:18000")
+        assertThat(jdbcUrl2).isEqualTo("localhost:18001")
+
+        assertThat(configResource)
+            .auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("configWithNamedDatabaseProxiesMapping.json")
     }
 }
