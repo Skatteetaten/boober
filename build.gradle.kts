@@ -1,14 +1,11 @@
 plugins {
     id("java")
-    id("no.skatteetaten.gradle.aurora") version "4.3.22"
+    id("no.skatteetaten.gradle.aurora") version "4.3.24"
 }
 
 aurora {
     useKotlinDefaults
     useSpringBootDefaults
-    useSpringBoot {
-        useCloudContract
-    }
 }
 
 dependencies {
@@ -17,8 +14,6 @@ dependencies {
 
     implementation("org.eclipse.jgit:org.eclipse.jgit:5.13.0.202109080827-r")
     implementation("org.apache.httpcomponents:httpclient:4.5.13")
-    implementation("com.github.fge:json-patch:1.13")
-    // Newest json-patch removes guava as dependency: https://github.com/java-json-tools/json-patch/releases
     implementation("com.google.guava:guava:31.0.1-jre")
     implementation("org.encryptor4j:encryptor4j:0.1.2")
     // The above library uses an vulnerable bcprov, set the fixed version here, hopefully this will work.
@@ -49,8 +44,3 @@ dependencies {
     testImplementation("no.skatteetaten.aurora:mockwebserver-extensions-kotlin:1.2.0")
     testImplementation("com.ninja-squad:springmockk:3.0.1")
 }
-
-/*
-tasks.test { onlyIf { false } }
-tasks.asciidoctor { onlyIf { false } }
-*/
