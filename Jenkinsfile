@@ -7,6 +7,7 @@ def overrides = [
     scriptVersion  : 'v7',
     iqOrganizationName: "Team AOS",
     iqBreakOnUnstable: true,
+    iqEmbedded: true,
     compilePropertiesIq: "-x test",
     pipelineScript: 'https://git.aurora.skead.no/scm/ao/aurora-pipeline-scripts.git',
     credentialsId: "github",
@@ -17,7 +18,8 @@ def overrides = [
     versionStrategy: [
       [branch: 'master', versionHint: '3'],
       [branch: 'release/v2', versionHint: '2'],
-    ]
+    ],
+    uploadLeveransepakke: true
 ]
 
 fileLoader.withGit(overrides.pipelineScript,, overrides.scriptVersion) {

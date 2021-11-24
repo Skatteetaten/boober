@@ -13,7 +13,6 @@ import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.mockmvc.extensions.Path
 import no.skatteetaten.aurora.mockmvc.extensions.contentType
 import no.skatteetaten.aurora.mockmvc.extensions.get
-import no.skatteetaten.aurora.mockmvc.extensions.patch
 import no.skatteetaten.aurora.mockmvc.extensions.put
 import no.skatteetaten.aurora.mockmvc.extensions.responseJsonPath
 import no.skatteetaten.aurora.mockmvc.extensions.status
@@ -77,34 +76,6 @@ class AuroraConfigControllerV1Test : AbstractControllerTest() {
             responseJsonPath("$.success").isTrue()
             responseJsonPath("$.items[0].name").equalsValue(auroraConfigRef.name)
             responseJsonPath("$.items[0].files").isNotEmpty()
-        }
-    }
-
-    @Test
-    fun `Patch aurora config`() {
-
-        val fileName = "simple.json"
-
-        val patch = """[{
-            "op": "add",
-            "path": "/version",
-            "value": "test"
-        }]"""
-
-        val content = """{ "version" : "test" }"""
-        every {
-            facade.patchAuroraConfigFile(auroraConfigRef, fileName, patch)
-        } returns AuroraConfigFile(fileName, content)
-
-        mockMvc.patch(
-            path = Path("/v1/auroraconfig/{auroraConfigName}/{fileName}", auroraConfigRef.name, fileName),
-            headers = HttpHeaders().contentType(),
-            body = mapOf("content" to patch)
-        ) {
-            statusIsOk()
-            responseJsonPath("$.success").isTrue()
-            responseJsonPath("$.items[0].name").equalsValue(fileName)
-            responseJsonPath("$.items[0].contents").equalsValue(content)
         }
     }
 
