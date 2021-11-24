@@ -7,6 +7,7 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Service
 import io.mockk.every
 import io.mockk.mockk
@@ -23,8 +24,10 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhRestTemplat
 import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
+import org.apache.commons.codec.binary.Base64
 import org.junit.jupiter.api.assertThrows
 import org.springframework.boot.web.client.RestTemplateBuilder
+import java.nio.charset.Charset
 
 class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
 
@@ -203,11 +206,9 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun databasetest() {
+    fun `Should map database secret to Toxiproxy`() {
 
-        httpMockServer(5000) {
-            rule { json(DbApiEnvelope("ok", listOf(createDbhSchema()))) }
-        }
+        httpMockServer(5000) { rule { json(DbApiEnvelope("ok", listOf(createDbhSchema()))) } }
 
         val (serviceResource, dcResource, secretResource, configResource) = generateResources(
             """{
@@ -220,9 +221,30 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             createdResources = 2
         )
 
+        assertThat(serviceResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed targetPort to point to toxiproxy",
+                featureIndex = 2
+            )
+
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment("Added toxiproxy volume and sidecar container")
-            .auroraResourceMatchesFile("dcWithDatabaseMapping.json")
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Added toxiproxy volume and sidecar container",
+                sourceIndex = 2,
+                featureIndex = 2
+            )
+
+        assertThat(secretResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed JDBC URL to point to Toxiproxy",
+                featureIndex = 2
+            )
+
+        val jdbcUrl = Base64
+            .decodeBase64((secretResource.resource as Secret).data["jdbcurl"])
+            .toString(Charset.defaultCharset())
+
+        assertThat(jdbcUrl).isEqualTo("localhost:18000")
 
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()
