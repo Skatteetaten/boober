@@ -563,38 +563,6 @@ class AuroraConfigFacadeTest(
     }
 
     @Test
-    fun `Should patch auroraConfigFile`() {
-        openShiftMock {
-
-            rule({ path?.endsWith("/groups") }) {
-                mockJsonFromFile("groups.json")
-            }
-
-            rule({ path?.endsWith("/users") }) {
-                mockJsonFromFile("users.json")
-            }
-        }
-
-        val patch = """[{
-            "op": "add",
-            "path": "/version",
-            "value": "test"
-        }]"""
-
-        val filename = "utv/simple.json"
-
-        val result = facade.patchAuroraConfigFile(
-            ref = auroraConfigRef,
-            filename = filename,
-            jsonPatchOp = patch
-        )
-
-        assertThat(result).isNotNull()
-        val json: JsonNode = jacksonObjectMapper().readTree(result.contents)
-        assertThat(json.at("/version").textValue()).isEqualTo("test")
-    }
-
-    @Test
     fun `find all auroraConfig names`() {
 
         bitbucketMock {
