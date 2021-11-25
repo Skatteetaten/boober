@@ -12,10 +12,13 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE_OVERRIDE
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.DEFAULT
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV_OVERRIDE
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.FEATURE
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.FEATURE_ENV
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL_OVERRIDE
 import no.skatteetaten.aurora.boober.model.ErrorType.INVALID
 import no.skatteetaten.aurora.boober.utils.jacksonYamlObjectMapper
+import org.apache.commons.lang3.StringUtils
 import org.springframework.util.DigestUtils
 
 enum class AuroraConfigFileType {
@@ -24,6 +27,8 @@ enum class AuroraConfigFileType {
     GLOBAL_OVERRIDE,
     BASE,
     BASE_OVERRIDE,
+    FEATURE,
+    FEATURE_ENV,
     INCLUDE_ENV,
     ENV,
     ENV_OVERRIDE,
@@ -54,7 +59,10 @@ data class AuroraConfigFile(
         get() {
 
             val appSpecificFile = !(name.startsWith("about") || name.contains("/about"))
-            val hasSubFolder = name.contains("/")
+            val featureFile = name.contains("/feature")
+            val slashCount = StringUtils.countMatches(name, "/")
+            val hasSubFolder = slashCount >= 1
+            val hasFeatureFolder = slashCount == 2
 
             return typeHint ?: when {
                 isDefault -> DEFAULT
@@ -62,6 +70,8 @@ data class AuroraConfigFile(
                 !hasSubFolder && !appSpecificFile && override -> GLOBAL_OVERRIDE
                 !hasSubFolder && appSpecificFile && !override -> BASE
                 !hasSubFolder && appSpecificFile && override -> BASE_OVERRIDE
+                hasSubFolder && featureFile && !override -> FEATURE
+                hasFeatureFolder && !featureFile && appSpecificFile && !override -> FEATURE_ENV
                 hasSubFolder && !appSpecificFile && !override -> ENV
                 hasSubFolder && !appSpecificFile && override -> ENV_OVERRIDE
                 hasSubFolder && appSpecificFile && !override -> APP

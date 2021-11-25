@@ -5,6 +5,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.APP
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.BASE
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.ENV
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.FEATURE_ENV
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.GLOBAL
 import no.skatteetaten.aurora.boober.model.AuroraConfigFileType.INCLUDE_ENV
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -148,7 +149,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
 
     val handlers: Set<AuroraConfigFieldHandler>
 
-    val aboutFileTypes = setOf(GLOBAL, ENV, INCLUDE_ENV)
+    val aboutFileTypes = setOf(GLOBAL, ENV, INCLUDE_ENV, FEATURE_ENV)
     val appFileTypes = setOf(BASE, APP)
 
     companion object {
@@ -204,7 +205,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
                 validator = { it.pattern(envNamePattern, envNameMessage) },
                 defaultSource = "folderName",
                 defaultValue = defaultEnvName,
-                allowedFilesTypes = setOf(ENV)
+                allowedFilesTypes = setOf(ENV, FEATURE_ENV)
             ),
             AuroraConfigFieldHandler(
                 "name",

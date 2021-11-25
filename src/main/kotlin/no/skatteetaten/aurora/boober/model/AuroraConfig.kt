@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.model
 
+import com.fasterxml.jackson.databind.JsonNode
 import java.io.File
 import java.nio.charset.Charset
 import no.skatteetaten.aurora.boober.feature.HeaderHandlers.Companion.BASE_FILE
@@ -8,6 +9,7 @@ import no.skatteetaten.aurora.boober.feature.HeaderHandlers.Companion.GLOBAL_FIL
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.removeExtension
+import org.apache.commons.lang3.StringUtils
 
 data class AuroraConfig(
     val files: List<AuroraConfigFile>,
@@ -56,8 +58,17 @@ data class AuroraConfig(
 
         return files
             .map { it.name.removeExtension() }
-            .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") }
-            .map { val (environment, application) = it.split("/"); ApplicationDeploymentRef(environment, application) }
+            .filter { it.contains("/") && !it.contains("about") && !it.startsWith("templates") && !it.endsWith("/feature") }
+            .map {
+                val count = StringUtils.countMatches(it, "/")
+                if (count == 2) {
+                    val (environment, feature, application) = it.split("/")
+                    ApplicationDeploymentRef(environment, application, feature)
+                } else {
+                    val (environment, application) = it.split("/")
+                    ApplicationDeploymentRef(environment, application)
+                }
+            }
     }
 
     fun getFilesForApplication(
@@ -135,35 +146,42 @@ data class AuroraConfig(
         return file ?: throw IllegalArgumentException("Should find applicationFile $fileName.(json|yaml)")
     }
 
-    private fun findFileSpec(applicationDeploymentRef: ApplicationDeploymentRef): Set<AuroraConfigFileSpec> {
+    fun getFeatureFile(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile? {
+        return findFile("${applicationDeploymentRef.environment}/feature")
+    }
+
+    fun getApplicationFileForFeature(applicationDeploymentRef: ApplicationDeploymentRef): AuroraConfigFile {
+        require(applicationDeploymentRef.feature != null) { "ApplicationDeployment should have format env/feature/app $applicationDeploymentRef" }
+        val filename1 = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.feature}/${applicationDeploymentRef.application}"
+        var file = findFile(filename1)
+
+        // if file found in $env/$feature return it
+        if (file != null) {
+            return file
+        }
+
+        // if file not found in $env/$feature/$application check in $env and treat it as if it is part of $env/$feature
+        val filename2 = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.application}"
+        file = findFile(filename2)
+        return file ?: throw IllegalArgumentException("Should find application $filename1.(json|yaml) or $filename2.(json|yaml)")
+    }
+
+    private fun findFile(filename: String): AuroraConfigFile? = files.find { it.name.removeExtension() == filename && !it.override }
+
+    private fun findFileSpecApplicationDeployment(applicationDeploymentRef: ApplicationDeploymentRef): Set<AuroraConfigFileSpec> {
 
         val implementationFile = getApplicationFile(applicationDeploymentRef)
 
-        val baseFile = implementationFile.asJsonNode.get(BASE_FILE)?.asText()?.removeExtension()
-            ?: applicationDeploymentRef.application
-
-        val envFile = implementationFile.asJsonNode.get(ENV_FILE)?.asText()?.removeExtension()
-            ?: "about"
-
-        require(envFile.startsWith("about")) { "envFile must start with about" }
-
-        val envFileJson = files.find { file ->
-            file.name.startsWith(applicationDeploymentRef.environment) &&
-                file.name.removePrefix("${applicationDeploymentRef.environment}/").removeExtension() == envFile &&
-                !file.override
-        }?.asJsonNode
-            ?: throw IllegalArgumentException("EnvFile $envFile.(json|yaml) missing for application: $applicationDeploymentRef")
-
+        val baseFile = implementationFile.getBaseFile() ?: applicationDeploymentRef.application
+        val envFile = implementationFile.getEnvFile() ?: "about"
+        val envFileJson = getEnvFileJson(envFile, applicationDeploymentRef)
         val include = envFileJson.get("includeEnvFile")?.asText()
 
         val envFiles = include?.let {
             require(it.substringAfterLast("/").startsWith(("about"))) { "included envFile must start with about" }
             AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
         }
-        val baseFileJson = files.find { file ->
-            file.name.removeExtension() == baseFile && !file.override
-        }?.asJsonNode
-            ?: throw IllegalArgumentException("BaseFile $baseFile.(json|yaml) missing for application: $applicationDeploymentRef")
+        val baseFileJson = getBaseFileJson(baseFile, applicationDeploymentRef)
 
         val globalFile = envFileJson.get(GLOBAL_FILE)?.asText()?.removeExtension()
             ?: baseFileJson.get(GLOBAL_FILE)?.asText()?.removeExtension() ?: "about"
@@ -199,4 +217,69 @@ data class AuroraConfig(
 
         return AuroraConfig(files, localAuroraConfig.name, newVersion, newVersion)
     }
+
+    private fun findFileSpec(applicationDeploymentRef: ApplicationDeploymentRef): Set<AuroraConfigFileSpec> {
+        val featureFile = getFeatureFile(applicationDeploymentRef) ?: return findFileSpecApplicationDeployment(applicationDeploymentRef)
+        val implementationFile = getApplicationFileForFeature(applicationDeploymentRef)
+
+        require(applicationDeploymentRef.feature != null) { "feature.(json|yaml) found, ApplicationDeployment.feature should be set" }
+
+        val baseFile = implementationFile.getBaseFile() ?: applicationDeploymentRef.application
+        val envFile = implementationFile.getEnvFile() ?: "about"
+        val envFileJson = getEnvFileJson(envFile, applicationDeploymentRef)
+        val include = envFileJson.get("includeEnvFile")?.asText()
+
+        val envFiles = include?.let {
+            require(it.substringAfterLast("/").startsWith("about")) { "included envFile must start with about" }
+            AuroraConfigFileSpec(it.removeExtension(), AuroraConfigFileType.INCLUDE_ENV)
+        }
+        val baseFileJson = getBaseFileJson(baseFile, applicationDeploymentRef)
+
+        val globalFile = envFileJson.get(GLOBAL_FILE)?.asText()?.removeExtension()
+            ?: baseFileJson.get(GLOBAL_FILE)?.asText()?.removeExtension()
+            ?: "about"
+
+        val featureEnvFile = featureFile.getEnvFile() ?: "about"
+
+        val st = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.feature}"
+        return setOf(
+            AuroraConfigFileSpec(globalFile, AuroraConfigFileType.GLOBAL),
+            AuroraConfigFileSpec(baseFile, AuroraConfigFileType.BASE)
+        )
+            .addIfNotNull(envFiles)
+            .addIfNotNull(
+                setOf(
+                    AuroraConfigFileSpec("$st/$envFile", AuroraConfigFileType.ENV), // env/feature/about
+                    AuroraConfigFileSpec("${applicationDeploymentRef.environment}/$featureEnvFile", AuroraConfigFileType.FEATURE_ENV), // env/about
+                    AuroraConfigFileSpec("$st/${applicationDeploymentRef.application}", AuroraConfigFileType.APP)
+                )
+            )
+    }
+
+    private fun getEnvFileJson(envFile: String, applicationDeploymentRef: ApplicationDeploymentRef): JsonNode {
+        require(envFile.startsWith("about")) { "envFile must start with about" }
+        val prefix: String
+        if (applicationDeploymentRef.feature != null) {
+            prefix = "${applicationDeploymentRef.environment}/${applicationDeploymentRef.feature}"
+        } else {
+            prefix = applicationDeploymentRef.environment
+        }
+
+        return files.find { file ->
+            file.name.startsWith(prefix) &&
+                file.name.removePrefix("$prefix/").removeExtension() == envFile &&
+                !file.override
+        }?.asJsonNode
+            ?: throw IllegalArgumentException("EnvFile $envFile.(json|yaml) missing for application ${applicationDeploymentRef.application}")
+    }
+
+    private fun getBaseFileJson(baseFile: String, applicationDeploymentRef: ApplicationDeploymentRef): JsonNode {
+        return files.find { file ->
+            file.name.removeExtension() == baseFile && !file.override
+        }?.asJsonNode
+            ?: throw IllegalArgumentException("baseFiles $baseFile.(json|yaml) missing for application: $applicationDeploymentRef")
+    }
+
+    private fun AuroraConfigFile.getBaseFile(): String? = this.asJsonNode.get(BASE_FILE)?.asText()?.removeExtension()
+    private fun AuroraConfigFile.getEnvFile(): String? = this.asJsonNode.get(ENV_FILE)?.asText()?.removeExtension()
 }

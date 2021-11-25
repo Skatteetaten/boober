@@ -140,4 +140,58 @@ aurora:
 
 ---
 spring:
-    profiles: openshift
+    config:
+        activate:
+            on-profile: local-utv04
+
+management.server.port: 9091
+
+server:
+    port: 8080
+
+openshift:
+    cluster: utv04
+
+integrations:
+    operations:
+        scope: dev
+    dbh:
+        url: https://dbh-aurora.utv.paas.skead.no/
+    cantus:
+        url: http://cantus-aup.apps.${openshift.cluster}.paas.skead.no
+    skap:
+        url: https://skap-aup.apps.${openshift.cluster}.paas.skead.no
+    fiona:
+        url: https://fiona-aurora.utv.paas.skead.no/
+    herkimer:
+        url: https://herkimer-aup.apps.${openshift.cluster}.paas.skead.no/
+        fallback:
+            applikasjonsnavn: "1234567890"
+    openshift:
+        port: 6443
+        url: https://api.${openshift.cluster}.paas.skead.no:${integrations.openshift.port}
+    docker:
+        releases: "container-registry-internal-release.aurora.skead.no:443"
+        registry: "container-registry-internal-private-pull.aurora.skead.no:443"
+boober:
+    openshift:
+        tokenLocation: /tmp/boober-token
+
+vault:
+    operations:
+        enabled: true
+
+splunk:
+    hec:
+        token: token
+    fluentbit:
+        tag: "1.6.10"
+
+aurora:
+    token:
+        value: token
+---
+spring:
+    config:
+        activate:
+            on-profile: openshift
