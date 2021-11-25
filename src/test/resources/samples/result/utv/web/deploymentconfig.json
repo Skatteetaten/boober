@@ -60,8 +60,7 @@
           {
             "args": [
               "-config",
-              "/u01/config/toxiproxy/config.json",
-              "-host=0.0.0.0"
+              "/u01/config/toxiproxy/config.json"
             ],
             "env": [
               {
