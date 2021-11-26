@@ -97,7 +97,7 @@
               },
               {
                 "name": "HTTPS_URL",
-                "value": "http://localhost:18002"
+                "value": "https://localhost:18002"
               },
               {
                 "name": "URL_WITH_PORT",
@@ -105,7 +105,7 @@
               },
               {
                 "name": "URL_WITH_PATH",
-                "value": "http://localhost:18004"
+                "value": "http://localhost:18004/path"
               }
             ],
             "name": "simple"

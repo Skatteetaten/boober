@@ -35,6 +35,7 @@ import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 
 const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
@@ -298,12 +299,17 @@ class ToxiproxySidecarFeature(
     }
 
     fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec) = this.forEach {
-        adc.extractToxiproxyEndpoints().forEach { (proxyName, varName) ->
-            val proxyAddress = toxiproxyConfigs
-                .find { toxiProxyConfig -> toxiProxyConfig.name == proxyName }!!
-                .listen
-                .replace(Regex("^0\\.0\\.0\\.0"), "http://localhost")
-            it.env.find { v -> v.name == varName }?.value = proxyAddress
-        }
+        adc
+            .extractToxiproxyEndpoints()
+            .map { (proxyName, varName) -> Pair(proxyName, it.env.find { v -> v.name == varName }) }
+            .filterNot { (_, envVar) -> envVar == null }
+            .forEach { (proxyName, envVar) ->
+                envVar!!.value = UriComponentsBuilder
+                    .fromUriString(envVar.value)
+                    .host("localhost")
+                    .port(toxiproxyConfigs.findPortByProxyName(proxyName))
+                    .build()
+                    .toUriString()
+            }
     }
 }
