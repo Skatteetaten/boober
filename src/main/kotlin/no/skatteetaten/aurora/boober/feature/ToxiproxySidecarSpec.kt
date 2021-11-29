@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.feature
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.utils.Url
 
 val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() =
@@ -56,3 +57,9 @@ fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) = this
     .find { it.name == proxyName }
     ?.listen
     ?.substringAfter(':')
+
+fun String.convertToProxyUrl(port: Int): String =
+    Url(this)
+        .modifyHostName("localhost")
+        .modifyPort(port)
+        .makeString()
