@@ -18,6 +18,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaInstance
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbApiEnvelope
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhRestTemplateWrapper
@@ -214,7 +215,13 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 json(
                     DbApiEnvelope(
                         "ok",
-                        listOf(createDbhSchema(UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060")))
+                        listOf(
+                            createDbhSchema(
+                                UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060"),
+                                "jdbc:oracle:thin:@host:1234/dbname",
+                                DatabaseSchemaInstance(1234, "host")
+                            )
+                        )
                     )
                 )
             }
@@ -254,7 +261,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             .decodeBase64((secretResource.resource as Secret).data["jdbcurl"])
             .toString(Charset.defaultCharset())
 
-        assertThat(jdbcUrl).isEqualTo("localhost:18000")
+        assertThat(jdbcUrl).isEqualTo("jdbc:oracle:thin:@localhost:18000/dbname")
 
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()
@@ -266,12 +273,35 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
 
         httpMockServer(5000) {
             rule {
-                json(
-                    DbApiEnvelope(
-                        "ok",
-                        listOf(createDbhSchema(UUID.fromString("db651af4-5fec-4875-bdef-0651b9b72691")))
-                    )
-                )
+                when {
+                    path.contains("name%3Ddb1") ->
+                        json(
+                            DbApiEnvelope(
+                                "ok",
+                                listOf(
+                                    createDbhSchema(
+                                        UUID.fromString("db651af4-5fec-4875-bdef-0651b9b72691"),
+                                        "jdbc:oracle:thin:@host:1234/db1",
+                                        DatabaseSchemaInstance(1234, "host")
+                                    )
+                                )
+                            )
+                        )
+                    path.contains("name%3Ddb2") ->
+                        json(
+                            DbApiEnvelope(
+                                "ok",
+                                listOf(
+                                    createDbhSchema(
+                                        UUID.fromString("5b5c2057-c8de-45e8-b41a-e897cf3800c9"),
+                                        "jdbc:oracle:thin:@host:1234/db2",
+                                        DatabaseSchemaInstance(1234, "host")
+                                    )
+                                )
+                            )
+                        )
+                    else -> null
+                }
             }
         }
 
@@ -326,8 +356,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             .decodeBase64((secretResource2.resource as Secret).data["jdbcurl"])
             .toString(Charset.defaultCharset())
 
-        assertThat(jdbcUrl1).isEqualTo("localhost:18000")
-        assertThat(jdbcUrl2).isEqualTo("localhost:18001")
+        assertThat(jdbcUrl1).isEqualTo("jdbc:oracle:thin:@localhost:18000/db1")
+        assertThat(jdbcUrl2).isEqualTo("jdbc:oracle:thin:@localhost:18001/db2")
 
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()
@@ -337,7 +367,39 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     @Test
     fun `Should map database secrets to named Toxiproxies`() {
 
-        httpMockServer(5000) { rule { json(DbApiEnvelope("ok", listOf(createDbhSchema()))) } }
+        httpMockServer(5000) {
+            rule {
+                when {
+                    path.contains("name%3Ddb1") ->
+                        json(
+                            DbApiEnvelope(
+                                "ok",
+                                listOf(
+                                    createDbhSchema(
+                                        UUID.fromString("db651af4-5fec-4875-bdef-0651b9b72691"),
+                                        "jdbc:oracle:thin:@host:1234/db1",
+                                        DatabaseSchemaInstance(1234, "host")
+                                    )
+                                )
+                            )
+                        )
+                    path.contains("name%3Ddb2") ->
+                        json(
+                            DbApiEnvelope(
+                                "ok",
+                                listOf(
+                                    createDbhSchema(
+                                        UUID.fromString("5b5c2057-c8de-45e8-b41a-e897cf3800c9"),
+                                        "jdbc:oracle:thin:@host:1234/db2",
+                                        DatabaseSchemaInstance(1234, "host")
+                                    )
+                                )
+                            )
+                        )
+                    else -> null
+                }
+            }
+        }
 
         val (serviceResource, dcResource, secretResource1, secretResource2, configResource) = generateResources(
             """{
@@ -399,8 +461,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             .decodeBase64((secretResource2.resource as Secret).data["jdbcurl"])
             .toString(Charset.defaultCharset())
 
-        assertThat(jdbcUrl1).isEqualTo("localhost:18000")
-        assertThat(jdbcUrl2).isEqualTo("localhost:18001")
+        assertThat(jdbcUrl1).isEqualTo("jdbc:oracle:thin:@localhost:18000/db1")
+        assertThat(jdbcUrl2).isEqualTo("jdbc:oracle:thin:@localhost:18001/db2")
 
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()

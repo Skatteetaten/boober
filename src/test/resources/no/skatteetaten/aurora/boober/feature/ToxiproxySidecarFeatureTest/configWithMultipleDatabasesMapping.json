@@ -6,6 +6,6 @@
     "namespace": "paas-utv"
   },
   "data": {
-    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\"},{\"name\":\"database_db651af4-5fec-4875-bdef-0651b9b72691\",\"listen\":\"0.0.0.0:18000\",\"upstream\":\"localhost:1512\"},{\"name\":\"database_db651af4-5fec-4875-bdef-0651b9b72691\",\"listen\":\"0.0.0.0:18001\",\"upstream\":\"localhost:1512\"}]"
+    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\"},{\"name\":\"database_db651af4-5fec-4875-bdef-0651b9b72691\",\"listen\":\"0.0.0.0:18000\",\"upstream\":\"host:1234\"},{\"name\":\"database_5b5c2057-c8de-45e8-b41a-e897cf3800c9\",\"listen\":\"0.0.0.0:18001\",\"upstream\":\"host:1234\"}]"
   }
 }

@@ -42,8 +42,8 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
+import java.nio.charset.Charset
 
 const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
@@ -295,7 +295,11 @@ class ToxiproxySidecarFeature(
                 val secret: Secret = it.resource as Secret
                 val toxiproxyPort = secretNameToPortMap[secret.metadata.name]
                 if (toxiproxyPort != null) {
-                    secret.data["jdbcurl"] = Base64.encodeBase64String(("localhost:$toxiproxyPort").toByteArray())
+                    val newUrl = Base64
+                        .decodeBase64(secret.data["jdbcurl"])
+                        .toString(Charset.defaultCharset())
+                        .convertToProxyUrl(toxiproxyPort)
+                    secret.data["jdbcurl"] = Base64.encodeBase64String((newUrl).toByteArray())
                     modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
                 }
             }
@@ -357,12 +361,7 @@ class ToxiproxySidecarFeature(
             .map { (proxyName, varName) -> Pair(proxyName, it.env.find { v -> v.name == varName }) }
             .filterNot { (_, envVar) -> envVar == null }
             .forEach { (proxyName, envVar) ->
-                envVar!!.value = UriComponentsBuilder
-                    .fromUriString(envVar.value)
-                    .host("localhost")
-                    .port(toxiproxyConfigs.findPortByProxyName(proxyName))
-                    .build()
-                    .toUriString()
+                envVar!!.value = envVar.value.convertToProxyUrl(toxiproxyConfigs.findPortByProxyName(proxyName)!!.toInt())
             }
     }
 
