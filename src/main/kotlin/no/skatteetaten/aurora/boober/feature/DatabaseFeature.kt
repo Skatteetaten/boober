@@ -204,27 +204,34 @@ class DatabaseFeature(
     }
 
     fun List<Database>.createSchemaRequests(adc: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
-        return this.map {
-            val details = it.createSchemaDetails(adc.affiliation)
-            if (it.id != null) {
-                SchemaIdRequest(
-                    id = it.id,
-                    details = details,
-                    tryReuse = it.tryReuse
-                )
-            } else {
-                SchemaForAppRequest(
-                    environment = adc.envName,
-                    application = it.applicationLabel ?: adc.name,
-                    details = details,
-                    generate = it.generate,
-                    tryReuse = it.tryReuse,
-                    user = userDetailsProvider.getAuthenticatedUser()
-                )
-            }
-        }
+        return createSchemaRequests(userDetailsProvider, adc)
     }
 }
+
+fun List<Database>.createSchemaRequests(
+    userDetailsProvider: UserDetailsProvider,
+    adc: AuroraDeploymentSpec
+): List<SchemaProvisionRequest> = this.map {
+    val details = it.createSchemaDetails(adc.affiliation)
+    if (it.id != null) {
+        SchemaIdRequest(
+            id = it.id,
+            details = details,
+            tryReuse = it.tryReuse
+        )
+    } else {
+        SchemaForAppRequest(
+            environment = adc.envName,
+            application = it.applicationLabel ?: adc.name,
+            details = details,
+            generate = it.generate,
+            tryReuse = it.tryReuse,
+            user = userDetailsProvider.getAuthenticatedUser()
+        )
+    }
+}
+
+val databaseDefaultsKey = "databaseDefaults"
 
 abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
 
@@ -236,185 +243,186 @@ abstract class DatabaseFeatureTemplate(val cluster: String) : Feature {
         return mapOf("databases" to findDatabases(spec))
     }
 
-    val databaseDefaultsKey = "databaseDefaults"
+    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> =
+        dbHandlers(cmd)
+}
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        val dbHandlers = findDbHandlers(cmd.applicationFiles)
+fun dbHandlers(cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
+    val dbHandlers = findDbHandlers(cmd.applicationFiles)
 
-        val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
+    val dbDefaultsHandlers = findDbDefaultHandlers(cmd.applicationFiles)
 
-        return (
-            dbDefaultsHandlers + dbHandlers + listOf(
-                AuroraConfigFieldHandler(
-                    "database",
-                    validator = { it.boolean() },
-                    defaultValue = false,
-                    canBeSimplifiedConfig = true
-                )
+    return (
+        dbDefaultsHandlers + dbHandlers + listOf(
+            AuroraConfigFieldHandler(
+                "database",
+                validator = { it.boolean() },
+                defaultValue = false,
+                canBeSimplifiedConfig = true
             )
-            ).toSet()
-    }
-
-    fun findDatabases(adc: AuroraDeploymentSpec): List<Database> {
-        val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
-        val defaultInstance = findInstance(adc, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
-            ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
-
-        val defaultDb = Database(
-            name = adc["$databaseDefaultsKey/name"],
-            flavor = defaultFlavor,
-            generate = adc["$databaseDefaultsKey/generate"],
-            instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
-            tryReuse = adc["$databaseDefaultsKey/tryReuse"]
         )
-        if (adc.isSimplifiedAndEnabled("database")) {
-            return listOf(defaultDb)
-        }
-        return adc.getSubKeyValues("database").mapNotNull { db -> findDatabase(db, adc, defaultDb) }
-    }
+        ).toSet()
+}
 
-    private fun findDatabase(
-        db: String,
-        adc: AuroraDeploymentSpec,
-        defaultDb: Database
-    ): Database? {
-        val key = "database/$db"
-        val isSimple = adc.fields.containsKey(key)
+fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
-        return if (isSimple) {
-            val value: String = adc[key]
-            if (value == "false") {
-                return null
-            }
-            defaultDb.copy(
-                name = db,
-                id = if (value == "auto" || value.isBlank()) null else value
-            )
+    return applicationFiles.findSubKeysExpanded("database").flatMap { db ->
+        val expandedDbKeys = applicationFiles.findSubKeys(db)
+        if (expandedDbKeys.isEmpty()) {
+            listOf(AuroraConfigFieldHandler(db))
         } else {
-            if (!adc.get<Boolean>("$key/enabled")) {
-                return null
-            }
-            val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
-            val instance = findInstance(adc, "$key/instance", flavor.defaultFallback)
-            val value: String = adc.getOrNull("$key/id") ?: ""
-            val tryReuse: Boolean = adc.getOrDefault("database", db, "tryReuse")
-
-            val instanceName = instance?.name ?: defaultDb.instance.name
-            val instanceFallback = instance?.fallback ?: flavor.defaultFallback
-            val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
-                .addIfNotNull(instance?.labels)
-
-            Database(
-                name = adc.getOrNull("$key/name") ?: db,
-                id = if (value == "auto" || value.isBlank()) null else value,
-                flavor = flavor,
-                generate = adc.getOrNull("$key/generate") ?: defaultDb.generate,
-                instance = DatabaseInstance(
-                    name = instanceName,
-                    fallback = instanceFallback,
-                    labels = instanceLabels
-                ),
-                applicationLabel = adc.getOrNull("$key/applicationLabel"),
-                tryReuse = tryReuse
-            )
+            createExpandedDbHandlers(db, applicationFiles)
         }
     }
+}
 
-    private fun findInstance(
-        adc: AuroraDeploymentSpec,
-        key: String,
-        defaultFallback: Boolean
-    ): DatabaseInstance? {
+fun findDbDefaultHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
 
-        if (!adc.hasSubKeys(key)) {
+    val databaseDefaultHandler = listOf(
+        AuroraConfigFieldHandler(
+            "$databaseDefaultsKey/flavor",
+            defaultValue = DatabaseFlavor.ORACLE_MANAGED,
+            validator = { node ->
+                node.oneOf(DatabaseFlavor.values().map { it.toString() })
+            }
+        ),
+        AuroraConfigFieldHandler(
+            "$databaseDefaultsKey/generate",
+            validator = { it.boolean() },
+            defaultValue = true
+        ),
+        AuroraConfigFieldHandler(
+            "$databaseDefaultsKey/tryReuse",
+            defaultValue = false,
+            validator = { it.boolean() }
+        ),
+        AuroraConfigFieldHandler(
+            "$databaseDefaultsKey/name",
+            defaultValue = "@name@"
+        ) // må vi ha på en validator her?
+    )
+
+    val instanceHandlers = findInstanceHandlers(databaseDefaultsKey, applicationFiles)
+
+    return listOf<AuroraConfigFieldHandler>() + databaseDefaultHandler + instanceHandlers
+}
+
+private fun createExpandedDbHandlers(
+    db: String,
+    applicationFiles: List<AuroraConfigFile>
+): List<AuroraConfigFieldHandler> {
+
+    val mainHandlers = listOf(
+        AuroraConfigFieldHandler("$db/enabled", defaultValue = true, validator = { it.boolean() }),
+        AuroraConfigFieldHandler("$db/generate", validator = { it.boolean() }),
+        AuroraConfigFieldHandler("$db/name"),
+        AuroraConfigFieldHandler("$db/applicationLabel"),
+        AuroraConfigFieldHandler("$db/id"),
+        AuroraConfigFieldHandler("$db/tryReuse", validator = { it.boolean() }),
+        AuroraConfigFieldHandler(
+            "$db/flavor", validator = { node ->
+                node?.oneOf(DatabaseFlavor.values().map { it.toString() })
+            }
+        )
+    )
+
+    val instanceHandlers = findInstanceHandlers(db, applicationFiles)
+
+    return mainHandlers + instanceHandlers
+}
+
+private fun findInstanceHandlers(
+    key: String,
+    applicationFiles: List<AuroraConfigFile>
+): List<AuroraConfigFieldHandler> {
+    return applicationFiles.findSubKeys("$key/instance").flatMap {
+        if (it == "labels") {
+            applicationFiles.findSubHandlers("$key/instance/$it")
+        } else {
+            listOf(AuroraConfigFieldHandler("$key/instance/$it"))
+        }
+    }
+}
+
+fun findDatabases(adc: AuroraDeploymentSpec): List<Database> {
+    val defaultFlavor: DatabaseFlavor = adc["$databaseDefaultsKey/flavor"]
+    val defaultInstance = findInstance(adc, "$databaseDefaultsKey/instance", defaultFlavor.defaultFallback)
+        ?: DatabaseInstance(fallback = defaultFlavor.defaultFallback)
+
+    val defaultDb = Database(
+        name = adc["$databaseDefaultsKey/name"],
+        flavor = defaultFlavor,
+        generate = adc["$databaseDefaultsKey/generate"],
+        instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
+        tryReuse = adc["$databaseDefaultsKey/tryReuse"]
+    )
+    if (adc.isSimplifiedAndEnabled("database")) {
+        return listOf(defaultDb)
+    }
+    return adc.getSubKeyValues("database").mapNotNull { db -> findDatabase(db, adc, defaultDb) }
+}
+
+private fun findDatabase(
+    db: String,
+    adc: AuroraDeploymentSpec,
+    defaultDb: Database
+): Database? {
+    val key = "database/$db"
+    val isSimple = adc.fields.containsKey(key)
+
+    return if (isSimple) {
+        val value: String = adc[key]
+        if (value == "false") {
             return null
         }
-        return DatabaseInstance(
-            name = adc.getOrNull("$key/name"),
-            fallback = adc.getOrNull("$key/fallback") ?: defaultFallback,
-            labels = adc.getSubKeys("$key/labels").mapValues { it.value.value.textValue() }
+        defaultDb.copy(
+            name = db,
+            id = if (value == "auto" || value.isBlank()) null else value
         )
-    }
-
-    fun findDbHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
-
-        return applicationFiles.findSubKeysExpanded("database").flatMap { db ->
-            val expandedDbKeys = applicationFiles.findSubKeys(db)
-            if (expandedDbKeys.isEmpty()) {
-                listOf(AuroraConfigFieldHandler(db))
-            } else {
-                createExpandedDbHandlers(db, applicationFiles)
-            }
+    } else {
+        if (!adc.get<Boolean>("$key/enabled")) {
+            return null
         }
-    }
+        val flavor: DatabaseFlavor = adc.getOrNull("$key/flavor") ?: defaultDb.flavor
+        val instance = findInstance(adc, "$key/instance", flavor.defaultFallback)
+        val value: String = adc.getOrNull("$key/id") ?: ""
+        val tryReuse: Boolean = adc.getOrDefault("database", db, "tryReuse")
 
-    private fun createExpandedDbHandlers(
-        db: String,
-        applicationFiles: List<AuroraConfigFile>
-    ): List<AuroraConfigFieldHandler> {
+        val instanceName = instance?.name ?: defaultDb.instance.name
+        val instanceFallback = instance?.fallback ?: flavor.defaultFallback
+        val instanceLabels = emptyMap<String, String>().addIfNotNull(defaultDb.instance.labels)
+            .addIfNotNull(instance?.labels)
 
-        val mainHandlers = listOf(
-            AuroraConfigFieldHandler("$db/enabled", defaultValue = true, validator = { it.boolean() }),
-            AuroraConfigFieldHandler("$db/generate", validator = { it.boolean() }),
-            AuroraConfigFieldHandler("$db/name"),
-            AuroraConfigFieldHandler("$db/applicationLabel"),
-            AuroraConfigFieldHandler("$db/id"),
-            AuroraConfigFieldHandler("$db/tryReuse", validator = { it.boolean() }),
-            AuroraConfigFieldHandler(
-                "$db/flavor", validator = { node ->
-                    node?.oneOf(DatabaseFlavor.values().map { it.toString() })
-                }
-            )
+        Database(
+            name = adc.getOrNull("$key/name") ?: db,
+            id = if (value == "auto" || value.isBlank()) null else value,
+            flavor = flavor,
+            generate = adc.getOrNull("$key/generate") ?: defaultDb.generate,
+            instance = DatabaseInstance(
+                name = instanceName,
+                fallback = instanceFallback,
+                labels = instanceLabels
+            ),
+            applicationLabel = adc.getOrNull("$key/applicationLabel"),
+            tryReuse = tryReuse
         )
-
-        val instanceHandlers = findInstanceHandlers(db, applicationFiles)
-
-        return mainHandlers + instanceHandlers
     }
+}
 
-    fun findDbDefaultHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+private fun findInstance(
+    adc: AuroraDeploymentSpec,
+    key: String,
+    defaultFallback: Boolean
+): DatabaseInstance? {
 
-        val databaseDefaultHandler = listOf(
-            AuroraConfigFieldHandler(
-                "$databaseDefaultsKey/flavor",
-                defaultValue = DatabaseFlavor.ORACLE_MANAGED,
-                validator = { node ->
-                    node.oneOf(DatabaseFlavor.values().map { it.toString() })
-                }
-            ),
-            AuroraConfigFieldHandler(
-                "$databaseDefaultsKey/generate",
-                validator = { it.boolean() },
-                defaultValue = true
-            ),
-            AuroraConfigFieldHandler(
-                "$databaseDefaultsKey/tryReuse",
-                defaultValue = false,
-                validator = { it.boolean() }
-            ),
-            AuroraConfigFieldHandler(
-                "$databaseDefaultsKey/name",
-                defaultValue = "@name@"
-            ) // må vi ha på en validator her?
-        )
-
-        val instanceHandlers = findInstanceHandlers(databaseDefaultsKey, applicationFiles)
-
-        return listOf<AuroraConfigFieldHandler>() + databaseDefaultHandler + instanceHandlers
+    if (!adc.hasSubKeys(key)) {
+        return null
     }
-
-    private fun findInstanceHandlers(
-        key: String,
-        applicationFiles: List<AuroraConfigFile>
-    ): List<AuroraConfigFieldHandler> {
-        return applicationFiles.findSubKeys("$key/instance").flatMap {
-            if (it == "labels") {
-                applicationFiles.findSubHandlers("$key/instance/$it")
-            } else {
-                listOf(AuroraConfigFieldHandler("$key/instance/$it"))
-            }
-        }
-    }
+    return DatabaseInstance(
+        name = adc.getOrNull("$key/name"),
+        fallback = adc.getOrNull("$key/fallback") ?: defaultFallback,
+        labels = adc.getSubKeys("$key/labels").mapValues { it.value.value.textValue() }
+    )
 }
 
 fun SchemaProvisionRequest.getSecretName(prefix: String): String {

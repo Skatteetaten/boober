@@ -35,8 +35,6 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdRequest
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
@@ -47,18 +45,13 @@ import java.nio.charset.Charset
 
 const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
-private const val DATABASE_CONTEXT_KEY = "databases"
-
-private val FeatureContext.databases: List<Database> get() = this.getContextKey(DATABASE_CONTEXT_KEY)
-
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
     val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
     val userDetailsProvider: UserDetailsProvider,
-    @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String,
-    @Value("\${openshift.cluster}") cluster: String
-) : AbstractResolveTagFeature(cantusService, cluster) {
+    @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String
+) : AbstractResolveTagFeature(cantusService) {
 
     val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
     val secretNameToPortMap = mutableMapOf<String, Int>()
@@ -97,7 +90,7 @@ class ToxiproxySidecarFeature(
         val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpoints")
         val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("database")
         val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
-        val dbHandlers = super.handlers(header, cmd)
+        val dbHandlers = dbHandlers(cmd)
 
         return (
             endpointHandlers + toxiproxyDbHandlers + envVariables + listOf(
@@ -217,13 +210,12 @@ class ToxiproxySidecarFeature(
 
         // Databases:
         val proxyAllDatabases = adc.fields["toxiproxy/database"]?.value?.booleanValue() == true
-        context
-            .databases
+        findDatabases(adc)
             .filter {
                 proxyAllDatabases ||
                     adc.fields["toxiproxy/database/" + it.name + "/enabled"]?.value?.booleanValue() == true
             }
-            .createSchemaRequests(adc)
+            .createSchemaRequests(userDetailsProvider, adc)
             .associateWith { databaseSchemaProvisioner.findSchema(it) }
             .filterNot { it.value == null }
             .forEach { (request, schema) ->
@@ -299,7 +291,8 @@ class ToxiproxySidecarFeature(
                         .decodeBase64(secret.data["jdbcurl"])
                         .toString(Charset.defaultCharset())
                         .convertToProxyUrl(toxiproxyPort)
-                    secret.data["jdbcurl"] = Base64.encodeBase64String((newUrl).toByteArray())
+                        .toByteArray()
+                    secret.data["jdbcurl"] = Base64.encodeBase64String(newUrl)
                     modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
                 }
             }
@@ -363,28 +356,5 @@ class ToxiproxySidecarFeature(
             .forEach { (proxyName, envVar) ->
                 envVar!!.value = envVar.value.convertToProxyUrl(toxiproxyConfigs.findPortByProxyName(proxyName)!!.toInt())
             }
-    }
-
-    // TODO: Duplikat, bør forenkles
-    fun List<Database>.createSchemaRequests(adc: AuroraDeploymentSpec): List<SchemaProvisionRequest> {
-        return this.map {
-            val details = it.createSchemaDetails(adc.affiliation)
-            if (it.id != null) {
-                SchemaIdRequest(
-                    id = it.id,
-                    details = details,
-                    tryReuse = it.tryReuse
-                )
-            } else {
-                SchemaForAppRequest(
-                    environment = adc.envName,
-                    application = it.applicationLabel ?: adc.name,
-                    details = details,
-                    generate = it.generate,
-                    tryReuse = it.tryReuse,
-                    user = userDetailsProvider.getAuthenticatedUser()
-                )
-            }
-        }
     }
 }

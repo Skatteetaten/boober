@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service
 class AzureFeature(
     cantusService: CantusService,
     @Value("\${clinger.sidecar.default.version:0.4.0}") val sidecarVersion: String
-) : AbstractResolveTagFeature(cantusService, "") {
+) : AbstractResolveTagFeature(cantusService) {
     private val jwtToStsConverter = JwtToStsConverterSubPart()
     private val auroraAzureApp = AuroraAzureAppSubPart()
 

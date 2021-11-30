@@ -9,13 +9,7 @@ private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
 
 private val logger = KotlinLogging.logger {}
 
-abstract class AbstractResolveTagFeature(
-    open val cantusService: CantusService,
-    cluster: String
-) : DatabaseFeatureTemplate(cluster) {
-    /* TODO: Måtte legge inn DatabaseFeatureTemplate her for å gi ToxiproxyFeature tilgang til handlers,
-        men det burde vel være mulig å gjøre det på en litt ryddigere måte? */
-
+abstract class AbstractResolveTagFeature(open val cantusService: CantusService) : Feature {
     internal val FeatureContext.imageMetadata: ImageMetadata
         get() = this.getContextKey(
             IMAGE_METADATA_CONTEXT_KEY

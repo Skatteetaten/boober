@@ -64,7 +64,7 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.url}") val splunkUrl: String,
     @Value("\${splunk.hec.port}") val splunkPort: String,
     @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String
-) : AbstractResolveTagFeature(cantusService, "") {
+) : AbstractResolveTagFeature(cantusService) {
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         val loggingIndex = spec.loggingIndex

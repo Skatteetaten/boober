@@ -42,7 +42,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         get() = listOf(
             ConfigFeature(),
             DatabaseFeature(provisioner, userDetailsProvider, "utv"),
-            ToxiproxySidecarFeature(cantusService, provisioner, userDetailsProvider, "2.1.3", "utv")
+            ToxiproxySidecarFeature(cantusService, provisioner, userDetailsProvider, "2.1.3")
         )
 
     private val cantusService: CantusService = mockk()
