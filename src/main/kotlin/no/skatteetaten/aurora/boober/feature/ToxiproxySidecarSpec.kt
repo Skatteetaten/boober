@@ -53,13 +53,11 @@ fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>>
 fun generateProxyNameFromVarName(varName: String) = "endpoint_$varName"
 
 // Search for the toxiproxy port number by a given proxy name
-fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) = this
-    .find { it.name == proxyName }
-    ?.listen
-    ?.substringAfter(':')
+fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) =
+    find { it.name == proxyName }?.listen?.substringAfter(':')
 
 fun String.convertToProxyUrl(port: Int): String =
     Url(this)
-        .modifyHostName("localhost")
-        .modifyPort(port)
+        .withModifiedHostName("localhost")
+        .withModifiedPort(port)
         .makeString()

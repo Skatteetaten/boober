@@ -210,7 +210,7 @@ class UrlTest {
         validUrls.forEach {
             assertEquals(
                 "newName.domain",
-                Url(it).modifyHostName("newName.domain").hostName
+                Url(it).withModifiedHostName("newName.domain").hostName
             )
         }
 
@@ -243,7 +243,7 @@ class UrlTest {
             (input, expectedOutput) ->
             assertEquals(
                 expectedOutput,
-                Url(input).modifyHostName("newName.domain").makeString()
+                Url(input).withModifiedHostName("newName.domain").makeString()
             )
         }
     }
@@ -254,7 +254,7 @@ class UrlTest {
         validUrls.forEach {
             assertEquals(
                 18000,
-                Url(it).modifyPort(18000).port
+                Url(it).withModifiedPort(18000).port
             )
         }
 
@@ -287,7 +287,7 @@ class UrlTest {
             (input, expectedOutput) ->
             assertEquals(
                 expectedOutput,
-                Url(input).modifyPort(18000).makeString()
+                Url(input).withModifiedPort(18000).makeString()
             )
         }
     }

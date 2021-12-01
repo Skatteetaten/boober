@@ -100,33 +100,32 @@ class ToxiproxySidecarFeature(
                     validator = { it.boolean() },
                     canBeSimplifiedConfig = true
                 ),
-                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
-                AuroraConfigFieldHandler("toxiproxy/endpoints"),
-                AuroraConfigFieldHandler("toxiproxy/database", defaultValue = false)
+                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion)
             ) + dbHandlers
         ).toSet()
     }
 
     fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(type: String): List<AuroraConfigFieldHandler> =
-        this.findSubKeysExpanded("toxiproxy/$type").flatMap { endpointsOrDbOrS3 ->
-            listOf(
-                AuroraConfigFieldHandler(
-                    endpointsOrDbOrS3,
-                    defaultValue = true,
-                    validator = { it.boolean() },
-                    canBeSimplifiedConfig = true
-                ),
-                AuroraConfigFieldHandler(
-                    "$endpointsOrDbOrS3/proxyname",
-                    defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(type, endpointsOrDbOrS3))
-                ),
-                AuroraConfigFieldHandler(
-                    "$endpointsOrDbOrS3/enabled",
-                    defaultValue = true,
-                    validator = { it.boolean() }
+        listOf(AuroraConfigFieldHandler("toxiproxy/$type")) +
+            findSubKeysExpanded("toxiproxy/$type").flatMap { endpointsOrDbOrS3 ->
+                listOf(
+                    AuroraConfigFieldHandler(
+                        endpointsOrDbOrS3,
+                        defaultValue = true,
+                        validator = { it.boolean() },
+                        canBeSimplifiedConfig = true
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$endpointsOrDbOrS3/proxyname",
+                        defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(type, endpointsOrDbOrS3))
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$endpointsOrDbOrS3/enabled",
+                        defaultValue = true,
+                        validator = { it.boolean() }
+                    )
                 )
-            )
-        }
+            }
 
     override fun validate(
         adc: AuroraDeploymentSpec,

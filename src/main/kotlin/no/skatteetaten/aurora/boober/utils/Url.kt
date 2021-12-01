@@ -77,30 +77,29 @@ class Url(val url: String) {
     } else { null }
 
     fun makeString(
-        modifiedHostName: String = this.hostName,
-        modifiedPort: Int = this.port,
-        modifiedSuffix: String = this.suffix
+        modifiedHostName: String = hostName,
+        modifiedPort: Int = port,
+        modifiedSuffix: String = suffix
     ): String {
         assertIsValid()
         val portWithColon = ":$modifiedPort"
         return when {
-            isOracleJdbcUrl() ->
-                "jdbc:oracle:thin:@" + getProtocolFromOracleJdbcUrl() + modifiedHostName + portWithColon + modifiedSuffix
+            isOracleJdbcUrl() -> "jdbc:oracle:thin:@${getProtocolFromOracleJdbcUrl()}$modifiedHostName$portWithColon$modifiedSuffix"
             isPostgresJdbcUrl() -> "jdbc:postgresql://$modifiedHostName$portWithColon$modifiedSuffix"
-            else -> this.uri!!.scheme + "://" + modifiedHostName + portWithColon + modifiedSuffix
+            else -> "${uri!!.scheme}://$modifiedHostName$portWithColon$modifiedSuffix"
         }
     }
 
-    fun modifyHostName(newHostName: String) = Url(makeString(modifiedHostName = newHostName))
+    fun withModifiedHostName(newHostName: String) = Url(makeString(modifiedHostName = newHostName))
 
-    fun modifyPort(newPort: Int) = Url(makeString(modifiedPort = newPort))
+    fun withModifiedPort(newPort: Int) = Url(makeString(modifiedPort = newPort))
 }
 
-fun URI.givenOrDefaultPort() = if (this.port == -1) when (this.scheme) {
+fun URI.givenOrDefaultPort() = if (port == -1) when (scheme) {
     "https" -> PortNumbers.HTTPS_PORT
     "postgresql" -> PortNumbers.DEFAULT_POSTGRES_PORT
     else -> PortNumbers.HTTP_PORT
-} else this.port
+} else port
 
 fun String.removeEverythingBeforeHostnameFromOracleJdbcUrl() =
-    this.replace(Regex("^jdbc:oracle:thin:@([a-z]+:\\/\\/|\\/\\/)?"), "")
+    replace(Regex("^jdbc:oracle:thin:@([a-z]+:\\/\\/|\\/\\/)?"), "")
