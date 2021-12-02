@@ -5,6 +5,8 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.utils.Url
 
+val toxiproxyTypes = listOf("endpoints", "database")
+
 val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() =
         this.featureEnabled("toxiproxy") {
@@ -26,11 +28,13 @@ fun varNameInFieldNameRegex(type: String) =
 fun findVarNameInFieldName(type: String, fieldName: String) =
     varNameInFieldNameRegex(type).find(fieldName)!!.value
 
-// Return lists of AuroraConfigFields grouped by environment variable name
-fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
-    .getSubKeys("toxiproxy/endpoints")
+// Return lists of AuroraConfigFields grouped by environment variable or db name
+fun AuroraDeploymentSpec.groupToxiproxyFields(type: String): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
+    .getSubKeys("toxiproxy/$type")
     .map { it }
-    .groupBy { findVarNameInFieldName("endpoints", it.key) }
+    .groupBy { findVarNameInFieldName(type, it.key) }
+
+fun AuroraDeploymentSpec.groupToxiproxyEndpointFields() = groupToxiproxyFields("endpoints")
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
@@ -48,9 +52,25 @@ fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>>
         Pair(proxyName, varName)
     }
 
+// Find all proxy names of a given type (endpoints or database)
+fun AuroraDeploymentSpec.getToxiproxyNames(type: String): List<String> = groupToxiproxyFields(type)
+    .map { (varName, fields) ->
+        fields
+            .find { it.key == "toxiproxy/$type/$varName/proxyname" }
+            ?.value
+            ?.value<String>()
+            ?: generateProxyNameFromVarName(varName, type)
+    }
+
+// Find all proxy names
+fun AuroraDeploymentSpec.getToxiproxyNames(): List<String> = toxiproxyTypes.flatMap { getToxiproxyNames(it) }
+
 // Generate a default proxy name based on the variable name
 // To be used when there is no proxy name specified by the user
-fun generateProxyNameFromVarName(varName: String) = "endpoint_$varName"
+fun generateProxyNameFromVarName(varName: String, type: String): String {
+    val prefix = if (type == "endpoints") "endpoint" else "database"
+    return "${prefix}_$varName"
+}
 
 // Search for the toxiproxy port number by a given proxy name
 fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) =

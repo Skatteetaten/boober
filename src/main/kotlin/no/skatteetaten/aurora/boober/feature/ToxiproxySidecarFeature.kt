@@ -35,6 +35,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
+import no.skatteetaten.aurora.boober.utils.Url
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
@@ -117,7 +118,7 @@ class ToxiproxySidecarFeature(
                     ),
                     AuroraConfigFieldHandler(
                         "$endpointsOrDbOrS3/proxyname",
-                        defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(type, endpointsOrDbOrS3))
+                        defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(type, endpointsOrDbOrS3), type)
                     ),
                     AuroraConfigFieldHandler(
                         "$endpointsOrDbOrS3/enabled",
@@ -132,35 +133,43 @@ class ToxiproxySidecarFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> = if (fullValidation) {
-        val groupedFields = adc.groupToxiproxyEndpointFields()
 
-        // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable
-        val missingVariableErrors = groupedFields
+        // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable with a valid URL
+        val missingOrInvalidVariableErrors = adc
+            .groupToxiproxyEndpointFields()
             .keys
             .mapNotNull {
                 varName ->
-                if (
-                    !adc.getSubKeys("config")
-                        .keys
-                        .any { it.removePrefix("config/") == varName }
-                ) {
+                val envVar = adc.getSubKeys("config")["config/$varName"]?.value<String>()
+                if (envVar == null) {
                     AuroraDeploymentSpecValidationException(
                         "Found Toxiproxy config for endpoint named $varName, " +
                             "but there is no such environment variable."
+                    )
+                } else if (!Url(envVar).isValid()) {
+                    AuroraDeploymentSpecValidationException(
+                        "The format of the URL \"$envVar\" given by the config variable $varName is not supported."
+                    )
+                } else null
+            }
+
+        // For every database in toxiproxy/database, there should be a corresponding database
+        val missingDbErrors = adc
+            .groupToxiproxyFields("database")
+            .filter { (key, value) -> value.find { it.key == "toxiproxy/database/$key/enabled" }?.value?.value() ?: false }
+            .keys
+            .mapNotNull { varName ->
+                if (!adc.getSubKeyValues("database").contains(varName)) {
+                    AuroraDeploymentSpecValidationException(
+                        "Found Toxiproxy config for database named $varName, " +
+                            "but there is no such database configured."
                     )
                 } else null
             }
 
         // There should be no proxyname duplicates
-        val proxynameDuplicateErrors = groupedFields
-            .map {
-                (varName, fields) ->
-                fields
-                    .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }
-                    ?.value
-                    ?.value<String>()
-                    ?: generateProxyNameFromVarName(varName)
-            }
+        val proxynameDuplicateErrors = adc
+            .getToxiproxyNames()
             .groupingBy { it }
             .eachCount()
             .filter { it.value > 1 }
@@ -171,7 +180,7 @@ class ToxiproxySidecarFeature(
                 )
             }
 
-        listOf(missingVariableErrors, proxynameDuplicateErrors).flatten()
+        listOf(missingOrInvalidVariableErrors, missingDbErrors, proxynameDuplicateErrors).flatten()
     } else { emptyList() }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -347,7 +356,7 @@ class ToxiproxySidecarFeature(
         }
     }
 
-    fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec) = this.forEach {
+    fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec) = forEach {
         adc
             .extractToxiproxyEndpoints()
             .map { (proxyName, varName) -> Pair(proxyName, it.env.find { v -> v.name == varName }) }

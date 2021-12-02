@@ -179,6 +179,31 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
+    fun `Should fail with an error message when the corresponding environment variable does not contain a valid URL`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "endpoints": {
+                            "SOME_VAR": {"proxyname": "test", "enabled": true}
+                        }
+                    },
+                    "config": {"SOME_VAR": "invalid_url"}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage =
+            "The format of the URL \"invalid_url\" given by the config variable SOME_VAR is not supported."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
     fun `Should fail with an error message when there are proxyname duplicates`() {
 
         val errorMessage = assertThrows<MultiApplicationValidationException> {
@@ -189,8 +214,10 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "endpoints": {
                             "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
                             "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
-                        }
+                        },
+                        "database": {"db": {"proxyname": "duplicate", "enabled": true}}
                     },
+                    "database": {"db": {"enabled": true}},
                     "config": {
                         "TEST_WITH_PROXYNAME": "http://test1.test",
                         "TEST_WITH_SAME_PROXYNAME": "http://test2.test"
@@ -202,7 +229,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         }.errors.first().errors.first().message
 
         val expectedErrorMessage =
-            "Found 2 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
+            "Found 3 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
 
         assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }
@@ -229,9 +256,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
 
         val (serviceResource, dcResource, secretResource, configResource) = generateResources(
             """{
-                "toxiproxy": {
-                    "database": true
-                },
+                "toxiproxy": {"database": true},
                 "database": true
             }""",
             mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
@@ -307,16 +332,10 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
 
         val (serviceResource, dcResource, secretResource1, secretResource2, configResource) = generateResources(
             """{
-                "toxiproxy": {
-                    "database": true
-                },
+                "toxiproxy": {"database": true},
                 "database": {
-                    "db1": {
-                        "enabled": true
-                    },
-                    "db2": {
-                        "enabled": true
-                    }
+                    "db1": {"enabled": true},
+                    "db2": {"enabled": true}
                 }
             }""",
             mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
@@ -416,12 +435,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     }
                 },
                 "database": {
-                    "db1": {
-                        "enabled": true
-                    },
-                    "db2": {
-                        "enabled": true
-                    }
+                    "db1": {"enabled": true},
+                    "db2": {"enabled": true}
                 }
             }""",
             mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
@@ -467,5 +482,27 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("configWithNamedDatabaseProxiesMapping.json")
+    }
+
+    @Test
+    fun `Should fail with an error message when there are missing databases`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "database": {"db1": true}
+                    }
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage =
+            "Found Toxiproxy config for database named db1, but there is no such database configured."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }
 }
