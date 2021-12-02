@@ -48,7 +48,6 @@ fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>>
 // To be used when there is no proxy name specified by the user
 fun generateProxyNameFromVarName(varName: String) = "endpoint_$varName"
 
-// Search for the toxiproxy port number by a given proxy name
 fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) = this
     .find { it.name == proxyName }
     ?.listen

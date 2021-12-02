@@ -48,11 +48,7 @@ class ToxiproxySidecarFeature(
 
     val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
 
-    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        val toxiproxyVersion = spec.toxiproxyVersion
-
-        return toxiproxyVersion != null
-    }
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean = spec.toxiproxyVersion != null
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
