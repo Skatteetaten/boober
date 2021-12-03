@@ -72,7 +72,6 @@ fun generateProxyNameFromVarName(varName: String, type: String): String {
     return "${prefix}_$varName"
 }
 
-// Search for the toxiproxy port number by a given proxy name
 fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) =
     find { it.name == proxyName }?.listen?.substringAfter(':')
 
