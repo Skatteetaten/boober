@@ -34,9 +34,12 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
 }
 
 private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNode) {
-    val triggerCount = (mergedResource.at("/spec/triggers") as ArrayNode).size()
-    (0..triggerCount).forEach {
-        mergedResource.updateField(existingResource, "/spec/triggers/$it/imageChange", "lastTriggeredImageID")
+    val triggerNode = mergedResource.at("/spec/triggers")
+
+    if (triggerNode is ArrayNode) {
+        (0..triggerNode.size()).forEach {
+            mergedResource.updateField(existingResource, "/spec/triggers/$it/imageChange", "lastTriggeredImageID")
+        }
     }
 }
 

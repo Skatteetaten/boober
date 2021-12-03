@@ -48,8 +48,9 @@ class NotificationService(
             val adc = deployResult.auroraDeploymentSpecInternal
             val releaseTo = adc.releaseTo?.let { " *releaseTo*=$it " } ?: ""
             val deployId = if (!isSuccessful) "*deployId*=${deployResult.deployId} " else ""
+            val replicas = adc.fields["replicas"]?.let { " *replicas*=${it.value} " } ?: ""
 
-            "* **${adc.envName}/${adc.name}** *version*=${adc.version}  $releaseTo $deployId $messageFormatted"
+            "* **${adc.envName}/${adc.name}** *version*=${adc.version}  $replicas $releaseTo $deployId $messageFormatted"
         }
     }
 
