@@ -189,6 +189,11 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
             headers.get(HttpHeaders.AUTHORIZATION)
                 ?.firstOrNull()
                 ?.split(" ")
-                ?.get(1)?.let { it.substring(0, Integer.min(it.length, 5)) }
+                ?.get(1)?.let {
+                    if (it.startsWith("sha256") && it.length >= 11)
+                        it.substring(6, 11)
+                    else
+                        it.substring(0, Integer.min(it.length, 5))
+                }
     }
 }
