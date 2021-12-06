@@ -27,7 +27,11 @@ open class OpenShiftResourceClient(
 
     fun put(url: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return exchange(RequestEntity(payload, headers, HttpMethod.PUT, URI(url)))!!
+        try {
+            return exchange(RequestEntity(payload, headers, HttpMethod.PUT, URI(url)))!!
+        } catch (e: NullPointerException) {
+            throw OpenShiftException("Put request with url=$url returned null", e)
+        }
     }
 
     open fun get(
@@ -46,7 +50,12 @@ open class OpenShiftResourceClient(
 
     open fun post(url: String, payload: JsonNode): ResponseEntity<JsonNode> {
         val headers: HttpHeaders = getAuthorizationHeaders()
-        return exchange(RequestEntity(payload, headers, HttpMethod.POST, URI(url)))!!
+
+        try {
+            return exchange(RequestEntity(payload, headers, HttpMethod.POST, URI(url)))!!
+        } catch (e: NullPointerException) {
+            throw OpenShiftException("Post request with url=$url returned null", e)
+        }
     }
 
     fun delete(url: String): ResponseEntity<JsonNode>? {
@@ -59,7 +68,11 @@ open class OpenShiftResourceClient(
         val headers = getAuthorizationHeaders().apply {
             set(HttpHeaders.CONTENT_TYPE, "application/strategic-merge-patch+json")
         }
-        return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PATCH, URI(url)))!!
+        try {
+            return exchange(RequestEntity<JsonNode>(payload, headers, HttpMethod.PATCH, URI(url)))!!
+        } catch (e: NullPointerException) {
+            throw OpenShiftException("Patch request with url=$url returned null", e)
+        }
     }
 
     open fun getAuthorizationHeaders(): HttpHeaders {
@@ -94,6 +107,7 @@ open class OpenShiftResourceClient(
                 e
             )
         }
+        logger.info("Request with url=${requestEntity.url} responded with code=${e.statusCode} message=${e.message}")
         null
     }
 
