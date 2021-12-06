@@ -91,4 +91,15 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
         }
         assertThat(RetryLogger.getTokenSnippetFromAuthHeader(httpHeaders)).isEqualTo(snippet)
     }
+
+    @Test
+    fun `Get sha256 token snippet from auth header`() {
+
+        val token = "sha25609876"
+        val snippet = "09876"
+        val httpHeaders = HttpHeaders().apply {
+            add(HttpHeaders.AUTHORIZATION, "Bearer $token")
+        }
+        assertThat(RetryLogger.getTokenSnippetFromAuthHeader(httpHeaders)).isEqualTo(snippet)
+    }
 }
