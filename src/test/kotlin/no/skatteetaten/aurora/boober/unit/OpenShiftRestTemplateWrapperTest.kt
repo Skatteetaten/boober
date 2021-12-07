@@ -85,7 +85,7 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
     fun `Get token snippet from auth header`() {
 
         val token = "some_long_token"
-        val snippet = "some_"
+        val snippet = "token"
         val httpHeaders = HttpHeaders().apply {
             add(HttpHeaders.AUTHORIZATION, "Authorization $token")
         }
@@ -95,8 +95,19 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
     @Test
     fun `Get sha256 token snippet from auth header`() {
 
-        val token = "sha25609876"
+        val token = "sha256~09876"
         val snippet = "09876"
+        val httpHeaders = HttpHeaders().apply {
+            add(HttpHeaders.AUTHORIZATION, "Bearer $token")
+        }
+        assertThat(RetryLogger.getTokenSnippetFromAuthHeader(httpHeaders)).isEqualTo(snippet)
+    }
+
+    @Test
+    fun `Get token snippet from short token in auth header`() {
+
+        val token = "9876"
+        val snippet = "9876"
         val httpHeaders = HttpHeaders().apply {
             add(HttpHeaders.AUTHORIZATION, "Bearer $token")
         }
