@@ -206,6 +206,14 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     @Test
     fun `Should fail with an error message when there are proxyname duplicates`() {
 
+        httpMockServer(5000) {
+            rule {
+                json(
+                    DbApiEnvelope("ok", listOf(createDbhSchema()))
+                )
+            }
+        }
+
         val errorMessage = assertThrows<MultiApplicationValidationException> {
             generateResources(
                 """{
