@@ -35,18 +35,20 @@ import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.web.util.UriComponentsBuilder
 import java.net.URI
 
-const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
+private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
+
+private const val TOXIPROXY_CONFIGS_CONTEXT_KEY = "toxiproxyConfigs"
+
+val FeatureContext.toxiproxyConfigs: List<ToxiProxyConfig>
+    get() = this.getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
 
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
     @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
-
-    val toxiproxyConfigs = mutableListOf<ToxiProxyConfig>()
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean = spec.toxiproxyVersion != null
 
@@ -66,11 +68,37 @@ class ToxiproxySidecarFeature(
             return emptyMap()
         }
 
+        val toxiproxyConfigs = mutableListOf(getDefaultToxiProxyConfig())
+
+        // Variable for the port number that Toxiproxy will listen to
+        // An addition of 1 to the value is made for each proxy
+        var port = FIRST_PORT_NUMBER
+
+        spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
+            val url = spec.fields["config/$varname"]?.value<String>()
+            if (url != null) {
+                val uri = URI(url)
+                val upstreamPort = if (uri.port == -1) {
+                    if (uri.scheme == "https") { PortNumbers.HTTPS_PORT } else { PortNumbers.HTTP_PORT }
+                } else {
+                    uri.port
+                }
+                toxiproxyConfigs.add(
+                    ToxiProxyConfig(
+                        name = proxyname,
+                        listen = "0.0.0.0:$port",
+                        upstream = uri.host + ":" + upstreamPort
+                    )
+                )
+                port++
+            }
+        }
+
         return createImageMetadataContext(
             repo = "shopify",
             name = "toxiproxy",
             tag = toxiProxyTag
-        )
+        ) + mapOf(TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs)
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -164,39 +192,12 @@ class ToxiproxySidecarFeature(
 
         adc.toxiproxyVersion ?: return emptySet()
 
-        // Variable for the port number that Toxiproxy will listen to
-        // An addition of 1 to the value is made for each proxy
-        var port = FIRST_PORT_NUMBER
-
-        toxiproxyConfigs.clear()
-        toxiproxyConfigs.add(getDefaultToxiProxyConfig())
-
-        adc.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-            val url = adc.fields["config/$varname"]?.value<String>()
-            if (url != null) {
-                val uri = URI(url)
-                val upstreamPort = if (uri.port == -1) {
-                    if (uri.scheme == "https") { PortNumbers.HTTPS_PORT } else { PortNumbers.HTTP_PORT }
-                } else {
-                    uri.port
-                }
-                toxiproxyConfigs.add(
-                    ToxiProxyConfig(
-                        name = proxyname,
-                        listen = "0.0.0.0:$port",
-                        upstream = uri.host + ":" + upstreamPort
-                    )
-                )
-                port++
-            }
-        }
-
         val configMap = newConfigMap {
             metadata {
                 name = "${adc.name}-toxiproxy-config"
                 namespace = adc.namespace
             }
-            data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(toxiproxyConfigs))
+            data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(context.toxiproxyConfigs))
         }
 
         return setOf(generateResource(configMap))
@@ -224,7 +225,7 @@ class ToxiproxySidecarFeature(
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.prependIfNotNull(volume)
-                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc)
+                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
                 podSpec.containers = podSpec.containers.prependIfNotNull(container)
             } else if (it.resource.kind == "Deployment") {
                 // TODO: refactor
@@ -232,7 +233,7 @@ class ToxiproxySidecarFeature(
                 val dc: Deployment = it.resource as Deployment
                 val podSpec = dc.spec.template.spec
                 podSpec.volumes = podSpec.volumes.prependIfNotNull(volume)
-                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc)
+                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
                 podSpec.containers = podSpec.containers.prependIfNotNull(container)
             } else if (it.resource.kind == "Service") {
                 val service: Service = it.resource as Service
@@ -292,20 +293,5 @@ class ToxiproxySidecarFeature(
             }
             args = listOf("-config", "$configPath/toxiproxy/config.json", "-host=0.0.0.0")
         }
-    }
-
-    fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec) = this.forEach {
-        adc
-            .extractToxiproxyEndpoints()
-            .map { (proxyName, varName) -> Pair(proxyName, it.env.find { v -> v.name == varName }) }
-            .filterNot { (_, envVar) -> envVar == null }
-            .forEach { (proxyName, envVar) ->
-                envVar!!.value = UriComponentsBuilder
-                    .fromUriString(envVar.value)
-                    .host("localhost")
-                    .port(toxiproxyConfigs.findPortByProxyName(proxyName))
-                    .build()
-                    .toUriString()
-            }
     }
 }

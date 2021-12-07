@@ -1,8 +1,10 @@
 package no.skatteetaten.aurora.boober.feature
 
+import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import org.springframework.web.util.UriComponentsBuilder
 
 val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() =
@@ -48,7 +50,22 @@ fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>>
 // To be used when there is no proxy name specified by the user
 fun generateProxyNameFromVarName(varName: String) = "endpoint_$varName"
 
-fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) = this
+fun List<ToxiProxyConfig>.findPortByProxyName(proxyName: String) = this
     .find { it.name == proxyName }
     ?.listen
     ?.substringAfter(':')
+
+fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec, context: FeatureContext) = forEach {
+    adc
+        .extractToxiproxyEndpoints()
+        .map { (proxyName, varName) -> Pair(proxyName, it.env.find { v -> v.name == varName }) }
+        .filterNot { (_, envVar) -> envVar == null }
+        .forEach { (proxyName, envVar) ->
+            envVar!!.value = UriComponentsBuilder
+                .fromUriString(envVar.value)
+                .host("localhost")
+                .port(context.toxiproxyConfigs.findPortByProxyName(proxyName))
+                .build()
+                .toUriString()
+        }
+}
