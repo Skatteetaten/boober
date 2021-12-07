@@ -36,7 +36,8 @@ class BigIpFeature(
         "externalHost",
         "oauthScopes",
         "apiPaths",
-        "routeAnnotations"
+        "routeAnnotations",
+        "trailingSlash"
     )
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -53,7 +54,8 @@ class BigIpFeature(
                     AuroraConfigFieldHandler("bigip/$name/asmPolicy"),
                     AuroraConfigFieldHandler("bigip/$name/externalHost"),
                     AuroraConfigFieldHandler("bigip/$name/oauthScopes"),
-                    AuroraConfigFieldHandler("bigip/$name/apiPaths")
+                    AuroraConfigFieldHandler("bigip/$name/apiPaths"),
+                    AuroraConfigFieldHandler("bigip/$name/trailingSlash", { it.boolean() })
                 ) + findRouteAnnotationHandlers("bigip/$name", cmd.applicationFiles, "routeAnnotations")
             }.toSet()
 
@@ -63,7 +65,8 @@ class BigIpFeature(
             AuroraConfigFieldHandler("bigip/externalHost"),
             AuroraConfigFieldHandler("bigip/oauthScopes"),
             AuroraConfigFieldHandler("bigip/apiPaths"),
-            AuroraConfigFieldHandler("bigip/enabled", { it.boolean() })
+            AuroraConfigFieldHandler("bigip/enabled", { it.boolean() }),
+            AuroraConfigFieldHandler("bigip/trailingSlash", { it.boolean() })
         ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles, "routeAnnotations")
 
         return multipleConfigs + legacyConfig
@@ -146,7 +149,8 @@ class BigIpFeature(
                     asmPolicy = adc.getOrNull("bigip/$host/asmPolicy"),
                     oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/$host/oauthScopes"),
                     apiPaths = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/$host/apiPaths"),
-                    externalHost = adc.getOrNull("bigip/$host/externalHost")
+                    externalHost = adc.getOrNull("bigip/$host/externalHost"),
+                    trailingSlash = adc.getOrNull("bigip/$host/trailingSlash")
                 )
             )
         )
@@ -186,7 +190,8 @@ class BigIpFeature(
                     asmPolicy = adc.getOrNull("bigip/asmPolicy"),
                     oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/oauthScopes"),
                     apiPaths = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/apiPaths"),
-                    externalHost = adc.getOrNull("bigip/externalHost")
+                    externalHost = adc.getOrNull("bigip/externalHost"),
+                    trailingSlash = adc.getOrNull("bigip/trailingSlash")
                 )
             )
         )
