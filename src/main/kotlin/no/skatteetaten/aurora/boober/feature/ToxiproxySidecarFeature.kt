@@ -51,6 +51,11 @@ private const val TOXIPROXY_CONFIGS_CONTEXT_KEY = "toxiproxyConfigs"
 val FeatureContext.toxiproxyConfigs: List<ToxiProxyConfig>
     get() = this.getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
 
+private const val SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY = "secretNameToPortMap"
+
+private val FeatureContext.secretNameToPortMap: Map<String, Int>
+    get() = this.getContextKey(SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY)
+
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
@@ -58,8 +63,6 @@ class ToxiproxySidecarFeature(
     val userDetailsProvider: UserDetailsProvider,
     @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
-
-    val secretNameToPortMap = mutableMapOf<String, Int>()
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean = spec.toxiproxyVersion != null
 
@@ -107,6 +110,7 @@ class ToxiproxySidecarFeature(
         }
 
         // Databases:
+        val secretNameToPortMap = mutableMapOf<String, Int>()
         val proxyAllDatabases = spec.fields["toxiproxy/database"]?.value?.booleanValue() == true
         findDatabases(spec)
             .filter {
@@ -132,11 +136,12 @@ class ToxiproxySidecarFeature(
                 port++
             }
 
-        return super.createContext(spec, cmd, validationContext) + createImageMetadataContext(
-            repo = "shopify",
-            name = "toxiproxy",
-            tag = toxiProxyTag
-        ) + mapOf(TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs)
+        return super.createContext(spec, cmd, validationContext) +
+            createImageMetadataContext(repo = "shopify", name = "toxiproxy", tag = toxiProxyTag) +
+            mapOf(
+                TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs,
+                SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY to secretNameToPortMap
+            )
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
@@ -291,7 +296,7 @@ class ToxiproxySidecarFeature(
                 modifyResource(it, "Changed targetPort to point to toxiproxy")
             } else if (it.resource.kind == "Secret") {
                 val secret: Secret = it.resource as Secret
-                val toxiproxyPort = secretNameToPortMap[secret.metadata.name]
+                val toxiproxyPort = context.secretNameToPortMap[secret.metadata.name]
                 if (toxiproxyPort != null) {
                     val newUrl = Base64
                         .decodeBase64(secret.data["jdbcurl"])
