@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
@@ -72,7 +73,7 @@ fun generateProxyNameFromVarName(varName: String, type: String): String {
     return "${prefix}_$varName"
 }
 
-fun MutableList<ToxiProxyConfig>.findPortByProxyName(proxyName: String) =
+fun List<ToxiProxyConfig>.findPortByProxyName(proxyName: String) =
     find { it.name == proxyName }?.listen?.substringAfter(':')
 
 fun String.convertToProxyUrl(port: Int): String =
@@ -80,3 +81,13 @@ fun String.convertToProxyUrl(port: Int): String =
         .withModifiedHostName("localhost")
         .withModifiedPort(port)
         .makeString()
+
+fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec, context: FeatureContext) = forEach {
+    adc
+        .extractToxiproxyEndpoints()
+        .map { (proxyName, varName) -> Pair(proxyName, it.env.find { v -> v.name == varName }) }
+        .filterNot { (_, envVar) -> envVar == null }
+        .forEach { (proxyName, envVar) ->
+            envVar!!.value = envVar.value.convertToProxyUrl(context.toxiproxyConfigs.findPortByProxyName(proxyName)!!.toInt())
+        }
+}
