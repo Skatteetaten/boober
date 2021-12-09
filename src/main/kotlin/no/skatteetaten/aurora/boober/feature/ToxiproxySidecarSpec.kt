@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.Url
 
 val toxiproxyTypes = listOf("endpoints", "database")
@@ -91,3 +92,45 @@ fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec, contex
             envVar!!.value = envVar.value.convertToProxyUrl(context.toxiproxyConfigs.findPortByProxyName(proxyName)!!.toInt())
         }
 }
+
+// Validate that for every endpoint in toxiproxy/endpoints, there is a corresponding environment variable with a valid URL
+fun AuroraDeploymentSpec.missingOrInvalidVariableErrors() = groupToxiproxyEndpointFields()
+    .keys
+    .mapNotNull { varName ->
+        val envVar = this.getSubKeys("config")["config/$varName"]?.value<String>()
+        if (envVar == null) {
+            AuroraDeploymentSpecValidationException(
+                "Found Toxiproxy config for endpoint named $varName, " +
+                    "but there is no such environment variable."
+            )
+        } else if (!Url(envVar).isValid()) {
+            AuroraDeploymentSpecValidationException(
+                "The format of the URL \"$envVar\" given by the config variable $varName is not supported."
+            )
+        } else null
+    }
+
+// Validate that for every database in toxiproxy/database, there is a corresponding database in the spec
+fun AuroraDeploymentSpec.missingDbErrors() = groupToxiproxyFields("database")
+    .filter { (key, value) -> value.find { it.key == "toxiproxy/database/$key/enabled" }?.value?.value() ?: false }
+    .keys
+    .mapNotNull { varName ->
+        if (!getSubKeyValues("database").contains(varName)) {
+            AuroraDeploymentSpecValidationException(
+                "Found Toxiproxy config for database named $varName, " +
+                    "but there is no such database configured."
+            )
+        } else null
+    }
+
+// Validate that there are no proxyname duplicates
+fun AuroraDeploymentSpec.proxynameDuplicateErrors() = getToxiproxyNames()
+    .groupingBy { it }
+    .eachCount()
+    .filter { it.value > 1 }
+    .map {
+        AuroraDeploymentSpecValidationException(
+            "Found ${it.value} Toxiproxy configs with the proxy name \"${it.key}\". " +
+                "Proxy names have to be unique."
+        )
+    }

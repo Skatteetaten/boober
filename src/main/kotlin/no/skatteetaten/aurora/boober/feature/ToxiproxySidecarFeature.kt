@@ -30,12 +30,10 @@ import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.utils.Url
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
@@ -191,54 +189,13 @@ class ToxiproxySidecarFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> = if (fullValidation) {
-
-        // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable with a valid URL
-        val missingOrInvalidVariableErrors = adc
-            .groupToxiproxyEndpointFields()
-            .keys
-            .mapNotNull {
-                varName ->
-                val envVar = adc.getSubKeys("config")["config/$varName"]?.value<String>()
-                if (envVar == null) {
-                    AuroraDeploymentSpecValidationException(
-                        "Found Toxiproxy config for endpoint named $varName, " +
-                            "but there is no such environment variable."
-                    )
-                } else if (!Url(envVar).isValid()) {
-                    AuroraDeploymentSpecValidationException(
-                        "The format of the URL \"$envVar\" given by the config variable $varName is not supported."
-                    )
-                } else null
-            }
-
-        // For every database in toxiproxy/database, there should be a corresponding database
-        val missingDbErrors = adc
-            .groupToxiproxyFields("database")
-            .filter { (key, value) -> value.find { it.key == "toxiproxy/database/$key/enabled" }?.value?.value() ?: false }
-            .keys
-            .mapNotNull { varName ->
-                if (!adc.getSubKeyValues("database").contains(varName)) {
-                    AuroraDeploymentSpecValidationException(
-                        "Found Toxiproxy config for database named $varName, " +
-                            "but there is no such database configured."
-                    )
-                } else null
-            }
-
-        // There should be no proxyname duplicates
-        val proxynameDuplicateErrors = adc
-            .getToxiproxyNames()
-            .groupingBy { it }
-            .eachCount()
-            .filter { it.value > 1 }
-            .map {
-                AuroraDeploymentSpecValidationException(
-                    "Found ${it.value} Toxiproxy configs with the proxy name \"${it.key}\". " +
-                        "Proxy names have to be unique."
-                )
-            }
-
-        listOf(missingOrInvalidVariableErrors, missingDbErrors, proxynameDuplicateErrors).flatten()
+        with(adc) {
+            listOf(
+                missingOrInvalidVariableErrors(),
+                missingDbErrors(),
+                proxynameDuplicateErrors()
+            ).flatten()
+        }
     } else { emptyList() }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
