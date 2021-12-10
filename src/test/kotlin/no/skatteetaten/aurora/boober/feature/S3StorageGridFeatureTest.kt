@@ -160,8 +160,10 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 match {
                     it.size == 1 && it.find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
                 }
-            ).credentials
-        } returns listOf(sgRequestsWithCredentials(area1Name, bucket1Name))
+            )
+        } returns SgoaWithCredentials(
+            emptyList(), listOf(sgRequestsWithCredentials(area1Name, bucket1Name))
+        )
 
         val resources = generateResources(
             """{ 
