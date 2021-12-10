@@ -48,7 +48,7 @@ class S3StorageGridProvisionerTest {
             listOf(sgAdminCreds(aId, objectAreaName))
 
         val response = provisioner.getOrProvisionCredentials(aId, requests)
-        assertThat(response.size).isEqualTo(1)
+        assertThat(response.credentials.size).isEqualTo(1)
     }
 }
 

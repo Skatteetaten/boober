@@ -71,32 +71,37 @@ class S3StorageGridProvisioner(
     private val logger = KotlinLogging.logger { }
 
     fun getOrProvisionCredentials(applicationDeploymentId: String, requests: List<SgProvisioningRequest>):
-        List<SgRequestsWithCredentials> {
+        SgoaWithCredentials {
 
-        if (requests.isEmpty()) return emptyList()
+        if (requests.isEmpty()) return SgoaWithCredentials(emptyList(), emptyList())
 
-        provisionMissingObjectAreas(applicationDeploymentId, requests)
-        return herkimerService.getObjectAreaAdminCredentials(applicationDeploymentId, requests)
+        val sgoas = provisionMissingObjectAreas(applicationDeploymentId, requests)
+
+        val credentials = herkimerService.getObjectAreaAdminCredentials(applicationDeploymentId, requests)
+
+        return SgoaWithCredentials(sgoas, credentials)
     }
 
-    fun provisionMissingObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>) {
+    fun provisionMissingObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>): List<StorageGridObjectArea> {
+        if (requests.isEmpty()) return emptyList()
         val existingResources = herkimerService.getObjectAreaResourcesIndex(applicationDeploymentId)
         if (existingResources.isNotEmpty()) {
             logger.debug("ObjectArea(s) ${existingResources.keys.joinToString()} was already provisioned for applicationDeploymentId=$applicationDeploymentId")
         }
         val missingObjectAreas = requests
             .filter { !existingResources.containsKey(it.objectAreaName) }
-        provisionObjectAreas(applicationDeploymentId, missingObjectAreas)
+        return provisionObjectAreas(applicationDeploymentId, missingObjectAreas)
     }
 
-    private fun provisionObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>) {
+    private fun provisionObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>): List<StorageGridObjectArea> {
 
-        if (requests.isEmpty()) return
+        if (requests.isEmpty()) return emptyList()
         logger.debug("Provisioning ObjectArea(s) ${requests.joinToString { it.objectAreaName }} for applicationDeploymentId=$applicationDeploymentId")
 
         val sgoas = applySgoaResources(applicationDeploymentId, requests)
         val results = sgoas.waitForRequestCompletionOrTimeout()
         handleErrors(applicationDeploymentId, results)
+        return sgoas
     }
 
     private fun applySgoaResources(applicationDeploymentId: String, requests: List<SgProvisioningRequest>) = requests

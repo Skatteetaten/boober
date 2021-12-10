@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWithCredentials
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgoaWithCredentials
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
@@ -159,7 +160,7 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                 match {
                     it.size == 1 && it.find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
                 }
-            )
+            ).credentials
         } returns listOf(sgRequestsWithCredentials(area1Name, bucket1Name))
 
         val resources = generateResources(
@@ -195,9 +196,12 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     }
                 }
             )
-        } returns listOf(
-            sgRequestsWithCredentials(area1Name, bucket1Name),
-            sgRequestsWithCredentials(area2Name, bucket2Name)
+        } returns SgoaWithCredentials(
+            emptyList(),
+            listOf(
+                sgRequestsWithCredentials(area1Name, bucket1Name),
+                sgRequestsWithCredentials(area2Name, bucket2Name)
+            )
         )
 
         val resources = generateResources(
@@ -221,9 +225,12 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     @Test
     fun `creates secretes and environment variable refs for provisioned credentials`() {
 
-        every { provisioner.getOrProvisionCredentials(any(), any()) } returns listOf(
-            sgRequestsWithCredentials(area1Name, bucket1Name),
-            sgRequestsWithCredentials(area2Name, bucket1Name)
+        every { provisioner.getOrProvisionCredentials(any(), any()) } returns SgoaWithCredentials(
+            emptyList(),
+            listOf(
+                sgRequestsWithCredentials(area1Name, bucket1Name),
+                sgRequestsWithCredentials(area2Name, bucket1Name)
+            )
         )
 
         val resources = generateResources(
