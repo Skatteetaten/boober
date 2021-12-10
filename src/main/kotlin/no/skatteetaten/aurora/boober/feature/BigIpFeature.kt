@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
 import com.fkorotkov.kubernetes.newObjectMeta
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -22,7 +23,7 @@ import org.springframework.stereotype.Service
 class BigIpFeature(
     @Value("\${boober.route.suffix}") val routeSuffix: String
 ) : Feature {
-
+    val logger = KotlinLogging.logger {  }
     enum class Errors(val message: String) {
         MissingLegacyService("bigip/service is required if other bigip flags are set. bigip/service is deprecated and you should move that configuration to bigip/<name>/service."),
         MissingMultipleService("bigip/<name>/service is required if any other bigip flags are set"),
@@ -195,6 +196,8 @@ class BigIpFeature(
                 )
             )
         )
+        logger.debug("trailingSlash value", adc.getOrNull("bigip/trailingSlash"))
+        logger.debug("generated bigipspec", bigIp.spec)
 
         return setOf(
             auroraRoute.generateOpenShiftRoute(adc.namespace, adc.name, routeSuffix).generateAuroraResource(),
