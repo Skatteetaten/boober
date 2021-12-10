@@ -23,7 +23,7 @@ import org.springframework.stereotype.Service
 class BigIpFeature(
     @Value("\${boober.route.suffix}") val routeSuffix: String
 ) : Feature {
-    val logger = KotlinLogging.logger {  }
+    val logger = KotlinLogging.logger { }
     enum class Errors(val message: String) {
         MissingLegacyService("bigip/service is required if other bigip flags are set. bigip/service is deprecated and you should move that configuration to bigip/<name>/service."),
         MissingMultipleService("bigip/<name>/service is required if any other bigip flags are set"),
