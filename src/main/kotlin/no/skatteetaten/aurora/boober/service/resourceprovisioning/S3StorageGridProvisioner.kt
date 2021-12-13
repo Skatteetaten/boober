@@ -180,7 +180,6 @@ class S3StorageGridProvisioner(
     private fun createSgoaResource(applicationDeploymentId: String, request: SgProvisioningRequest):
         StorageGridObjectArea {
         val objectAreaName = "${request.deploymentName}-${request.objectAreaName}"
-        // TODO: We need to somehow get the ownerReference set
         val labels = operationScopeFeature.getLabelsToAdd()
             .normalizeLabels()
         return StorageGridObjectArea(
