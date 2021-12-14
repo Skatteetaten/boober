@@ -21,12 +21,12 @@ fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
 )
 
 // Regex for matching a variable name in a field name
-val varNameInFieldNameRegex = Regex("(?<=^toxiproxy\\/endpoints\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
+val varNameInFieldNameRegex = Regex("(?<=^toxiproxy\\/endpointsFromConfig\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
 fun findVarNameInFieldName(fieldName: String) = varNameInFieldNameRegex.find(fieldName)!!.value
 
 // Return lists of AuroraConfigFields grouped by environment variable name
 fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
-    .getSubKeys("toxiproxy/endpoints")
+    .getSubKeys("toxiproxy/endpointsFromConfig")
     .map { it }
     .groupBy { findVarNameInFieldName(it.key) }
 
@@ -35,12 +35,12 @@ fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.En
 fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
     .groupToxiproxyEndpointFields()
     .filter { (varName, fields) ->
-        fields.find { it.key == "toxiproxy/endpoints/$varName" }!!.value.value() &&
-            fields.find { it.key == "toxiproxy/endpoints/$varName/enabled" }!!.value.value()
+        fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName" }!!.value.value() &&
+            fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName/enabled" }!!.value.value()
     }
     .map { (varName, fields) ->
         val proxyName = fields
-            .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }!!
+            .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }!!
             .value
             .value<String>()
         Pair(proxyName, varName)

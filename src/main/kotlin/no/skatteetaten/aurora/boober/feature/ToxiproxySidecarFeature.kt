@@ -115,13 +115,13 @@ class ToxiproxySidecarFeature(
                     canBeSimplifiedConfig = true
                 ),
                 AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
-                AuroraConfigFieldHandler("toxiproxy/endpoints")
+                AuroraConfigFieldHandler("toxiproxy/endpointsFromConfig")
             )
         ).toSet()
     }
 
     fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded("toxiproxy/endpoints").flatMap { endpoint ->
+        applicationFiles.findSubKeysExpanded("toxiproxy/endpointsFromConfig").flatMap { endpoint ->
             listOf(
                 AuroraConfigFieldHandler(
                     endpoint,
@@ -170,7 +170,7 @@ class ToxiproxySidecarFeature(
             .map {
                 (varName, fields) ->
                 fields
-                    .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }
+                    .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }
                     ?.value
                     ?.value<String>()
                     ?: generateProxyNameFromVarName(varName)

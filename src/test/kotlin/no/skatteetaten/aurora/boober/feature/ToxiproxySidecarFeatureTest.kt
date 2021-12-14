@@ -83,7 +83,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             """{
                 "toxiproxy": {
                     "version": "2.1.3",
-                    "endpoints": {
+                    "endpointsFromConfig": {
                         "TEST_WITH_PROXYNAME": {"proxyname": "test1", "enabled": true},
                         "TEST_WITHOUT_PROXYNAME": true,
                         "DISABLED_TEST_WITH_PROXYNAME": {"proxyname": "test3", "enabled": false},
@@ -137,7 +137,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "endpoints": {
+                        "endpointsFromConfig": {
                             "NOT_EXISTING_VAR": {"proxyname": "test", "enabled": true}
                         }
                     }
@@ -161,7 +161,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "endpoints": {
+                        "endpointsFromConfig": {
                             "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
                             "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
                         }
