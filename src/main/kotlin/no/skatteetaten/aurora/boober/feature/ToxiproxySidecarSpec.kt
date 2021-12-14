@@ -43,12 +43,12 @@ fun AuroraDeploymentSpec.groupToxiproxyEndpointFields() = groupToxiproxyFields("
 fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
     .groupToxiproxyEndpointFields()
     .filter { (varName, fields) ->
-        fields.find { it.key == "toxiproxy/endpoints/$varName" }!!.value.value() &&
-            fields.find { it.key == "toxiproxy/endpoints/$varName/enabled" }!!.value.value()
+        fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName" }!!.value.value() &&
+            fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName/enabled" }!!.value.value()
     }
     .map { (varName, fields) ->
         val proxyName = fields
-            .find { it.key == "toxiproxy/endpoints/$varName/proxyname" }!!
+            .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }!!
             .value
             .value<String>()
         Pair(proxyName, varName)

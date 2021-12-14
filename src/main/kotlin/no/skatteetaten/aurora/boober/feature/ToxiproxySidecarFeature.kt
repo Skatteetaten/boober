@@ -144,7 +144,7 @@ class ToxiproxySidecarFeature(
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
-        val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpoints")
+        val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpointsFromConfig")
         val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("database")
         val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
         val dbHandlers = dbHandlers(cmd)
