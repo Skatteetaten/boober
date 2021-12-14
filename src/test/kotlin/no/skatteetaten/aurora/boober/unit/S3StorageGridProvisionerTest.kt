@@ -1,7 +1,7 @@
 package no.skatteetaten.aurora.boober.unit
 
 import assertk.assertThat
-import assertk.assertions.isEqualTo
+import assertk.assertions.hasSize
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.mockk.every
 import io.mockk.mockk
@@ -48,7 +48,7 @@ class S3StorageGridProvisionerTest {
             listOf(sgAdminCreds(aId, objectAreaName))
 
         val response = provisioner.getOrProvisionCredentials(aId, requests)
-        assertThat(response.credentials.size).isEqualTo(1)
+        assertThat(response.credentials).hasSize(1)
     }
 }
 

@@ -275,7 +275,6 @@ class S3StorageGridFeatureTest : AbstractMultiFeatureTest() {
                     _metadata = newObjectMeta {
                         name = "name"
                         namespace = "namespace"
-                        this.labels = labels
                     },
                     spec = StorageGridObjectAreaSpec("test", "123", area1Name, false)
                 )
