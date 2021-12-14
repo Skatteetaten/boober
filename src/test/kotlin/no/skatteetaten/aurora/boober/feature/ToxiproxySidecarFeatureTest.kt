@@ -186,7 +186,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "endpoints": {
+                        "endpointsFromConfig": {
                             "SOME_VAR": {"proxyname": "test", "enabled": true}
                         }
                     },

@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.Url
 
-val toxiproxyTypes = listOf("endpoints", "database")
+val toxiproxyTypes = listOf("endpointsFromConfig", "database")
 
 val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() =
@@ -36,7 +36,7 @@ fun AuroraDeploymentSpec.groupToxiproxyFields(type: String): Map<String, List<Ma
     .map { it }
     .groupBy { findVarNameInFieldName(type, it.key) }
 
-fun AuroraDeploymentSpec.groupToxiproxyEndpointFields() = groupToxiproxyFields("endpoints")
+fun AuroraDeploymentSpec.groupToxiproxyEndpointFields() = groupToxiproxyFields("endpointsFromConfig")
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
@@ -70,7 +70,7 @@ fun AuroraDeploymentSpec.getToxiproxyNames(): List<String> = toxiproxyTypes.flat
 // Generate a default proxy name based on the variable name
 // To be used when there is no proxy name specified by the user
 fun generateProxyNameFromVarName(varName: String, type: String): String {
-    val prefix = if (type == "endpoints") "endpoint" else "database"
+    val prefix = if (type == "endpointsFromConfig") "endpoint" else "database"
     return "${prefix}_$varName"
 }
 
