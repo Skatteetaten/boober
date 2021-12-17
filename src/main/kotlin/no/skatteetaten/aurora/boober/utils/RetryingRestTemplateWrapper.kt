@@ -189,6 +189,8 @@ class RetryLogger(val logger: Logger) : RetryListenerSupport() {
             headers.get(HttpHeaders.AUTHORIZATION)
                 ?.firstOrNull()
                 ?.split(" ")
-                ?.get(1)?.let { it.substring(0, Integer.min(it.length, 5)) }
+                ?.get(1)?.let {
+                    it.takeLast(Integer.min(it.length, 5))
+                }
     }
 }
