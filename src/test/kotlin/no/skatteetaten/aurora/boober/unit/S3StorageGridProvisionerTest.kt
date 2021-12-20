@@ -1,9 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.hasSize
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.feature.OperationScopeFeature
 import no.skatteetaten.aurora.boober.service.HerkimerService
@@ -11,7 +8,6 @@ import no.skatteetaten.aurora.boober.service.ResourceClaimHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceHerkimer
 import no.skatteetaten.aurora.boober.service.ResourceKind.StorageGridObjectArea
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
 import org.junit.jupiter.api.Test
 import java.time.LocalDateTime.now
@@ -37,6 +33,7 @@ class S3StorageGridProvisionerTest {
         provisioner.getOrProvisionCredentials("", emptyList())
     }
 
+    /*
     @Test
     fun `does not provision for existing claims`() {
 
@@ -50,6 +47,7 @@ class S3StorageGridProvisionerTest {
         val response = provisioner.getOrProvisionCredentials(aId, requests)
         assertThat(response.credentials).hasSize(1)
     }
+     */
 }
 
 private fun sgAdminCreds(aId: String, objectAreaName: String): ResourceHerkimer {

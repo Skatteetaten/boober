@@ -75,7 +75,7 @@ class S3StorageGridProvisioner(
 
         if (requests.isEmpty()) return SgoaWithCredentials(emptyList(), emptyList())
 
-        val sgoas = provisionMissingObjectAreas(applicationDeploymentId, requests)
+        val sgoas = provisionObjectAreas(applicationDeploymentId, requests)
 
         val credentials = herkimerService.getObjectAreaAdminCredentials(applicationDeploymentId, requests)
 

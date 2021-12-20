@@ -420,6 +420,13 @@ class DeployFacadeTest :
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
 
+            rule({ path.endsWith("simple-default") }) {
+                MockResponse()
+                    .setBody(loadBufferResource("sgoa.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+
             rule {
                 json(HerkimerResponse<Any>())
             }
