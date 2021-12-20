@@ -1,0 +1,30 @@
+{
+  "apiVersion" : "skatteetaten.no/v1",
+  "kind" : "StorageGridObjectArea",
+  "metadata" : {
+    "labels" : {
+      "operationScope" : "aos-4016",
+      "app" : "python",
+      "updatedBy" : "hero",
+      "updatedAt" : "0",
+      "lastUpdatedYear" : "1970",
+      "affiliation" : "paas",
+      "name" : "python",
+      "booberDeployId" : "deploy1"
+    },
+    "name" : "python-default",
+    "namespace" : "paas-utv",
+    "ownerReferences" : [ {
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "ApplicationDeployment",
+      "name" : "python",
+      "uid" : "123-123"
+    } ]
+  },
+  "spec" : {
+    "bucketPostfix" : "mybucket",
+    "applicationDeploymentId" : "1234567890",
+    "objectArea" : "default",
+    "tryReuseCredentials" : false
+  }
+}

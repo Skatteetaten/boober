@@ -228,6 +228,13 @@ class DeployFacadeTest :
 
         openShiftMock {
 
+            rule({ path.endsWith("-default") }) {
+                MockResponse()
+                    .setBody(loadBufferResource("sgoa.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+
             rule({ path?.endsWith("/groups") }) {
                 mockJsonFromFile("groups.json")
             }
@@ -417,13 +424,6 @@ class DeployFacadeTest :
             rule({ path.contains("resource?claimedBy=$adId") }) {
                 MockResponse()
                     .setBody(loadBufferResource("herkimerResponseBucketAdminSG.json"))
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            }
-
-            rule({ path.endsWith("simple-default") }) {
-                MockResponse()
-                    .setBody(loadBufferResource("sgoa.json"))
-                    .setResponseCode(200)
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
 
