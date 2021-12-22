@@ -1,13 +1,18 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isTrue
+import java.time.Instant
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fkorotkov.kubernetes.apps.newDeploymentList
 import com.fkorotkov.kubernetes.batch.newCronJobList
 import com.fkorotkov.kubernetes.batch.newJobList
 import com.fkorotkov.kubernetes.newConfigMapList
+import assertk.assertThat
+import assertk.assertions.isTrue
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -21,11 +26,6 @@ import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.jsonMapper
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.http.HttpHeaders
-import org.springframework.http.ResponseEntity
-import java.time.Instant
 
 class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
 
@@ -78,9 +78,10 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
             .addIfNotNull("deployment" to jsonMapper().convertValue(deploymentList))
             .addIfNotNull("job" to jsonMapper().convertValue(jobList))
             .addIfNotNull("cronjob" to jsonMapper().convertValue(cronJobList))
-            .addIfNotNull("auroracname" to mapper.valueToTree<JsonNode>(auroraCnameList))
-            .addIfNotNull("auroraazureapp" to mapper.valueToTree<JsonNode>(auroraCnameList))
-            .addIfNotNull("alert" to mapper.valueToTree<JsonNode>(alertList))
+            .addIfNotNull("auroracname" to mapper.valueToTree(auroraCnameList))
+            .addIfNotNull("auroraazureapp" to mapper.valueToTree(auroraCnameList))
+            .addIfNotNull("auroraapim" to mapper.valueToTree(auroraCnameList))
+            .addIfNotNull("alert" to mapper.valueToTree(alertList))
 
         responses.forEach {
             val kind = it.key

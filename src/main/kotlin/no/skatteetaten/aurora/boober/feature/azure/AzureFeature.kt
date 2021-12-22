@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature.azure
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
 import no.skatteetaten.aurora.boober.feature.isJob
@@ -11,9 +13,8 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.isListOrEmpty
 import no.skatteetaten.aurora.boober.utils.isValidDns
+import no.skatteetaten.aurora.boober.utils.startsWithSlash
 import no.skatteetaten.aurora.boober.utils.validUrl
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
 @Service
 class AzureFeature(
@@ -22,9 +23,10 @@ class AzureFeature(
 ) : AbstractResolveTagFeature(cantusService) {
     private val jwtToStsConverter = JwtToStsConverterSubPart()
     private val auroraAzureApp = AuroraAzureAppSubPart()
+    private val auroraApim = AuroraAzureApimSubPart()
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        return spec.isJwtToStsConverterEnabled || spec.isAzureAppFqdnEnabled
+        return spec.isJwtToStsConverterEnabled || spec.isAzureAppFqdnEnabled || spec.isApimEnabled
     }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -72,6 +74,31 @@ class AzureFeature(
                 validator = { it.boolean() },
                 canBeSimplifiedConfig = true
             ),
+            AuroraConfigFieldHandler(
+                AuroraAzureApimSubPart.ConfigPath.enabled,
+                defaultValue = false,
+                validator = { it.boolean(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                AuroraAzureApimSubPart.ConfigPath.path,
+                validator = { it.startsWithSlash(AuroraAzureApimSubPart.ConfigPath.path) }
+            ),
+            AuroraConfigFieldHandler(
+                AuroraAzureApimSubPart.ConfigPath.openapiUrl,
+                validator = { it.validUrl(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                AuroraAzureApimSubPart.ConfigPath.serviceUrl,
+                validator = { it.validUrl(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                AuroraAzureApimSubPart.ConfigPath.policies,
+                validator = { it.isListOrEmpty() }
+            ),
+            AuroraConfigFieldHandler(
+                AuroraAzureApimSubPart.ConfigPath.apiHost,
+                validator = { it.isValidDns() }
+            ),
             AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
         )
     }
@@ -103,7 +130,7 @@ class AzureFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        return auroraAzureApp.generate(adc, this)
+        return auroraAzureApp.generate(adc, this) + auroraApim.generate(adc, this)
     }
 
     override fun validate(
@@ -111,6 +138,6 @@ class AzureFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        return auroraAzureApp.validate(adc)
+        return auroraAzureApp.validate(adc) + auroraApim.validate(adc)
     }
 }

@@ -1,5 +1,10 @@
 package no.skatteetaten.aurora.boober.service.openshift
 
+import org.springframework.cache.annotation.Cacheable
+import org.springframework.http.HttpHeaders
+import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Service
+import org.springframework.web.client.HttpClientErrorException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -20,11 +25,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient.C
 import no.skatteetaten.aurora.boober.utils.annotation
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
-import org.springframework.cache.annotation.Cacheable
-import org.springframework.http.HttpHeaders
-import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
-import org.springframework.web.client.HttpClientErrorException
 
 private val logger = KotlinLogging.logger {}
 
@@ -247,7 +247,7 @@ class OpenShiftClient(
      * the request.
      */
     private fun getClientForKind(kind: String): OpenShiftResourceClient {
-        return if (listOf("namespace", "route", "auroracname", "auroraazureapp").contains(kind.lowercase())) {
+        return if (listOf("namespace", "route", "auroracname", "auroraazureapp", "auroraapim").contains(kind.lowercase())) {
             serviceAccountClient
         } else {
             userClient

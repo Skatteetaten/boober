@@ -26,9 +26,10 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "persistentvolumeclaim" -> updatePersistentVolumeClaim(mergedResource, existingResource)
         "deploymentconfig" -> updateDeploymentConfig(mergedResource, existingResource)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
-        "namespace" -> updateNamespace(mergedResource, existingResource)
-        "auroracname" -> updateAuroraCname(mergedResource, existingResource)
-        "auroraazureapp" -> updateAuroraAzureApp(mergedResource, existingResource)
+        "namespace" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroracname" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroraazureapp" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroraapim" -> mergeMetadataFrom(mergedResource, existingResource)
     }
     return mergedResource
 }
@@ -59,11 +60,5 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
     mergedResource.updateField(existingResource, "/spec", "clusterIP")
 }
 
-private fun updateNamespace(mergedResource: ObjectNode, existingResource: ObjectNode) =
-    mergedResource.mergeField(existingResource, "/metadata", "annotations")
-
-private fun updateAuroraCname(mergedResource: ObjectNode, existingResource: ObjectNode) =
-    mergedResource.mergeField(existingResource, "/metadata", "annotations")
-
-private fun updateAuroraAzureApp(mergedResource: ObjectNode, existingResource: ObjectNode) =
+private fun mergeMetadataFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
     mergedResource.mergeField(existingResource, "/metadata", "annotations")
