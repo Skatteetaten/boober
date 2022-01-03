@@ -8,7 +8,6 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
-import org.springframework.test.annotation.DirtiesContext
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -35,10 +34,10 @@ import okhttp3.mockwebserver.MockResponse
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     properties = ["integrations.openshift.retries=0", "integrations.s3.variant=storagegrid"]
 )
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+// TODO: Do we need this?
+//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class DeployFacadeTest :
-    AbstractSpringBootAuroraConfigTest() {
+class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: DeployFacade
