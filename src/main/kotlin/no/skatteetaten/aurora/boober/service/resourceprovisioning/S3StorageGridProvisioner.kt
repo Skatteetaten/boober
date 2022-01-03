@@ -82,18 +82,10 @@ class S3StorageGridProvisioner(
         return SgoaWithCredentials(sgoas, credentials)
     }
 
-    fun provisionMissingObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>): List<StorageGridObjectArea> {
-        if (requests.isEmpty()) return emptyList()
-        val existingResources = herkimerService.getObjectAreaResourcesIndex(applicationDeploymentId)
-        if (existingResources.isNotEmpty()) {
-            logger.debug("ObjectArea(s) ${existingResources.keys.joinToString()} was already provisioned for applicationDeploymentId=$applicationDeploymentId")
-        }
-        val missingObjectAreas = requests
-            .filter { !existingResources.containsKey(it.objectAreaName) }
-        return provisionObjectAreas(applicationDeploymentId, missingObjectAreas)
-    }
-
-    private fun provisionObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>): List<StorageGridObjectArea> {
+    private fun provisionObjectAreas(
+        applicationDeploymentId: String,
+        requests: List<SgProvisioningRequest>
+    ): List<StorageGridObjectArea> {
 
         if (requests.isEmpty()) return emptyList()
         logger.debug("Provisioning ObjectArea(s) ${requests.joinToString { it.objectAreaName }} for applicationDeploymentId=$applicationDeploymentId")
