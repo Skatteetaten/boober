@@ -412,7 +412,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 val azureRoute = configuredRoute.copy(
                     objectName = configuredRoute.objectName.ensureEndsWith("-azure"),
                     labels = mapOf("type" to "azure"),
-                    fullyQualifiedHost = true
+                    fullyQualifiedHost = true,
+                    tls = SecureRoute(InsecurePolicy.None, TlsTermination.edge)
                 )
                 val azureRouteSuffix = configuredRoute.suffix(routeSuffix)
                 val azureOpenshiftRoute = azureRoute.generateOpenShiftRoute(
