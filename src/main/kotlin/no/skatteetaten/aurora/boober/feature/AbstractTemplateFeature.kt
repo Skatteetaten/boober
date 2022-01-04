@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.text.StringSubstitutor
+import no.skatteetaten.aurora.boober.utils.boolean
 
 const val TEMPLATE_CONTEXT_KEY = "template"
 
@@ -49,9 +50,12 @@ abstract class AbstractTemplateFeature(
             header.versionHandler,
             AuroraConfigFieldHandler("replicas"),
             AuroraConfigFieldHandler("splunkIndex"),
+
+            // TODO: Det er ønskelig å kunne sette prometheus konfigurasjon i about filer, selv om de ikke gjør noe for templates
+            AuroraConfigFieldHandler("prometheus", validator = { it.boolean() }, canBeSimplifiedConfig = true),
             AuroraConfigFieldHandler("prometheus/path"),
             AuroraConfigFieldHandler("prometheus/port"),
-            // TODO: Part har konfigurert applikasjonene sine slik at de har prometheus/path i about filen.
+
             AuroraConfigFieldHandler("deployStrategy/type"),
             AuroraConfigFieldHandler("deployStrategy/timeout")
             // TODO: Sirius har deployStrategy/type for templates
