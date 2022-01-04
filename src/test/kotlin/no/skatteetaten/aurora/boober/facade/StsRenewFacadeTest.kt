@@ -14,7 +14,6 @@ import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
-// @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class StsRenewFacadeTest : AbstractSpringBootTest() {
 

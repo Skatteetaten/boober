@@ -33,7 +33,6 @@ import org.springframework.http.MediaType
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE
 )
-// @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class AuroraConfigFacadeTest(
     @Value("\${application.deployment.id}") val booberAdId: String
