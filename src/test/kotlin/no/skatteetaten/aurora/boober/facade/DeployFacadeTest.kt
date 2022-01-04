@@ -35,7 +35,7 @@ import okhttp3.mockwebserver.MockResponse
     properties = ["integrations.openshift.retries=0", "integrations.s3.variant=storagegrid"]
 )
 // TODO: Do we need this?
-//@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+// @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
