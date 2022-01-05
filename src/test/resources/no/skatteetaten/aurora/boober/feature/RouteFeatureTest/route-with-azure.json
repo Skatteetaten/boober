@@ -13,6 +13,10 @@
     "port": {
       "targetPort": "http"
     },
+    "tls": {
+      "insecureEdgeTerminationPolicy": "None",
+      "termination": "edge"
+    },
     "to": {
       "kind": "Service",
       "name": "simple"
