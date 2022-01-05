@@ -2,30 +2,37 @@ package no.skatteetaten.aurora.boober.feature
 
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
+import com.fkorotkov.kubernetes.newObjectMeta
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsAll
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectArea
+import no.skatteetaten.aurora.boober.model.openshift.StorageGridObjectAreaSpec
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3StorageGridProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgProvisioningRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgRequestsWithCredentials
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SgoaWithCredentials
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.StorageGridCredentials
-import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
-class S3StorageGridFeatureTest : AbstractFeatureTest() {
+class S3StorageGridFeatureTest : AbstractMultiFeatureTest() {
     private val provisioner = mockk<S3StorageGridProvisioner>()
 
-    override val feature: Feature
-        get() = S3StorageGridFeature(provisioner, mockk())
+    override val features: List<Feature>
+        get() = listOf(
+            S3StorageGridFeature(provisioner, mockk())
+        )
 
     @AfterEach
     fun after() {
@@ -160,7 +167,9 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     it.size == 1 && it.find { it.bucketPostfix == bucket1Name && it.objectAreaName == area1Name } != null
                 }
             )
-        } returns listOf(sgRequestsWithCredentials(area1Name, bucket1Name))
+        } returns SgoaWithCredentials(
+            emptyList(), listOf(sgRequestsWithCredentials(area1Name, bucket1Name))
+        )
 
         val resources = generateResources(
             """{ 
@@ -195,9 +204,12 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
                     }
                 }
             )
-        } returns listOf(
-            sgRequestsWithCredentials(area1Name, bucket1Name),
-            sgRequestsWithCredentials(area2Name, bucket2Name)
+        } returns SgoaWithCredentials(
+            emptyList(),
+            listOf(
+                sgRequestsWithCredentials(area1Name, bucket1Name),
+                sgRequestsWithCredentials(area2Name, bucket2Name)
+            )
         )
 
         val resources = generateResources(
@@ -221,9 +233,12 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
     @Test
     fun `creates secretes and environment variable refs for provisioned credentials`() {
 
-        every { provisioner.getOrProvisionCredentials(any(), any()) } returns listOf(
-            sgRequestsWithCredentials(area1Name, bucket1Name),
-            sgRequestsWithCredentials(area2Name, bucket1Name)
+        every { provisioner.getOrProvisionCredentials(any(), any()) } returns SgoaWithCredentials(
+            emptyList(),
+            listOf(
+                sgRequestsWithCredentials(area1Name, bucket1Name),
+                sgRequestsWithCredentials(area2Name, bucket1Name)
+            )
         )
 
         val resources = generateResources(
@@ -245,6 +260,46 @@ class S3StorageGridFeatureTest : AbstractFeatureTest() {
         )
 
         resources.verifyS3SecretsAndEnvs(listOf(area1Name, area2Name))
+    }
+
+    @Test
+    fun `verify OwnerReference and CommonLabels are included in StorageGridObjectArea`() {
+        every {
+            provisioner.getOrProvisionCredentials(
+                any(),
+                any()
+            )
+        } returns SgoaWithCredentials(
+            listOf(
+                StorageGridObjectArea(
+                    _metadata = newObjectMeta {
+                        name = "name"
+                        namespace = "namespace"
+                    },
+                    spec = StorageGridObjectAreaSpec("test", "123", area1Name, false)
+                )
+            ),
+            listOf(
+                sgRequestsWithCredentials(area1Name, bucket1Name),
+            )
+        )
+
+        val resources = generateResources(
+            """{ 
+                "s3": {
+                    "$area1Name" : {
+                        "bucketName": "$bucket1Name"
+                    }
+                }
+           }""",
+            createdResources = 2,
+            resources = mutableSetOf(createEmptyApplicationDeployment(), createEmptyDeploymentConfig())
+        )
+
+        val storageGridObjectArea = resources.find { it.resource is StorageGridObjectArea }
+
+        assertThat { storageGridObjectArea?.resource?.metadata?.ownerReferences }.isNotNull()
+        assertThat { storageGridObjectArea?.resource?.metadata?.labels }.isNotNull()
     }
 
     private fun sgRequestsWithCredentials(objectAreaName: String, bucketName: String) = SgRequestsWithCredentials(
