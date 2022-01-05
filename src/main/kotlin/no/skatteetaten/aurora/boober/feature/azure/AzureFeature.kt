@@ -16,6 +16,17 @@ import no.skatteetaten.aurora.boober.utils.isValidDns
 import no.skatteetaten.aurora.boober.utils.startsWithSlash
 import no.skatteetaten.aurora.boober.utils.validUrl
 
+/**
+ * Azure feature collects several azure related items. These are:
+ * <ul>
+ *     <li>JwtToStsConverter: Clinger sidecar converts JWT token to webseal header</li>
+ *     <li>AuroraAzureAppSubPart: Control migration away from webseal to azure ad JWT token</li>
+ *     <li>AuroraAzureApimSubPart: Registration of openapi-spec in Azure API Management. Notice
+ *     that you also need to enable the azure shard and create a dns entry in Azure AD</li>
+ * </ul>
+ *
+ * @see no.skatteetaten.aurora.boober.feature.RouteFeature
+ */
 @Service
 class AzureFeature(
     cantusService: CantusService,

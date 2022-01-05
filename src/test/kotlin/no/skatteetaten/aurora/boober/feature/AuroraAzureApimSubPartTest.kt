@@ -12,7 +12,7 @@ import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
 
-class AuroraAzureApimSubPartPartTest : AbstractMultiFeatureTest() {
+class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
             AzureFeature(cantusService, "0.4.0")

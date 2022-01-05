@@ -63,9 +63,9 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         val deploymentList = newDeploymentList()
         val jobList = newJobList()
         val cronJobList = newCronJobList()
-        val auroraCnameList = mapOf(
+        val dummyEntry = mapOf(
             "apiVersion" to "v1",
-            "kind" to "AuroraCnameList",
+            "kind" to "UnsusedInTestList",
             "items" to ArrayList<String>()
         )
         val alertList = mapOf(
@@ -78,9 +78,9 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
             .addIfNotNull("deployment" to jsonMapper().convertValue(deploymentList))
             .addIfNotNull("job" to jsonMapper().convertValue(jobList))
             .addIfNotNull("cronjob" to jsonMapper().convertValue(cronJobList))
-            .addIfNotNull("auroracname" to mapper.valueToTree(auroraCnameList))
-            .addIfNotNull("auroraazureapp" to mapper.valueToTree(auroraCnameList))
-            .addIfNotNull("auroraapim" to mapper.valueToTree(auroraCnameList))
+            .addIfNotNull("auroracname" to mapper.valueToTree(dummyEntry))
+            .addIfNotNull("auroraazureapp" to mapper.valueToTree(dummyEntry))
+            .addIfNotNull("auroraapim" to mapper.valueToTree(dummyEntry))
             .addIfNotNull("alert" to mapper.valueToTree(alertList))
 
         responses.forEach {
