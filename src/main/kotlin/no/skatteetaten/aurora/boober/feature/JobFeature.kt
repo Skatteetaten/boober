@@ -73,13 +73,7 @@ class JobFeature(
         AuroraConfigFieldHandler("prometheus/path"),
         AuroraConfigFieldHandler("prometheus/port"),
         AuroraConfigFieldHandler("deployStrategy/type"),
-        AuroraConfigFieldHandler("deployStrategy/timeout"),
-        AuroraConfigFieldHandler(
-            ROUTE_FEATURE_FIELD,
-            defaultValue = false,
-            validator = { it.boolean() },
-            canBeSimplifiedConfig = true
-        )
+        AuroraConfigFieldHandler("deployStrategy/timeout")
     )
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {

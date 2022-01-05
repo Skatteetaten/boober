@@ -4,7 +4,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
-import assertk.assertions.isSuccess
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.CantusService
@@ -36,19 +35,6 @@ class JobFeatureTest : AbstractFeatureTest() {
     @AfterEach
     fun clearMocks() {
         HttpMock.clearAllHttpMocks()
-    }
-
-    @Test
-    fun `should allow cronjob with simplified route config`() {
-
-        assertThat {
-            createAuroraDeploymentContext(
-                """{
-                "type" : "cronjob",
-                "route": true
-                }"""
-            )
-        }.isSuccess()
     }
 
     @Test
