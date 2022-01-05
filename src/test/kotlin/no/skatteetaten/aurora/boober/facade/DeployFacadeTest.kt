@@ -35,8 +35,7 @@ import okhttp3.mockwebserver.MockResponse
     properties = ["integrations.openshift.retries=0", "integrations.s3.variant=storagegrid"]
 )
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
-class DeployFacadeTest :
-    AbstractSpringBootAuroraConfigTest() {
+class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
     @Autowired
     lateinit var facade: DeployFacade
@@ -225,6 +224,13 @@ class DeployFacadeTest :
         }
 
         openShiftMock {
+
+            rule({ path.endsWith("-default") }) {
+                MockResponse()
+                    .setBody(loadBufferResource("sgoa.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
 
             rule({ path?.endsWith("/groups") }) {
                 mockJsonFromFile("groups.json")
