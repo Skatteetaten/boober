@@ -10,6 +10,7 @@ import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
+import assertk.assertions.isSuccess
 
 class TemplateFeatureTest : AbstractFeatureTest() {
 
@@ -19,6 +20,30 @@ class TemplateFeatureTest : AbstractFeatureTest() {
         get() = TemplateFeature(templateService, "utv")
 
     val template: String = this.javaClass.getResource("/samples/config/templates/atomhopper.json").readText()
+
+    @Test
+    fun `should allow template with prometheus handlers`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "template",
+                "prometheus": false
+        }"""
+            )
+        }.isSuccess()
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "template",
+                "prometheus": {
+                    "path": "none",
+                    "port": "anything"
+                }
+        }"""
+            )
+        }.isSuccess()
+    }
 
     @Test
     fun `should get error if template is missing`() {
