@@ -70,8 +70,12 @@ class JobFeature(
     val defaultHandlersForAllTypes = setOf(
         AuroraConfigFieldHandler("serviceAccount"),
         AuroraConfigFieldHandler("replicas"),
+
+        // TODO: Det er ønskelig å kunne sette prometheus konfigurasjon i about filer, selv om de ikke gjør noe for jobs
+        AuroraConfigFieldHandler("prometheus", validator = { it.boolean() }, canBeSimplifiedConfig = true),
         AuroraConfigFieldHandler("prometheus/path"),
         AuroraConfigFieldHandler("prometheus/port"),
+
         AuroraConfigFieldHandler("deployStrategy/type"),
         AuroraConfigFieldHandler("deployStrategy/timeout")
     )
