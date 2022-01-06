@@ -20,7 +20,6 @@ import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -37,8 +36,6 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
 import java.net.URI
-
-private val logger = KotlinLogging.logger {}
 
 private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
@@ -257,9 +254,6 @@ class ToxiproxySidecarFeature(
 
         val imageMetadata = context.imageMetadata
 
-        val imagePath = imageMetadata.getFullImagePath()
-        logger.debug { "Image path: $imagePath" }
-
         return newContainer {
             name = "${adc.name}-toxiproxy-sidecar"
             ports = containerPorts.map {
@@ -289,7 +283,7 @@ class ToxiproxySidecarFeature(
                     "cpu" to Quantity("10m")
                 )
             }
-            image = imagePath
+            image = imageMetadata.getFullImagePath()
             readinessProbe = newProbe {
                 tcpSocket {
                     port = IntOrString(PortNumbers.TOXIPROXY_ADMIN_PORT)
