@@ -34,9 +34,9 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
+import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import java.net.URI
@@ -234,17 +234,17 @@ class ToxiproxySidecarFeature(
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
                 val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.prependIfNotNull(volume)
+                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-                podSpec.containers = podSpec.containers.prependIfNotNull(container)
+                podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Deployment") {
                 // TODO: refactor
                 modifyResource(it, "Added toxiproxy volume and sidecar container")
                 val dc: Deployment = it.resource as Deployment
                 val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.prependIfNotNull(volume)
+                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
                 dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-                podSpec.containers = podSpec.containers.prependIfNotNull(container)
+                podSpec.containers = podSpec.containers.addIfNotNull(container)
             } else if (it.resource.kind == "Service") {
                 val service: Service = it.resource as Service
                 service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->

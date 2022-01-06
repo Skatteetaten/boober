@@ -58,60 +58,6 @@
       "spec": {
         "containers": [
           {
-            "args": [
-              "-config",
-              "/u01/config/toxiproxy/config.json",
-              "-host=0.0.0.0"
-            ],
-            "env": [
-              {
-                "name": "HTTP_PORT",
-                "value": "8090"
-              },
-              {
-                "name": "MANAGEMENT_HTTP_PORT",
-                "value": "8474"
-              }
-            ],
-            "image": "docker.registry:5000/shopify/toxiproxy@sha256:1234",
-            "name": "whoami-toxiproxy-sidecar",
-            "ports": [
-              {
-                "containerPort": 8090,
-                "name": "http",
-                "protocol": "TCP"
-              },
-              {
-                "containerPort": 8474,
-                "name": "management",
-                "protocol": "TCP"
-              }
-            ],
-            "readinessProbe": {
-              "initialDelaySeconds": 10,
-              "tcpSocket": {
-                "port": 8474
-              },
-              "timeoutSeconds": 1
-            },
-            "resources": {
-              "limits": {
-                "memory": "256Mi",
-                "cpu": "1"
-              },
-              "requests": {
-                "memory": "128Mi",
-                "cpu": "10m"
-              }
-            },
-            "volumeMounts": [
-              {
-                "mountPath": "/u01/config/toxiproxy",
-                "name": "whoami-toxiproxy-config"
-              }
-            ]
-          },
-          {
             "env": [
               {
                 "name": "POD_NAME",
@@ -232,17 +178,65 @@
                 "name": "whoami-db"
               }
             ]
+          },
+          {
+            "args": [
+              "-config",
+              "/u01/config/toxiproxy/config.json",
+              "-host=0.0.0.0"
+            ],
+            "env": [
+              {
+                "name": "HTTP_PORT",
+                "value": "8090"
+              },
+              {
+                "name": "MANAGEMENT_HTTP_PORT",
+                "value": "8474"
+              }
+            ],
+            "image": "docker.registry:5000/shopify/toxiproxy@sha256:1234",
+            "name": "whoami-toxiproxy-sidecar",
+            "ports": [
+              {
+                "containerPort": 8090,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8474,
+                "name": "management",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "initialDelaySeconds": 10,
+              "tcpSocket": {
+                "port": 8474
+              },
+              "timeoutSeconds": 1
+            },
+            "resources": {
+              "limits": {
+                "memory": "256Mi",
+                "cpu": "1"
+              },
+              "requests": {
+                "memory": "128Mi",
+                "cpu": "10m"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/u01/config/toxiproxy",
+                "name": "whoami-toxiproxy-config"
+              }
+            ]
           }
         ],
         "dnsPolicy": "ClusterFirst",
         "restartPolicy": "Always",
         "volumes": [
-          {
-            "configMap": {
-              "name": "whoami-toxiproxy-config"
-            },
-            "name": "whoami-toxiproxy-config"
-          },
           {
             "emptyDir": {},
             "name": "application-log-volume"
@@ -252,6 +246,12 @@
             "secret": {
               "secretName": "whoami-db"
             }
+          },
+          {
+            "configMap": {
+              "name": "whoami-toxiproxy-config"
+            },
+            "name": "whoami-toxiproxy-config"
           }
         ]
       }
