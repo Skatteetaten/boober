@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
+import assertk.assertions.isSuccess
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.service.CantusService
@@ -49,6 +50,30 @@ class JobFeatureTest : AbstractFeatureTest() {
         }.singleApplicationErrorResult(
             "Cron schedule is required."
         )
+    }
+
+    @Test
+    fun `should allow job with prometheus handlers`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "cronjob",
+                "prometheus": true
+        }"""
+            )
+        }.isSuccess()
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                "type" : "cronjob",
+                "prometheus": {
+                    "path": "none",
+                    "port": "anything"
+                }
+        }"""
+            )
+        }.isSuccess()
     }
 
     @Test

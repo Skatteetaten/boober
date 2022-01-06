@@ -71,32 +71,29 @@ class S3StorageGridProvisioner(
     private val logger = KotlinLogging.logger { }
 
     fun getOrProvisionCredentials(applicationDeploymentId: String, requests: List<SgProvisioningRequest>):
-        List<SgRequestsWithCredentials> {
+        SgoaWithCredentials {
+
+        if (requests.isEmpty()) return SgoaWithCredentials(emptyList(), emptyList())
+
+        val sgoas = provisionObjectAreas(applicationDeploymentId, requests)
+
+        val credentials = herkimerService.getObjectAreaAdminCredentials(applicationDeploymentId, requests)
+
+        return SgoaWithCredentials(sgoas, credentials)
+    }
+
+    private fun provisionObjectAreas(
+        applicationDeploymentId: String,
+        requests: List<SgProvisioningRequest>
+    ): List<StorageGridObjectArea> {
 
         if (requests.isEmpty()) return emptyList()
-
-        provisionMissingObjectAreas(applicationDeploymentId, requests)
-        return herkimerService.getObjectAreaAdminCredentials(applicationDeploymentId, requests)
-    }
-
-    fun provisionMissingObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>) {
-        val existingResources = herkimerService.getObjectAreaResourcesIndex(applicationDeploymentId)
-        if (existingResources.isNotEmpty()) {
-            logger.debug("ObjectArea(s) ${existingResources.keys.joinToString()} was already provisioned for applicationDeploymentId=$applicationDeploymentId")
-        }
-        val missingObjectAreas = requests
-            .filter { !existingResources.containsKey(it.objectAreaName) }
-        provisionObjectAreas(applicationDeploymentId, missingObjectAreas)
-    }
-
-    private fun provisionObjectAreas(applicationDeploymentId: String, requests: List<SgProvisioningRequest>) {
-
-        if (requests.isEmpty()) return
         logger.debug("Provisioning ObjectArea(s) ${requests.joinToString { it.objectAreaName }} for applicationDeploymentId=$applicationDeploymentId")
 
         val sgoas = applySgoaResources(applicationDeploymentId, requests)
         val results = sgoas.waitForRequestCompletionOrTimeout()
         handleErrors(applicationDeploymentId, results)
+        return sgoas
     }
 
     private fun applySgoaResources(applicationDeploymentId: String, requests: List<SgProvisioningRequest>) = requests
@@ -175,7 +172,6 @@ class S3StorageGridProvisioner(
     private fun createSgoaResource(applicationDeploymentId: String, request: SgProvisioningRequest):
         StorageGridObjectArea {
         val objectAreaName = "${request.deploymentName}-${request.objectAreaName}"
-        // TODO: We need to somehow get the ownerReference set
         val labels = operationScopeFeature.getLabelsToAdd()
             .normalizeLabels()
         return StorageGridObjectArea(

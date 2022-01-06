@@ -46,10 +46,19 @@ class S3StorageGridFeature(
 
         val requests = s3ObjectAreas
             .map { SgProvisioningRequest(it.tenant, it.area, spec.name, spec.namespace, it.bucketName) }
-        val s3Credentials = s3StorageGridProvisioner.getOrProvisionCredentials(spec.applicationDeploymentId, requests)
+
+        val sgoaWithCredentials =
+            s3StorageGridProvisioner.getOrProvisionCredentials(spec.applicationDeploymentId, requests)
+
+        val s3Credentials = sgoaWithCredentials.credentials
         logger.debug("Found ${s3Credentials.size} ObjectArea credentials for ApplicationDeployment ${spec.namespace}/${spec.name}")
         val s3Secret = s3Credentials.map(SgRequestsWithCredentials::toS3Secret)
-        return s3Secret.map { it.generateAuroraResource() }.toSet()
+
+        val secretResources = s3Secret.map { it.generateAuroraResource() }.toSet()
+
+        val sgoaResources = sgoaWithCredentials.sgoas.map { it.generateAuroraResource() }.toSet()
+
+        return secretResources + sgoaResources
     }
 
     override fun modify(spec: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
