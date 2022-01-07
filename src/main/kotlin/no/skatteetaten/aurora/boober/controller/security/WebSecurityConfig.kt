@@ -29,6 +29,8 @@ class WebSecurityConfig(
         http.authenticationProvider(preAuthenticationProvider())
             .addFilter(requestHeaderAuthenticationFilter())
             .authorizeRequests()
+
+            // EndpointRequest.toAnyEndpoint() points to all actuator endpoints and then permitAll requests
             .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
             .antMatchers("/v1/clientconfig").permitAll()
             .antMatchers("/v1/auroraconfignames").permitAll()
