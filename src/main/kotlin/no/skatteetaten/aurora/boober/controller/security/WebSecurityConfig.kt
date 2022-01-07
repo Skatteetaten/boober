@@ -13,13 +13,13 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
 import org.springframework.security.web.util.matcher.RequestMatcher
 import javax.servlet.http.HttpServletRequest
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest
 
 private val logger = KotlinLogging.logger {}
 
 @EnableWebSecurity
 class WebSecurityConfig(
-    val authenticationManager: BearerAuthenticationManager,
-    @Value("\${management.server.port}") val managementPort: Int
+    val authenticationManager: BearerAuthenticationManager
 ) : WebSecurityConfigurerAdapter() {
 
     override fun configure(http: HttpSecurity) {
@@ -29,13 +29,11 @@ class WebSecurityConfig(
         http.authenticationProvider(preAuthenticationProvider())
             .addFilter(requestHeaderAuthenticationFilter())
             .authorizeRequests()
-            .requestMatchers(forPort(managementPort)).permitAll()
+            .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
             .antMatchers("/v1/clientconfig").permitAll()
             .antMatchers("/v1/auroraconfignames").permitAll()
             .anyRequest().authenticated()
     }
-
-    private fun forPort(port: Int) = RequestMatcher { request: HttpServletRequest -> port == request.localPort }
 
     @Bean
     internal fun preAuthenticationProvider() = PreAuthenticatedAuthenticationProvider().apply {
