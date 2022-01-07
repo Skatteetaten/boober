@@ -130,6 +130,57 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
+    fun `Should add toxiproxy to dc and map servers and ports from container`() {
+
+        val (serviceResource, dcResource, configResource) = generateResources(
+            """{
+                "toxiproxy": {
+                    "version": "2.1.3",
+                    "serverAndPortFromConfig": {
+                        "proxyName1": {
+                            "serverVariable": "SERVER_1",
+                            "portVariable": "PORT_1"
+                        },
+                        "proxyName2": {
+                            "serverVariable": "SERVER_2",
+                            "portVariable": "PORT_2"
+                        }
+                    }
+                },
+                "config": {
+                    "SERVER_1": "test1.test",
+                    "PORT_1": 123,
+                    "SERVER_2": "test2.test",
+                    "PORT_2": 124
+                }
+            }""",
+            createEmptyService(),
+            createEmptyDeploymentConfig()
+        )
+
+        assertThat(serviceResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed targetPort to point to toxiproxy",
+                featureIndex = 1
+            )
+
+        val service = serviceResource.resource as Service
+        assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
+
+        assertThat(dcResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Added toxiproxy volume and sidecar container",
+                sourceIndex = 1,
+                featureIndex = 1
+            )
+            .auroraResourceMatchesFile("dcWithServerAndPortMapping.json")
+
+        assertThat(configResource)
+            .auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("configWithServerAndPortMapping.json")
+    }
+
+    @Test
     fun `Should fail with an error message when an endpoint with no corresponding environment variable is given`() {
 
         val errorMessage = assertThrows<MultiApplicationValidationException> {
