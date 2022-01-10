@@ -5,6 +5,13 @@ val kubernetesNonApiGroupResources = setOf(
     "replicationcontroller", "persistentvolumeclaim", "pod"
 )
 
+/**
+ * TODO: Add reason for this
+ */
+val preAppliedResources = setOf(
+    "storagegridobjectarea"
+)
+
 val nonGettableResources = setOf(
     "processedtemplate", "deploymentrequest", "imagestreamimport", "job"
 )
