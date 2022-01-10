@@ -169,6 +169,7 @@ class OpenShiftCommandService(
         "Service",
         "Route",
         "AuroraCname",
+        "AuroraAzureCname",
         "AuroraAzureApp",
         "ImageStream",
         "BigIp",
@@ -188,6 +189,7 @@ class OpenShiftCommandService(
         val labelSelectors = listOf("app=$name", "booberDeployId", "booberDeployId!=$deployId")
         return apiResources
             .filter { kind -> kind.lowercase() != "auroracname" || openShiftClient.k8sVersionOfAtLeast("1.16") }
+            .filter { kind -> kind.lowercase() != "auroraazurecname" || openShiftClient.k8sVersionOfAtLeast("1.16") }
             .filter { kind -> kind.lowercase() != "alert" || openShiftClient.k8sVersionOfAtLeast("1.16") }
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
             .map {

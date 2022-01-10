@@ -81,8 +81,65 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `separate routes for onprem and azure with cname`() {
-        val (dcResource, routeResource, azureRouteResource, auroraCname) = generateResources(
+    fun `route for onprem with cnames`() {
+        val (dcResource, routeResource, auroraCname) = generateResources(
+            """{
+            "route" : {
+               "simple" : {
+                    "host": "simple-specific-cname.foo.no",
+                    "cname": {
+                       "enabled": true,
+                       "ttl": 150
+                    }
+               }
+            }
+        }""",
+            createEmptyDeploymentConfig(),
+            createdResources = 2
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-specific-cname.json")
+
+        assertThat(auroraCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-specific-host.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-specific-cname.foo.no")
+    }
+
+    @Test
+    fun `route for azure with cname`() {
+        val (dcResource, routeResource, azureRouteResource, auroraAzureCname) = generateResources(
+            """{
+            "route" : {
+               "simple" : {
+                    "host": "simple-specific-cname.foo.no",
+                    "azure": {
+                       "enabled": true,
+                       "cnameTtl": 100
+                    }
+               }
+            }
+        }""",
+            createEmptyDeploymentConfig(),
+            createdResources = 3
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-specific-cname.json")
+
+        assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-azure-specific-host.json")
+
+        assertThat(auroraAzureCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-azure-specific-host.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-specific-cname.foo.no")
+    }
+
+    @Test
+    fun `separate routes for onprem and azure with cnames`() {
+        val (dcResource, routeResource, azureRouteResource, auroraCname, auroraAzureCname) = generateResources(
             """{
             "route" : {
                "simple" : {
@@ -99,7 +156,7 @@ class RouteFeatureTest : AbstractFeatureTest() {
             }
         }""",
             createEmptyDeploymentConfig(),
-            createdResources = 3
+            createdResources = 4
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
@@ -109,6 +166,9 @@ class RouteFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("route-with-azure-specific-host.json")
 
         assertThat(auroraCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-specific-host.json")
+
+        assertThat(auroraAzureCname).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("aurora-cname-azure-specific-host.json")
 
         assertThat(dcResource).auroraRouteEnvAdded("simple-specific-cname.foo.no")
@@ -142,30 +202,62 @@ class RouteFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should have separate routes for onprem and azure with azure defaults`() {
-        val (dcResource, routeResource, azureRouteResource, auroraCname) = generateResources(
+    fun `should have routes for onprem with onprem defaults`() {
+        val (dcResource, routeResource, auroraCname) = generateResources(
             """{
             "routeDefaults" : { 
-                "azure": {
+                "cname": {
                     "enabled": true
                 }
             },
             "route" : true
         }""",
             createEmptyDeploymentConfig(),
-            createdResources = 3
+            createdResources = 2
         )
 
         assertThat(routeResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("route.json")
-
-        assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("route-with-azure.json")
+            .auroraResourceMatchesFile("route-with-cname-simple.json")
 
         assertThat(auroraCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-simple.json")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv")
+    }
+
+    @Test
+    fun `should have routes for onprem and azure with defaults`() {
+        val (dcResource, routeResource, azureRouteResource, auroraCname, auroraAzureCname) = generateResources(
+            """{
+            "routeDefaults" : {
+                "azure": {
+                    "enabled": true
+                },
+                "cname": {
+                    "enabled": true
+                }
+            },
+            "route" : true
+        }""",
+            createEmptyDeploymentConfig(),
+            createdResources = 4
+        )
+
+        assertThat(routeResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-cname-simple.json")
+
+        assertThat(azureRouteResource).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("route-with-azure-cname-simple.json")
+
+        assertThat(auroraCname).auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("aurora-cname-simple.json")
+
+        assertThat(auroraAzureCname).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("aurora-cname-azure.json")
 
-        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv.test.foo")
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv")
+
+        assertThat(dcResource).auroraRouteEnvAdded("simple-paas-utv")
     }
 
     @Test
