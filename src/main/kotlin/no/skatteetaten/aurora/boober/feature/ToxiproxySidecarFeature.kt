@@ -29,7 +29,6 @@ import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
@@ -75,6 +74,7 @@ class ToxiproxySidecarFeature(
         // An addition of 1 to the value is made for each proxy
         var port = FIRST_PORT_NUMBER
 
+        // Add endpoints to toxiproxyConfigs:
         spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
             val url = spec.fields["config/$varname"]?.value<String>()
             if (url != null) {
@@ -95,6 +95,7 @@ class ToxiproxySidecarFeature(
             }
         }
 
+        // Add servers and ports to toxiproxyConfigs:
         spec.extractToxiproxyServersAndPorts().forEach {
             val upstreamServer = spec.fields["config/${it.serverVar}"]?.value<String>()
             val upstreamPort = spec.fields["config/${it.portVar}"]?.value<String>()
@@ -177,46 +178,13 @@ class ToxiproxySidecarFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> = if (fullValidation) {
-        val groupedFields = adc.groupToxiproxyEndpointFields()
-
-        // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable
-        val missingVariableErrors = groupedFields
-            .keys
-            .mapNotNull {
-                varName ->
-                if (
-                    !adc.getSubKeys("config")
-                        .keys
-                        .any { it.removePrefix("config/") == varName }
-                ) {
-                    AuroraDeploymentSpecValidationException(
-                        "Found Toxiproxy config for endpoint named $varName, " +
-                            "but there is no such environment variable."
-                    )
-                } else null
-            }
-
-        // There should be no proxyname duplicates
-        val proxynameDuplicateErrors = groupedFields
-            .map {
-                (varName, fields) ->
-                fields
-                    .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }
-                    ?.value
-                    ?.value<String>()
-                    ?: generateProxyNameFromVarName(varName)
-            }
-            .groupingBy { it }
-            .eachCount()
-            .filter { it.value > 1 }
-            .map {
-                AuroraDeploymentSpecValidationException(
-                    "Found ${it.value} Toxiproxy configs with the proxy name \"${it.key}\". " +
-                        "Proxy names have to be unique."
-                )
-            }
-
-        listOf(missingVariableErrors, proxynameDuplicateErrors).flatten()
+        with(adc) {
+            listOf(
+                missingEndpointVariableErrors(),
+                missingServerAndPortVariableErrors(),
+                proxynameDuplicateErrors()
+            ).flatten()
+        }
     } else { emptyList() }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {

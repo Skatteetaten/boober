@@ -205,6 +205,62 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
+    fun `Should fail with an error message when serverVarible points to an inexistent variable`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "serverAndPortFromConfig": {
+                            "proxyName": {
+                                "serverVariable": "INEXISTENT_SERVER_VAR",
+                                "portVariable": "EXISTENT_PORT_VAR"
+                            }
+                        }
+                    },
+                    "config": {"EXISTENT_PORT_VAR": 123}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage =
+            "Found Toxiproxy config for a server variable named INEXISTENT_SERVER_VAR, but there is no such environment variable."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when portVarible points to an inexistent variable`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "serverAndPortFromConfig": {
+                            "proxyName": {
+                                "serverVariable": "EXISTENT_SERVER_VAR",
+                                "portVariable": "INEXISTENT_PORT_VAR"
+                            }
+                        }
+                    },
+                    "config": {"EXISTENT_SERVER_VAR": "test.test"}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage =
+            "Found Toxiproxy config for a port variable named INEXISTENT_PORT_VAR, but there is no such environment variable."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
     fun `Should fail with an error message when there are proxyname duplicates`() {
 
         val errorMessage = assertThrows<MultiApplicationValidationException> {
@@ -215,11 +271,19 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "endpointsFromConfig": {
                             "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
                             "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
+                        },
+                        "serverAndPortFromConfig": {
+                            "duplicate": {
+                                "serverVariable": "SAME_PROXYNAME_SERVER",
+                                "portVariable": "SAME_PROXYNAME_PORT"
+                            }
                         }
                     },
                     "config": {
                         "TEST_WITH_PROXYNAME": "http://test1.test",
-                        "TEST_WITH_SAME_PROXYNAME": "http://test2.test"
+                        "TEST_WITH_SAME_PROXYNAME": "http://test2.test",
+                        "SAME_PROXYNAME_SERVER": "testserver.test",
+                        "SAME_PROXYNAME_PORT": 123
                     }
                 }""",
                 createEmptyService(),
@@ -228,7 +292,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         }.errors.first().errors.first().message
 
         val expectedErrorMessage =
-            "Found 2 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
+            "Found 3 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
 
         assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }

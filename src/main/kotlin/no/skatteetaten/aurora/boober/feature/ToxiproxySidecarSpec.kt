@@ -4,6 +4,7 @@ import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import org.springframework.web.util.UriComponentsBuilder
 
 val AuroraDeploymentSpec.toxiproxyVersion: String?
@@ -95,3 +96,58 @@ fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec, contex
         it.env.find { v -> v.name == portVar }?.value = context.toxiproxyConfigs.findPortByProxyName(proxyName)
     }
 }
+
+fun AuroraDeploymentSpec.getToxiproxyEndpointNames(): List<String> =
+    groupToxiproxyEndpointFields().map { (varName, fields) ->
+        fields
+            .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }
+            ?.value
+            ?.value<String>()
+            ?: generateProxyNameFromVarName(varName)
+    }
+
+fun AuroraDeploymentSpec.getToxiproxyServerAndPortNames(): List<String> =
+    groupToxiproxyServerAndPortFields().keys.toList()
+
+fun AuroraDeploymentSpec.getToxiproxyNames(): List<String> =
+    getToxiproxyEndpointNames() + getToxiproxyServerAndPortNames()
+
+// Validate that for every endpoint in toxiproxy/endpointsFromConfig, there is a corresponding environment variable
+fun AuroraDeploymentSpec.missingEndpointVariableErrors() =
+    groupToxiproxyEndpointFields().keys.mapNotNull { varName ->
+        if (getSubKeys("config").keys.none { it.removePrefix("config/") == varName }) {
+            AuroraDeploymentSpecValidationException(
+                "Found Toxiproxy config for endpoint named $varName, " +
+                    "but there is no such environment variable."
+            )
+        } else null
+    }
+
+// Validate that the environment variables given in toxiproxy/serverAndPortFromConfig exist
+fun AuroraDeploymentSpec.missingServerAndPortVariableErrors() =
+    groupToxiproxyServerAndPortFields().flatMap { (proxyName, fields) ->
+        listOf("server", "port").mapNotNull { serverOrPort ->
+            val serverOrPortVariable = fields
+                .find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/${serverOrPort}Variable" }!!
+                .value
+                .value<String>()
+            if (getSubKeys("config").keys.none { it.removePrefix("config/") == serverOrPortVariable }) {
+                AuroraDeploymentSpecValidationException(
+                    "Found Toxiproxy config for a $serverOrPort variable named $serverOrPortVariable, " +
+                        "but there is no such environment variable."
+                )
+            } else null
+        }
+    }
+
+// Validate that there are no proxyname duplicates
+fun AuroraDeploymentSpec.proxynameDuplicateErrors() = getToxiproxyNames()
+    .groupingBy { it }
+    .eachCount()
+    .filter { it.value > 1 }
+    .map {
+        AuroraDeploymentSpecValidationException(
+            "Found ${it.value} Toxiproxy configs with the proxy name \"${it.key}\". " +
+                "Proxy names have to be unique."
+        )
+    }
