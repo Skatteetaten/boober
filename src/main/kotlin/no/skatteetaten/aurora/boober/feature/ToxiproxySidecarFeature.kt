@@ -1,5 +1,3 @@
-// ktlint-disable indent
-
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -157,16 +155,16 @@ class ToxiproxySidecarFeature(
             )
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-
-        val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpointsFromConfig")
-        val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("database")
-        val serverAndPortHandlers = cmd.applicationFiles.findServerAndPortHandlers()
-        val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
-        val dbHandlers = dbHandlers(cmd)
-
-        return (
-            endpointHandlers + toxiproxyDbHandlers + serverAndPortHandlers + envVariables + listOf(
+    override fun handlers(
+        header: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand
+    ): Set<AuroraConfigFieldHandler> = with (cmd.applicationFiles) {
+        listOf(
+            createToxiproxyFieldHandlers("endpointsFromConfig"),
+            createToxiproxyFieldHandlers("database"),
+            findServerAndPortHandlers(),
+            findConfigFieldHandlers(),
+            listOf(
                 AuroraConfigFieldHandler(
                     "toxiproxy",
                     defaultValue = false,
@@ -176,8 +174,9 @@ class ToxiproxySidecarFeature(
                 AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
                 AuroraConfigFieldHandler("toxiproxy/endpointsFromConfig"),
                 AuroraConfigFieldHandler("toxiproxy/serverAndPortFromConfig")
-            ) + dbHandlers
-        ).toSet()
+            ),
+            dbHandlers(cmd)
+        ).flatten().toSet()
     }
 
     fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(type: String): List<AuroraConfigFieldHandler> =
