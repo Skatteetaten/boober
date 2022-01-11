@@ -36,8 +36,9 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
 private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNode) {
     val triggerNode = mergedResource.at("/spec/triggers")
 
+
     if (triggerNode is ArrayNode) {
-        (0..triggerNode.size()).forEach {
+        (0 until triggerNode.size()).forEach {
             mergedResource.updateField(existingResource, "/spec/triggers/$it/imageChange", "lastTriggeredImageID")
         }
     }
@@ -46,9 +47,9 @@ private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNo
 private fun updateDeploymentConfig(mergedResource: JsonNode, existingResource: JsonNode) {
     mergedResource.updateField(existingResource, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
     val containersField = "/spec/template/spec/containers"
-    val containerCount = (mergedResource.at(containersField) as ArrayNode).size() - 1
+    val containerCount = (mergedResource.at(containersField) as ArrayNode).size()
 
-    (0..containerCount).forEach {
+    (0 until containerCount).forEach {
         val containerName = mergedResource.at("$containersField/$it/name").textValue()
         val isSidecarContainer = containerName.endsWith("-sidecar")
         // We should allow updates of sidecar container images
