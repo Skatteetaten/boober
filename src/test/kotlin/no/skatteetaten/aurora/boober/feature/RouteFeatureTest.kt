@@ -7,6 +7,7 @@ import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
+import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
 import assertk.assertions.support.expected
 import assertk.assertions.support.show
@@ -25,6 +26,21 @@ class RouteFeatureTest : AbstractFeatureTest() {
     private val sixtyOne = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
     private val sixtyThree = "${sixtyOne}oo"
     private val twoHundred53 = "$sixtyThree.$sixtyThree.$sixtyThree.$sixtyOne"
+
+    @Test
+    fun `should allow cronjob with simplified route config without generating route resource`() {
+
+        assertThat {
+            generateResources(
+                """{
+                "type" : "cronjob",
+                "route": true
+                }""",
+                createEmptyDeploymentConfig(),
+                createdResources = 0
+            )
+        }.isSuccess()
+    }
 
     @Test
     fun `should get error if route with invalid tls termination`() {

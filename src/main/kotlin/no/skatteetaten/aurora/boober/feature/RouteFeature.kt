@@ -28,7 +28,6 @@ import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.AuroraCname
 import no.skatteetaten.aurora.boober.model.openshift.CnameDNSResolver
 import no.skatteetaten.aurora.boober.model.openshift.CnameSpec
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
@@ -87,10 +86,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
         val routes = context.routes
 
-        if (routes.isNotEmpty() && adc.isJob) {
-            return listOf(AuroraDeploymentSpecValidationException("Routes are not supported for jobs/cronjobs"))
-        }
-
         val applicationDeploymentRef = context.applicationDeploymentRef
         val tlsErrors = validateTlsForRoutes(routes, applicationDeploymentRef)
 
@@ -131,6 +126,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     fun parseConfiguredRoutes(
         adc: AuroraDeploymentSpec
     ): List<ConfiguredRoute> {
+        if (adc.isJob) return emptyList()
+
         val isSimplifiedRoute = adc.isSimplifiedConfig(ROUTE_FEATURE_FIELD)
         val defaultRoute = getDefaultRoute(adc)
 
