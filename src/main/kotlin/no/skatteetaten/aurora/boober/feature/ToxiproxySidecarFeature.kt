@@ -1,5 +1,3 @@
-// ktlint-disable indent
-
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -116,14 +114,15 @@ class ToxiproxySidecarFeature(
         ) + mapOf(TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs)
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-
-        val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
-        val serverAndPortHandlers = findServerAndPortHandlers(cmd.applicationFiles)
-        val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
-
-        return (
-            endpointHandlers + serverAndPortHandlers + envVariables + listOf(
+    override fun handlers(
+        header: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand
+    ): Set<AuroraConfigFieldHandler> = with(cmd.applicationFiles) {
+        listOf(
+            findEndpointHandlers(),
+            findServerAndPortHandlers(),
+            findConfigFieldHandlers(),
+            listOf(
                 AuroraConfigFieldHandler(
                     "toxiproxy",
                     defaultValue = false,
@@ -134,11 +133,11 @@ class ToxiproxySidecarFeature(
                 AuroraConfigFieldHandler("toxiproxy/endpointsFromConfig"),
                 AuroraConfigFieldHandler("toxiproxy/serverAndPortFromConfig")
             )
-        ).toSet()
+        ).flatten().toSet()
     }
 
-    fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded("toxiproxy/endpointsFromConfig").flatMap { endpoint ->
+    fun List<AuroraConfigFile>.findEndpointHandlers(): List<AuroraConfigFieldHandler> =
+        findSubKeysExpanded("toxiproxy/endpointsFromConfig").flatMap { endpoint ->
             listOf(
                 AuroraConfigFieldHandler(
                     endpoint,
@@ -158,8 +157,8 @@ class ToxiproxySidecarFeature(
             )
         }
 
-    fun findServerAndPortHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded("toxiproxy/serverAndPortFromConfig").flatMap { proxyname ->
+    fun List<AuroraConfigFile>.findServerAndPortHandlers(): List<AuroraConfigFieldHandler> =
+        findSubKeysExpanded("toxiproxy/serverAndPortFromConfig").flatMap { proxyname ->
             listOf(
                 AuroraConfigFieldHandler(proxyname),
                 AuroraConfigFieldHandler(
