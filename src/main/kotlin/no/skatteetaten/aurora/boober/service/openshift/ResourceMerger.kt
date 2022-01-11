@@ -51,9 +51,10 @@ private fun updateDeploymentConfig(mergedResource: JsonNode, existingResource: J
 
     (0 until containerCount).forEach {
         val containerName = mergedResource.at("$containersField/$it/name").textValue()
-        val isSidecarContainer = containerName.endsWith("-sidecar")
+        val isApplicationContainer = !containerName.endsWith("-sidecar")
+
         // We should allow updates of sidecar container images
-        if (!isSidecarContainer) {
+        if (isApplicationContainer) {
             mergedResource.updateField(existingResource, "$containersField/$it", "image")
         }
     }
