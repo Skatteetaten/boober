@@ -217,6 +217,87 @@
               "capabilities": {},
               "privileged": false
             }
+          },
+          {
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HEC_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "HEC_TOKEN",
+                    "name": "referanse-kotlin-hec",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "SPLUNK_HOST",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "SPLUNK_HOST",
+                    "name": "referanse-kotlin-hec",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "SPLUNK_PORT",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "SPLUNK_PORT",
+                    "name": "referanse-kotlin-hec",
+                    "optional": false
+                  }
+                }
+              }
+            ],
+            "image": "container-registry-internal-private-pull.aurora.skead.no:443/fluent/fluent-bit@new-sha",
+            "imagePullPolicy": "IfNotPresent",
+            "name": "referanse-kotlin-fluent-sidecar",
+            "resources": {
+              "limits": {
+                "cpu": "300m",
+                "memory": "100Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "20Mi"
+              }
+            },
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File",
+            "volumeMounts": [
+              {
+                "mountPath": "/fluent-bit/parser",
+                "name": "referanse-kotlin-fluent-parser"
+              },
+              {
+                "mountPath": "/fluent-bit/etc",
+                "name": "referanse-kotlin-fluent-config"
+              },
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ]
           }
         ],
         "restartPolicy": "Always",
