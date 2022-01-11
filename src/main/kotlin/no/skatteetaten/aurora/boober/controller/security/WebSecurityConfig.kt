@@ -1,19 +1,16 @@
 package no.skatteetaten.aurora.boober.controller.security
 
-import com.fasterxml.jackson.databind.JsonNode
-import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.utils.openshiftName
 import org.slf4j.MDC
-import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationProvider
 import org.springframework.security.web.authentication.preauth.RequestHeaderAuthenticationFilter
-import org.springframework.security.web.util.matcher.RequestMatcher
-import javax.servlet.http.HttpServletRequest
-import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest
+import com.fasterxml.jackson.databind.JsonNode
+import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.utils.openshiftName
 
 private val logger = KotlinLogging.logger {}
 
@@ -29,7 +26,6 @@ class WebSecurityConfig(
         http.authenticationProvider(preAuthenticationProvider())
             .addFilter(requestHeaderAuthenticationFilter())
             .authorizeRequests()
-
             // EndpointRequest.toAnyEndpoint() points to all actuator endpoints and then permitAll requests
             .requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll()
             .antMatchers("/v1/clientconfig").permitAll()
