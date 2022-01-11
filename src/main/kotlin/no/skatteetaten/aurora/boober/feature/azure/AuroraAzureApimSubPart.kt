@@ -15,11 +15,11 @@ val AuroraDeploymentSpec.isApimEnabled: Boolean
         return this.getOrNull(AuroraAzureApimSubPart.ConfigPath.enabled) ?: false
     }
 
-val AuroraDeploymentSpec.azureApimPolicies: List<String>?
+val AuroraDeploymentSpec.azureApimPolicies: Map<String, Boolean>?
     get() {
         //  Somewhat strange construction in order to avoid error with null as typeCast
         val rawGroup = this.getOrNull<Any>(AuroraAzureApimSubPart.ConfigPath.policies) ?: return null
-        return rawGroup as List<String>
+        return rawGroup as Map<String, Boolean>
     }
 
 class AuroraAzureApimSubPart {
@@ -51,7 +51,7 @@ class AuroraAzureApimSubPart {
                             path = path,
                             openapiUrl = openapiUrl,
                             serviceUrl = serviceUrl,
-                            policies = adc.azureApimPolicies!!,
+                            policies = adc.azureApimPolicies!!.filter { (_, v) -> v }.map { (k, _) -> k }.toList(),
                             apiHost = apiHost
                         )
                     )

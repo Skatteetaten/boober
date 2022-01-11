@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.isListOrEmpty
@@ -103,16 +104,30 @@ class AzureFeature(
                 validator = { it.validUrl(required = false) }
             ),
             AuroraConfigFieldHandler(
-                AuroraAzureApimSubPart.ConfigPath.policies,
-                validator = { it.isListOrEmpty() }
+                AuroraAzureApimSubPart.ConfigPath.policies
             ),
             AuroraConfigFieldHandler(
                 AuroraAzureApimSubPart.ConfigPath.apiHost,
                 validator = { it.isValidDns() }
             ),
             AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
-        )
+        ) + handlePolicyMap(cmd)
     }
+
+    private fun handlePolicyMap(cmd: AuroraContextCommand) =
+        if (cmd.applicationFiles.findSubKeys(AuroraAzureApimSubPart.ConfigPath.policies).isEmpty()) {
+            emptySet()
+        } else {
+            cmd.applicationFiles.findSubKeys(AuroraAzureApimSubPart.ConfigPath.policies).flatMap { key ->
+                setOf(
+                    AuroraConfigFieldHandler(
+                        "${AuroraAzureApimSubPart.ConfigPath.policies}/$key",
+                        defaultValue = false,
+                        validator = { it.boolean() }
+                    )
+                )
+            }
+        }
 
     override fun createContext(
         spec: AuroraDeploymentSpec,
