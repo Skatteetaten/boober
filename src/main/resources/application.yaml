@@ -100,20 +100,18 @@ openshift:
     cluster: utv04
 
 integrations:
-    mattermost:
-        url: http://localhost:8080
     operations:
         scope: dev
     dbh:
         url: https://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
-        url: https://cantus-aup.apps.utv04.paas.skead.no
+        url: https://cantus-aup.apps.${openshift.cluster}.paas.skead.no
     skap:
         url: https://skap-aurora.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: https://herkimer-aup.apps.utv04.paas.skead.no
+        url: https://herkimer-aup.apps.${openshift.cluster}.paas.skead.no
         fallback:
             applikasjonsnavn: "1234567890"
     openshift:
