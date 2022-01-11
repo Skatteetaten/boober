@@ -17,6 +17,8 @@ val AuroraDeploymentSpec.toxiproxyVersion: String?
 
 data class ToxiProxyConfig(val name: String, val listen: String, val upstream: String)
 
+data class ToxiproxyServerAndPortVars(val proxyname: String, val serverVar: String, val portVar: String)
+
 fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
     name = "app",
     listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
@@ -31,17 +33,16 @@ fun findVarNameInFieldName(type: String, fieldName: String) =
     varNameInFieldNameRegex(type).find(fieldName)!!.value
 
 // Return lists of AuroraConfigFields grouped by environment variable or db name
-fun AuroraDeploymentSpec.groupToxiproxyFields(type: String): Map<String, List<Map.Entry<String, AuroraConfigField>>> = this
-    .getSubKeys("toxiproxy/$type")
-    .map { it }
-    .groupBy { findVarNameInFieldName(type, it.key) }
+fun AuroraDeploymentSpec.groupToxiproxyFields(type: String): Map<String, List<Map.Entry<String, AuroraConfigField>>> =
+    getSubKeys("toxiproxy/$type")
+        .map { it }
+        .groupBy { findVarNameInFieldName(type, it.key) }
 
 fun AuroraDeploymentSpec.groupToxiproxyEndpointFields() = groupToxiproxyFields("endpointsFromConfig")
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
-fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = this
-    .groupToxiproxyEndpointFields()
+fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = groupToxiproxyEndpointFields()
     .filter { (varName, fields) ->
         fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName" }!!.value.value() &&
             fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName/enabled" }!!.value.value()
@@ -53,19 +54,6 @@ fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>>
             .value<String>()
         Pair(proxyName, varName)
     }
-
-// Find all proxy names of a given type (endpoints or database)
-fun AuroraDeploymentSpec.getToxiproxyNames(type: String): List<String> = groupToxiproxyFields(type)
-    .map { (varName, fields) ->
-        fields
-            .find { it.key == "toxiproxy/$type/$varName/proxyname" }
-            ?.value
-            ?.value<String>()
-            ?: generateProxyNameFromVarName(varName, type)
-    }
-
-// Find all proxy names
-fun AuroraDeploymentSpec.getToxiproxyNames(): List<String> = toxiproxyTypes.flatMap { getToxiproxyNames(it) }
 
 // Generate a default proxy name based on the variable name
 // To be used when there is no proxy name specified by the user
@@ -82,6 +70,26 @@ fun String.convertToProxyUrl(port: Int): String =
         .withModifiedHostName("localhost")
         .withModifiedPort(port)
         .makeString()
+// Regex for matching a proxy name in a server and port field name
+val proxyNameInServerAndPortFieldNameRegex =
+    Regex("(?<=^toxiproxy\\/serverAndPortFromConfig\\/)([^\\/]+(?=\\/serverVariable\$|\\/portVariable\$|\$))")
+
+fun findProxyNameInServerAndPortFieldName(fieldName: String) = proxyNameInServerAndPortFieldNameRegex.find(fieldName)!!.value
+
+// Return lists of AuroraConfigFields grouped by proxy name
+fun AuroraDeploymentSpec.groupToxiproxyServerAndPortFields(): Map<String, List<Map.Entry<String, AuroraConfigField>>> =
+    getSubKeys("toxiproxy/serverAndPortFromConfig")
+        .map { it }
+        .groupBy { findProxyNameInServerAndPortFieldName(it.key) }
+
+fun AuroraDeploymentSpec.extractToxiproxyServersAndPorts(): List<ToxiproxyServerAndPortVars> =
+    groupToxiproxyServerAndPortFields().map { (proxyName, fields) ->
+        ToxiproxyServerAndPortVars(
+            proxyName,
+            fields.find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/serverVariable" }!!.value.value(),
+            fields.find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/portVariable" }!!.value.value()
+        )
+    }
 
 fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec, context: FeatureContext) = forEach {
     adc
@@ -91,12 +99,31 @@ fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec, contex
         .forEach { (proxyName, envVar) ->
             envVar!!.value = envVar.value.convertToProxyUrl(context.toxiproxyConfigs.findPortByProxyName(proxyName)!!.toInt())
         }
+    adc.extractToxiproxyServersAndPorts().forEach { (proxyName, serverVar, portVar) ->
+        it.env.find { v -> v.name == serverVar }?.value = "localhost"
+        it.env.find { v -> v.name == portVar }?.value = context.toxiproxyConfigs.findPortByProxyName(proxyName)
+    }
 }
 
-// Validate that for every endpoint in toxiproxy/endpoints, there is a corresponding environment variable with a valid URL
-fun AuroraDeploymentSpec.missingOrInvalidVariableErrors() = groupToxiproxyEndpointFields()
-    .keys
-    .mapNotNull { varName ->
+// Find all proxy names of a given type (endpoints or database)
+fun AuroraDeploymentSpec.getToxiproxyEndpointOrDbNames(type: String): List<String> =
+    groupToxiproxyFields(type).map { (varName, fields) ->
+        fields
+            .find { it.key == "toxiproxy/$type/$varName/proxyname" }
+            ?.value
+            ?.value<String>()
+            ?: generateProxyNameFromVarName(varName, type)
+    }
+
+fun AuroraDeploymentSpec.getToxiproxyServerAndPortNames(): List<String> =
+    groupToxiproxyServerAndPortFields().keys.toList()
+
+fun AuroraDeploymentSpec.getToxiproxyNames(): List<String> =
+    toxiproxyTypes.flatMap { getToxiproxyEndpointOrDbNames(it) } + getToxiproxyServerAndPortNames()
+
+// Validate that for every endpoint in toxiproxy/endpointsFromConfig, there is a corresponding environment variable
+fun AuroraDeploymentSpec.missingOrInvalidEndpointVariableErrors() =
+    groupToxiproxyEndpointFields().keys.mapNotNull { varName ->
         val envVar = this.getSubKeys("config")["config/$varName"]?.value<String>()
         if (envVar == null) {
             AuroraDeploymentSpecValidationException(
@@ -108,6 +135,23 @@ fun AuroraDeploymentSpec.missingOrInvalidVariableErrors() = groupToxiproxyEndpoi
                 "The format of the URL \"$envVar\" given by the config variable $varName is not supported."
             )
         } else null
+    }
+
+// Validate that the environment variables given in toxiproxy/serverAndPortFromConfig exist
+fun AuroraDeploymentSpec.missingServerAndPortVariableErrors() =
+    groupToxiproxyServerAndPortFields().flatMap { (proxyName, fields) ->
+        listOf("server", "port").mapNotNull { serverOrPort ->
+            val serverOrPortVariable = fields
+                .find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/${serverOrPort}Variable" }!!
+                .value
+                .value<String>()
+            if (getSubKeys("config").keys.none { it.removePrefix("config/") == serverOrPortVariable }) {
+                AuroraDeploymentSpecValidationException(
+                    "Found Toxiproxy config for a $serverOrPort variable named $serverOrPortVariable, " +
+                        "but there is no such environment variable."
+                )
+            } else null
+        }
     }
 
 // Validate that for every database in toxiproxy/database, there is a corresponding database in the spec

@@ -37,6 +37,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRe
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.notBlank
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
 import java.net.URI
@@ -86,7 +87,7 @@ class ToxiproxySidecarFeature(
         // An addition of 1 to the value is made for each proxy
         var port = FIRST_PORT_NUMBER
 
-        // Endpoints:
+        // Add endpoints to toxiproxyConfigs:
         spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
             val url = spec.fields["config/$varname"]?.value<String>()
             if (url != null) {
@@ -107,7 +108,7 @@ class ToxiproxySidecarFeature(
             }
         }
 
-        // Databases:
+        // Add databases to toxiproxyConfigs:
         val secretNameToPortMap = mutableMapOf<String, Int>()
         val proxyAllDatabases = spec.fields["toxiproxy/database"]?.value?.booleanValue() == true
         findDatabases(spec)
@@ -134,6 +135,20 @@ class ToxiproxySidecarFeature(
                 port++
             }
 
+        // Add servers and ports to toxiproxyConfigs:
+        spec.extractToxiproxyServersAndPorts().forEach {
+            val upstreamServer = spec.fields["config/${it.serverVar}"]?.value<String>()
+            val upstreamPort = spec.fields["config/${it.portVar}"]?.value<String>()
+            toxiproxyConfigs.add(
+                ToxiProxyConfig(
+                    name = it.proxyname,
+                    listen = "0.0.0.0:$port",
+                    upstream = "$upstreamServer:$upstreamPort"
+                )
+            )
+            port++
+        }
+
         return super.createContext(spec, cmd, validationContext) +
             createImageMetadataContext(repo = "shopify", name = "toxiproxy", tag = toxiProxyTag) +
             mapOf(
@@ -146,18 +161,21 @@ class ToxiproxySidecarFeature(
 
         val endpointHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("endpointsFromConfig")
         val toxiproxyDbHandlers = cmd.applicationFiles.createToxiproxyFieldHandlers("database")
+        val serverAndPortHandlers = cmd.applicationFiles.findServerAndPortHandlers()
         val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
         val dbHandlers = dbHandlers(cmd)
 
         return (
-            endpointHandlers + toxiproxyDbHandlers + envVariables + listOf(
+            endpointHandlers + toxiproxyDbHandlers + serverAndPortHandlers + envVariables + listOf(
                 AuroraConfigFieldHandler(
                     "toxiproxy",
                     defaultValue = false,
                     validator = { it.boolean() },
                     canBeSimplifiedConfig = true
                 ),
-                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion)
+                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
+                AuroraConfigFieldHandler("toxiproxy/endpointsFromConfig"),
+                AuroraConfigFieldHandler("toxiproxy/serverAndPortFromConfig")
             ) + dbHandlers
         ).toSet()
     }
@@ -184,6 +202,21 @@ class ToxiproxySidecarFeature(
                 )
             }
 
+    fun List<AuroraConfigFile>.findServerAndPortHandlers(): List<AuroraConfigFieldHandler> =
+        findSubKeysExpanded("toxiproxy/serverAndPortFromConfig").flatMap { proxyname ->
+            listOf(
+                AuroraConfigFieldHandler(proxyname),
+                AuroraConfigFieldHandler(
+                    "$proxyname/serverVariable",
+                    validator = { it.notBlank("Server variable must be set") }
+                ),
+                AuroraConfigFieldHandler(
+                    "$proxyname/portVariable",
+                    validator = { it.notBlank("Port variable must be set") }
+                )
+            )
+        }
+
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
@@ -191,7 +224,8 @@ class ToxiproxySidecarFeature(
     ): List<Exception> = if (fullValidation) {
         with(adc) {
             listOf(
-                missingOrInvalidVariableErrors(),
+                missingOrInvalidEndpointVariableErrors(),
+                missingServerAndPortVariableErrors(),
                 missingDbErrors(),
                 proxynameDuplicateErrors()
             ).flatten()
