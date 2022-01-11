@@ -6,7 +6,10 @@ val kubernetesNonApiGroupResources = setOf(
 )
 
 /**
- * TODO: Add reason for this
+ * These resources have been pre applied during the generate step in a Feature. They are missing common labels and
+ * ownerreference since they have been applied before the ApplicationDeployment resource. So when we are creating an
+ * openshift command we need to get the existing resource and create an update command if not the command created will
+ * be of type CREATED and that will result in a 409-Conflict since it's already created/applied.
  */
 val preAppliedResources = setOf(
     "storagegridobjectarea"
