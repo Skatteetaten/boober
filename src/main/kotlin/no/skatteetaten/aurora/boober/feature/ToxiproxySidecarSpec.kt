@@ -15,15 +15,13 @@ val AuroraDeploymentSpec.toxiproxyVersion: String?
             this["toxiproxy/version"]
         }
 
-data class ToxiProxyConfig(val name: String, val listen: String, val upstream: String)
+data class ToxiproxyConfig(
+    val name: String = "app",
+    val listen: String = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
+    val upstream: String = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT
+)
 
 data class ToxiproxyServerAndPortVars(val proxyname: String, val serverVar: String, val portVar: String)
-
-fun getDefaultToxiProxyConfig() = ToxiProxyConfig(
-    name = "app",
-    listen = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
-    upstream = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT
-)
 
 // Regex for matching a variable name in a field name
 fun varNameInFieldNameRegex(type: String) =
@@ -62,7 +60,7 @@ fun generateProxyNameFromVarName(varName: String, type: String): String {
     return "${prefix}_$varName"
 }
 
-fun List<ToxiProxyConfig>.findPortByProxyName(proxyName: String) =
+fun List<ToxiproxyConfig>.findPortByProxyName(proxyName: String) =
     find { it.name == proxyName }?.listen?.substringAfter(':')
 
 fun String.convertToProxyUrl(port: Int): String =

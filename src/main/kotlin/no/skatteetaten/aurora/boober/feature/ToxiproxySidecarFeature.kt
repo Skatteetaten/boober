@@ -46,7 +46,7 @@ private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be 
 
 private const val TOXIPROXY_CONFIGS_CONTEXT_KEY = "toxiproxyConfigs"
 
-val FeatureContext.toxiproxyConfigs: List<ToxiProxyConfig>
+val FeatureContext.toxiproxyConfigs: List<ToxiproxyConfig>
     get() = this.getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
 
 private const val SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY = "secretNameToPortMap"
@@ -80,7 +80,7 @@ class ToxiproxySidecarFeature(
             return emptyMap()
         }
 
-        val toxiproxyConfigs = mutableListOf(getDefaultToxiProxyConfig())
+        val toxiproxyConfigs = mutableListOf(ToxiproxyConfig())
 
         // Variable for the port number that Toxiproxy will listen to
         // An addition of 1 to the value is made for each proxy
@@ -97,7 +97,7 @@ class ToxiproxySidecarFeature(
                     uri.port
                 }
                 toxiproxyConfigs.add(
-                    ToxiProxyConfig(
+                    ToxiproxyConfig(
                         name = proxyname,
                         listen = "0.0.0.0:$port",
                         upstream = uri.host + ":" + upstreamPort
@@ -124,7 +124,7 @@ class ToxiproxySidecarFeature(
                     ?.value<String>()
                     ?: "database_" + schema!!.id
                 toxiproxyConfigs.add(
-                    ToxiProxyConfig(
+                    ToxiproxyConfig(
                         name = proxyname,
                         listen = "0.0.0.0:$port",
                         upstream = schema!!.databaseInstance.host + ":" + schema.databaseInstance.port
@@ -139,7 +139,7 @@ class ToxiproxySidecarFeature(
             val upstreamServer = spec.fields["config/${it.serverVar}"]?.value<String>()
             val upstreamPort = spec.fields["config/${it.portVar}"]?.value<String>()
             toxiproxyConfigs.add(
-                ToxiProxyConfig(
+                ToxiproxyConfig(
                     name = it.proxyname,
                     listen = "0.0.0.0:$port",
                     upstream = "$upstreamServer:$upstreamPort"
