@@ -217,7 +217,7 @@ class ToxiproxySidecarFeature(
             }
         }
 
-        val container = createToxiProxyContainer(adc, context)
+        val container = createToxiproxyContainer(adc, context)
 
         fun addToxiproxyVolumeAndSidecarContainer(auroraResource: AuroraResource, podTemplateSpec: PodTemplateSpec) {
             modifyResource(auroraResource, "Added toxiproxy volume and sidecar container")
@@ -249,7 +249,7 @@ class ToxiproxySidecarFeature(
         }
     }
 
-    private fun createToxiProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
+    private fun createToxiproxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val containerPorts = mapOf(
             "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
             "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
