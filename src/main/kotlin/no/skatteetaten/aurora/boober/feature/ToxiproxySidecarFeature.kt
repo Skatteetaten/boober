@@ -161,8 +161,7 @@ class ToxiproxySidecarFeature(
         cmd: AuroraContextCommand
     ): Set<AuroraConfigFieldHandler> = with(cmd.applicationFiles) {
         listOf(
-            createToxiproxyFieldHandlers("endpointsFromConfig"),
-            createToxiproxyFieldHandlers("database"),
+            enumValues<ToxiproxyUrlSource>().flatMap { createToxiproxyFieldHandlers(it) },
             findServerAndPortHandlers(),
             findConfigFieldHandlers(),
             listOf(
@@ -180,9 +179,9 @@ class ToxiproxySidecarFeature(
         ).flatten().toSet()
     }
 
-    fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(type: String): List<AuroraConfigFieldHandler> =
-        listOf(AuroraConfigFieldHandler("toxiproxy/$type")) +
-            findSubKeysExpanded("toxiproxy/$type").flatMap { endpointsOrDbOrS3 ->
+    fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(urlSource: ToxiproxyUrlSource): List<AuroraConfigFieldHandler> =
+        listOf(AuroraConfigFieldHandler("toxiproxy/${urlSource.propName}")) +
+            findSubKeysExpanded("toxiproxy/${urlSource.propName}").flatMap { endpointsOrDbOrS3 ->
                 listOf(
                     AuroraConfigFieldHandler(
                         endpointsOrDbOrS3,
@@ -192,7 +191,10 @@ class ToxiproxySidecarFeature(
                     ),
                     AuroraConfigFieldHandler(
                         "$endpointsOrDbOrS3/proxyname",
-                        defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(type, endpointsOrDbOrS3), type)
+                        defaultValue = generateProxyNameFromVarName(
+                            findVarNameInFieldName(urlSource, endpointsOrDbOrS3),
+                            urlSource
+                        )
                     ),
                     AuroraConfigFieldHandler(
                         "$endpointsOrDbOrS3/enabled",

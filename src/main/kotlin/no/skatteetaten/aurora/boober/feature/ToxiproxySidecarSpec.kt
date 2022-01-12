@@ -7,7 +7,10 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.Url
 
-val toxiproxyTypes = listOf("endpointsFromConfig", "database")
+enum class ToxiproxyUrlSource(val propName: String, val defaultProxyNamePrefix: String) {
+    CONFIG_VAR("endpointsFromConfig", "endpoint"),
+    DB_SECRET("database", "database")
+}
 
 val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() =
@@ -24,41 +27,42 @@ data class ToxiproxyConfig(
 data class ToxiproxyServerAndPortVars(val proxyname: String, val serverVar: String, val portVar: String)
 
 // Regex for matching a variable name in a field name
-fun varNameInFieldNameRegex(type: String) =
-    Regex("(?<=^toxiproxy\\/$type\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
+fun varNameInFieldNameRegex(urlSource: ToxiproxyUrlSource) =
+    Regex("(?<=^toxiproxy\\/${urlSource.propName}\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
 
-fun findVarNameInFieldName(type: String, fieldName: String) =
-    varNameInFieldNameRegex(type).find(fieldName)!!.value
+fun findVarNameInFieldName(urlSource: ToxiproxyUrlSource, fieldName: String) =
+    varNameInFieldNameRegex(urlSource).find(fieldName)!!.value
 
 // Return lists of AuroraConfigFields grouped by environment variable or db name
-fun AuroraDeploymentSpec.groupToxiproxyFields(type: String): Map<String, List<Map.Entry<String, AuroraConfigField>>> =
-    getSubKeys("toxiproxy/$type")
+fun AuroraDeploymentSpec.groupToxiproxyFields(urlSource: ToxiproxyUrlSource): Map<String, List<Map.Entry<String, AuroraConfigField>>> =
+    getSubKeys("toxiproxy/${urlSource.propName}")
         .map { it }
-        .groupBy { findVarNameInFieldName(type, it.key) }
+        .groupBy { findVarNameInFieldName(urlSource, it.key) }
 
-fun AuroraDeploymentSpec.groupToxiproxyEndpointFields() = groupToxiproxyFields("endpointsFromConfig")
+fun AuroraDeploymentSpec.groupToxiproxyEndpointFields() = groupToxiproxyFields(ToxiproxyUrlSource.CONFIG_VAR)
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
-fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = groupToxiproxyEndpointFields()
-    .filter { (varName, fields) ->
-        fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName" }!!.value.value() &&
-            fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName/enabled" }!!.value.value()
-    }
-    .map { (varName, fields) ->
-        val proxyName = fields
-            .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }!!
-            .value
-            .value<String>()
-        Pair(proxyName, varName)
-    }
+fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> {
+    val propPath = "toxiproxy/" + ToxiproxyUrlSource.CONFIG_VAR.propName
+    return groupToxiproxyEndpointFields()
+        .filter { (varName, fields) ->
+            fields.find { it.key == "$propPath/$varName" }!!.value.value() &&
+                fields.find { it.key == "$propPath/$varName/enabled" }!!.value.value()
+        }
+        .map { (varName, fields) ->
+            val proxyName = fields
+                .find { it.key == "$propPath/$varName/proxyname" }!!
+                .value
+                .value<String>()
+            Pair(proxyName, varName)
+        }
+}
 
 // Generate a default proxy name based on the variable name
 // To be used when there is no proxy name specified by the user
-fun generateProxyNameFromVarName(varName: String, type: String): String {
-    val prefix = if (type == "endpointsFromConfig") "endpoint" else "database"
-    return "${prefix}_$varName"
-}
+fun generateProxyNameFromVarName(varName: String, urlSource: ToxiproxyUrlSource): String =
+    "${urlSource.defaultProxyNamePrefix}_$varName"
 
 fun List<ToxiproxyConfig>.findPortByProxyName(proxyName: String) =
     find { it.name == proxyName }?.listen?.substringAfter(':')
@@ -103,21 +107,21 @@ fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpec, contex
     }
 }
 
-// Find all proxy names of a given type (endpoints or database)
-fun AuroraDeploymentSpec.getToxiproxyEndpointOrDbNames(type: String): List<String> =
-    groupToxiproxyFields(type).map { (varName, fields) ->
+// Find all proxy names of a given url source (endpoints or database)
+fun AuroraDeploymentSpec.getToxiproxyEndpointOrDbNames(urlSource: ToxiproxyUrlSource): List<String> =
+    groupToxiproxyFields(urlSource).map { (varName, fields) ->
         fields
-            .find { it.key == "toxiproxy/$type/$varName/proxyname" }
+            .find { it.key == "toxiproxy/${urlSource.propName}/$varName/proxyname" }
             ?.value
             ?.value<String>()
-            ?: generateProxyNameFromVarName(varName, type)
+            ?: generateProxyNameFromVarName(varName, urlSource)
     }
 
 fun AuroraDeploymentSpec.getToxiproxyServerAndPortNames(): List<String> =
     groupToxiproxyServerAndPortFields().keys.toList()
 
 fun AuroraDeploymentSpec.getToxiproxyNames(): List<String> =
-    toxiproxyTypes.flatMap { getToxiproxyEndpointOrDbNames(it) } + getToxiproxyServerAndPortNames()
+    enumValues<ToxiproxyUrlSource>().flatMap { getToxiproxyEndpointOrDbNames(it) } + getToxiproxyServerAndPortNames()
 
 // Validate that for every endpoint in toxiproxy/endpointsFromConfig, there is a corresponding environment variable
 fun AuroraDeploymentSpec.missingOrInvalidEndpointVariableErrors() =
@@ -153,7 +157,7 @@ fun AuroraDeploymentSpec.missingServerAndPortVariableErrors() =
     }
 
 // Validate that for every database in toxiproxy/database, there is a corresponding database in the spec
-fun AuroraDeploymentSpec.missingDbErrors() = groupToxiproxyFields("database")
+fun AuroraDeploymentSpec.missingDbErrors() = groupToxiproxyFields(ToxiproxyUrlSource.DB_SECRET)
     .filter { (key, value) -> value.find { it.key == "toxiproxy/database/$key/enabled" }?.value?.value() ?: false }
     .keys
     .mapNotNull { varName ->
