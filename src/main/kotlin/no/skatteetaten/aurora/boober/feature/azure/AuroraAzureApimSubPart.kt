@@ -4,11 +4,18 @@ import java.util.stream.Stream
 import com.fkorotkov.kubernetes.newObjectMeta
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.openshift.ApimSpec
 import no.skatteetaten.aurora.boober.model.openshift.AuroraApim
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.isValidDns
+import no.skatteetaten.aurora.boober.utils.startsWithSlash
+import no.skatteetaten.aurora.boober.utils.validUrl
 
 val AuroraDeploymentSpec.isApimEnabled: Boolean
     get() {
@@ -51,7 +58,7 @@ class AuroraAzureApimSubPart {
                             path = path,
                             openapiUrl = openapiUrl,
                             serviceUrl = serviceUrl,
-                            policies = adc.azureApimPolicies!!.filter { (_, v) -> v }.map { (k, _) -> k }.toList(),
+                            policies = adc.azureApimPolicies!!.filterValues { it }.map { (k, _) -> k }.toList(),
                             apiHost = apiHost
                         )
                     )
@@ -85,4 +92,48 @@ class AuroraAzureApimSubPart {
 
         return errors
     }
+
+    fun handlers(cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> =
+        setOf(
+            AuroraConfigFieldHandler(
+                ConfigPath.enabled,
+                defaultValue = false,
+                validator = { it.boolean(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.path,
+                validator = { it.startsWithSlash(ConfigPath.path) }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.openapiUrl,
+                validator = { it.validUrl(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.serviceUrl,
+                validator = { it.validUrl(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.policies
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.apiHost,
+                validator = { it.isValidDns() }
+            ),
+            AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
+        ) + handlePolicyMap(cmd)
+
+    private fun handlePolicyMap(cmd: AuroraContextCommand) =
+        if (cmd.applicationFiles.findSubKeys(ConfigPath.policies).isEmpty()) {
+            emptySet()
+        } else {
+            cmd.applicationFiles.findSubKeys(ConfigPath.policies).flatMap { key ->
+                setOf(
+                    AuroraConfigFieldHandler(
+                        "${ConfigPath.policies}/$key",
+                        defaultValue = false,
+                        validator = { it.boolean() }
+                    )
+                )
+            }
+        }
 }

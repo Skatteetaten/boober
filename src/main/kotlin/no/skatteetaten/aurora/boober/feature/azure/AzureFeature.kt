@@ -9,13 +9,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.isListOrEmpty
-import no.skatteetaten.aurora.boober.utils.isValidDns
-import no.skatteetaten.aurora.boober.utils.startsWithSlash
-import no.skatteetaten.aurora.boober.utils.validUrl
 
 /**
  * Azure feature collects several azure related items. These are:
@@ -46,88 +40,10 @@ class AzureFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.enabled,
-                defaultValue = false,
-                validator = { it.boolean(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.version,
-                defaultValue = sidecarVersion
-            ),
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.discoveryUrl,
-                validator = { it.validUrl(required = false) }
-            ),
-
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.ivGroupsRequired,
-                defaultValue = false,
-                validator = { it.boolean() }
-            ),
-
-            AuroraConfigFieldHandler(
-                AuroraAzureAppSubPart.ConfigPath.azureAppFqdn,
-                validator = { it.isValidDns(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureAppSubPart.ConfigPath.groups,
-                validator = { it.isListOrEmpty(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureAppSubPart.ConfigPath.managedRoute,
-                defaultValue = false,
-                validator = { it.boolean() }
-            ),
-            AuroraConfigFieldHandler(
-                "webseal",
-                defaultValue = false,
-                validator = { it.boolean() },
-                canBeSimplifiedConfig = true
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureApimSubPart.ConfigPath.enabled,
-                defaultValue = false,
-                validator = { it.boolean(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureApimSubPart.ConfigPath.path,
-                validator = { it.startsWithSlash(AuroraAzureApimSubPart.ConfigPath.path) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureApimSubPart.ConfigPath.openapiUrl,
-                validator = { it.validUrl(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureApimSubPart.ConfigPath.serviceUrl,
-                validator = { it.validUrl(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureApimSubPart.ConfigPath.policies
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureApimSubPart.ConfigPath.apiHost,
-                validator = { it.isValidDns() }
-            ),
-            AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
-        ) + handlePolicyMap(cmd)
+        return jwtToStsConverter.handlers(sidecarVersion) +
+            auroraAzureApp.handlers() +
+            auroraApim.handlers(cmd)
     }
-
-    private fun handlePolicyMap(cmd: AuroraContextCommand) =
-        if (cmd.applicationFiles.findSubKeys(AuroraAzureApimSubPart.ConfigPath.policies).isEmpty()) {
-            emptySet()
-        } else {
-            cmd.applicationFiles.findSubKeys(AuroraAzureApimSubPart.ConfigPath.policies).flatMap { key ->
-                setOf(
-                    AuroraConfigFieldHandler(
-                        "${AuroraAzureApimSubPart.ConfigPath.policies}/$key",
-                        defaultValue = false,
-                        validator = { it.boolean() }
-                    )
-                )
-            }
-        }
 
     override fun createContext(
         spec: AuroraDeploymentSpec,
