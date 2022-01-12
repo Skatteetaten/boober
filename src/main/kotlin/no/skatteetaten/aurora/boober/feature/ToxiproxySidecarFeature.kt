@@ -14,6 +14,7 @@ import com.fkorotkov.kubernetes.tcpSocket
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Service
@@ -262,39 +263,45 @@ class ToxiproxySidecarFeature(
         }
 
         val container = createToxiProxyContainer(adc, context)
+
+        fun addToxiproxyVolumeAndSidecarContainer(auroraResource: AuroraResource, podTemplateSpec: PodTemplateSpec) {
+            modifyResource(auroraResource, "Added toxiproxy volume and sidecar container")
+            val dc = auroraResource.resource
+            val podSpec = podTemplateSpec.spec
+            podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
+            dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
+            podSpec.containers = podSpec.containers.addIfNotNull(container)
+        }
+
         resources.forEach {
-            if (it.resource.kind == "DeploymentConfig") {
-                modifyResource(it, "Added toxiproxy volume and sidecar container")
-                val dc: DeploymentConfig = it.resource as DeploymentConfig
-                val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
-                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Deployment") {
-                // TODO: refactor
-                modifyResource(it, "Added toxiproxy volume and sidecar container")
-                val dc: Deployment = it.resource as Deployment
-                val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
-                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Service") {
-                val service: Service = it.resource as Service
-                service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
-                    port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
+            when (it.resource.kind) {
+                "DeploymentConfig" -> {
+                    val dc: DeploymentConfig = it.resource as DeploymentConfig
+                    addToxiproxyVolumeAndSidecarContainer(it, dc.spec.template)
                 }
-                modifyResource(it, "Changed targetPort to point to toxiproxy")
-            } else if (it.resource.kind == "Secret") {
-                val secret: Secret = it.resource as Secret
-                val toxiproxyPort = context.secretNameToPortMap[secret.metadata.name]
-                if (toxiproxyPort != null) {
-                    val newUrl = Base64
-                        .decodeBase64(secret.data["jdbcurl"])
-                        .toString(Charset.defaultCharset())
-                        .convertToProxyUrl(toxiproxyPort)
-                        .toByteArray()
-                    secret.data["jdbcurl"] = Base64.encodeBase64String(newUrl)
-                    modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
+                "Deployment" -> {
+                    val dc: Deployment = it.resource as Deployment
+                    addToxiproxyVolumeAndSidecarContainer(it, dc.spec.template)
+                }
+                "Service" -> {
+                    val service: Service = it.resource as Service
+                    service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
+                        port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
+                    }
+                    modifyResource(it, "Changed targetPort to point to toxiproxy")
+                }
+                "Secret" -> {
+                    val secret: Secret = it.resource as Secret
+                    val toxiproxyPort = context.secretNameToPortMap[secret.metadata.name]
+                    if (toxiproxyPort != null) {
+                        val newUrl = Base64
+                            .decodeBase64(secret.data["jdbcurl"])
+                            .toString(Charset.defaultCharset())
+                            .convertToProxyUrl(toxiproxyPort)
+                            .toByteArray()
+                        secret.data["jdbcurl"] = Base64.encodeBase64String(newUrl)
+                        modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
+                    }
                 }
             }
         }
