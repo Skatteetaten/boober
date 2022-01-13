@@ -71,3 +71,5 @@ utv/python.json | sts: true
         default |     version: "0.4.0"
         default |     ivGroupsRequired: false
         default |   managedRoute: false
+                |   apim:
+        default |     enabled: false

@@ -6,12 +6,16 @@ import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigP
 import no.skatteetaten.aurora.boober.feature.isWebsealEnabled
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.AuroraAzureApp
 import no.skatteetaten.aurora.boober.model.openshift.AzureAppSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.isListOrEmpty
+import no.skatteetaten.aurora.boober.utils.isValidDns
 
 val AuroraDeploymentSpec.azureAppFqdn: String?
     get() {
@@ -116,4 +120,27 @@ class AuroraAzureAppSubPart {
 
         return errors
     }
+
+    fun handlers(): Set<AuroraConfigFieldHandler> =
+        setOf(
+            AuroraConfigFieldHandler(
+                ConfigPath.azureAppFqdn,
+                validator = { it.isValidDns(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.groups,
+                validator = { it.isListOrEmpty(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                managedRoute,
+                defaultValue = false,
+                validator = { it.boolean() }
+            ),
+            AuroraConfigFieldHandler(
+                "webseal",
+                defaultValue = false,
+                validator = { it.boolean() },
+                canBeSimplifiedConfig = true
+            )
+        )
 }

@@ -17,11 +17,14 @@ import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
 import no.skatteetaten.aurora.boober.feature.getContextKey
 import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.validUrl
 
 val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
     get() = this.getOrNull(JwtToStsConverterSubPart.ConfigPath.enabled) ?: false
@@ -167,4 +170,27 @@ class JwtToStsConverterSubPart {
             EnvVarBuilder().withName(key).withValue(value).build()
         }
     }
+
+    fun handlers(sidecarVersion: String): Set<AuroraConfigFieldHandler> =
+        setOf(
+            AuroraConfigFieldHandler(
+                ConfigPath.enabled,
+                defaultValue = false,
+                validator = { it.boolean(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.version,
+                defaultValue = sidecarVersion
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.discoveryUrl,
+                validator = { it.validUrl(required = false) }
+            ),
+
+            AuroraConfigFieldHandler(
+                ConfigPath.ivGroupsRequired,
+                defaultValue = false,
+                validator = { it.boolean() }
+            )
+        )
 }
