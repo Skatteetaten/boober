@@ -26,9 +26,10 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "persistentvolumeclaim" -> updatePersistentVolumeClaim(mergedResource, existingResource)
         "deploymentconfig" -> updateDeploymentConfig(mergedResource, existingResource)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
-        "namespace" -> updateNamespace(mergedResource, existingResource)
-        "auroracname" -> updateAuroraCname(mergedResource, existingResource)
-        "auroraazureapp" -> updateAuroraAzureApp(mergedResource, existingResource)
+        "namespace" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroracname" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroraazureapp" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroraapim" -> mergeMetadataFrom(mergedResource, existingResource)
     }
     return mergedResource
 }
@@ -36,8 +37,9 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
 private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNode) {
     val triggerNode = mergedResource.at("/spec/triggers")
 
+
     if (triggerNode is ArrayNode) {
-        (0..triggerNode.size()).forEach {
+        (0 until triggerNode.size()).forEach {
             mergedResource.updateField(existingResource, "/spec/triggers/$it/imageChange", "lastTriggeredImageID")
         }
     }
@@ -45,9 +47,17 @@ private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNo
 
 private fun updateDeploymentConfig(mergedResource: JsonNode, existingResource: JsonNode) {
     mergedResource.updateField(existingResource, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
-    val containerCount = (mergedResource.at("/spec/template/spec/containers") as ArrayNode).size()
-    (0..containerCount).forEach {
-        mergedResource.updateField(existingResource, "/spec/template/spec/containers/$it", "image")
+    val containersField = "/spec/template/spec/containers"
+    val containerCount = (mergedResource.at(containersField) as ArrayNode).size()
+
+    (0 until containerCount).forEach {
+        val containerName = mergedResource.at("$containersField/$it/name").textValue()
+        val isApplicationContainer = !containerName.endsWith("-sidecar")
+
+        // We should allow updates of sidecar container images
+        if (isApplicationContainer) {
+            mergedResource.updateField(existingResource, "$containersField/$it", "image")
+        }
     }
 }
 
@@ -59,11 +69,5 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
     mergedResource.updateField(existingResource, "/spec", "clusterIP")
 }
 
-private fun updateNamespace(mergedResource: ObjectNode, existingResource: ObjectNode) =
-    mergedResource.mergeField(existingResource, "/metadata", "annotations")
-
-private fun updateAuroraCname(mergedResource: ObjectNode, existingResource: ObjectNode) =
-    mergedResource.mergeField(existingResource, "/metadata", "annotations")
-
-private fun updateAuroraAzureApp(mergedResource: ObjectNode, existingResource: ObjectNode) =
+private fun mergeMetadataFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
     mergedResource.mergeField(existingResource, "/metadata", "annotations")

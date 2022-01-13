@@ -165,3 +165,5 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     version: "0.4.0"
                  default |     ivGroupsRequired: false
                  default |   managedRoute: false
+                         |   apim:
+                 default |     enabled: false

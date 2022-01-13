@@ -97,7 +97,7 @@ server:
     port: 8080
 
 openshift:
-    cluster: utv
+    cluster: utv04
 
 integrations:
     operations:
@@ -105,18 +105,18 @@ integrations:
     dbh:
         url: https://dbh-aurora.${openshift.cluster}.paas.skead.no
     cantus:
-        url: http://cantus-aurora.${openshift.cluster}.paas.skead.no
+        url: https://cantus-aup.apps.${openshift.cluster}.paas.skead.no
     skap:
         url: https://skap-aurora.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
-        url: https://herkimer-aurora-dev.${openshift.cluster}.paas.skead.no/
+        url: https://herkimer-aup.apps.${openshift.cluster}.paas.skead.no
         fallback:
             applikasjonsnavn: "1234567890"
     openshift:
         port: 8443
-        url: https://${openshift.cluster}-master.paas.skead.no:${integrations.openshift.port}
+        url: https://api.${openshift.cluster}.paas.skead.no
     docker:
         releases: "container-registry-internal-release.aurora.skead.no:443"
         registry: "container-registry-internal-private-pull.aurora.skead.no:443"
@@ -132,7 +132,7 @@ splunk:
     hec:
         token: token
     fluentbit:
-        tag: "1.6.10"
+        tag: "1.7.3"
 
 aurora:
     token:
