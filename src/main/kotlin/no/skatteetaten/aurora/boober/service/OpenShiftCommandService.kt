@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -39,7 +40,6 @@ import no.skatteetaten.aurora.boober.utils.nonGettableResources
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
 import no.skatteetaten.aurora.boober.utils.resourceUrl
-import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftCommandService(
@@ -170,6 +170,7 @@ class OpenShiftCommandService(
         "Route",
         "AuroraCname",
         "AuroraAzureApp",
+        "AuroraApim",
         "ImageStream",
         "BigIp",
         "CronJob",
