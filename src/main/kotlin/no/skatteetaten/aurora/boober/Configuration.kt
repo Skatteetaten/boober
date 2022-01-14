@@ -8,8 +8,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrap
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 import no.skatteetaten.aurora.boober.utils.SharedSecretReader
-import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
-import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
@@ -155,7 +153,6 @@ class Configuration {
                 ClientHttpRequestInterceptor { request, body, execution ->
                     request.headers.apply {
                         set(HttpHeaders.AUTHORIZATION, "Bearer $cantusToken")
-                        set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
                         set(clientIdHeaderName, applicationName)
                         set("Meldingsid", UUID.randomUUID().toString())
                     }
@@ -184,7 +181,6 @@ class Configuration {
                             "aurora-token ${sharedSecretReader.secret}"
                         )
                         set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
                         set(
                             clientIdHeaderName, applicationName
                         )
