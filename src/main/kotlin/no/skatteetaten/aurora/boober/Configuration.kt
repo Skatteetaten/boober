@@ -7,6 +7,7 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
+import no.skatteetaten.aurora.boober.utils.BooberHeaderRestTemplateCustomizer
 import no.skatteetaten.aurora.boober.utils.SharedSecretReader
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
@@ -33,7 +34,6 @@ import java.io.FileInputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import java.util.UUID
 
 @Configuration
 @EnableRetry
@@ -153,8 +153,6 @@ class Configuration {
                 ClientHttpRequestInterceptor { request, body, execution ->
                     request.headers.apply {
                         set(HttpHeaders.AUTHORIZATION, "Bearer $cantusToken")
-                        set(clientIdHeaderName, applicationName)
-                        set("Meldingsid", UUID.randomUUID().toString())
                     }
 
                     execution.execute(request, body)
@@ -181,10 +179,6 @@ class Configuration {
                             "aurora-token ${sharedSecretReader.secret}"
                         )
                         set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        set(
-                            clientIdHeaderName, applicationName
-                        )
-                        set("Meldingsid", UUID.randomUUID().toString())
                     }
 
                     execution.execute(request, body)
@@ -230,6 +224,10 @@ class Configuration {
             }
             ks
         }
+
+    @Bean
+    @Primary
+    fun booberHeaderRestTemplateCustomizer() = BooberHeaderRestTemplateCustomizer()
 }
 
 enum class ServiceTypes {

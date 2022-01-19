@@ -11,6 +11,8 @@ spring:
         caffeine:
             spec: maximumSize=2000,expireAfterWrite=300s
             cache-names: groups, templates
+    application:
+        name: "boober"
 
 integrations:
     # TODO: add url to auroraConfig for ocp4
@@ -68,9 +70,11 @@ auroraconfig:
 
 aurora:
     token:
-        location: /u01/secrets/app/aurora-token/token
-    starter:
-        headerfilter:
+      location: /u01/secrets/app/aurora-token/token
+    mvc:
+      header:
+        resttemplate:
+          interceptor:
             enabled: false
 
 logging:
