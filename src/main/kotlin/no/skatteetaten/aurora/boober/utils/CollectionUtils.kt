@@ -1,6 +1,9 @@
 package no.skatteetaten.aurora.boober.utils
 
+import brave.Tracing
+import brave.propagation.CurrentTraceContext
 import io.fabric8.kubernetes.api.model.HasMetadata
+import kotlinx.coroutines.ThreadContextElement
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -9,6 +12,8 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.slf4j.MDCContext
 import no.skatteetaten.aurora.boober.controller.security.SpringSecurityThreadContextElement
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 import kotlin.reflect.KClass
 
 fun <K, V> Map<K, V>.addIfNotNull(value: Pair<K, V>?): Map<K, V> {
@@ -138,10 +143,25 @@ fun <K, V> Map<K, V>?.takeIfNotEmpty(): Map<K, V>? {
     return this.takeIf { it?.isEmpty() == false }
 }
 
+// Implemented based on https://github.com/openzipkin/brave/issues/820#issuecomment-447614394
+private class TracingContextElement : ThreadContextElement<CurrentTraceContext.Scope>, AbstractCoroutineContextElement(Key) {
+    private val currentTraceContext = Tracing.current().currentTraceContext()
+    private val initial = currentTraceContext.get()
+    companion object Key : CoroutineContext.Key<TracingContextElement>
+
+    override fun updateThreadContext(context: CoroutineContext): CurrentTraceContext.Scope {
+        return currentTraceContext.maybeScope(initial)
+    }
+
+    override fun restoreThreadContext(context: CoroutineContext, scope: CurrentTraceContext.Scope) {
+        scope.close()
+    }
+}
+
 fun <A, B> Iterable<A>.parallelMap(f: suspend (A) -> B): List<B> {
     val iter = this
     return runBlocking(
-        threadPool + MDCContext() + SpringSecurityThreadContextElement()
+        threadPool + MDCContext() + TracingContextElement() + SpringSecurityThreadContextElement()
     ) {
         iter.pmap(f)
     }

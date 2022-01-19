@@ -7,7 +7,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrapper
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
-import no.skatteetaten.aurora.boober.utils.BooberHeaderRestTemplateCustomizer
 import no.skatteetaten.aurora.boober.utils.SharedSecretReader
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
@@ -136,15 +135,10 @@ class Configuration {
     @TargetService(ServiceTypes.CANTUS)
     fun cantusRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-        @Value("\${spring.application.name}") applicationName: String,
         @Value("\${integrations.cantus.url}") cantusUrl: String,
         @Value("\${integrations.cantus.token}") cantusToken: String,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
-
-        val clientIdHeaderName = "KlientID"
 
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
@@ -164,11 +158,9 @@ class Configuration {
     @TargetService(ServiceTypes.AURORA)
     fun auroraRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
-        val clientIdHeaderName = "KlientID"
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
             .interceptors(
@@ -224,10 +216,6 @@ class Configuration {
             }
             ks
         }
-
-    @Bean
-    @Primary
-    fun booberHeaderRestTemplateCustomizer() = BooberHeaderRestTemplateCustomizer()
 }
 
 enum class ServiceTypes {

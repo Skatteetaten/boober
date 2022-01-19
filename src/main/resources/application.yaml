@@ -75,7 +75,7 @@ aurora:
       header:
         resttemplate:
           interceptor:
-            enabled: false
+            enabled: true
 
 logging:
     level:
