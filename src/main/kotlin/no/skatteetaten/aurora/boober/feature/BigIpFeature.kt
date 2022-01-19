@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service
 class BigIpFeature(
     @Value("\${boober.route.suffix}") val routeSuffix: String
 ) : Feature {
-
     enum class Errors(val message: String) {
         MissingLegacyService("bigip/service is required if other bigip flags are set. bigip/service is deprecated and you should move that configuration to bigip/<name>/service."),
         MissingMultipleService("bigip/<name>/service is required if any other bigip flags are set"),
@@ -36,7 +35,8 @@ class BigIpFeature(
         "externalHost",
         "oauthScopes",
         "apiPaths",
-        "routeAnnotations"
+        "routeAnnotations",
+        "trailingSlash"
     )
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -53,7 +53,8 @@ class BigIpFeature(
                     AuroraConfigFieldHandler("bigip/$name/asmPolicy"),
                     AuroraConfigFieldHandler("bigip/$name/externalHost"),
                     AuroraConfigFieldHandler("bigip/$name/oauthScopes"),
-                    AuroraConfigFieldHandler("bigip/$name/apiPaths")
+                    AuroraConfigFieldHandler("bigip/$name/apiPaths"),
+                    AuroraConfigFieldHandler("bigip/$name/trailingSlash")
                 ) + findRouteAnnotationHandlers("bigip/$name", cmd.applicationFiles, "routeAnnotations")
             }.toSet()
 
@@ -63,7 +64,8 @@ class BigIpFeature(
             AuroraConfigFieldHandler("bigip/externalHost"),
             AuroraConfigFieldHandler("bigip/oauthScopes"),
             AuroraConfigFieldHandler("bigip/apiPaths"),
-            AuroraConfigFieldHandler("bigip/enabled", { it.boolean() })
+            AuroraConfigFieldHandler("bigip/enabled", { it.boolean() }),
+            AuroraConfigFieldHandler("bigip/trailingSlash")
         ) + findRouteAnnotationHandlers("bigip", cmd.applicationFiles, "routeAnnotations")
 
         return multipleConfigs + legacyConfig
@@ -146,7 +148,8 @@ class BigIpFeature(
                     asmPolicy = adc.getOrNull("bigip/$host/asmPolicy"),
                     oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/$host/oauthScopes"),
                     apiPaths = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/$host/apiPaths"),
-                    externalHost = adc.getOrNull("bigip/$host/externalHost")
+                    externalHost = adc.getOrNull("bigip/$host/externalHost"),
+                    trailingSlash = adc.getOrNull("bigip/$host/trailingSlash")
                 )
             )
         )
@@ -186,7 +189,8 @@ class BigIpFeature(
                     asmPolicy = adc.getOrNull("bigip/asmPolicy"),
                     oauthScopes = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/oauthScopes"),
                     apiPaths = adc.getDelimitedStringOrArrayAsSetOrNull("bigip/apiPaths"),
-                    externalHost = adc.getOrNull("bigip/externalHost")
+                    externalHost = adc.getOrNull("bigip/externalHost"),
+                    trailingSlash = adc.getOrNull("bigip/trailingSlash")
                 )
             )
         )

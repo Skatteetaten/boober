@@ -51,5 +51,6 @@ data class BigIpKonfigurasjonstjenesten(
     val apiPaths: Set<String>?,
     val oauthScopes: Set<String>?,
     val asmPolicy: String?,
-    val externalHost: String?
+    val externalHost: String?,
+    val trailingSlash: String?
 )
