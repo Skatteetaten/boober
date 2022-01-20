@@ -48,10 +48,10 @@ class ApplicationDeploymentFeatureTest : AbstractFeatureTest() {
         assertThat(ad).auroraResourceCreatedByThisFeature()
             .auroraResourceMatchesFile("ad.json")
 
-        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Added env vars", index = 0)
+        assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(comment = "Added env vars", sourceIndex = 0)
         assertThat(dc).auroraResourceModifiedByThisFeatureWithComment(
             comment = "Set owner reference to ApplicationDeployment",
-            index = 1
+            sourceIndex = 1
         )
         assertThat(dc.resource.metadata.ownerReferences[0]).isEqualTo(
             newOwnerReference {
