@@ -6,10 +6,6 @@ plugins {
 aurora {
     useKotlinDefaults
     useSpringBootDefaults
-
-    versions {
-        auroraSpringBootMvcStarter = "1.4.2"
-    }
 }
 
 dependencies {
