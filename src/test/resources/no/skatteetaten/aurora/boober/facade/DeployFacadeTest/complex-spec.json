@@ -773,11 +773,11 @@
     "default": {
       "bucketName": {
         "source": "complex.json",
-        "value": "minyndlingsbucket",
+        "value": "mybucket",
         "sources": [
           {
             "name": "complex.json",
-            "value": "minyndlingsbucket"
+            "value": "mybucket"
           }
         ]
       }

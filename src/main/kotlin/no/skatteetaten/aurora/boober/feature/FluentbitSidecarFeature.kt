@@ -339,8 +339,8 @@ fun getKnownSourceType(logger: String): String {
 fun getKnownFilePattern(logger: String): String {
     return when (logger) {
         logApplication -> "*.log"
-        logAuditText -> "*.audit.json"
-        logAuditJson -> "*.audit.text"
+        logAuditText -> "*.audit.text"
+        logAuditJson -> "*.audit.json"
         logAccess -> "*.access"
         logSlow -> "*.slow"
         logGC -> "*.gc"
