@@ -185,7 +185,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["whoami", "simple", "web", "ah", "complex", "job", "python"])
+    @CsvSource(value = ["complex", "whoami", "simple", "web", "ah", "job", "python"])
     fun `deploy application`(app: String) {
 
         skapMock {
@@ -225,9 +225,9 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         openShiftMock {
 
-            rule({ path.endsWith("-default") }) {
+            rule({ path.contains("storagegrid") }) {
                 MockResponse()
-                    .setBody(loadBufferResource("sgoa.json"))
+                    .setBody(createSgoaResponse(app))
                     .setResponseCode(200)
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
@@ -439,4 +439,44 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
     }
+
+    private fun createSgoaResponse(app: String): String = """
+   { 
+      "apiVersion" : "skatteetaten.no/v1",
+      "kind" : "StorageGridObjectArea",
+      "metadata" : {
+        "labels" : {
+          "operationScope" : "aos-4016",
+          "app" : "$app",
+          "updatedBy" : "hero",
+          "updatedAt" : "0",
+          "lastUpdatedYear" : "1970",
+          "affiliation" : "paas",
+          "name" : "$app",
+          "booberDeployId" : "deploy1"
+        },
+        "name" : "$app-default",
+        "namespace" : "paas-utv",
+        "ownerReferences" : [ {
+          "apiVersion" : "skatteetaten.no/v1",
+          "kind" : "ApplicationDeployment",
+          "name" : "$app",
+          "uid" : "123-123"
+        } ]
+      },
+      "spec" : {
+        "bucketPostfix" : "mybucket",
+        "applicationDeploymentId" : "1234567890",
+        "objectArea" : "default",
+        "tryReuseCredentials" : false
+      },
+      "status" : {
+        "result" : {
+          "message" : "nothing here",
+          "reason" : "SGOAProvisioned",
+          "success" : true
+        }
+      }
+   }
+    """.trimIndent()
 }

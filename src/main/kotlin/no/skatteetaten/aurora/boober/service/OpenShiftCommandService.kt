@@ -39,6 +39,7 @@ import no.skatteetaten.aurora.boober.utils.namespacedResourceUrl
 import no.skatteetaten.aurora.boober.utils.nonGettableResources
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
+import no.skatteetaten.aurora.boober.utils.preAppliedResources
 import no.skatteetaten.aurora.boober.utils.resourceUrl
 
 @Service
@@ -141,7 +142,10 @@ class OpenShiftCommandService(
         }
         val kind = newResource.openshiftKind
 
-        val existingResource = if (mergeWithExistingResource && kind !in nonGettableResources)
+        val shouldGetExistigResource =
+            (mergeWithExistingResource && kind !in nonGettableResources) || kind in preAppliedResources
+
+        val existingResource = if (shouldGetExistigResource)
             openShiftClient.get(kind, namedUrl, retryGetResourceOnFailure)
         else null
 
