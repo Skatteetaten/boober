@@ -85,7 +85,7 @@
   "message": "Aurora <3",
   "s3": {
     "default": {
-      "bucketName": "minyndlingsbucket"
+      "bucketName": "mybucket"
     }
   },
   "database": {
