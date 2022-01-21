@@ -1,3 +1,5 @@
+// ktlint-disable indent
+
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
