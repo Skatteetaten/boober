@@ -144,17 +144,17 @@ fun <K, V> Map<K, V>?.takeIfNotEmpty(): Map<K, V>? {
 }
 
 // Implemented based on https://github.com/openzipkin/brave/issues/820#issuecomment-447614394
-private class TracingContextElement : ThreadContextElement<CurrentTraceContext.Scope>, AbstractCoroutineContextElement(Key) {
-    private val currentTraceContext = Tracing.current().currentTraceContext()
-    private val initial = currentTraceContext.get()
+private class TracingContextElement : ThreadContextElement<CurrentTraceContext.Scope?>, AbstractCoroutineContextElement(Key) {
+    private val currentTraceContext: CurrentTraceContext? = Tracing.current()?.currentTraceContext()
+    private val initial = currentTraceContext?.get()
     companion object Key : CoroutineContext.Key<TracingContextElement>
 
-    override fun updateThreadContext(context: CoroutineContext): CurrentTraceContext.Scope {
-        return currentTraceContext.maybeScope(initial)
+    override fun updateThreadContext(context: CoroutineContext): CurrentTraceContext.Scope? {
+        return currentTraceContext?.maybeScope(initial)
     }
 
-    override fun restoreThreadContext(context: CoroutineContext, scope: CurrentTraceContext.Scope) {
-        scope.close()
+    override fun restoreThreadContext(context: CoroutineContext, oldState: CurrentTraceContext.Scope?) {
+        oldState?.close()
     }
 }
 
