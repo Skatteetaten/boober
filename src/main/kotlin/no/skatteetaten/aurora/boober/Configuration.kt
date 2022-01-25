@@ -8,8 +8,6 @@ import no.skatteetaten.aurora.boober.service.openshift.OpenShiftRestTemplateWrap
 import no.skatteetaten.aurora.boober.service.openshift.token.ServiceAccountTokenProvider
 import no.skatteetaten.aurora.boober.service.openshift.token.UserDetailsTokenProvider
 import no.skatteetaten.aurora.boober.utils.SharedSecretReader
-import no.skatteetaten.aurora.filter.logging.AuroraHeaderFilter
-import no.skatteetaten.aurora.filter.logging.RequestKorrelasjon
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
@@ -35,7 +33,6 @@ import java.io.FileInputStream
 import java.security.KeyStore
 import java.security.cert.CertificateFactory
 import java.security.cert.X509Certificate
-import java.util.UUID
 
 @Configuration
 @EnableRetry
@@ -138,15 +135,10 @@ class Configuration {
     @TargetService(ServiceTypes.CANTUS)
     fun cantusRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${boober.httpclient.readTimeout:10000}") readTimeout: Int,
-        @Value("\${boober.httpclient.connectTimeout:5000}") connectTimeout: Int,
-        @Value("\${spring.application.name}") applicationName: String,
         @Value("\${integrations.cantus.url}") cantusUrl: String,
         @Value("\${integrations.cantus.token}") cantusToken: String,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
-
-        val clientIdHeaderName = "KlientID"
 
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
@@ -155,9 +147,6 @@ class Configuration {
                 ClientHttpRequestInterceptor { request, body, execution ->
                     request.headers.apply {
                         set(HttpHeaders.AUTHORIZATION, "Bearer $cantusToken")
-                        set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                        set(clientIdHeaderName, applicationName)
-                        set("Meldingsid", UUID.randomUUID().toString())
                     }
 
                     execution.execute(request, body)
@@ -169,11 +158,9 @@ class Configuration {
     @TargetService(ServiceTypes.AURORA)
     fun auroraRestTemplate(
         restTemplateBuilder: RestTemplateBuilder,
-        @Value("\${spring.application.name}") applicationName: String,
         sharedSecretReader: SharedSecretReader,
         clientHttpRequestFactory: HttpComponentsClientHttpRequestFactory
     ): RestTemplate {
-        val clientIdHeaderName = "KlientID"
         return restTemplateBuilder
             .requestFactory { clientHttpRequestFactory }
             .interceptors(
@@ -184,11 +171,6 @@ class Configuration {
                             "aurora-token ${sharedSecretReader.secret}"
                         )
                         set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                        set(AuroraHeaderFilter.KORRELASJONS_ID, RequestKorrelasjon.getId())
-                        set(
-                            clientIdHeaderName, applicationName
-                        )
-                        set("Meldingsid", UUID.randomUUID().toString())
                     }
 
                     execution.execute(request, body)

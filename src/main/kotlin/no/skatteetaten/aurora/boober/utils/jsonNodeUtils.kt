@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.utils
 
+import java.net.URI
+import org.springframework.boot.convert.DurationStyle
 import com.cronutils.model.CronType
 import com.cronutils.model.definition.CronDefinitionBuilder
 import com.cronutils.parser.CronParser
@@ -15,8 +17,6 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.fasterxml.jackson.module.kotlin.treeToValue
-import org.springframework.boot.convert.DurationStyle
-import java.net.URI
 
 inline fun <reified T : Any> JsonNode.convert(): T = jacksonObjectMapper().convertValue(this)
 
@@ -304,6 +304,20 @@ fun JsonNode?.isListOrEmpty(required: Boolean = false): Exception? {
         return IllegalArgumentException("Parameter not a list. TextValue: ${this.textValue()}")
     }
     return null
+}
+
+fun JsonNode?.startsWithSlash(elementName: String, required: Boolean = false): Exception? {
+    return if (this == null) {
+        if (required) {
+            IllegalArgumentException("Need to supply $elementName")
+        } else {
+            null
+        }
+    } else if (!this.textValue().startsWith("/")) {
+        IllegalArgumentException("$elementName must start with a slash, i.e. /, it contains ${this.textValue()}")
+    } else {
+        null
+    }
 }
 
 fun JsonNode?.validUrl(required: Boolean = true): Exception? {

@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature.azure
 
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
 import no.skatteetaten.aurora.boober.feature.isJob
@@ -8,13 +10,18 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.isListOrEmpty
-import no.skatteetaten.aurora.boober.utils.isValidDns
-import no.skatteetaten.aurora.boober.utils.validUrl
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
+/**
+ * Azure feature collects several azure related items. These are:
+ * <ul>
+ *     <li>JwtToStsConverter: Clinger sidecar converts JWT token to webseal header</li>
+ *     <li>AuroraAzureAppSubPart: Control migration away from webseal to azure ad JWT token</li>
+ *     <li>AuroraAzureApimSubPart: Registration of openapi-spec in Azure API Management. Notice
+ *     that you also need to enable the azure shard and create a dns entry in Azure AD</li>
+ * </ul>
+ *
+ * @see no.skatteetaten.aurora.boober.feature.RouteFeature
+ */
 @Service
 class AzureFeature(
     cantusService: CantusService,
@@ -22,9 +29,10 @@ class AzureFeature(
 ) : AbstractResolveTagFeature(cantusService) {
     private val jwtToStsConverter = JwtToStsConverterSubPart()
     private val auroraAzureApp = AuroraAzureAppSubPart()
+    private val auroraApim = AuroraAzureApimSubPart()
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        return spec.isJwtToStsConverterEnabled || spec.isAzureAppFqdnEnabled
+        return spec.isJwtToStsConverterEnabled || spec.isAzureAppFqdnEnabled || spec.isApimEnabled
     }
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
@@ -32,48 +40,9 @@ class AzureFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return setOf(
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.enabled,
-                defaultValue = false,
-                validator = { it.boolean(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.version,
-                defaultValue = sidecarVersion
-            ),
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.discoveryUrl,
-                validator = { it.validUrl(required = false) }
-            ),
-
-            AuroraConfigFieldHandler(
-                JwtToStsConverterSubPart.ConfigPath.ivGroupsRequired,
-                defaultValue = false,
-                validator = { it.boolean() }
-            ),
-
-            AuroraConfigFieldHandler(
-                AuroraAzureAppSubPart.ConfigPath.azureAppFqdn,
-                validator = { it.isValidDns(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureAppSubPart.ConfigPath.groups,
-                validator = { it.isListOrEmpty(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                AuroraAzureAppSubPart.ConfigPath.managedRoute,
-                defaultValue = false,
-                validator = { it.boolean() }
-            ),
-            AuroraConfigFieldHandler(
-                "webseal",
-                defaultValue = false,
-                validator = { it.boolean() },
-                canBeSimplifiedConfig = true
-            ),
-            AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
-        )
+        return jwtToStsConverter.handlers(sidecarVersion) +
+            auroraAzureApp.handlers() +
+            auroraApim.handlers(cmd)
     }
 
     override fun createContext(
@@ -103,7 +72,7 @@ class AzureFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        return auroraAzureApp.generate(adc, this)
+        return auroraAzureApp.generate(adc, this) + auroraApim.generate(adc, this)
     }
 
     override fun validate(
@@ -111,6 +80,6 @@ class AzureFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        return auroraAzureApp.validate(adc)
+        return auroraAzureApp.validate(adc) + auroraApim.validate(adc)
     }
 }

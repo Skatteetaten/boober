@@ -140,7 +140,7 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |       haproxy.router.openshift.io|timeout: "30s"
                          | s3:
                          |   default:
-            complex.json |     bucketName: "minyndlingsbucket"
+            complex.json |     bucketName: "mybucket"
                  default |     objectArea: "default"
                  default |     enabled: true
                          | s3Defaults:
@@ -165,3 +165,5 @@ utv/about-alternate.json |   ttl: "1d"
                  default |     version: "0.4.0"
                  default |     ivGroupsRequired: false
                  default |   managedRoute: false
+                         |   apim:
+                 default |     enabled: false

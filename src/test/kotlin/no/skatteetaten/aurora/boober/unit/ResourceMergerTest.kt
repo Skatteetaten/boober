@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.service.openshift.mergeWithExistingResource
@@ -46,11 +47,21 @@ class ResourceMergerTest : ResourceLoader() {
     @EnumSource(OpenShiftResourceTypeTestData::class)
     fun `Should accept that element to retain might be missing for `(test: OpenShiftResourceTypeTestData) {
         val type = test.name.lowercase()
-        val oldResource = loadJsonResource("$type-new.json")
+        val oldResource = loadJsonResource("$type.json")
         val newResource = loadJsonResource("$type-new.json")
         val merged = mergeWithExistingResource(newResource, oldResource)
         test.fields.forEach {
             assertThat(merged.at(it)).isEqualTo(oldResource.at(it))
         }
+    }
+
+    @Test
+    fun `Should accept changes to sidecar container images`() {
+        val oldDc = loadJsonResource("deploymentconfig.json")
+        val newDc = loadJsonResource("deploymentconfig-new.json")
+        val merged = mergeWithExistingResource(newDc, oldDc)
+        val sidecarImageField = "/spec/template/spec/containers/1/image"
+
+        assertThat(merged.at(sidecarImageField)).isEqualTo(newDc.at(sidecarImageField))
     }
 }

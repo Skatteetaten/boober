@@ -10,15 +10,15 @@ import io.fabric8.kubernetes.api.model.ObjectMeta
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder(value = ["apiVersion", "kind", "metadata", "spec"])
-data class BigIp(
-    val spec: BigIpSpec,
+data class AuroraApim(
+    val spec: ApimSpec,
     @JsonIgnore
     var _metadata: ObjectMeta?,
     @JsonIgnore
-    val _kind: String = "BigIp",
+    val _kind: String = "AuroraApim",
     @JsonIgnore
     var _apiVersion: String = "skatteetaten.no/v1"
-) : HasMetadata { // or just KubernetesResource?
+) : HasMetadata {
     override fun getMetadata(): ObjectMeta {
         return _metadata ?: ObjectMeta()
     }
@@ -40,17 +40,12 @@ data class BigIp(
     }
 }
 
-data class BigIpSpec(
-    val routeName: String,
-    val konfigtjenesten: BigIpKonfigurasjonstjenesten
-)
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class BigIpKonfigurasjonstjenesten(
-    val service: String,
-    val apiPaths: Set<String>?,
-    val oauthScopes: Set<String>?,
-    val asmPolicy: String?,
-    val externalHost: String?,
-    val trailingSlash: String?
+data class ApimSpec(
+    val path: String,
+    val openapiUrl: String,
+    val serviceUrl: String,
+    val policies: List<String>,
+    val apiHost: String
 )

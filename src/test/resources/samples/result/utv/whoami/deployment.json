@@ -182,7 +182,8 @@
           {
             "args": [
               "-config",
-              "/u01/config/toxiproxy/config.json"
+              "/u01/config/toxiproxy/config.json",
+              "-host=0.0.0.0"
             ],
             "env": [
               {
@@ -211,7 +212,7 @@
             "readinessProbe": {
               "initialDelaySeconds": 10,
               "tcpSocket": {
-                "port": 8090
+                "port": 8474
               },
               "timeoutSeconds": 1
             },

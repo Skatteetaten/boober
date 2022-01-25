@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.service
 
+import org.springframework.stereotype.Service
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -38,8 +39,8 @@ import no.skatteetaten.aurora.boober.utils.namespacedResourceUrl
 import no.skatteetaten.aurora.boober.utils.nonGettableResources
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.openshiftName
+import no.skatteetaten.aurora.boober.utils.preAppliedResources
 import no.skatteetaten.aurora.boober.utils.resourceUrl
-import org.springframework.stereotype.Service
 
 @Service
 class OpenShiftCommandService(
@@ -141,7 +142,10 @@ class OpenShiftCommandService(
         }
         val kind = newResource.openshiftKind
 
-        val existingResource = if (mergeWithExistingResource && kind !in nonGettableResources)
+        val shouldGetExistigResource =
+            (mergeWithExistingResource && kind !in nonGettableResources) || kind in preAppliedResources
+
+        val existingResource = if (shouldGetExistigResource)
             openShiftClient.get(kind, namedUrl, retryGetResourceOnFailure)
         else null
 
@@ -171,6 +175,7 @@ class OpenShiftCommandService(
         "AuroraCname",
         "AuroraAzureCname",
         "AuroraAzureApp",
+        "AuroraApim",
         "ImageStream",
         "BigIp",
         "CronJob",

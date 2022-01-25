@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.model
 object PortNumbers {
 
     const val HTTP_PORT = 80
+    const val HTTPS_PORT = 443
     const val INTERNAL_HTTP_PORT = 8080
     const val INTERNAL_ADMIN_PORT = 8081
     const val EXTRA_APPLICATION_PORT = 8082
