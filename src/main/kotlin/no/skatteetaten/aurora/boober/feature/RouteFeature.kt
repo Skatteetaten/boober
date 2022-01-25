@@ -513,17 +513,10 @@ data class Cname(
             },
             spec = CnameSpec(
                 cname = routeHost,
-                host = withoutInitialPeriod(routeSuffix),
+                host = routeSuffix.removePrefix("."),
                 ttl = ttl
             )
         )
-
-    private fun withoutInitialPeriod(str: String): String =
-        if (str.startsWith(".")) {
-            str.substring(1)
-        } else {
-            str
-        }
 }
 
 data class AzureCname(
@@ -539,17 +532,10 @@ data class AzureCname(
             },
             spec = AzureCnameSpec(
                 cname = routeHost,
-                host = withoutInitialPeriod(routeSuffix),
+                host = routeSuffix.removePrefix("."),
                 ttl = ttl
             )
         )
-
-    private fun withoutInitialPeriod(str: String): String =
-        if (str.startsWith(".")) {
-            str.substring(1)
-        } else {
-            str
-        }
 }
 
 data class ConfiguredRoute(
