@@ -6,6 +6,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import org.springframework.web.util.UriComponentsBuilder
+import java.net.URI
 
 val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() =
@@ -149,3 +150,47 @@ fun AuroraDeploymentSpec.proxynameDuplicateErrors() = getToxiproxyNames()
                 "Proxy names have to be unique."
         )
     }
+
+fun MutableList<ToxiproxyConfig>.addEndpointsFromConfigAndReturnNextPort(
+    spec: AuroraDeploymentSpec,
+    initialPort: Int
+): Int {
+    var port = initialPort
+    spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
+        val url = spec.fields["config/$varname"]?.value<String>()
+        if (url != null) {
+            val uri = URI(url)
+            val upstreamPort = if (uri.port == -1) {
+                if (uri.scheme == "https") PortNumbers.HTTPS_PORT else PortNumbers.HTTP_PORT
+            } else uri.port
+            add(
+                ToxiproxyConfig(
+                    name = proxyname,
+                    listen = "0.0.0.0:$port",
+                    upstream = uri.host + ":" + upstreamPort
+                )
+            )
+            port++
+        }
+    }
+    return port
+}
+
+fun MutableList<ToxiproxyConfig>.addServersAndPortsFromConfig(
+    spec: AuroraDeploymentSpec,
+    initialPort: Int
+) {
+    var port = initialPort
+    spec.extractToxiproxyServersAndPorts().forEach {
+        val upstreamServer = spec.fields["config/${it.serverVar}"]?.value<String>()
+        val upstreamPort = spec.fields["config/${it.portVar}"]?.value<String>()
+        add(
+            ToxiproxyConfig(
+                name = it.proxyname,
+                listen = "0.0.0.0:$port",
+                upstream = "$upstreamServer:$upstreamPort"
+            )
+        )
+        port++
+    }
+}

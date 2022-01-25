@@ -36,7 +36,6 @@ import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.notBlank
 import org.springframework.beans.factory.annotation.Value
-import java.net.URI
 
 private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
@@ -71,43 +70,9 @@ class ToxiproxySidecarFeature(
 
         val toxiproxyConfigs = mutableListOf(ToxiproxyConfig())
 
-        // Variable for the port number that Toxiproxy will listen to
-        // An addition of 1 to the value is made for each proxy
-        var port = FIRST_PORT_NUMBER
-
-        // Add endpoints to toxiproxyConfigs:
-        spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-            val url = spec.fields["config/$varname"]?.value<String>()
-            if (url != null) {
-                val uri = URI(url)
-                val upstreamPort = if (uri.port == -1) {
-                    if (uri.scheme == "https") { PortNumbers.HTTPS_PORT } else { PortNumbers.HTTP_PORT }
-                } else {
-                    uri.port
-                }
-                toxiproxyConfigs.add(
-                    ToxiproxyConfig(
-                        name = proxyname,
-                        listen = "0.0.0.0:$port",
-                        upstream = uri.host + ":" + upstreamPort
-                    )
-                )
-                port++
-            }
-        }
-
-        // Add servers and ports to toxiproxyConfigs:
-        spec.extractToxiproxyServersAndPorts().forEach {
-            val upstreamServer = spec.fields["config/${it.serverVar}"]?.value<String>()
-            val upstreamPort = spec.fields["config/${it.portVar}"]?.value<String>()
-            toxiproxyConfigs.add(
-                ToxiproxyConfig(
-                    name = it.proxyname,
-                    listen = "0.0.0.0:$port",
-                    upstream = "$upstreamServer:$upstreamPort"
-                )
-            )
-            port++
+        toxiproxyConfigs.run {
+            val nextPort = addEndpointsFromConfigAndReturnNextPort(spec, FIRST_PORT_NUMBER)
+            addServersAndPortsFromConfig(spec, nextPort)
         }
 
         return createImageMetadataContext(
