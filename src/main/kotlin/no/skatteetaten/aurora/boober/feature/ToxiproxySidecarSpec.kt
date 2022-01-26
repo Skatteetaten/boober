@@ -151,46 +151,32 @@ fun AuroraDeploymentSpec.proxynameDuplicateErrors() = getToxiproxyNames()
         )
     }
 
-fun MutableList<ToxiproxyConfig>.addEndpointsFromConfigAndReturnNextPort(
-    spec: AuroraDeploymentSpec,
-    initialPort: Int
-): Int {
-    var port = initialPort
-    spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-        val url = spec.fields["config/$varname"]?.value<String>()
+fun AuroraDeploymentSpec.endpointsFromConfig(initialPort: Int) =
+    extractToxiproxyEndpoints().mapIndexedNotNull { i, (proxyname, varname) ->
+        val url = fields["config/$varname"]?.value<String>()
         if (url != null) {
             val uri = URI(url)
             val upstreamPort = if (uri.port == -1) {
                 if (uri.scheme == "https") PortNumbers.HTTPS_PORT else PortNumbers.HTTP_PORT
             } else uri.port
-            add(
-                ToxiproxyConfig(
-                    name = proxyname,
-                    listen = "0.0.0.0:$port",
-                    upstream = uri.host + ":" + upstreamPort
-                )
-            )
-            port++
-        }
-    }
-    return port
-}
-
-fun MutableList<ToxiproxyConfig>.addServersAndPortsFromConfig(
-    spec: AuroraDeploymentSpec,
-    initialPort: Int
-) {
-    var port = initialPort
-    spec.extractToxiproxyServersAndPorts().forEach {
-        val upstreamServer = spec.fields["config/${it.serverVar}"]?.value<String>()
-        val upstreamPort = spec.fields["config/${it.portVar}"]?.value<String>()
-        add(
             ToxiproxyConfig(
-                name = it.proxyname,
-                listen = "0.0.0.0:$port",
-                upstream = "$upstreamServer:$upstreamPort"
+                name = proxyname,
+                listen = "0.0.0.0:${initialPort + i}",
+                upstream = uri.host + ":" + upstreamPort
             )
-        )
-        port++
+        } else null
     }
-}
+
+fun AuroraDeploymentSpec.serversAndPortsFromConfig(initialPort: Int) =
+    extractToxiproxyServersAndPorts().mapIndexed { i, (proxyname, serverVar, portVar) ->
+        val upstreamServer = fields["config/$serverVar"]?.value<String>()
+        val upstreamPort = fields["config/$portVar"]?.value<String>()
+        ToxiproxyConfig(
+            name = proxyname,
+            listen = "0.0.0.0:${initialPort + i}",
+            upstream = "$upstreamServer:$upstreamPort"
+        )
+    }
+
+fun List<ToxiproxyConfig>.getNextPortNumber(numberIfEmpty: Int) =
+    maxOfOrNull { it.listen.substringAfter(':').toInt() }.let { if (it == null) numberIfEmpty else it + 1 }

@@ -68,12 +68,11 @@ class ToxiproxySidecarFeature(
             return emptyMap()
         }
 
-        val toxiproxyConfigs = mutableListOf(ToxiproxyConfig())
-
-        toxiproxyConfigs.run {
-            val nextPort = addEndpointsFromConfigAndReturnNextPort(spec, FIRST_PORT_NUMBER)
-            addServersAndPortsFromConfig(spec, nextPort)
-        }
+        val appToxiproxyConfig = listOf(ToxiproxyConfig())
+        val endpointsFromConfig = spec.endpointsFromConfig(FIRST_PORT_NUMBER)
+        val nextPortNumber = endpointsFromConfig.getNextPortNumber(numberIfEmpty = FIRST_PORT_NUMBER)
+        val serversAndPortsFromConfig = spec.serversAndPortsFromConfig(nextPortNumber)
+        val toxiproxyConfigs = appToxiproxyConfig + endpointsFromConfig + serversAndPortsFromConfig
 
         return createImageMetadataContext(
             repo = "shopify",
