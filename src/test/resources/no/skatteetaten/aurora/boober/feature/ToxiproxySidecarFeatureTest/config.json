@@ -6,6 +6,6 @@
     "namespace": "paas-utv"
   },
   "data": {
-    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\"}]"
+    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\",\"enabled\":true}]"
   }
 }

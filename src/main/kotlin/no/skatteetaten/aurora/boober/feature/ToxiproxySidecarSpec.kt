@@ -17,14 +17,15 @@ val AuroraDeploymentSpec.toxiproxyVersion: String?
 data class ToxiproxyConfig(
     val name: String = "app",
     val listen: String = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
-    val upstream: String = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT
+    val upstream: String = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT,
+    val enabled: Boolean = true
 )
 
 data class ToxiproxyServerAndPortVars(val proxyname: String, val serverVar: String, val portVar: String)
 
 // Regex for matching a variable name in an endpoint field name
 val varNameInEndpointFieldNameRegex =
-    Regex("(?<=^toxiproxy\\/endpointsFromConfig\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\$))")
+    Regex("(?<=^toxiproxy\\/endpointsFromConfig\\/)([^\\/]+(?=\\/enabled\$|\\/proxyname\$|\\/initialEnabledState\$|\$))")
 
 fun findVarNameInEndpointFieldName(fieldName: String) = varNameInEndpointFieldNameRegex.find(fieldName)!!.value
 
@@ -55,7 +56,7 @@ fun generateProxyNameFromVarName(varName: String) = "endpoint_$varName"
 
 // Regex for matching a proxy name in a server and port field name
 val proxyNameInServerAndPortFieldNameRegex =
-    Regex("(?<=^toxiproxy\\/serverAndPortFromConfig\\/)([^\\/]+(?=\\/serverVariable\$|\\/portVariable\$|\$))")
+    Regex("(?<=^toxiproxy\\/serverAndPortFromConfig\\/)([^\\/]+(?=\\/serverVariable\$|\\/portVariable\$|\\/initialEnabledState\$|\$))")
 
 fun findProxyNameInServerAndPortFieldName(fieldName: String) = proxyNameInServerAndPortFieldNameRegex.find(fieldName)!!.value
 

@@ -6,6 +6,6 @@
     "namespace": "paas-utv"
   },
   "data": {
-    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\"},{\"name\":\"proxyName1\",\"listen\":\"0.0.0.0:18000\",\"upstream\":\"test1.test:123\"},{\"name\":\"proxyName2\",\"listen\":\"0.0.0.0:18001\",\"upstream\":\"test2.test:124\"}]"
+    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\",\"enabled\":true},{\"name\":\"proxyName1\",\"listen\":\"0.0.0.0:18000\",\"upstream\":\"test1.test:123\",\"enabled\":true},{\"name\":\"proxyName2\",\"listen\":\"0.0.0.0:18001\",\"upstream\":\"test2.test:124\",\"enabled\":true}]"
   }
 }
