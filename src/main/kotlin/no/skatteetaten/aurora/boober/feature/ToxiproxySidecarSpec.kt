@@ -21,7 +21,18 @@ data class ToxiproxyConfig(
     val enabled: Boolean = true
 )
 
-data class ToxiproxyServerAndPortVars(val proxyname: String, val serverVar: String, val portVar: String)
+data class ToxiproxyEndpoint(
+    val proxyName: String,
+    val varName: String,
+    val enabled: Boolean
+)
+
+data class ToxiproxyServerAndPortVars(
+    val proxyname: String,
+    val serverVar: String,
+    val portVar: String,
+    val enabled: Boolean
+)
 
 // Regex for matching a variable name in an endpoint field name
 val varNameInEndpointFieldNameRegex =
@@ -37,7 +48,7 @@ fun AuroraDeploymentSpec.groupToxiproxyEndpointFields(): Map<String, List<Map.En
 
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
-fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>> = groupToxiproxyEndpointFields()
+fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<ToxiproxyEndpoint> = groupToxiproxyEndpointFields()
     .filter { (varName, fields) ->
         fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName" }!!.value.value() &&
             fields.find { it.key == "toxiproxy/endpointsFromConfig/$varName/enabled" }!!.value.value()
@@ -47,7 +58,11 @@ fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<Pair<String, String>>
             .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }!!
             .value
             .value<String>()
-        Pair(proxyName, varName)
+        val enabled = fields
+            .find { it.key == "toxiproxy/endpointsFromConfig/$varName/initialEnabledState" }!!
+            .value
+            .value<Boolean>()
+        ToxiproxyEndpoint(proxyName, varName, enabled)
     }
 
 // Generate a default proxy name based on the variable name
@@ -71,7 +86,8 @@ fun AuroraDeploymentSpec.extractToxiproxyServersAndPorts(): List<ToxiproxyServer
         ToxiproxyServerAndPortVars(
             proxyName,
             fields.find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/serverVariable" }!!.value.value(),
-            fields.find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/portVariable" }!!.value.value()
+            fields.find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/portVariable" }!!.value.value(),
+            fields.find { it.key == "toxiproxy/serverAndPortFromConfig/$proxyName/initialEnabledState" }!!.value.value()
         )
     }
 
@@ -153,7 +169,7 @@ fun AuroraDeploymentSpec.proxynameDuplicateErrors() = getToxiproxyNames()
     }
 
 fun AuroraDeploymentSpec.endpointsFromConfig(initialPort: Int) =
-    extractToxiproxyEndpoints().mapIndexedNotNull { i, (proxyname, varname) ->
+    extractToxiproxyEndpoints().mapIndexedNotNull { i, (proxyname, varname, enabled) ->
         val url = fields["config/$varname"]?.value<String>()
         if (url != null) {
             val uri = URI(url)
@@ -163,19 +179,21 @@ fun AuroraDeploymentSpec.endpointsFromConfig(initialPort: Int) =
             ToxiproxyConfig(
                 name = proxyname,
                 listen = "0.0.0.0:${initialPort + i}",
-                upstream = uri.host + ":" + upstreamPort
+                upstream = uri.host + ":" + upstreamPort,
+                enabled = enabled
             )
         } else null
     }
 
 fun AuroraDeploymentSpec.serversAndPortsFromConfig(initialPort: Int) =
-    extractToxiproxyServersAndPorts().mapIndexed { i, (proxyname, serverVar, portVar) ->
+    extractToxiproxyServersAndPorts().mapIndexed { i, (proxyname, serverVar, portVar, enabled) ->
         val upstreamServer = fields["config/$serverVar"]?.value<String>()
         val upstreamPort = fields["config/$portVar"]?.value<String>()
         ToxiproxyConfig(
             name = proxyname,
             listen = "0.0.0.0:${initialPort + i}",
-            upstream = "$upstreamServer:$upstreamPort"
+            upstream = "$upstreamServer:$upstreamPort",
+            enabled = enabled
         )
     }
 
