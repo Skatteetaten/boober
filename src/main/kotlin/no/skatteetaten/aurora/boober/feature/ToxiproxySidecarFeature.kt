@@ -1,5 +1,3 @@
-// ktlint-disable indent
-
 package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -34,14 +32,12 @@ import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
-import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.notBlank
 import org.apache.commons.codec.binary.Base64
 import org.springframework.beans.factory.annotation.Value
-import java.net.URI
 import java.nio.charset.Charset
 
 private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
@@ -82,73 +78,21 @@ class ToxiproxySidecarFeature(
             return emptyMap()
         }
 
-        val toxiproxyConfigs = mutableListOf(ToxiproxyConfig())
+        var nextPortNumber = FIRST_PORT_NUMBER
+        val appToxiproxyConfig = listOf(ToxiproxyConfig())
+        val endpointsFromConfig = spec.endpointsFromConfig(nextPortNumber)
+        nextPortNumber = endpointsFromConfig.getNextPortNumber(numberIfEmpty = nextPortNumber)
+        val serversAndPortsFromConfig = spec.serversAndPortsFromConfig(nextPortNumber)
+        nextPortNumber = serversAndPortsFromConfig.getNextPortNumber(numberIfEmpty = nextPortNumber)
+        val (databases, secretNameToPortMap) =
+            spec.databasesFromSecrets(nextPortNumber, databaseSchemaProvisioner, userDetailsProvider)
 
-        // Variable for the port number that Toxiproxy will listen to
-        // An addition of 1 to the value is made for each proxy
-        var port = FIRST_PORT_NUMBER
-
-        // Add endpoints to toxiproxyConfigs:
-        spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-            val url = spec.fields["config/$varname"]?.value<String>()
-            if (url != null) {
-                val uri = URI(url)
-                val upstreamPort = if (uri.port == -1) {
-                    if (uri.scheme == "https") { PortNumbers.HTTPS_PORT } else { PortNumbers.HTTP_PORT }
-                } else {
-                    uri.port
-                }
-                toxiproxyConfigs.add(
-                    ToxiproxyConfig(
-                        name = proxyname,
-                        listen = "0.0.0.0:$port",
-                        upstream = uri.host + ":" + upstreamPort
-                    )
-                )
-                port++
-            }
-        }
-
-        // Add databases to toxiproxyConfigs:
-        val secretNameToPortMap = mutableMapOf<String, Int>()
-        val proxyAllDatabases = spec.fields["toxiproxy/database"]?.value?.booleanValue() == true
-        findDatabases(spec)
-            .filter {
-                proxyAllDatabases ||
-                    spec.fields["toxiproxy/database/" + it.name + "/enabled"]?.value?.booleanValue() == true
-            }
-            .createSchemaRequests(userDetailsProvider, spec)
-            .associateWith { databaseSchemaProvisioner.findSchema(it) }
-            .filterNot { it.value == null }
-            .forEach { (request, schema) ->
-                val proxyname = spec
-                    .fields["toxiproxy/database/" + (request as SchemaForAppRequest).labels["name"] + "/proxyname"]
-                    ?.value<String>()
-                    ?: "database_" + schema!!.id
-                toxiproxyConfigs.add(
-                    ToxiproxyConfig(
-                        name = proxyname,
-                        listen = "0.0.0.0:$port",
-                        upstream = schema!!.databaseInstance.host + ":" + schema.databaseInstance.port
-                    )
-                )
-                secretNameToPortMap[request.getSecretName(prefix = spec.name)] = port
-                port++
-            }
-
-        // Add servers and ports to toxiproxyConfigs:
-        spec.extractToxiproxyServersAndPorts().forEach {
-            val upstreamServer = spec.fields["config/${it.serverVar}"]?.value<String>()
-            val upstreamPort = spec.fields["config/${it.portVar}"]?.value<String>()
-            toxiproxyConfigs.add(
-                ToxiproxyConfig(
-                    name = it.proxyname,
-                    listen = "0.0.0.0:$port",
-                    upstream = "$upstreamServer:$upstreamPort"
-                )
-            )
-            port++
-        }
+        val toxiproxyConfigs = listOf(
+            appToxiproxyConfig,
+            endpointsFromConfig,
+            serversAndPortsFromConfig,
+            databases
+        ).flatten()
 
         return super.createContext(spec, cmd, validationContext) +
             createImageMetadataContext(repo = "shopify", name = "toxiproxy", tag = toxiProxyTag) +

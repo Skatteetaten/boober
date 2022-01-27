@@ -5,7 +5,11 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
 import no.skatteetaten.aurora.boober.utils.Url
+import java.net.URI
 
 enum class ToxiproxyUrlSource(val propName: String, val defaultProxyNamePrefix: String) {
     CONFIG_VAR("endpointsFromConfig", "endpoint"),
@@ -72,6 +76,7 @@ fun String.convertToProxyUrl(port: Int): String =
         .withModifiedHostName("localhost")
         .withModifiedPort(port)
         .makeString()
+
 // Regex for matching a proxy name in a server and port field name
 val proxyNameInServerAndPortFieldNameRegex =
     Regex("(?<=^toxiproxy\\/serverAndPortFromConfig\\/)([^\\/]+(?=\\/serverVariable\$|\\/portVariable\$|\$))")
@@ -180,3 +185,63 @@ fun AuroraDeploymentSpec.proxynameDuplicateErrors() = getToxiproxyNames()
                 "Proxy names have to be unique."
         )
     }
+
+fun AuroraDeploymentSpec.endpointsFromConfig(initialPort: Int) =
+    extractToxiproxyEndpoints().mapIndexedNotNull { i, (proxyname, varname) ->
+        val url = fields["config/$varname"]?.value<String>()
+        if (url != null) {
+            val uri = URI(url)
+            val upstreamPort = if (uri.port == -1) {
+                if (uri.scheme == "https") PortNumbers.HTTPS_PORT else PortNumbers.HTTP_PORT
+            } else uri.port
+            ToxiproxyConfig(
+                name = proxyname,
+                listen = "0.0.0.0:${initialPort + i}",
+                upstream = uri.host + ":" + upstreamPort
+            )
+        } else null
+    }
+
+fun AuroraDeploymentSpec.serversAndPortsFromConfig(initialPort: Int) =
+    extractToxiproxyServersAndPorts().mapIndexed { i, (proxyname, serverVar, portVar) ->
+        val upstreamServer = fields["config/$serverVar"]?.value<String>()
+        val upstreamPort = fields["config/$portVar"]?.value<String>()
+        ToxiproxyConfig(
+            name = proxyname,
+            listen = "0.0.0.0:${initialPort + i}",
+            upstream = "$upstreamServer:$upstreamPort"
+        )
+    }
+
+fun AuroraDeploymentSpec.databasesFromSecrets(
+    initialPort: Int,
+    databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    userDetailsProvider: UserDetailsProvider
+): Pair<List<ToxiproxyConfig>, Map<String, Int>> = findDatabases(this)
+    .filter {
+        fields["toxiproxy/database"]?.value?.booleanValue() == true ||
+            fields["toxiproxy/database/" + it.name + "/enabled"]?.value?.booleanValue() == true
+    }
+    .createSchemaRequests(userDetailsProvider, this)
+    .associateWith { databaseSchemaProvisioner.findSchema(it) }
+    .filterNot { it.value == null }
+    .toList()
+    .mapIndexed { i, (request, schema) ->
+        val proxyname =
+            fields["toxiproxy/database/" + (request as SchemaForAppRequest).labels["name"] + "/proxyname"]
+                ?.value<String>()
+                ?: "database_" + schema!!.id
+        val port = initialPort + i
+        val toxiproxyConfig = ToxiproxyConfig(
+            name = proxyname,
+            listen = "0.0.0.0:$port",
+            upstream = schema!!.databaseInstance.host + ":" + schema.databaseInstance.port
+        )
+        val secretNameToPortMap = mapOf(request.getSecretName(prefix = name) to port)
+        Pair(toxiproxyConfig, secretNameToPortMap)
+    }
+    .unzip()
+    .run { Pair(first, second.fold(emptyMap()) { acc, map -> acc + map }) }
+
+fun List<ToxiproxyConfig>.getNextPortNumber(numberIfEmpty: Int) =
+    maxOfOrNull { it.listen.substringAfter(':').toInt() }.let { if (it == null) numberIfEmpty else it + 1 }
