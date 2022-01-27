@@ -130,6 +130,57 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
+    fun `Should add toxiproxy to dc and map servers and ports from container`() {
+
+        val (serviceResource, dcResource, configResource) = generateResources(
+            """{
+                "toxiproxy": {
+                    "version": "2.1.3",
+                    "serverAndPortFromConfig": {
+                        "proxyName1": {
+                            "serverVariable": "SERVER_1",
+                            "portVariable": "PORT_1"
+                        },
+                        "proxyName2": {
+                            "serverVariable": "SERVER_2",
+                            "portVariable": "PORT_2"
+                        }
+                    }
+                },
+                "config": {
+                    "SERVER_1": "test1.test",
+                    "PORT_1": 123,
+                    "SERVER_2": "test2.test",
+                    "PORT_2": 124
+                }
+            }""",
+            createEmptyService(),
+            createEmptyDeploymentConfig()
+        )
+
+        assertThat(serviceResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Changed targetPort to point to toxiproxy",
+                featureIndex = 1
+            )
+
+        val service = serviceResource.resource as Service
+        assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
+
+        assertThat(dcResource)
+            .auroraResourceModifiedByThisFeatureWithComment(
+                comment = "Added toxiproxy volume and sidecar container",
+                sourceIndex = 1,
+                featureIndex = 1
+            )
+            .auroraResourceMatchesFile("dcWithServerAndPortMapping.json")
+
+        assertThat(configResource)
+            .auroraResourceCreatedByThisFeature()
+            .auroraResourceMatchesFile("configWithServerAndPortMapping.json")
+    }
+
+    @Test
     fun `Should fail with an error message when an endpoint with no corresponding environment variable is given`() {
 
         val errorMessage = assertThrows<MultiApplicationValidationException> {
@@ -154,6 +205,62 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
+    fun `Should fail with an error message when serverVarible points to an inexistent variable`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "serverAndPortFromConfig": {
+                            "proxyName": {
+                                "serverVariable": "INEXISTENT_SERVER_VAR",
+                                "portVariable": "EXISTENT_PORT_VAR"
+                            }
+                        }
+                    },
+                    "config": {"EXISTENT_PORT_VAR": 123}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage =
+            "Found Toxiproxy config for a server variable named INEXISTENT_SERVER_VAR, but there is no such environment variable."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when portVarible points to an inexistent variable`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "serverAndPortFromConfig": {
+                            "proxyName": {
+                                "serverVariable": "EXISTENT_SERVER_VAR",
+                                "portVariable": "INEXISTENT_PORT_VAR"
+                            }
+                        }
+                    },
+                    "config": {"EXISTENT_SERVER_VAR": "test.test"}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage =
+            "Found Toxiproxy config for a port variable named INEXISTENT_PORT_VAR, but there is no such environment variable."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
     fun `Should fail with an error message when there are proxyname duplicates`() {
 
         val errorMessage = assertThrows<MultiApplicationValidationException> {
@@ -164,11 +271,19 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "endpointsFromConfig": {
                             "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
                             "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
+                        },
+                        "serverAndPortFromConfig": {
+                            "duplicate": {
+                                "serverVariable": "SAME_PROXYNAME_SERVER",
+                                "portVariable": "SAME_PROXYNAME_PORT"
+                            }
                         }
                     },
                     "config": {
                         "TEST_WITH_PROXYNAME": "http://test1.test",
-                        "TEST_WITH_SAME_PROXYNAME": "http://test2.test"
+                        "TEST_WITH_SAME_PROXYNAME": "http://test2.test",
+                        "SAME_PROXYNAME_SERVER": "testserver.test",
+                        "SAME_PROXYNAME_PORT": 123
                     }
                 }""",
                 createEmptyService(),
@@ -177,7 +292,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         }.errors.first().errors.first().message
 
         val expectedErrorMessage =
-            "Found 2 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
+            "Found 3 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
 
         assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }

@@ -16,6 +16,7 @@ import com.fkorotkov.kubernetes.tcpSocket
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
@@ -29,19 +30,18 @@ import no.skatteetaten.aurora.boober.model.Paths.configPath
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
-import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.notBlank
 import org.springframework.beans.factory.annotation.Value
-import java.net.URI
 
 private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
 private const val TOXIPROXY_CONFIGS_CONTEXT_KEY = "toxiproxyConfigs"
 
-val FeatureContext.toxiproxyConfigs: List<ToxiProxyConfig>
+val FeatureContext.toxiproxyConfigs: List<ToxiproxyConfig>
     get() = this.getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
 
 @org.springframework.stereotype.Service
@@ -68,31 +68,11 @@ class ToxiproxySidecarFeature(
             return emptyMap()
         }
 
-        val toxiproxyConfigs = mutableListOf(getDefaultToxiProxyConfig())
-
-        // Variable for the port number that Toxiproxy will listen to
-        // An addition of 1 to the value is made for each proxy
-        var port = FIRST_PORT_NUMBER
-
-        spec.extractToxiproxyEndpoints().forEach { (proxyname, varname) ->
-            val url = spec.fields["config/$varname"]?.value<String>()
-            if (url != null) {
-                val uri = URI(url)
-                val upstreamPort = if (uri.port == -1) {
-                    if (uri.scheme == "https") { PortNumbers.HTTPS_PORT } else { PortNumbers.HTTP_PORT }
-                } else {
-                    uri.port
-                }
-                toxiproxyConfigs.add(
-                    ToxiProxyConfig(
-                        name = proxyname,
-                        listen = "0.0.0.0:$port",
-                        upstream = uri.host + ":" + upstreamPort
-                    )
-                )
-                port++
-            }
-        }
+        val appToxiproxyConfig = listOf(ToxiproxyConfig())
+        val endpointsFromConfig = spec.endpointsFromConfig(FIRST_PORT_NUMBER)
+        val nextPortNumber = endpointsFromConfig.getNextPortNumber(numberIfEmpty = FIRST_PORT_NUMBER)
+        val serversAndPortsFromConfig = spec.serversAndPortsFromConfig(nextPortNumber)
+        val toxiproxyConfigs = appToxiproxyConfig + endpointsFromConfig + serversAndPortsFromConfig
 
         return createImageMetadataContext(
             repo = "shopify",
@@ -101,13 +81,15 @@ class ToxiproxySidecarFeature(
         ) + mapOf(TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs)
     }
 
-    override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-
-        val endpointHandlers = findEndpointHandlers(cmd.applicationFiles)
-        val envVariables = cmd.applicationFiles.findConfigFieldHandlers()
-
-        return (
-            endpointHandlers + envVariables + listOf(
+    override fun handlers(
+        header: AuroraDeploymentSpec,
+        cmd: AuroraContextCommand
+    ): Set<AuroraConfigFieldHandler> = with(cmd.applicationFiles) {
+        listOf(
+            findEndpointHandlers(),
+            findServerAndPortHandlers(),
+            findConfigFieldHandlers(),
+            listOf(
                 AuroraConfigFieldHandler(
                     "toxiproxy",
                     defaultValue = false,
@@ -115,13 +97,14 @@ class ToxiproxySidecarFeature(
                     canBeSimplifiedConfig = true
                 ),
                 AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
-                AuroraConfigFieldHandler("toxiproxy/endpointsFromConfig")
+                AuroraConfigFieldHandler("toxiproxy/endpointsFromConfig"),
+                AuroraConfigFieldHandler("toxiproxy/serverAndPortFromConfig")
             )
-        ).toSet()
+        ).flatten().toSet()
     }
 
-    fun findEndpointHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> =
-        applicationFiles.findSubKeysExpanded("toxiproxy/endpointsFromConfig").flatMap { endpoint ->
+    fun List<AuroraConfigFile>.findEndpointHandlers(): List<AuroraConfigFieldHandler> =
+        findSubKeysExpanded("toxiproxy/endpointsFromConfig").flatMap { endpoint ->
             listOf(
                 AuroraConfigFieldHandler(
                     endpoint,
@@ -131,7 +114,7 @@ class ToxiproxySidecarFeature(
                 ),
                 AuroraConfigFieldHandler(
                     "$endpoint/proxyname",
-                    defaultValue = generateProxyNameFromVarName(findVarNameInFieldName(endpoint))
+                    defaultValue = generateProxyNameFromVarName(findVarNameInEndpointFieldName(endpoint))
                 ),
                 AuroraConfigFieldHandler(
                     "$endpoint/enabled",
@@ -141,51 +124,33 @@ class ToxiproxySidecarFeature(
             )
         }
 
+    fun List<AuroraConfigFile>.findServerAndPortHandlers(): List<AuroraConfigFieldHandler> =
+        findSubKeysExpanded("toxiproxy/serverAndPortFromConfig").flatMap { proxyname ->
+            listOf(
+                AuroraConfigFieldHandler(proxyname),
+                AuroraConfigFieldHandler(
+                    "$proxyname/serverVariable",
+                    validator = { it.notBlank("Server variable must be set") }
+                ),
+                AuroraConfigFieldHandler(
+                    "$proxyname/portVariable",
+                    validator = { it.notBlank("Port variable must be set") }
+                )
+            )
+        }
+
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> = if (fullValidation) {
-        val groupedFields = adc.groupToxiproxyEndpointFields()
-
-        // For every endpoint in toxiproxy/endpoints, there should be a corresponding environment variable
-        val missingVariableErrors = groupedFields
-            .keys
-            .mapNotNull {
-                varName ->
-                if (
-                    !adc.getSubKeys("config")
-                        .keys
-                        .any { it.removePrefix("config/") == varName }
-                ) {
-                    AuroraDeploymentSpecValidationException(
-                        "Found Toxiproxy config for endpoint named $varName, " +
-                            "but there is no such environment variable."
-                    )
-                } else null
-            }
-
-        // There should be no proxyname duplicates
-        val proxynameDuplicateErrors = groupedFields
-            .map {
-                (varName, fields) ->
-                fields
-                    .find { it.key == "toxiproxy/endpointsFromConfig/$varName/proxyname" }
-                    ?.value
-                    ?.value<String>()
-                    ?: generateProxyNameFromVarName(varName)
-            }
-            .groupingBy { it }
-            .eachCount()
-            .filter { it.value > 1 }
-            .map {
-                AuroraDeploymentSpecValidationException(
-                    "Found ${it.value} Toxiproxy configs with the proxy name \"${it.key}\". " +
-                        "Proxy names have to be unique."
-                )
-            }
-
-        listOf(missingVariableErrors, proxynameDuplicateErrors).flatten()
+        with(adc) {
+            listOf(
+                missingEndpointVariableErrors(),
+                missingServerAndPortVariableErrors(),
+                proxynameDuplicateErrors()
+            ).flatten()
+        }
     } else { emptyList() }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -218,35 +183,39 @@ class ToxiproxySidecarFeature(
             }
         }
 
-        val container = createToxiProxyContainer(adc, context)
-        resources.forEach {
-            if (it.resource.kind == "DeploymentConfig") {
-                modifyResource(it, "Added toxiproxy volume and sidecar container")
-                val dc: DeploymentConfig = it.resource as DeploymentConfig
-                val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
-                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Deployment") {
-                // TODO: refactor
-                modifyResource(it, "Added toxiproxy volume and sidecar container")
-                val dc: Deployment = it.resource as Deployment
-                val podSpec = dc.spec.template.spec
-                podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
-                dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Service") {
-                val service: Service = it.resource as Service
-                service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
-                    port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
-                }
+        val container = createToxiproxyContainer(adc, context)
 
-                modifyResource(it, "Changed targetPort to point to toxiproxy")
+        fun addToxiproxyVolumeAndSidecarContainer(auroraResource: AuroraResource, podTemplateSpec: PodTemplateSpec) {
+            modifyResource(auroraResource, "Added toxiproxy volume and sidecar container")
+            val dc = auroraResource.resource
+            val podSpec = podTemplateSpec.spec
+            podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
+            dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
+            podSpec.containers = podSpec.containers.addIfNotNull(container)
+        }
+
+        resources.forEach {
+            when (it.resource.kind) {
+                "DeploymentConfig" -> {
+                    val dc: DeploymentConfig = it.resource as DeploymentConfig
+                    addToxiproxyVolumeAndSidecarContainer(it, dc.spec.template)
+                }
+                "Deployment" -> {
+                    val dc: Deployment = it.resource as Deployment
+                    addToxiproxyVolumeAndSidecarContainer(it, dc.spec.template)
+                }
+                "Service" -> {
+                    val service: Service = it.resource as Service
+                    service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
+                        port.targetPort = IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT)
+                    }
+                    modifyResource(it, "Changed targetPort to point to toxiproxy")
+                }
             }
         }
     }
 
-    private fun createToxiProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
+    private fun createToxiproxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val containerPorts = mapOf(
             "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
             "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
