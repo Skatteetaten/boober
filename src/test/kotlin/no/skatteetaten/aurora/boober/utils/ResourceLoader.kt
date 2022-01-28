@@ -154,7 +154,6 @@ open class ResourceLoader {
         val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
         val expectedJson = loadJsonResource(fileName)
         assertThat(expectedJson).jsonEquals(actualJson, fileName)
-        // compareJson(expectedJson, actualJson, fileName)
         ar
     }
 
