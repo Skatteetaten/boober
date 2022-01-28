@@ -512,21 +512,22 @@ class FluentBitConfigurator {
      */
     private fun generateSplunkOutput(matcherTag: String, index: String, sourceType: String): String = """
     |[OUTPUT]
-    |   Name             splunk
-    |   Match            $matcherTag 
-    |   Host             $ {SPLUNK_HOST}
-    |   Port             $ {SPLUNK_PORT}
-    |   Splunk_token     $ {HEC_TOKEN}
-    |   TLS              On
-    |   TLS.Verify       Off
-    |   event_index      $index
-    |   event_sourcetype $sourceType
-    |   event_host       $ {POD_NAME}
-    |   event_source     ${'$'}source
-    |   event_field      application ${'$'}name
-    |   event_field      cluster ${'$'}cluster
-    |   event_field      environment ${'$'}environment
-    |   event_field      nodetype ${'$'}nodetype
-    |   event_key        ${'$'}event
+    |   Name                       splunk
+    |   Match                      $matcherTag 
+    |   Host                       $ {SPLUNK_HOST}
+    |   Port                       $ {SPLUNK_PORT}
+    |   Splunk_token               $ {HEC_TOKEN}
+    |   TLS                        On
+    |   TLS.Verify                 Off
+    |   event_index                $index
+    |   event_sourcetype           $sourceType
+    |   event_host                 $ {POD_NAME}
+    |   event_source               ${'$'}source
+    |   event_field                application ${'$'}name
+    |   event_field                cluster ${'$'}cluster
+    |   event_field                environment ${'$'}environment
+    |   event_field                nodetype ${'$'}nodetype
+    |   event_key                  ${'$'}event
+    |   net.keepalive_idle_timeout 10
     """.trimMargin()
 }

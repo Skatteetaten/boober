@@ -92,38 +92,42 @@ abstract class AbstractSpringBootAuroraConfigTest : AbstractSpringBootTest() {
         prepareTestAuroraConfig()
         UUIDGenerator.generateId = { "deploy1" }
     }
-}
 
-fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transform { ar ->
-    assertThat(ar.size).isEqualTo(1)
-    val auroraDeployResult = ar.first()
-    assertThat(auroraDeployResult.success).isTrue()
+    fun Assert<List<AuroraDeployResult>>.auroraDeployResultMatchesFiles() = transform { ar ->
+        assertThat(ar.size).isEqualTo(1)
+        val auroraDeployResult = ar.first()
+        assertThat(auroraDeployResult.success).isTrue()
 
-    val generatedObjects = auroraDeployResult.openShiftResponses.mapNotNull {
-        it.responseBody
-    }
-    val resultFiles = auroraDeployResult.command.applicationDeploymentRef.getResultFiles()
-    val keys = resultFiles.keys
-
-    generatedObjects.forEach { generatedObject ->
-        val key = generatedObject.getKey()
-        assertThat(keys).contains(key)
-
-        if (generatedObject.openshiftKind == "secret") {
-            val data = generatedObject["data"] as ObjectNode
-            data.fields().forEach { (key, _) ->
-                data.put(key, "REMOVED_IN_TEST")
-            }
-        } else if (generatedObject.openshiftKind == "applicationdeployment") {
-            val auroraConfigField = generatedObject.at("/spec/command/auroraConfig") as ObjectNode
-            auroraConfigField.replace("resolvedRef", TextNode("123abb"))
+        val generatedObjects = auroraDeployResult.openShiftResponses.mapNotNull {
+            it.responseBody
         }
-        val resultFile = resultFiles[key]!!
-        compareJson(resultFile.content, generatedObject, resultFile.path)
+        val resultFiles = auroraDeployResult.command.applicationDeploymentRef.getResultFiles()
+        val keys = resultFiles.keys
+
+        generatedObjects.forEach { generatedObject ->
+            val key = generatedObject.getKey()
+            assertThat(keys).contains(key)
+
+            if (generatedObject.openshiftKind == "secret") {
+                val data = generatedObject["data"] as ObjectNode
+                data.fields().forEach { (key, _) ->
+                    data.put(key, "REMOVED_IN_TEST")
+                }
+            } else if (generatedObject.openshiftKind == "applicationdeployment") {
+                val auroraConfigField = generatedObject.at("/spec/command/auroraConfig") as ObjectNode
+                auroraConfigField.replace("resolvedRef", TextNode("123abb"))
+            }
+            val resultFile = resultFiles[key]!!
+            val name = resultFile.path.substringAfterLast("/")
+            val path = resultFile.path.substringBeforeLast("/")
+
+            assertThat(resultFile.content).jsonEquals(expected = generatedObject, name = name, folder = path)
+            // compareJson(resultFile.content, generatedObject, resultFile.path)
+        }
+        val generatedObjectNames = generatedObjects.map { it.getKey() }.toSortedSet()
+        val expected = resultFiles.keys.toSortedSet()
+        assertThat(generatedObjectNames).isEqualTo(expected)
     }
-    val generatedObjectNames = generatedObjects.map { it.getKey() }.toSortedSet()
-    val expected = resultFiles.keys.toSortedSet()
-    assertThat(generatedObjectNames).isEqualTo(expected)
 }
 
 // This is done as text comparison and not jsonNode equals to get easier diff when they dif
