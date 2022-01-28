@@ -122,7 +122,6 @@ abstract class AbstractSpringBootAuroraConfigTest : AbstractSpringBootTest() {
             val path = resultFile.path.substringBeforeLast("/")
 
             assertThat(resultFile.content).jsonEquals(expected = generatedObject, name = name, folder = path)
-            // compareJson(resultFile.content, generatedObject, resultFile.path)
         }
         val generatedObjectNames = generatedObjects.map { it.getKey() }.toSortedSet()
         val expected = resultFiles.keys.toSortedSet()
