@@ -20,7 +20,7 @@ import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class RouteFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = RouteFeature(".test.foo")
+        get() = RouteFeature(routeSuffix = ".test.foo", azureRouteSuffix = ".azure.foo")
 
     // Number of "o" characters is 61
     private val sixtyOne = "ooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"

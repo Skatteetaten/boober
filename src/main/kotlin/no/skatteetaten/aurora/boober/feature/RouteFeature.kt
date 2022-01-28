@@ -56,7 +56,10 @@ const val ROUTE_FEATURE_FIELD = "route"
 const val ROUTE_DEFAULTS_FEATURE_FIELD = "routeDefaults"
 
 @Service
-class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
+class RouteFeature(
+    @Value("\${boober.route.suffix}") val routeSuffix: String,
+    @Value("\${boober.azureRoute.suffix}") val azureRouteSuffix: String
+) : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return findDefaultRouteHandlers(header) +
@@ -387,7 +390,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             .mapNotNull { configuredRoute ->
                 configuredRoute.azureCname?.generateAuroraCname(
                     routeNamespace = namespace,
-                    routeSuffix = routeSuffix
+                    azureRouteSuffix = azureRouteSuffix
                 )?.let {
                     generateResource(it)
                 }
@@ -524,7 +527,7 @@ data class AzureCname(
     val ttl: Int,
     val objectName: String
 ) {
-    fun generateAuroraCname(routeNamespace: String, routeSuffix: String) =
+    fun generateAuroraCname(routeNamespace: String, azureRouteSuffix: String) =
         AuroraAzureCname(
             _metadata = newObjectMeta {
                 name = objectName
@@ -532,7 +535,7 @@ data class AzureCname(
             },
             spec = AzureCnameSpec(
                 cname = routeHost,
-                host = routeSuffix.removePrefix("."),
+                host = azureRouteSuffix.removePrefix("."),
                 ttl = ttl
             )
         )

@@ -6,7 +6,7 @@
     "namespace": "paas-utv"
   },
   "spec": {
-    "host": "test.foo",
+    "host": "azure.foo",
     "cname": "simple-specific-cname.foo.no",
     "ttl": 100
   }
