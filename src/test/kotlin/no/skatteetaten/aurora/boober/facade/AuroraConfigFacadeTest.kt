@@ -47,7 +47,8 @@ class AuroraConfigFacadeTest(
 
         applicationDeploymentGenerationMock {
             rule({ path.contains("resource?claimedBy=$booberAdId") }) {
-                MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", "DeployFacadeTest"))
+                val folder = "$packageName/DeployFacadeTest"
+                MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", folder))
                     .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
 
@@ -431,14 +432,31 @@ class AuroraConfigFacadeTest(
         dbhMock {
             rule {
                 MockResponse()
-                    .setBody(loadBufferResource("dbhResponse.json", "DeployFacadeTest"))
+                    .setBody(loadBufferResource("dbhResponse.json", "$packageName/DeployFacadeTest"))
                     .setResponseCode(200)
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
+        cantusMock {
+            rule({ path.endsWith("/manifest") }) {
+                val cantusManifestResponseFile = "cantusManifestResponse.json"
+                MockResponse()
+                    .setBody(loadBufferResource(cantusManifestResponseFile, "$packageName/DeployFacadeTest"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+            rule {
+                MockResponse()
+                    .setBody(""" { "success" : true }""")
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+        }
+
+        val auroraConfigSamples = getAuroraConfigSamples()
         val validated = facade.validateAuroraConfig(
-            getAuroraConfigSamples(),
+            auroraConfigSamples,
             resourceValidation = true,
             auroraConfigRef = auroraConfigRef
         )
