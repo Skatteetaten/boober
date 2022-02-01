@@ -24,27 +24,6 @@
       "spec": {
         "containers": [
           {
-            "env": [
-              {
-                "name": "SERVER_1",
-                "value": "localhost"
-              },
-              {
-                "name": "PORT_1",
-                "value": "18000"
-              },
-              {
-                "name": "SERVER_2",
-                "value": "localhost"
-              },
-              {
-                "name": "PORT_2",
-                "value": "18001"
-              }
-            ],
-            "name": "simple"
-          },
-          {
             "args": [
               "-config",
               "/u01/config/toxiproxy/config.json",
@@ -97,6 +76,27 @@
                 "name": "simple-toxiproxy-config"
               }
             ]
+          },
+          {
+            "env": [
+              {
+                "name": "SERVER_1",
+                "value": "localhost"
+              },
+              {
+                "name": "PORT_1",
+                "value": "18000"
+              },
+              {
+                "name": "SERVER_2",
+                "value": "localhost"
+              },
+              {
+                "name": "PORT_2",
+                "value": "18001"
+              }
+            ],
+            "name": "simple"
           }
         ],
         "dnsPolicy": "ClusterFirst",

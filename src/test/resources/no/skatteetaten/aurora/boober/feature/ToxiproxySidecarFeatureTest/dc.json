@@ -24,9 +24,6 @@
       "spec": {
         "containers": [
           {
-            "name": "simple"
-          },
-          {
             "args": [
               "-config",
               "/u01/config/toxiproxy/config.json",
@@ -79,6 +76,9 @@
                 "name": "simple-toxiproxy-config"
               }
             ]
+          },
+          {
+            "name": "simple"
           }
         ],
         "dnsPolicy": "ClusterFirst",
