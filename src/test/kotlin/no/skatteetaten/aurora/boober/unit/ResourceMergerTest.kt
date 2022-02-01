@@ -69,9 +69,13 @@ class ResourceMergerTest : ResourceLoader() {
         val oldDc = loadJsonResource("deploymentconfig-prependedsidecar.json")
         val newDc = loadJsonResource("deploymentconfig-new.json")
         val merged = mergeWithExistingResource(newDc, oldDc)
-        val oldApplicationImageField = "/spec/template/spec/containers/1/image"
-        val newApplicationImageField = "/spec/template/spec/containers/0/image"
+        val containersField = "/spec/template/spec/containers"
+        val oldApplicationImageField = "$containersField/1/image"
+        val newApplicationImageField = "$containersField/0/image"
+        val newAppendedSidecarImageField = "$containersField/1/image"
 
         assertThat(merged.at(newApplicationImageField)).isEqualTo(oldDc.at(oldApplicationImageField))
+        assertThat(merged.at(newAppendedSidecarImageField)).isEqualTo(newDc.at(newAppendedSidecarImageField))
+        assertThat(merged.at(containersField).size()).isEqualTo(newDc.at(containersField).size())
     }
 }
