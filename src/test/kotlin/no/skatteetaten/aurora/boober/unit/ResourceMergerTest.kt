@@ -64,4 +64,14 @@ class ResourceMergerTest : ResourceLoader() {
 
         assertThat(merged.at(sidecarImageField)).isEqualTo(newDc.at(sidecarImageField))
     }
+
+    @Test
+    fun `Should preserve project labels`() {
+        val oldProject = loadJsonResource("namespace.json")
+        val newProject = loadJsonResource("namespace-new.json")
+        val merged = mergeWithExistingResource(newProject, oldProject)
+        val labelsField = "/metadata/labels"
+
+        assertThat(merged.at(labelsField)["network.openshift.io/policy-group"]).isEqualTo(oldProject.at(labelsField)["network.openshift.io/policy-group"])
+    }
 }

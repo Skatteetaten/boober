@@ -26,13 +26,18 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "persistentvolumeclaim" -> updatePersistentVolumeClaim(mergedResource, existingResource)
         "deploymentconfig" -> updateDeploymentConfig(mergedResource, existingResource)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
-        "namespace" -> mergeMetadataFrom(mergedResource, existingResource)
-        "auroracname" -> mergeMetadataFrom(mergedResource, existingResource)
-        "auroraazurecname" -> mergeMetadataFrom(mergedResource, existingResource)
-        "auroraazureapp" -> mergeMetadataFrom(mergedResource, existingResource)
-        "auroraapim" -> mergeMetadataFrom(mergedResource, existingResource)
+        "namespace" -> mergeNamespace(mergedResource, existingResource)
+        "auroracname" -> mergeAnnotationsFrom(mergedResource, existingResource)
+        "auroraazurecname" -> mergeAnnotationsFrom(mergedResource, existingResource)
+        "auroraazureapp" -> mergeAnnotationsFrom(mergedResource, existingResource)
+        "auroraapim" -> mergeAnnotationsFrom(mergedResource, existingResource)
     }
     return mergedResource
+}
+
+private fun mergeNamespace(mergedResource: ObjectNode, existingResource: ObjectNode) {
+    mergeAnnotationsFrom(mergedResource, existingResource)
+    mergeLabelsFrom(mergedResource, existingResource)
 }
 
 private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNode) {
@@ -69,5 +74,8 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
     mergedResource.updateField(existingResource, "/spec", "clusterIP")
 }
 
-private fun mergeMetadataFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
+private fun mergeLabelsFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
+    mergedResource.updateField(existingResource, "/metadata", "labels")
+
+private fun mergeAnnotationsFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
     mergedResource.mergeField(existingResource, "/metadata", "annotations")
