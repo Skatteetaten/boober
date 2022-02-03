@@ -28,6 +28,7 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
         "namespace" -> mergeMetadataFrom(mergedResource, existingResource)
         "auroracname" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroraazurecname" -> mergeMetadataFrom(mergedResource, existingResource)
         "auroraazureapp" -> mergeMetadataFrom(mergedResource, existingResource)
         "auroraapim" -> mergeMetadataFrom(mergedResource, existingResource)
     }

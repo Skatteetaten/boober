@@ -8,10 +8,6 @@
   "spec": {
     "host": "test.foo",
     "cname": "not-just-default.utv.apps.paas.skead.no",
-    "ttl": 150,
-    "msDns" : {
-      "enabled" : true,
-      "ttl" : 150
-    }
+    "ttl": 150
   }
 }

@@ -159,8 +159,9 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
     }
 
     fun mockJsonFromFile(fileName: String): MockResponse {
+        val folder = "$packageName/DeployFacadeTest"
         return MockResponse()
-            .setBody(loadBufferResource(fileName, DeployFacadeTest::class.java.simpleName))
+            .setBody(loadBufferResource(fileName, folder = folder))
             .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
     }
 

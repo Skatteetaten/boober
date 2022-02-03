@@ -27,6 +27,7 @@ class ResourceMergerTest : ResourceLoader() {
         CONFIGMAP(listOf("/metadata/resourceVersion")),
         NAMESPACE(listOf("/metadata/annotations")),
         AURORACNAME(listOf("/metadata/annotations")),
+        AURORAAZURECNAME(listOf("/metadata/annotations")),
     }
 
     @ParameterizedTest

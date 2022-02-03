@@ -6,6 +6,6 @@
     "namespace": "paas-utv"
   },
   "data": {
-    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\"},{\"name\":\"test1\",\"listen\":\"0.0.0.0:18000\",\"upstream\":\"test1.test:80\"},{\"name\":\"endpoint_TEST_WITHOUT_PROXYNAME\",\"listen\":\"0.0.0.0:18001\",\"upstream\":\"test2.test:80\"},{\"name\":\"test5\",\"listen\":\"0.0.0.0:18002\",\"upstream\":\"test5.test:443\"},{\"name\":\"test6\",\"listen\":\"0.0.0.0:18003\",\"upstream\":\"test6.test:1234\"},{\"name\":\"test7\",\"listen\":\"0.0.0.0:18004\",\"upstream\":\"test7.test:80\"}]"
+    "config.json": "[{\"name\":\"app\",\"listen\":\"0.0.0.0:8090\",\"upstream\":\"0.0.0.0:8080\",\"enabled\":true},{\"name\":\"test1\",\"listen\":\"0.0.0.0:18000\",\"upstream\":\"test1.test:80\",\"enabled\":true},{\"name\":\"endpoint_TEST_WITHOUT_PROXYNAME\",\"listen\":\"0.0.0.0:18001\",\"upstream\":\"test2.test:80\",\"enabled\":true},{\"name\":\"test5\",\"listen\":\"0.0.0.0:18002\",\"upstream\":\"test5.test:443\",\"enabled\":true},{\"name\":\"test6\",\"listen\":\"0.0.0.0:18003\",\"upstream\":\"test6.test:1234\",\"enabled\":true},{\"name\":\"test7\",\"listen\":\"0.0.0.0:18004\",\"upstream\":\"test7.test:80\",\"enabled\":true},{\"name\":\"test8\",\"listen\":\"0.0.0.0:18005\",\"upstream\":\"test8.test:80\",\"enabled\":true},{\"name\":\"test9\",\"listen\":\"0.0.0.0:18006\",\"upstream\":\"test9.test:80\",\"enabled\":false}]"
   }
 }
