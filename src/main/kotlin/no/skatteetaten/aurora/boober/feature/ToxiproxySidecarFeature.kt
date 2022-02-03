@@ -120,6 +120,11 @@ class ToxiproxySidecarFeature(
                     "$endpoint/enabled",
                     defaultValue = true,
                     validator = { it.boolean() }
+                ),
+                AuroraConfigFieldHandler(
+                    "$endpoint/initialEnabledState",
+                    defaultValue = true,
+                    validator = { it.boolean() }
                 )
             )
         }
@@ -135,6 +140,11 @@ class ToxiproxySidecarFeature(
                 AuroraConfigFieldHandler(
                     "$proxyname/portVariable",
                     validator = { it.notBlank("Port variable must be set") }
+                ),
+                AuroraConfigFieldHandler(
+                    "$proxyname/initialEnabledState",
+                    defaultValue = true,
+                    validator = { it.boolean() }
                 )
             )
         }

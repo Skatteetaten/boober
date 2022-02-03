@@ -40,6 +40,14 @@
               {
                 "name": "PORT_2",
                 "value": "18001"
+              },
+              {
+                "name": "SERVER_3",
+                "value": "localhost"
+              },
+              {
+                "name": "PORT_3",
+                "value": "18002"
               }
             ],
             "name": "simple"
