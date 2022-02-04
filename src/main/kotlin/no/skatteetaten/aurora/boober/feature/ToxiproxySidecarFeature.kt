@@ -278,6 +278,8 @@ class ToxiproxySidecarFeature(
                 postStart {
                     exec {
                         command = listOf(
+                            "sh",
+                            "-c",
                             """
                                 i=0;
                                 s=1;
