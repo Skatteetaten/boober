@@ -4,6 +4,8 @@ package no.skatteetaten.aurora.boober.feature
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.exec
+import com.fkorotkov.kubernetes.lifecycle
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newConfigMap
 import com.fkorotkov.kubernetes.newContainer
@@ -11,6 +13,7 @@ import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newProbe
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.postStart
 import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.tcpSocket
 import io.fabric8.kubernetes.api.model.Container
@@ -271,6 +274,27 @@ class ToxiproxySidecarFeature(
                 timeoutSeconds = 1
             }
             args = listOf("-config", "$configPath/toxiproxy/config.json", "-host=0.0.0.0")
+            lifecycle {
+                postStart {
+                    exec {
+                        command = listOf(
+                            """
+                                i=0;
+                                s=1;
+                                while [ ${"$"}i -ne 10 -a ${"$"}s -ne 0 ]; do
+                                    i=$((${"$"}i+1));
+                                    sleep 1;
+                                    nc -zv 127.0.0.1 ${PortNumbers.TOXIPROXY_ADMIN_PORT};
+                                    s=$?;
+                                done;
+                                if [ ${"$"}s -ne 0 ];
+                                    then exit;
+                                fi;
+                            """.trim().replace(Regex("\\s+"), " ")
+                        )
+                    }
+                }
+            }
         }
     }
 }
