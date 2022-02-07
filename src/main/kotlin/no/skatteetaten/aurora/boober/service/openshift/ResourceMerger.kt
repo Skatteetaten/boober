@@ -26,18 +26,14 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "persistentvolumeclaim" -> updatePersistentVolumeClaim(mergedResource, existingResource)
         "deploymentconfig" -> updateDeploymentConfig(mergedResource, existingResource)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
-        "namespace" -> mergeNamespace(mergedResource, existingResource)
+        "namespace" -> mergeAnnotationsFrom(mergedResource, existingResource)
+        "project" -> mergeLabelsFrom(mergedResource, existingResource)
         "auroracname" -> mergeAnnotationsFrom(mergedResource, existingResource)
         "auroraazurecname" -> mergeAnnotationsFrom(mergedResource, existingResource)
         "auroraazureapp" -> mergeAnnotationsFrom(mergedResource, existingResource)
         "auroraapim" -> mergeAnnotationsFrom(mergedResource, existingResource)
     }
     return mergedResource
-}
-
-private fun mergeNamespace(mergedResource: ObjectNode, existingResource: ObjectNode) {
-    mergeAnnotationsFrom(mergedResource, existingResource)
-    mergeLabelsFrom(mergedResource, existingResource)
 }
 
 private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNode) {
