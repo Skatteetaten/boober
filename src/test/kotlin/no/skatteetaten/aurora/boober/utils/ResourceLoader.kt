@@ -41,7 +41,7 @@ open class ResourceLoader {
      * This enables you to overwrite resources, instead of manually copy pasting and rerunning tests
      * Only applies to facade tests, feature tests still require manual copy pasting
      */
-    val shouldOverwriteResources: Boolean = false
+    val shouldOverwriteResources: Boolean = true
 
     val mapper = jsonMapper()
 
