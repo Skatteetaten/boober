@@ -55,17 +55,10 @@ private fun updateDeploymentConfig(mergedResource: JsonNode, existingResource: J
 
         // We should allow updates of sidecar container images
         if (isApplicationContainer) {
-            (existingResource.at(containersField) as ArrayNode)
-                .find { it.at("/name").textValue() == containerName }
-                ?.let {
-                    val sourceField = it.at("/image")
-                    if (!sourceField.isMissingNode) {
-                        (mergedResource.at("$containersField/$i") as ObjectNode).replace(
-                            "image",
-                            sourceField
-                        )
-                    }
-                }
+            ensureImageIsPreserved(
+                mergedResource.at("$containersField/$i"),
+                existingResource.at(containersField).findContainerNodeByName(containerName)
+            )
         }
     }
 }
@@ -80,3 +73,12 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
 
 private fun mergeMetadataFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
     mergedResource.mergeField(existingResource, "/metadata", "annotations")
+
+private fun JsonNode.findContainerNodeByName(name: String) =
+    (this as ArrayNode).find { it.at("/name").textValue() == name }
+
+private fun ensureImageIsPreserved(targetContainer: JsonNode, sourceContainer: JsonNode?) =
+    sourceContainer
+        ?.at("/image")
+        ?.takeUnless { it.isMissingNode }
+        ?.let { (targetContainer as ObjectNode).replace("image", it) }
