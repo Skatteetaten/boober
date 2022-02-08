@@ -56,8 +56,8 @@ private fun updateDeploymentConfig(mergedResource: JsonNode, existingResource: J
         // We should allow updates of sidecar container images
         if (isApplicationContainer) {
             ensureImageIsPreserved(
-                mergedResource.at("$containersField/$i"),
-                existingResource.at(containersField).findContainerNodeByName(containerName)
+                targetContainer = mergedResource.at("$containersField/$i"),
+                sourceContainer = existingResource.at(containersField).findContainerNodeByName(containerName)
             )
         }
     }
