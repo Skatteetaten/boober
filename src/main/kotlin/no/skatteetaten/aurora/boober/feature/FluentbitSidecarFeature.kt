@@ -66,7 +66,8 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.token}") val hecToken: String,
     @Value("\${splunk.hec.url}") val splunkUrl: String,
     @Value("\${splunk.hec.port}") val splunkPort: String,
-    @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String
+    @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String,
+    @Value("\${splunk.fluentbit.resources.cpu.limit}") val cpuLimitFluentbit: String,
 ) : AbstractResolveTagFeature(cantusService) {
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
@@ -279,9 +280,8 @@ class FluentbitSidecarFeature(
             )
             resources {
                 limits = mapOf(
-                    // TODO? Add as config parameter
                     "memory" to Quantity("${adc.bufferSize * 5}Mi"),
-                    "cpu" to Quantity("300m")
+                    "cpu" to Quantity(cpuLimitFluentbit)
                 )
                 requests = mapOf(
                     "memory" to Quantity("${adc.bufferSize}Mi"),

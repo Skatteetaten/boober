@@ -88,6 +88,13 @@ logging:
             hibernate: WARN
             springframework: WARN
             apache: WARN
+
+splunk:
+    fluentbit:
+        resources:
+            cpu:
+                limit: "300m"
+
 server:
     tomcat:
         mbeanregistry:
