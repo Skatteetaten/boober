@@ -17,7 +17,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import assertk.Assert
 import assertk.assertions.support.fail
 import mu.KotlinLogging
-import no.skatteetaten.aurora.boober.facade.compareJson
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigField
@@ -38,38 +37,48 @@ import okio.Buffer
 private val logger = KotlinLogging.logger {}
 
 open class ResourceLoader {
-    @Value("\${test.resources.shouldOverwrite:false}")
-    var shouldOverwriteResources: Boolean? = null
+    /**
+     * NOTE! This should always be false when merging to master
+     * This enables you to overwrite resources, instead of manually copy pasting and rerunning tests
+     * Only applies to facade tests, feature tests still require manual copy pasting
+     */
+    val shouldOverwriteResources: Boolean = false
 
     val mapper = jsonMapper()
 
-    fun loadResource(resourceName: String, folder: String = this.javaClass.simpleName): String =
+    private val resourceUrl = "src/test/resources"
+
+    val packageName = this.javaClass.`package`.name.replace(".", "/")
+    val className = this.javaClass.simpleName
+
+    fun loadResource(resourceName: String, folder: String? = null): String =
         getResourceUrl(resourceName, folder).readText()
 
-    fun overwriteResource(resourceName: String, content: String, folder: String = this.javaClass.simpleName) {
+    fun overwriteResource(resourceName: String, content: String, folder: String? = null) {
         val resourceUrl = getResourceUrl(resourceName, folder)
         val resourceFile = ResourceUtils.getFile(resourceUrl)
         resourceFile.writeText(content)
     }
 
-    // TODO: should this not use package name to make it easier to reuse files
-    fun getResourceUrl(resourceName: String, folder: String = this.javaClass.simpleName): URL {
-        val pck = this.javaClass.`package`.name.replace(".", "/")
-        val path = "src/test/resources/$pck/$folder/$resourceName"
+    fun getResourceUrl(resourceName: String, folder: String? = null): URL {
+        val path =
+            if (folder == null) "$resourceUrl/$packageName/$className/$resourceName"
+            else "$resourceUrl/$folder/$resourceName"
+
         return ResourceUtils.getURL(path)
     }
 
-    inline fun <reified T> load(resourceName: String, folder: String = this.javaClass.simpleName): T =
+    inline fun <reified T> load(resourceName: String, folder: String? = null): T =
         jacksonObjectMapper().readValue(loadResource(resourceName, folder))
 
-    fun loadJsonResource(resourceName: String, folder: String = this.javaClass.simpleName): JsonNode =
+    fun loadJsonResource(resourceName: String, folder: String? = null): JsonNode =
         jacksonObjectMapper().readValue(loadResource(resourceName, folder))
 
-    fun loadByteResource(resourceName: String, folder: String = this.javaClass.simpleName): ByteArray {
+    fun loadByteResource(resourceName: String, folder: String? = null): ByteArray {
         return getResourceUrl(resourceName, folder).openStream().readBytes()
     }
 
-    fun loadBufferResource(resourceName: String, folder: String = this.javaClass.simpleName): Buffer {
+    fun loadBufferResource(resourceName: String, folder: String? = null): Buffer {
         return Buffer().readFrom(getResourceUrl(resourceName, folder).openStream())
     }
 
@@ -85,7 +94,12 @@ open class ResourceLoader {
         }
     }
 
-    fun Assert<JsonNode>.jsonEquals(expected: JsonNode, name: String, allowOverwrite: Boolean = true) {
+    fun Assert<JsonNode>.jsonEquals(
+        expected: JsonNode,
+        name: String,
+        folder: String? = null,
+        allowOverwrite: Boolean = true
+    ) {
         given { actual ->
             val writer = jsonMapper().writer(ResourcePrettyPrinter())
             val targetString = writer.writeValueAsString(expected)
@@ -97,15 +111,14 @@ open class ResourceLoader {
 
             if (targetString.equals(nodeString, false)) return
             if (shouldOverwriteResources == true && allowOverwrite) {
-                overwriteResource(name, targetString)
-                assertThat(loadJsonResource(name)).jsonEquals(expected, name, false)
+                overwriteResource(name, targetString, folder = folder)
+                assertThat(loadJsonResource(name)).jsonEquals(expected, name, folder = folder, allowOverwrite = false)
             } else {
                 this.fail(actual, expected)
             }
         }
     }
 
-    // TODO: test with this method in facade test
     fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatchesSpecFiles(prefix: String): Assert<AuroraDeploymentSpec> =
         transform { spec ->
 
@@ -140,11 +153,10 @@ open class ResourceLoader {
     fun Assert<AuroraResource>.auroraResourceMatchesFile(fileName: String): Assert<AuroraResource> = transform { ar ->
         val actualJson: JsonNode = jacksonObjectMapper().convertValue(ar.resource)
         val expectedJson = loadJsonResource(fileName)
-        compareJson(expectedJson, actualJson, fileName)
+        assertThat(expectedJson).jsonEquals(actualJson, fileName)
         ar
     }
 
-    // TODO: test with this method in all feature tests
     fun Assert<AuroraDeploymentSpec>.auroraDeploymentSpecMatches(jsonDefaultName: String): Assert<AuroraDeploymentSpec> =
         transform { spec ->
             assertThat(loadJsonResource(jsonDefaultName)).jsonEquals(

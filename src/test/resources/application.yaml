@@ -8,10 +8,6 @@ aurora:
     token:
         value: token
 
-test:
-    resources:
-        shouldOverwrite: false
-
 splunk:
     hec:
         token: token
@@ -96,6 +92,8 @@ boober:
         tokenLocation: /tmp/boober-token
     route:
         suffix: ".test"
+    azureRoute:
+        suffix: ".test.azure"
     webseal:
         suffix: ".test.webseal"
     productionlevel: "u"

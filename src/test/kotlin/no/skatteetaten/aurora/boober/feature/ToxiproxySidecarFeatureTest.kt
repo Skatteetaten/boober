@@ -90,7 +90,9 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "DISABLED_TEST_WITHOUT_PROXYNAME": false,
                         "HTTPS_URL": {"proxyname": "test5", "enabled": true},
                         "URL_WITH_PORT": {"proxyname": "test6", "enabled": true},
-                        "URL_WITH_PATH": {"proxyname": "test7", "enabled": true}
+                        "URL_WITH_PATH": {"proxyname": "test7", "enabled": true},
+                        "INITIALLY_ENABLED": {"proxyname": "test8", "enabled": true, "initialEnabledState": true},
+                        "INITIALLY_DISABLED": {"proxyname": "test9", "enabled": true, "initialEnabledState": false}
                     }
                 },
                 "config": {
@@ -100,7 +102,9 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "DISABLED_TEST_WITHOUT_PROXYNAME": "http://test4.test",
                     "HTTPS_URL": "https://test5.test",
                     "URL_WITH_PORT": "http://test6.test:1234",
-                    "URL_WITH_PATH": "http://test7.test/path"
+                    "URL_WITH_PATH": "http://test7.test/path",
+                    "INITIALLY_ENABLED": "http://test8.test",
+                    "INITIALLY_DISABLED": "http://test9.test"
                 }
             }""",
             createEmptyService(),
@@ -143,7 +147,13 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         },
                         "proxyName2": {
                             "serverVariable": "SERVER_2",
-                            "portVariable": "PORT_2"
+                            "portVariable": "PORT_2",
+                            "initialEnabledState": true
+                        },
+                        "proxyName3": {
+                            "serverVariable": "SERVER_3",
+                            "portVariable": "PORT_3",
+                            "initialEnabledState": false
                         }
                     }
                 },
@@ -151,7 +161,9 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "SERVER_1": "test1.test",
                     "PORT_1": 123,
                     "SERVER_2": "test2.test",
-                    "PORT_2": 124
+                    "PORT_2": 124,
+                    "SERVER_3": "test3.test",
+                    "PORT_3": 125
                 }
             }""",
             createEmptyService(),

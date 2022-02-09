@@ -106,6 +106,14 @@
               {
                 "name": "URL_WITH_PATH",
                 "value": "http://localhost:18004/path"
+              },
+              {
+                "name": "INITIALLY_ENABLED",
+                "value": "http://localhost:18005"
+              },
+              {
+                "name": "INITIALLY_DISABLED",
+                "value": "http://localhost:18006"
               }
             ],
             "name": "simple"

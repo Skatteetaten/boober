@@ -8,10 +8,6 @@
   "spec": {
     "host": "test.foo",
     "cname": "simple-foo-specific-cname",
-    "ttl": 300,
-    "msDns": {
-      "enabled" : true,
-      "ttl": 300
-    }
+    "ttl": 300
   }
 }

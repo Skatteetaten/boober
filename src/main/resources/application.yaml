@@ -60,6 +60,8 @@ boober:
         tokenLocation: /var/run/secrets/kubernetes.io/serviceaccount/token
     route:
         suffix: ".${openshift.cluster}.paas.skead.no"
+    azureRoute:
+        suffix: ".azure.${openshift.cluster}.paas.skead.no"
     webseal:
         suffix: ".amutv.skead.no"
     productionlevel: "u"
@@ -136,7 +138,7 @@ splunk:
     hec:
         token: token
     fluentbit:
-        tag: "1.7.3"
+        tag: "1.8.11"
 
 aurora:
     token:

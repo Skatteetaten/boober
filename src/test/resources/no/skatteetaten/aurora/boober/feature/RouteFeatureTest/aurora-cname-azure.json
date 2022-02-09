@@ -1,17 +1,13 @@
 {
   "apiVersion": "skatteetaten.no/v1",
-  "kind": "AuroraCname",
+  "kind": "AuroraAzureCname",
   "metadata": {
     "name": "simple",
     "namespace": "paas-utv"
   },
   "spec": {
-    "host": "test.foo",
-    "cname" : "simple-paas-utv",
-    "ttl" : 300,
-    "azureDns" : {
-      "enabled" : true,
-      "ttl" : 300
-    }
+    "host": "azure.foo",
+    "cname": "simple-paas-utv",
+    "ttl": 300
   }
 }
