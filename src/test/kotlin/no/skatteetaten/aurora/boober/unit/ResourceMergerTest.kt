@@ -25,7 +25,7 @@ class ResourceMergerTest : ResourceLoader() {
             )
         ),
         CONFIGMAP(listOf("/metadata/resourceVersion")),
-        PROJECT(listOf("/metadata/annotations")),
+        NAMESPACE(listOf("/metadata/annotations", "/metadata/labels")),
         AURORACNAME(listOf("/metadata/annotations")),
         AURORAAZURECNAME(listOf("/metadata/annotations")),
     }
@@ -55,8 +55,8 @@ class ResourceMergerTest : ResourceLoader() {
 
     @Test
     fun `Should preserve project labels`() {
-        val oldProject = loadJsonResource("project.json")
-        val newProject = loadJsonResource("project-new.json")
+        val oldProject = loadJsonResource("namespace.json")
+        val newProject = loadJsonResource("namespace-new.json")
         val merged = mergeWithExistingResource(newProject, oldProject)
         val labelsField = "/metadata/labels"
 
