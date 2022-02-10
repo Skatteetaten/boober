@@ -342,11 +342,11 @@
     },
     "version": {
       "source": "default",
-      "value": 1,
+      "value": 2,
       "sources": [
         {
           "name": "default",
-          "value": 1
+          "value": 2
         }
       ]
     }

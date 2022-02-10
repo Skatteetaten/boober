@@ -39,7 +39,7 @@ utv/about-alternate.json |   ttl: "1d"
                  default |   version: "1"
                          | baseImage:
                  default |   name: "wingnut11"
-                 default |   version: 1
+                 default |   version: 2
                          | certificate:
             complex.json |   commonName: "komplex"
                          | config:
