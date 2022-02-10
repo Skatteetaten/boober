@@ -26,7 +26,7 @@ class BuildFeature(
     @Value("\${auroraconfig.builder.version}") val builderVersion: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return header.type == TemplateType.development
+        return listOf(TemplateType.localDevelopment, TemplateType.development).contains(header.type)
     }
 
     override fun validate(
@@ -34,7 +34,7 @@ class BuildFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        if (adc.deployState == DeploymentState.deployment) {
+        if (adc.type == TemplateType.development && adc.deployState == DeploymentState.deployment) {
             throw AuroraDeploymentSpecValidationException("Development type is not supported for deployState=deployment")
         }
         return emptyList()
@@ -58,6 +58,9 @@ class BuildFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+        // If localDevelopment we build image locally and push to registry, so we use default deploy strategy
+        if (adc.type == TemplateType.localDevelopment) return emptySet()
+
         return setOf(generateResource(createBuild(adc)))
     }
 
@@ -66,6 +69,9 @@ class BuildFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
+        // If localDevelopment we build image locally and push to registry, so we use default deploy strategy
+        if (adc.type == TemplateType.localDevelopment) return
+
         resources.forEach {
             if (it.resource.kind == "ImageStream") {
                 modifyResource(it, "Remove spec from imagestream")

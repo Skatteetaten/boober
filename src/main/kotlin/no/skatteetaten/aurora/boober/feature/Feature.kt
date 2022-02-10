@@ -120,9 +120,9 @@ interface Feature {
 }
 
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {
-    java("wingnut11", 1, "None"),
-    python("rumple39", 1, "None"),
-    web("wrench12", 1, "Redirect");
+    java("wingnut11", 2, "None"),
+    python("rumple39", 2, "None"),
+    web("wrench16", 1, "Redirect");
 }
 
 enum class TemplateType(
@@ -133,6 +133,7 @@ enum class TemplateType(
     job(auroraGeneratedDeployment = false),
     deploy,
     development,
+    localDevelopment,
     localTemplate(false, false),
     template(false, false)
 }
