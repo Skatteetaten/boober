@@ -24,47 +24,6 @@
       "spec": {
         "containers": [
           {
-            "env": [
-              {
-                "name": "TEST_WITH_PROXYNAME",
-                "value": "http://localhost:18000"
-              },
-              {
-                "name": "TEST_WITHOUT_PROXYNAME",
-                "value": "http://localhost:18001"
-              },
-              {
-                "name": "DISABLED_TEST_WITH_PROXYNAME",
-                "value": "http://test3.test"
-              },
-              {
-                "name": "DISABLED_TEST_WITHOUT_PROXYNAME",
-                "value": "http://test4.test"
-              },
-              {
-                "name": "HTTPS_URL",
-                "value": "https://localhost:18002"
-              },
-              {
-                "name": "URL_WITH_PORT",
-                "value": "http://localhost:18003"
-              },
-              {
-                "name": "URL_WITH_PATH",
-                "value": "http://localhost:18004/path"
-              },
-              {
-                "name": "INITIALLY_ENABLED",
-                "value": "http://localhost:18005"
-              },
-              {
-                "name": "INITIALLY_DISABLED",
-                "value": "http://localhost:18006"
-              }
-            ],
-            "name": "simple"
-          },
-          {
             "args": [
               "-config",
               "/u01/config/toxiproxy/config.json",
@@ -117,6 +76,47 @@
                 "name": "simple-toxiproxy-config"
               }
             ]
+          },
+          {
+            "env": [
+              {
+                "name": "TEST_WITH_PROXYNAME",
+                "value": "http://localhost:18000"
+              },
+              {
+                "name": "TEST_WITHOUT_PROXYNAME",
+                "value": "http://localhost:18001"
+              },
+              {
+                "name": "DISABLED_TEST_WITH_PROXYNAME",
+                "value": "http://test3.test"
+              },
+              {
+                "name": "DISABLED_TEST_WITHOUT_PROXYNAME",
+                "value": "http://test4.test"
+              },
+              {
+                "name": "HTTPS_URL",
+                "value": "https://localhost:18002"
+              },
+              {
+                "name": "URL_WITH_PORT",
+                "value": "http://localhost:18003"
+              },
+              {
+                "name": "URL_WITH_PATH",
+                "value": "http://localhost:18004/path"
+              },
+              {
+                "name": "INITIALLY_ENABLED",
+                "value": "http://localhost:18005"
+              },
+              {
+                "name": "INITIALLY_DISABLED",
+                "value": "http://localhost:18006"
+              }
+            ],
+            "name": "simple"
           }
         ],
         "dnsPolicy": "ClusterFirst",

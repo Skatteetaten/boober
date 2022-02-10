@@ -31,10 +31,10 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.notBlank
+import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
 
 private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
@@ -199,9 +199,9 @@ class ToxiproxySidecarFeature(
             modifyResource(auroraResource, "Added toxiproxy volume and sidecar container")
             val dc = auroraResource.resource
             val podSpec = podTemplateSpec.spec
-            podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
+            podSpec.volumes = podSpec.volumes.prependIfNotNull(volume)
             dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-            podSpec.containers = podSpec.containers.addIfNotNull(container)
+            podSpec.containers = podSpec.containers.prependIfNotNull(container)
         }
 
         resources.forEach {
