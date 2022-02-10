@@ -54,6 +54,21 @@ class ResourceMergerTest : ResourceLoader() {
     }
 
     @Test
+    fun `Should load image information from the correct, existing application container`() {
+        val oldDc = loadJsonResource("deploymentconfig-prependedsidecar.json")
+        val newDc = loadJsonResource("deploymentconfig-new.json")
+        val merged = mergeWithExistingResource(newDc, oldDc)
+        val containersField = "/spec/template/spec/containers"
+        val oldApplicationImageField = "$containersField/1/image"
+        val newApplicationImageField = "$containersField/0/image"
+        val newAppendedSidecarImageField = "$containersField/1/image"
+
+        assertThat(merged.at(newApplicationImageField)).isEqualTo(oldDc.at(oldApplicationImageField))
+        assertThat(merged.at(newAppendedSidecarImageField)).isEqualTo(newDc.at(newAppendedSidecarImageField))
+        assertThat(merged.at(containersField).size()).isEqualTo(newDc.at(containersField).size())
+    }
+
+    @Test
     fun `Should preserve project labels`() {
         val oldProject = loadJsonResource("namespace.json")
         val newProject = loadJsonResource("namespace-new.json")
