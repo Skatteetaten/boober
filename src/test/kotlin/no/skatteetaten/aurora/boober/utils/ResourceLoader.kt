@@ -4,7 +4,6 @@ import java.io.File
 import java.net.URL
 import java.nio.charset.Charset
 import org.apache.commons.text.StringSubstitutor
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.ResourceUtils
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.util.DefaultIndenter
