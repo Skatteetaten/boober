@@ -139,6 +139,9 @@ splunk:
         token: token
     fluentbit:
         tag: "1.8.11"
+        retry:
+            limit: 5
+
 
 aurora:
     token:
