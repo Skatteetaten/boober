@@ -19,6 +19,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = FluentbitSidecarFeature(
             cantusService,
+            FluentBitConfigurator(),
             "test_hec",
             "splunk.url",
             "8080",

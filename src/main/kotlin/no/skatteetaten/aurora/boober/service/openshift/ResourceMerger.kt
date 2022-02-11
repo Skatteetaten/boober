@@ -28,6 +28,7 @@ fun mergeWithExistingResource(newResource: JsonNode, existingResource: JsonNode)
         "buildconfig" -> updateBuildConfig(mergedResource, existingResource)
         "namespace" -> mergeMetadataFrom(mergedResource, existingResource)
         "auroracname" -> mergeMetadataFrom(mergedResource, existingResource)
+        "auroraazurecname" -> mergeMetadataFrom(mergedResource, existingResource)
         "auroraazureapp" -> mergeMetadataFrom(mergedResource, existingResource)
         "auroraapim" -> mergeMetadataFrom(mergedResource, existingResource)
     }
@@ -47,15 +48,17 @@ private fun updateBuildConfig(mergedResource: JsonNode, existingResource: JsonNo
 private fun updateDeploymentConfig(mergedResource: JsonNode, existingResource: JsonNode) {
     mergedResource.updateField(existingResource, "/spec/triggers/0/imageChangeParams", "lastTriggeredImage")
     val containersField = "/spec/template/spec/containers"
-    val containerCount = (mergedResource.at(containersField) as ArrayNode).size()
 
-    (0 until containerCount).forEach {
-        val containerName = mergedResource.at("$containersField/$it/name").textValue()
+    (mergedResource.at(containersField) as ArrayNode).forEachIndexed { i, containerNode ->
+        val containerName = containerNode.at("/name").textValue()
         val isApplicationContainer = !containerName.endsWith("-sidecar")
 
         // We should allow updates of sidecar container images
         if (isApplicationContainer) {
-            mergedResource.updateField(existingResource, "$containersField/$it", "image")
+            ensureImageIsPreserved(
+                targetContainer = mergedResource.at("$containersField/$i"),
+                sourceContainer = existingResource.at(containersField).findContainerNodeByName(containerName)
+            )
         }
     }
 }
@@ -70,3 +73,12 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
 
 private fun mergeMetadataFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
     mergedResource.mergeField(existingResource, "/metadata", "annotations")
+
+private fun JsonNode.findContainerNodeByName(name: String) =
+    (this as ArrayNode).find { it.at("/name").textValue() == name }
+
+private fun ensureImageIsPreserved(targetContainer: JsonNode, sourceContainer: JsonNode?) =
+    sourceContainer
+        ?.at("/image")
+        ?.takeUnless { it.isMissingNode }
+        ?.let { (targetContainer as ObjectNode).replace("image", it) }

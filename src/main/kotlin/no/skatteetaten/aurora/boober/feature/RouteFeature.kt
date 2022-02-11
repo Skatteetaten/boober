@@ -12,7 +12,6 @@ import com.fkorotkov.openshift.to
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.openshift.api.model.Route
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigException
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -26,8 +25,9 @@ import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.model.openshift.AuroraCname
-import no.skatteetaten.aurora.boober.model.openshift.CnameDNSResolver
+import no.skatteetaten.aurora.boober.model.openshift.AuroraAzureCname
 import no.skatteetaten.aurora.boober.model.openshift.CnameSpec
+import no.skatteetaten.aurora.boober.model.openshift.AzureCnameSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureEndsWith
@@ -36,8 +36,6 @@ import no.skatteetaten.aurora.boober.utils.int
 import no.skatteetaten.aurora.boober.utils.isValidDns
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.startsWith
-
-private val logger = KotlinLogging.logger {}
 
 private const val ROUTE_CONTEXT_KEY = "route"
 private const val APPLICATION_DEPLOYMENT_REF_CONTEXT_KEY = "applicationDeploymentRef"
@@ -58,7 +56,10 @@ const val ROUTE_FEATURE_FIELD = "route"
 const val ROUTE_DEFAULTS_FEATURE_FIELD = "routeDefaults"
 
 @Service
-class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : Feature {
+class RouteFeature(
+    @Value("\${boober.route.suffix}") val routeSuffix: String,
+    @Value("\${boober.azureRoute.suffix}") val azureRouteSuffix: String
+) : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return findDefaultRouteHandlers(header) +
@@ -105,10 +106,11 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val routes = context.routes
 
         val auroraCnames = routes.generateCnames(adc.namespace)
+        val auroraAzureCnames = routes.generateAzureCnames(adc.namespace)
 
         val openshiftRoutes = routes.generateOpenshiftRoutes(adc.namespace, adc.name)
 
-        return openshiftRoutes + auroraCnames
+        return openshiftRoutes + auroraCnames + auroraAzureCnames
     }
 
     override fun modify(
@@ -147,17 +149,26 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
     }
 
     private fun getCname(adc: AuroraDeploymentSpec, host: String, objectName: String, routeName: String = ""): Cname? {
-        val azureDnsCname = getAzureDnsCnameOrNull(adc, routeName)
-        val msDnsCname = getMsDnsCnameOrNull(adc, routeName)
-        if (azureDnsCname == null && msDnsCname == null) return null
-        val ttl = msDnsCname?.ttl ?: azureDnsCname?.ttl ?: 300
+        if (!adc.isMsDnsCnameEnabled(routeName)) {
+            return null
+        }
 
         return Cname(
             routeHost = host,
-            ttl = ttl,
-            objectName = objectName,
-            msDnsCname = msDnsCname,
-            azureDnsCname = azureDnsCname
+            ttl = adc.getRouteFieldOrDefault(routeName = routeName, suffix = "cname/ttl"),
+            objectName = objectName
+        )
+    }
+
+    private fun getAzureCname(adc: AuroraDeploymentSpec, host: String, objectName: String, routeName: String = ""): AzureCname? {
+        if (!adc.isAzureConfigured(routeName)) {
+            return null
+        }
+
+        return AzureCname(
+            routeHost = host,
+            ttl = adc.getRouteFieldOrDefault(routeName = routeName, suffix = "azure/cnameTtl"),
+            objectName = objectName
         )
     }
 
@@ -167,9 +178,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
         val defaultAnnotations = adc.getRouteAnnotations("$ROUTE_DEFAULTS_FEATURE_FIELD/annotations/")
 
         val shouldGenerateAzureRoute = adc.isAzureConfigured()
-        val isFullyQualifiedHost = adc.isMsDnsCnameEnabled()
+        val isFullyQualifiedHost = adc.isMsDnsCnameEnabled() || adc.isAzureConfigured()
         val host: String = adc["$ROUTE_DEFAULTS_FEATURE_FIELD/host"]
         val defaultCname = getCname(adc, host, adc.name)
+        val defaultAzureCname = getAzureCname(adc, host, adc.name)
         return ConfiguredRoute(
             host = host,
             objectName = adc.name,
@@ -177,7 +189,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             fullyQualifiedHost = isFullyQualifiedHost,
             annotations = defaultAnnotations,
             shouldGenerateAzureRoute = shouldGenerateAzureRoute,
-            cname = defaultCname
+            cname = defaultCname,
+            azureCname = defaultAzureCname
         )
     }
 
@@ -196,9 +209,10 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
         val isMsDnsCnameConfigured = adc.isMsDnsCnameEnabled(routeName)
         val fullyQualifiedHost: Boolean =
-            adc["$ROUTE_FEATURE_FIELD/$routeName/fullyQualifiedHost"] || isMsDnsCnameConfigured
+            adc["$ROUTE_FEATURE_FIELD/$routeName/fullyQualifiedHost"] || isMsDnsCnameConfigured || adc.isAzureConfigured(routeName)
         val host = adc.getOrNull("$ROUTE_FEATURE_FIELD/$routeName/host") ?: defaultRoute.host
-        val cnameOrNull = getCname(adc, host, objectname, routeName)
+        val cname = getCname(adc, host, objectname, routeName)
+        val azureCname = getAzureCname(adc, host, objectname, routeName)
 
         return ConfiguredRoute(
             objectName = objectname,
@@ -208,7 +222,8 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
             tls = secure,
             fullyQualifiedHost = fullyQualifiedHost,
             shouldGenerateAzureRoute = adc.isAzureConfigured(routeName),
-            cname = cnameOrNull
+            cname = cname,
+            azureCname = azureCname
         )
     }
 
@@ -219,26 +234,6 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
                 adc.getRouteFieldOrDefault(routeName, "tls/termination")
             )
         } else null
-    }
-
-    private fun getMsDnsCnameOrNull(adc: AuroraDeploymentSpec, routeName: String = ""): CnameDNSResolver? {
-        return if (adc.isMsDnsCnameEnabled(routeName)) {
-            CnameDNSResolver(
-                ttl = adc.getRouteFieldOrDefault(routeName = routeName, suffix = "cname/ttl")
-            )
-        } else {
-            null
-        }
-    }
-
-    private fun getAzureDnsCnameOrNull(adc: AuroraDeploymentSpec, routeName: String = ""): CnameDNSResolver? {
-        return if (adc.isAzureConfigured(routeName)) {
-            CnameDNSResolver(
-                ttl = adc.getRouteFieldOrDefault(routeName = routeName, suffix = "azure/cnameTtl")
-            )
-        } else {
-            null
-        }
     }
 
     private fun findDefaultRouteHandlers(header: AuroraDeploymentSpec): Set<AuroraConfigFieldHandler> {
@@ -381,14 +376,23 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 
     private fun List<ConfiguredRoute>.generateCnames(namespace: String) =
         this.filter { it.cname != null }
-            .mapNotNull {
-                val auroraCname = it.cname?.generateAuroraCname(
+            .mapNotNull { configuredRoute ->
+                configuredRoute.cname?.generateAuroraCname(
                     routeNamespace = namespace,
                     routeSuffix = routeSuffix
-                )
+                )?.let {
+                    generateResource(it)
+                }
+            }.toSet()
 
-                auroraCname?.let {
-                    generateResource(auroraCname)
+    private fun List<ConfiguredRoute>.generateAzureCnames(namespace: String) =
+        this.filter { it.azureCname != null }
+            .mapNotNull { configuredRoute ->
+                configuredRoute.azureCname?.generateAuroraCname(
+                    routeNamespace = namespace,
+                    azureRouteSuffix = azureRouteSuffix
+                )?.let {
+                    generateResource(it)
                 }
             }.toSet()
 
@@ -502,9 +506,7 @@ class RouteFeature(@Value("\${boober.route.suffix}") val routeSuffix: String) : 
 data class Cname(
     val routeHost: String,
     val ttl: Int,
-    val objectName: String,
-    val msDnsCname: CnameDNSResolver?,
-    val azureDnsCname: CnameDNSResolver?
+    val objectName: String
 ) {
     fun generateAuroraCname(routeNamespace: String, routeSuffix: String) =
         AuroraCname(
@@ -514,19 +516,29 @@ data class Cname(
             },
             spec = CnameSpec(
                 cname = routeHost,
-                host = withoutInitialPeriod(routeSuffix),
-                ttl = ttl,
-                azureDns = azureDnsCname,
-                msDns = msDnsCname
+                host = routeSuffix.removePrefix("."),
+                ttl = ttl
             )
         )
+}
 
-    private fun withoutInitialPeriod(str: String): String =
-        if (str.startsWith(".")) {
-            str.substring(1)
-        } else {
-            str
-        }
+data class AzureCname(
+    val routeHost: String,
+    val ttl: Int,
+    val objectName: String
+) {
+    fun generateAuroraCname(routeNamespace: String, azureRouteSuffix: String) =
+        AuroraAzureCname(
+            _metadata = newObjectMeta {
+                name = objectName
+                namespace = routeNamespace
+            },
+            spec = AzureCnameSpec(
+                cname = routeHost,
+                host = azureRouteSuffix.removePrefix("."),
+                ttl = ttl
+            )
+        )
 }
 
 data class ConfiguredRoute(
@@ -538,7 +550,8 @@ data class ConfiguredRoute(
     val tls: SecureRoute? = null,
     val fullyQualifiedHost: Boolean = false,
     val shouldGenerateAzureRoute: Boolean = false,
-    val cname: Cname? = null
+    val cname: Cname? = null,
+    val azureCname: AzureCname? = null
 ) {
     val target: String
         get(): String = if (path != null) "$host$path" else host

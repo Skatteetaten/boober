@@ -1,0 +1,17 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "AuroraAzureCname",
+  "metadata": {
+    "labels": {
+      "affiliation": "demo",
+      "app": "cname-demo"
+    },
+    "name": "cname-demo",
+    "namespace": "demo-psat-poc"
+  },
+  "spec": {
+    "cname": "gavel-poc-10.cname-poc10.utv.paas.skead.no",
+    "host": "apps.utv04.paas.skead.no",
+    "ttl": 300
+  }
+}

@@ -32,7 +32,8 @@ class OpenShiftRestTemplateWrapperTest : ResourceLoader() {
     @Test
     fun `Succeeds even if the request fails a couple of times`() {
 
-        val resource = loadJsonResource("deploymentconfig.json", ResourceMergerTest::class.simpleName!!)
+        val resourceMergerTestName = ResourceMergerTest::class.simpleName!!
+        val resource = loadJsonResource("deploymentconfig.json", folder = "$packageName/$resourceMergerTestName")
 
         server.execute(
             400 to "",

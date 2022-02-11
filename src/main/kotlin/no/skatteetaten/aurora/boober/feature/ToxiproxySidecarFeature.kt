@@ -32,11 +32,11 @@ import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
-import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.notBlank
 import org.apache.commons.codec.binary.Base64
+import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
 import java.nio.charset.Charset
 
@@ -146,6 +146,11 @@ class ToxiproxySidecarFeature(
                         "$endpointsOrDbOrS3/enabled",
                         defaultValue = true,
                         validator = { it.boolean() }
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$endpointsOrDbOrS3/initialEnabledState",
+                        defaultValue = true,
+                        validator = { it.boolean() }
                     )
                 )
             }
@@ -161,6 +166,11 @@ class ToxiproxySidecarFeature(
                 AuroraConfigFieldHandler(
                     "$proxyname/portVariable",
                     validator = { it.notBlank("Port variable must be set") }
+                ),
+                AuroraConfigFieldHandler(
+                    "$proxyname/initialEnabledState",
+                    defaultValue = true,
+                    validator = { it.boolean() }
                 )
             )
         }
@@ -216,9 +226,9 @@ class ToxiproxySidecarFeature(
             modifyResource(auroraResource, "Added toxiproxy volume and sidecar container")
             val dc = auroraResource.resource
             val podSpec = podTemplateSpec.spec
-            podSpec.volumes = podSpec.volumes.addIfNotNull(volume)
+            podSpec.volumes = podSpec.volumes.prependIfNotNull(volume)
             dc.allNonSideCarContainers.overrideEnvVarsWithProxies(adc, context)
-            podSpec.containers = podSpec.containers.addIfNotNull(container)
+            podSpec.containers = podSpec.containers.prependIfNotNull(container)
         }
 
         resources.forEach {
