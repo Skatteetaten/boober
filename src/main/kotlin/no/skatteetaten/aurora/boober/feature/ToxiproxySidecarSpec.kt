@@ -8,7 +8,7 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
-import no.skatteetaten.aurora.boober.utils.Url
+import no.skatteetaten.aurora.boober.utils.UrlParser
 import java.net.URI
 
 enum class ToxiproxyUrlSource(val propName: String, val defaultProxyNamePrefix: String) {
@@ -88,7 +88,7 @@ fun List<ToxiproxyConfig>.findPortByProxyName(proxyName: String) =
     find { it.name == proxyName }?.listen?.substringAfter(':')
 
 fun String.convertToProxyUrl(port: Int): String =
-    Url(this)
+    UrlParser(this)
         .withModifiedHostName("localhost")
         .withModifiedPort(port)
         .makeString()
@@ -154,7 +154,7 @@ fun AuroraDeploymentSpec.missingOrInvalidEndpointVariableErrors() =
                 "Found Toxiproxy config for endpoint named $varName, " +
                     "but there is no such environment variable."
             )
-        } else if (!Url(envVar).isValid()) {
+        } else if (!UrlParser(envVar).isValid()) {
             AuroraDeploymentSpecValidationException(
                 "The format of the URL \"$envVar\" given by the config variable $varName is not supported."
             )

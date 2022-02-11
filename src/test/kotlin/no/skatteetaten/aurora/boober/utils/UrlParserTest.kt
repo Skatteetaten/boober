@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
-class UrlTest {
+class UrlParserTest {
 
     // Test data
 
@@ -88,7 +88,7 @@ class UrlTest {
     fun `Validation works as expected`() {
 
         validUrls.forEach {
-            with(Url(it)) {
+            with(UrlParser(it)) {
                 assertTrue { this.isValid() }
                 this.assertIsValid()
             }
@@ -99,7 +99,7 @@ class UrlTest {
             misspelledJdbcPostgresUrl,
             misspelledJdbcOracleUrl
         ).forEach {
-            with(Url(it)) {
+            with(UrlParser(it)) {
                 assertFalse(this.isValid())
                 assertThrows<UrlValidationException> { this.assertIsValid() }
             }
@@ -111,7 +111,7 @@ class UrlTest {
         validUrls.forEach {
             assertEquals(
                 if (it.contains("hostname")) "hostname" else "localhost",
-                Url(it).hostName
+                UrlParser(it).hostName
             )
         }
     }
@@ -121,25 +121,25 @@ class UrlTest {
         httpUrls.forEach {
             assertEquals(
                 if (it.contains("6543")) 6543 else 80,
-                Url(it).port
+                UrlParser(it).port
             )
         }
         httpsUrls.forEach {
             assertEquals(
                 if (it.contains("6543")) 6543 else 443,
-                Url(it).port
+                UrlParser(it).port
             )
         }
         jdbcPosgresUrls.forEach {
             assertEquals(
                 if (it.contains("6543")) 6543 else 5432,
-                Url(it).port
+                UrlParser(it).port
             )
         }
         jdbcOracleUrls.forEach {
             assertEquals(
                 if (it.contains("6543")) 6543 else 1521,
-                Url(it).port
+                UrlParser(it).port
             )
         }
     }
@@ -171,7 +171,7 @@ class UrlTest {
             jdbcOracleUrlWithDoubleSlash to "",
             jdbcOracleUrlWithProtocol to "",
             jdbcOracleUrlWithProtocolPortServiceModeAndQuery to "/service:mode?param=arg"
-        ).forEach { (input, expectedOutput) -> assertEquals(expectedOutput, Url(input).suffix) }
+        ).forEach { (input, expectedOutput) -> assertEquals(expectedOutput, UrlParser(input).suffix) }
     }
 
     @Test
@@ -201,7 +201,7 @@ class UrlTest {
             jdbcOracleUrlWithDoubleSlash to "jdbc:oracle:thin:@//hostname:1521",
             jdbcOracleUrlWithProtocol to "jdbc:oracle:thin:@protocol://hostname:1521",
             jdbcOracleUrlWithProtocolPortServiceModeAndQuery to "jdbc:oracle:thin:@protocol://hostname:6543/service:mode?param=arg"
-        ).forEach { (input, expectedOutput) -> assertEquals(expectedOutput, Url(input).makeString()) }
+        ).forEach { (input, expectedOutput) -> assertEquals(expectedOutput, UrlParser(input).makeString()) }
     }
 
     @Test
@@ -210,7 +210,7 @@ class UrlTest {
         validUrls.forEach {
             assertEquals(
                 "newName.domain",
-                Url(it).withModifiedHostName("newName.domain").hostName
+                UrlParser(it).withModifiedHostName("newName.domain").hostName
             )
         }
 
@@ -243,7 +243,7 @@ class UrlTest {
             (input, expectedOutput) ->
             assertEquals(
                 expectedOutput,
-                Url(input).withModifiedHostName("newName.domain").makeString()
+                UrlParser(input).withModifiedHostName("newName.domain").makeString()
             )
         }
     }
@@ -254,7 +254,7 @@ class UrlTest {
         validUrls.forEach {
             assertEquals(
                 18000,
-                Url(it).withModifiedPort(18000).port
+                UrlParser(it).withModifiedPort(18000).port
             )
         }
 
@@ -287,7 +287,7 @@ class UrlTest {
             (input, expectedOutput) ->
             assertEquals(
                 expectedOutput,
-                Url(input).withModifiedPort(18000).makeString()
+                UrlParser(input).withModifiedPort(18000).makeString()
             )
         }
     }
