@@ -4,7 +4,6 @@ import java.io.File
 import java.net.URL
 import java.nio.charset.Charset
 import org.apache.commons.text.StringSubstitutor
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.util.ResourceUtils
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.util.DefaultIndenter
@@ -40,7 +39,6 @@ open class ResourceLoader {
     /**
      * NOTE! This should always be false when merging to master
      * This enables you to overwrite resources, instead of manually copy pasting and rerunning tests
-     * Only applies to facade tests, feature tests still require manual copy pasting
      */
     val shouldOverwriteResources: Boolean = false
 
@@ -112,7 +110,12 @@ open class ResourceLoader {
             if (targetString.equals(nodeString, false)) return
             if (shouldOverwriteResources == true && allowOverwrite) {
                 overwriteResource(name, targetString, folder = folder)
-                assertThat(loadJsonResource(name)).jsonEquals(expected, name, folder = folder, allowOverwrite = false)
+                assertThat(loadJsonResource(name, folder = folder)).jsonEquals(
+                    expected,
+                    name,
+                    folder = folder,
+                    allowOverwrite = false
+                )
             } else {
                 this.fail(actual, expected)
             }
