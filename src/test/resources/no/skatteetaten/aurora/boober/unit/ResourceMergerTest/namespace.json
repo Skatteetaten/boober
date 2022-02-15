@@ -4,7 +4,8 @@
   "metadata": {
     "labels": {
       "affiliation": "paas",
-      "removeAfter": "86400"
+      "removeAfter": "86400",
+      "network.openshift.io/policy-group": "monitoring"
     },
     "annotations": {
       "foo": "bar"

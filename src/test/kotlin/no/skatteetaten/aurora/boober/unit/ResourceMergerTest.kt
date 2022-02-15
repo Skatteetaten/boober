@@ -25,7 +25,7 @@ class ResourceMergerTest : ResourceLoader() {
             )
         ),
         CONFIGMAP(listOf("/metadata/resourceVersion")),
-        NAMESPACE(listOf("/metadata/annotations")),
+        NAMESPACE(listOf("/metadata/annotations", "/metadata/labels")),
         AURORACNAME(listOf("/metadata/annotations")),
         AURORAAZURECNAME(listOf("/metadata/annotations")),
     }
@@ -34,18 +34,6 @@ class ResourceMergerTest : ResourceLoader() {
     @EnumSource(OpenShiftResourceTypeTestData::class)
     fun `Should update`(test: OpenShiftResourceTypeTestData) {
 
-        val type = test.name.lowercase()
-        val oldResource = loadJsonResource("$type.json")
-        val newResource = loadJsonResource("$type-new.json")
-        val merged = mergeWithExistingResource(newResource, oldResource)
-        test.fields.forEach {
-            assertThat(merged.at(it)).isEqualTo(oldResource.at(it))
-        }
-    }
-
-    @ParameterizedTest
-    @EnumSource(OpenShiftResourceTypeTestData::class)
-    fun `Should accept that element to retain might be missing for `(test: OpenShiftResourceTypeTestData) {
         val type = test.name.lowercase()
         val oldResource = loadJsonResource("$type.json")
         val newResource = loadJsonResource("$type-new.json")
@@ -78,5 +66,15 @@ class ResourceMergerTest : ResourceLoader() {
         assertThat(merged.at(newApplicationImageField)).isEqualTo(oldDc.at(oldApplicationImageField))
         assertThat(merged.at(newAppendedSidecarImageField)).isEqualTo(newDc.at(newAppendedSidecarImageField))
         assertThat(merged.at(containersField).size()).isEqualTo(newDc.at(containersField).size())
+    }
+
+    @Test
+    fun `Should preserve project labels`() {
+        val oldProject = loadJsonResource("namespace.json")
+        val newProject = loadJsonResource("namespace-new.json")
+        val merged = mergeWithExistingResource(newProject, oldProject)
+        val labelsField = "/metadata/labels"
+
+        assertThat(merged.at(labelsField)["network.openshift.io/policy-group"]).isEqualTo(oldProject.at(labelsField)["network.openshift.io/policy-group"])
     }
 }

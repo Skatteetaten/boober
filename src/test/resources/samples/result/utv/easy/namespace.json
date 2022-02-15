@@ -5,9 +5,6 @@
     "labels": {
       "affiliation": "paas"
     },
-    "name": "paas-utv",
-    "annotations": {
-      "openshift.io/requester": "hero"
-    }
+    "name": "paas-utv"
   }
 }
