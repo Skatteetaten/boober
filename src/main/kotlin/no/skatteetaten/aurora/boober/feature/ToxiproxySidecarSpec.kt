@@ -10,6 +10,8 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
 import no.skatteetaten.aurora.boober.utils.UrlParser
 import java.net.URI
+import java.nio.charset.Charset
+import java.util.Base64
 
 enum class ToxiproxyUrlSource(val propName: String, val defaultProxyNamePrefix: String) {
     CONFIG_VAR("endpointsFromConfig", "endpoint"),
@@ -92,6 +94,15 @@ fun String.convertToProxyUrl(port: Int): String =
         .withModifiedHostName("localhost")
         .withModifiedPort(port)
         .makeString()
+
+fun MutableMap<String, String>.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort: Int) {
+    this["jdbcurl"] = this["jdbcurl"]
+        .let(Base64.getDecoder()::decode)
+        .toString(Charset.defaultCharset())
+        .convertToProxyUrl(toxiproxyPort)
+        .toByteArray()
+        .let(Base64.getEncoder()::encodeToString)
+}
 
 // Regex for matching a proxy name in a server and port field name
 val proxyNameInServerAndPortFieldNameRegex =

@@ -35,10 +35,8 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchema
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.notBlank
-import org.apache.commons.codec.binary.Base64
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
-import java.nio.charset.Charset
 
 private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
@@ -250,14 +248,8 @@ class ToxiproxySidecarFeature(
                 }
                 "Secret" -> {
                     val secret: Secret = it.resource as Secret
-                    val toxiproxyPort = context.secretNameToPortMap[secret.metadata.name]
-                    if (toxiproxyPort != null) {
-                        val newUrl = Base64
-                            .decodeBase64(secret.data["jdbcurl"])
-                            .toString(Charset.defaultCharset())
-                            .convertToProxyUrl(toxiproxyPort)
-                            .toByteArray()
-                        secret.data["jdbcurl"] = Base64.encodeBase64String(newUrl)
+                    context.secretNameToPortMap[secret.metadata.name]?.let { toxiproxyPort ->
+                        secret.data.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort)
                         modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
                     }
                 }
