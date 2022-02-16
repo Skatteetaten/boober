@@ -15,22 +15,29 @@ import com.fkorotkov.kubernetes.newVolumeMount
 import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.secretKeyRef
 import com.fkorotkov.kubernetes.valueFrom
+import io.fabric8.kubernetes.api.model.ConfigMap
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.required
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
 const val SPLUNK_CONNECT_INDEX_TAG = "splunk.com/index"
+
+private const val FEATURE_FIELD_NAME = "logging"
 
 val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
 val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
@@ -94,35 +101,39 @@ class FluentbitSidecarFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return knownLogs.map { log ->
-            AuroraConfigFieldHandler("logging/loggers/$log")
-        }
-            .addIfNotNull(AuroraConfigFieldHandler("logging/index"))
-            .addIfNotNull(AuroraConfigFieldHandler("logging/bufferSize", defaultValue = 20))
-            .toSet()
+        val multipleLoggers = knownLogs.map { log ->
+            AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/loggers/$log")
+        }.toSet()
+        val customLogger = getCustomLoggerHandlers(cmd.applicationFiles)
+
+
+        return setOf(
+            AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/index"),
+            AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/bufferSize", defaultValue = 20)
+        ) + multipleLoggers + customLogger
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        val index = adc.loggingIndex ?: return emptySet()
-        if (!shouldGenerateAndModify(adc)) return emptySet()
-        val loggerIndexes = getLoggingIndexes(adc, index)
+    // TODO: validate that if custom is used, then no others are allowed
+    // TODO: validate that custom sourcetypes are of known types
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        context: FeatureContext
+    ): List<Exception> {
+        return emptyList()
+    }
 
-        val fluentParserMap = newConfigMap {
-            metadata {
-                name = adc.fluentParserName
-                namespace = adc.namespace
-            }
-            data = mapOf(parsersFileName to fluentBitConfigurator.parserConf())
-        }
-
-        val fluentConfigMap = newConfigMap {
+    fun createFluentbitConfigMap(
+        adc: AuroraDeploymentSpec,
+        loggerIndexes: List<LoggingConfig>,
+    ): ConfigMap =
+        newConfigMap {
             metadata {
                 name = adc.fluentConfigName
                 namespace = adc.namespace
             }
             data = mapOf(
                 "fluent-bit.conf" to fluentBitConfigurator.generateFluentBitConfig(
-                    defaultIndex = index,
                     loggingConfigs = loggerIndexes,
                     application = adc.name,
                     cluster = adc.cluster,
@@ -132,6 +143,54 @@ class FluentbitSidecarFeature(
             )
         }
 
+    fun getCustomLoggerConfig(adc: AuroraDeploymentSpec): List<LoggingConfig> {
+        val loggerNames = adc.getSubKeyValues("$FEATURE_FIELD_NAME/custom")
+
+        return loggerNames.map {
+            val index: String = adc["$FEATURE_FIELD_NAME/custom/$it/index"]
+            val pattern: String = adc["$FEATURE_FIELD_NAME/custom/$it/pattern"]
+            val sourceType: String = adc["$FEATURE_FIELD_NAME/custom/$it/sourcetype"]
+
+            LoggingConfig(
+                name = it,
+                sourceType = sourceType,
+                index = index,
+                filePattern = pattern,
+                excludePattern = getLogRotationExcludePattern(pattern)
+            )
+        }
+    }
+
+    fun getLoggerConfigs(adc: AuroraDeploymentSpec): List<LoggingConfig> {
+        val isCustomConfig = adc.getSubKeys("$FEATURE_FIELD_NAME/custom").isNotEmpty()
+        val defaultIndex = adc.loggingIndex
+
+        return when {
+            isCustomConfig -> getCustomLoggerConfig(adc)
+            defaultIndex != null -> getLoggingIndexes(adc, defaultIndex)
+            else -> emptyList()
+        }
+    }
+
+    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+        if (!shouldGenerateAndModify(adc)) return emptySet()
+
+        val loggerIndexes = getLoggerConfigs(adc)
+
+        if (loggerIndexes.isEmpty()) {
+            return emptySet()
+        }
+
+        val fluentConfigMap = createFluentbitConfigMap(adc, loggerIndexes)
+
+        val fluentParserMap = createFluentbitParserConfigmap(adc)
+
+        val hecSecret = createHecSecret(adc)
+
+        return setOf(generateResource(fluentParserMap), generateResource(fluentConfigMap), generateResource(hecSecret))
+    }
+
+    private fun createHecSecret(adc: AuroraDeploymentSpec): Secret {
         val hecSecret = newSecret {
             metadata {
                 name = adc.hecSecretName
@@ -143,7 +202,18 @@ class FluentbitSidecarFeature(
                 splunkPortKey to Base64.encodeBase64String(splunkPort.toByteArray())
             )
         }
-        return setOf(generateResource(fluentParserMap), generateResource(fluentConfigMap), generateResource(hecSecret))
+        return hecSecret
+    }
+
+    private fun createFluentbitParserConfigmap(adc: AuroraDeploymentSpec): ConfigMap {
+        val fluentParserMap = newConfigMap {
+            metadata {
+                name = adc.fluentParserName
+                namespace = adc.namespace
+            }
+            data = mapOf(parsersFileName to fluentBitConfigurator.parserConf())
+        }
+        return fluentParserMap
     }
 
     override fun modify(
@@ -293,6 +363,22 @@ class FluentbitSidecarFeature(
             image = imageMetadata.getFullImagePath()
         }
     }
+
+    fun getCustomLoggerHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
+        return applicationFiles.findSubKeys(FEATURE_FIELD_NAME).flatMap { key ->
+            listOf(
+                AuroraConfigFieldHandler(
+                    "$FEATURE_FIELD_NAME/custom/index",
+                    validator = { it.required("index is required when using custom logging") }),
+                AuroraConfigFieldHandler(
+                    "$FEATURE_FIELD_NAME/custom/pattern",
+                    validator = { it.required("pattern is required when using custom logging") }),
+                AuroraConfigFieldHandler(
+                    "$FEATURE_FIELD_NAME/custom/sourcetype",
+                    validator = { it.required("sourcetype is required when using custom logging") })
+            )
+        }
+    }
 }
 
 data class LoggingConfig(
@@ -307,6 +393,14 @@ fun getLoggingIndexes(adc: AuroraDeploymentSpec, defaultIndex: String): List<Log
 
     val loggers = getLoggingIndexNames(adc, defaultIndex)
 
+    val fluentbitLogger = LoggingConfig(
+        name = "fluentbit",
+        sourceType = "fluentbit",
+        index = defaultIndex,
+        filePattern = "fluentbit",
+        excludePattern = getLogRotationExcludePattern("fluentbit")
+    )
+
     return loggers.map { (key, value) ->
         val filePattern = getKnownFilePattern(key)
         LoggingConfig(
@@ -316,7 +410,7 @@ fun getLoggingIndexes(adc: AuroraDeploymentSpec, defaultIndex: String): List<Log
             filePattern = filePattern,
             excludePattern = getLogRotationExcludePattern(filePattern)
         )
-    }
+    } + listOf(fluentbitLogger)
 }
 
 private fun getLoggingIndexNames(
@@ -395,7 +489,6 @@ class FluentBitConfigurator {
      * Fluentbit config
      */
     fun generateFluentBitConfig(
-        defaultIndex: String,
         loggingConfigs: List<LoggingConfig>,
         application: String,
         cluster: String,
@@ -409,23 +502,31 @@ class FluentBitConfigurator {
             }
         }
 
-        val fluentbitSplunkOutput =
-            generateSplunkOutput(matcherTag = "fluentbit", index = defaultIndex, sourceType = "fluentbit")
+        val fluentbitLoggerOrNull = loggingConfigs.find { it.name == "fluentbit" }
+        val fluentbitSelfLogger = if (fluentbitLoggerOrNull != null) {
+            listOf(
+                getFluentbitLogInputAndFilter(fluentbitLoggerOrNull.filePattern),
+                generateSplunkOutput(matcherTag = "fluentbit", index = fluentbitLoggerOrNull.index, sourceType = "fluentbit")
+            )
+        } else emptyList()
 
-        return listOf(
+        val applicationFluentbitLoggerConfig = listOf(
             fluentbitService,
             logInputList,
-            fluentbitLogInputAndFilter,
             timeParserFilter,
             multilineLog4jFilter,
             getModifyFilter(application, cluster),
-            applicationSplunkOutputs,
-            fluentbitSplunkOutput
-        ).joinToString("\n\n")
+            applicationSplunkOutputs
+        )
+
+        // TODO: verify order is not important here, can input + filter come after an ouput
+        val fluentbitConfig = applicationFluentbitLoggerConfig + fluentbitSelfLogger
+
+        return fluentbitConfig.joinToString("\n\n")
             .replace(
                 "$ {",
                 "\${"
-            ) // Fluentbit uses $(variable) but so does kotling multiline string, so space between $ and ( is used in config and must be replaced here.
+            ) // Fluentbit uses $(variable) but so does kotlin multiline string, so space between $ and ( is used in config and must be replaced here.
     }
 
     private val fluentbitService: String = """
@@ -461,20 +562,22 @@ class FluentBitConfigurator {
 
     // Input for the log file produced by fluentbit
     // Filters it to stdout
-    private val fluentbitLogInputAndFilter = """
-    |[INPUT]
-    |   Name             tail
-    |   Path             /u01/logs/fluentbit
-    |   Path_Key         source
-    |   Tag              fluentbit
-    |   Refresh_Interval 5
-    |   Read_from_Head   true
-    |   Key              event
-    |
-    |[FILTER]
-    |   Name             stdout
-    |   Match            fluentbit
-    """.trimMargin()
+    private fun getFluentbitLogInputAndFilter(pattern: String): String {
+            return """
+        |[INPUT]
+        |   Name             tail
+        |   Path             /u01/logs/$pattern
+        |   Path_Key         source
+        |   Tag              fluentbit
+        |   Refresh_Interval 5
+        |   Read_from_Head   true
+        |   Key              event
+        |
+        |[FILTER]
+        |   Name             stdout
+        |   Match            fluentbit
+        """.trimMargin()
+    }
 
     // Parser filter to assign it to application tag records
     private val timeParserFilter = """
@@ -513,7 +616,12 @@ class FluentBitConfigurator {
      * The output extracts fields by using event_field and record accessor. Fields are added to the record by a previous filter
      * Event_key extracts the "event" key from the record and uses it to build up the HEC payload
      */
-    private fun generateSplunkOutput(matcherTag: String, index: String, sourceType: String, retryLimit: Int? = null): String {
+    private fun generateSplunkOutput(
+        matcherTag: String,
+        index: String,
+        sourceType: String,
+        retryLimit: Int? = null
+    ): String {
         val retryConfigOrEmpty = retryLimit?.let {
             """
             |
