@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrorResult
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
+import assertk.assertions.containsOnly
 
 class AlertsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -106,6 +107,34 @@ class AlertsFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should generate alert resource with multipl connection rules`() {
+        val generatedResources = generateResources(
+            """{
+              "alerts": {
+                "isdown": {
+                  "enabled": true,
+                  "expr": "ac",
+                  "delay": 1,
+                  "connections": [
+                    "aurora-mattermost",
+                    "connection2"
+                  ],
+                  "severity": "warning"
+                }
+              }
+            }"""
+        )
+
+        assertThat(generatedResources).hasSize(1)
+        val resource = generatedResources[0].resource as Alerts
+        val alertSpec = resource.spec
+        val metadata = resource.metadata
+        assertThat(alertSpec.prometheus.expr).isEqualTo("ac")
+        assertThat(alertSpec.alert.enabled).isTrue()
+        assertThat(metadata.name).contains("simple-")
+    }
+
+    @Test
     fun `should use configuration from alertsDefaults if defined for missing configuration values`() {
         val generatedResources = generateResources(
             """{
@@ -126,7 +155,7 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         assertThat(generatedResources).hasSize(1)
         val alert = (generatedResources[0].resource as Alerts).spec.alert
         assertThat(alert.delay).isEqualTo("4")
-        assertThat(alert.connection).isEqualTo("koblingsregel")
+        assertThat(alert.connections).containsOnly("koblingsregel")
         assertThat(alert.severity).isEqualTo("critical")
     }
 
@@ -154,6 +183,6 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         assertThat(generatedResources).hasSize(1)
         val alert = (generatedResources[0].resource as Alerts).spec.alert
         assertThat(alert.delay).isEqualTo("2")
-        assertThat(alert.connection).isEqualTo("en-annen-koblingsregel")
+        assertThat(alert.connections).containsOnly("en-annen-koblingsregel")
     }
 }

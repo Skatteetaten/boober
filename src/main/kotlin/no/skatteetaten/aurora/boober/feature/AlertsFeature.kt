@@ -21,7 +21,7 @@ data class AlertConfiguration(
     val enabled: Boolean,
     val expr: String,
     val delay: String,
-    val connection: String,
+    val connections: List<String>,
     val severity: String,
     val summary: String,
     val description: String
@@ -53,6 +53,7 @@ class AlertsFeature : Feature {
         val alertsDefaults = setOf(
             AuroraConfigFieldHandler("$defaultsName/enabled"),
             AuroraConfigFieldHandler("$defaultsName/connection"),
+            AuroraConfigFieldHandler("$defaultsName/connections"),
             AuroraConfigFieldHandler("$defaultsName/delay")
         )
         val definedAlerts = cmd.applicationFiles.getDefinedAlerts()
@@ -62,6 +63,7 @@ class AlertsFeature : Feature {
                     AuroraConfigFieldHandler("$featureName/$name/expr"),
                     AuroraConfigFieldHandler("$featureName/$name/delay"),
                     AuroraConfigFieldHandler("$featureName/$name/connection"),
+                    AuroraConfigFieldHandler("$featureName/$name/connections"),
                     AuroraConfigFieldHandler("$featureName/$name/severity", validator = { node ->
                         node?.oneOf(listOf("warning", "critical"))
                     }),
@@ -93,6 +95,11 @@ class AlertsFeature : Feature {
                 adc.getOrNull<String>("$defaultsName/connection").isNullOrEmpty()
         }
 
+        val isConnectionsPropertyMissing = alarms.any {
+            adc.getOrNull<List<String>>("$featureName/$it/connections").isNullOrEmpty() &&
+                adc.getOrNull<List<String>>("$defaultsName/connections").isNullOrEmpty()
+        }
+
         val isDelayPropertyMissing = alarms.any {
             adc.getOrNull<String>("$featureName/$it/delay").isNullOrEmpty() &&
                 adc.getOrNull<String>("$defaultsName/delay").isNullOrEmpty()
@@ -111,7 +118,7 @@ class AlertsFeature : Feature {
             validationErrors.add(AuroraDeploymentSpecValidationException(Errors.MissingAlertEnabledProp.message))
         }
 
-        if (isConnectionPropertyMissing) {
+        if (isConnectionPropertyMissing && isConnectionsPropertyMissing) {
             validationErrors.add(AuroraDeploymentSpecValidationException(Errors.MissingAlertConnectionProp.message))
         }
 
@@ -159,7 +166,7 @@ class AlertsFeature : Feature {
                 AlertConfig(
                     alertConfig.delay,
                     alertConfig.severity,
-                    alertConfig.connection,
+                    alertConfig.connections,
                     alertConfig.enabled,
                     alertConfig.summary,
                     alertConfig.description
@@ -173,29 +180,66 @@ class AlertsFeature : Feature {
     private fun AuroraDeploymentSpec.extractConfiguration(alertName: String): AlertConfiguration {
         val confPath = "$featureName/$alertName"
 
-        val alertEnabled = this.getOrNull<Boolean>("$confPath/enabled")
-        val alertExpr = this.getOrNull<String>("$confPath/expr")
-            ?: throw IllegalStateException("Missing $confPath/expr value, check validation-logic")
-        val alertDelay = this.getOrNull<String>("$confPath/delay")
-        val alertConnection = this.getOrNull<String>("$confPath/connection")
-        val alertSeverity = this.getOrNull<String>("$confPath/severity")
-            ?: throw IllegalStateException("Missing $confPath/severity value, check validation-logic")
-        val alertSummary = this.getOrNull<String>("$confPath/summary") ?: "oppsummering av alarm er ikke angitt"
-        val alertDescription = this.getOrNull<String>("$confPath/description") ?: "beskrivelse av alarm er ikke angitt"
+        // non-nullable w. no-default
+        val confExpression = this.get<String>("$confPath/expr")
+        val confSeverity = this.get<String>("$confPath/severity")
 
-        val defaultEnabled = this.getOrNull<Boolean>("$defaultsName/enabled") ?: false
-        val defaultDelay = this.getOrNull<String>("$defaultsName/delay") ?: "1"
-        val connection = alertConnection ?: this.getOrNull<String>("$defaultsName/connection")
-            ?: throw IllegalStateException("Missing $confPath/connection value, check validation-logic")
+        // nullable w. conf-default + fallback
+        val confEnabled = this.getWithDefaultFallback(confPath, "enabled", false, defaultsName)
+        val confDelay = this.getWithDefaultFallback(confPath, "delay", "1", defaultsName)
+
+        // nullable w. fallback
+        val confSummary = this.getWithDefaultFallback(confPath, "summary", "oppsummering av alarm er ikke angitt")
+        val confDescription = this.getWithDefaultFallback(confPath, "description", "beskrivelse av alarm er ikke angitt")
+
+        // connection rules handling
+        val confConnections = this.getAlertConnectionRules(confPath)
 
         return AlertConfiguration(
-            enabled = alertEnabled ?: defaultEnabled,
-            expr = alertExpr,
-            delay = alertDelay ?: defaultDelay,
-            connection = alertConnection ?: connection,
-            severity = alertSeverity,
-            summary = alertSummary,
-            description = alertDescription
+            enabled = confEnabled,
+            expr = confExpression,
+            delay = confDelay,
+            connections = confConnections,
+            severity = confSeverity,
+            summary = confSummary,
+            description = confDescription
         )
+    }
+
+    private inline fun <reified T> AuroraDeploymentSpec.getWithDefaultFallback(
+        root: String,
+        key: String,
+        fallback: T,
+        defaultRoot: String? = null
+    ): T {
+        val v = this.getOrNull<T>("$root/$key")
+        val d = if (defaultRoot != null) {
+            this.getOrNull<T>("$defaultRoot/$key")
+        } else {
+            null
+        }
+        return v ?: d ?: fallback
+    }
+
+    private fun AuroraDeploymentSpec.getAlertConnectionRules(confPath: String): List<String> {
+        val alertConnection = this.getOrNull<String>("$confPath/connection")
+        val defaultsConnection = this.getOrNull<String>("$defaultsName/connection")
+        val implConnection = alertConnection ?: defaultsConnection
+
+        val alertsConnections = this.getOrNull<List<String>>("$confPath/connections")
+        val defaultsConnections = this.getOrNull<List<String>>("$defaultsName/connections")
+        val implConnections = alertsConnections ?: defaultsConnections
+
+        val list = mutableListOf<String>()
+
+        if (!implConnection.isNullOrEmpty()) {
+            list.add(implConnection)
+        } else if (!implConnections.isNullOrEmpty()) {
+            list.addAll(implConnections)
+        } else {
+            throw IllegalStateException("one of $confPath/connection and $confPath/connections must be defined")
+        }
+
+        return list
     }
 }
