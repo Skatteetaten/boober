@@ -122,7 +122,8 @@ interface Feature {
 enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: Int, val insecurePolicy: String) {
     java("wingnut11", 2, "None"),
     python("rumple39", 2, "None"),
-    web("wrench16", 1, "Redirect");
+    web("wrench16", 1, "Redirect"),
+    doozer("turbo", 3, "None");
 }
 
 enum class TemplateType(
