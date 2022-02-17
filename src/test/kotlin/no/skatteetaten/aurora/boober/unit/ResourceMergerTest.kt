@@ -70,11 +70,12 @@ class ResourceMergerTest : ResourceLoader() {
 
     @Test
     fun `Should preserve project labels`() {
-        val oldProject = loadJsonResource("namespace.json")
-        val newProject = loadJsonResource("namespace-new.json")
-        val merged = mergeWithExistingResource(newProject, oldProject)
+        val oldNamespace = loadJsonResource("namespace.json")
+        val newNamespace = loadJsonResource("namespace-new.json")
+        val merged = mergeWithExistingResource(newNamespace, oldNamespace)
         val labelsField = "/metadata/labels"
 
-        assertThat(merged.at(labelsField)["network.openshift.io/policy-group"]).isEqualTo(oldProject.at(labelsField)["network.openshift.io/policy-group"])
+        assertThat(merged.at(labelsField)["network.openshift.io/policy-group"]).isEqualTo(oldNamespace.at(labelsField)["network.openshift.io/policy-group"])
+        assertThat(merged.at("$labelsField/affiliation")).isEqualTo(newNamespace.at("$labelsField/affiliation"))
     }
 }

@@ -3,7 +3,6 @@
   "kind": "Namespace",
   "metadata": {
     "labels": {
-      "affiliation": "paas",
       "removeAfter": "86400",
       "network.openshift.io/policy-group": "monitoring"
     },
