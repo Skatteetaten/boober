@@ -5,7 +5,7 @@ Content-Type: application/json
 {
   "applicationDeploymentRefs": [
     {
-      "environment": "m96405",
+      "environment": "",
       "application": "referanse-kotlin"
     }
   ]

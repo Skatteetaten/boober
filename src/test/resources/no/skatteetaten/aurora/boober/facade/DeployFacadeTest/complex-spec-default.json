@@ -615,28 +615,6 @@
       }
     }
   },
-  "logging": {
-    "index": {
-      "source": "complex.json",
-      "value": "test-index",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "test-index"
-        }
-      ]
-    },
-    "bufferSize": {
-      "source": "default",
-      "value": 20,
-      "sources": [
-        {
-          "name": "default",
-          "value": 20
-        }
-      ]
-    }
-  },
   "deployStrategy": {
     "type": {
       "source": "complex.json",
@@ -1473,6 +1451,28 @@
           }
         ]
       }
+    }
+  },
+  "logging": {
+    "index": {
+      "source": "complex.json",
+      "value": "test-index",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "test-index"
+        }
+      ]
+    },
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
     }
   }
 }

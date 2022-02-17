@@ -70,9 +70,6 @@ utv/about-alternate.json |   ttl: "1d"
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
-                         | logging:
-            complex.json |   index: "test-index"
-                 default |   bufferSize: 20
                          | deployStrategy:
             complex.json |   type: "recreate"
                  default |   timeout: 180
@@ -167,3 +164,6 @@ utv/about-alternate.json |   ttl: "1d"
                  default |   managedRoute: false
                          |   apim:
                  default |     enabled: false
+                         | logging:
+            complex.json |   index: "test-index"
+                 default |   bufferSize: 20

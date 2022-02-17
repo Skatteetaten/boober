@@ -10,16 +10,17 @@ import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
+import no.skatteetaten.aurora.boober.feature.fluentbit.FluentbitSidecarFeature
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationValidationError
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = FluentbitSidecarFeature(
             cantusService,
-            FluentBitConfigurator(),
             "test_hec",
             "splunk.url",
             "8080",
@@ -49,8 +50,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should add fluentbit to dc`() {
-        // mockVault("foo")
+    fun `should add fluentbit sidecar to dc`() {
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
             """{
              "logging" : {
@@ -77,7 +77,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should validate but not generate sidecar setup for templates`() {
+    fun `should add splunk connect annotations for templates and no sidecar`() {
         val (dcResource) = generateResources(
             """{
              "type" : "template",
@@ -95,7 +95,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should validate but not generate sidecar setup for cronjob`() {
+    fun `should add splunk connect annotations for cronjob and no sidecar`() {
         val (dcResource) = generateResources(
             """{
              "type" : "cronjob",
@@ -113,7 +113,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should validate and not generate sidecar setup for templates with empty index`() {
+    fun `should not add annotations or sidecar when index is not set for template`() {
         val (dcResource) = generateResources(
             """{
              "type" : "template",
@@ -129,7 +129,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `setting buffer size should be reflected in deployment config and fluent bit config`() {
+    fun `setting buffer size should be reflected in deploymentconfig and fluentbit config`() {
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
             """{
              "logging" : {
@@ -144,5 +144,25 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("dc_resized.json")
 
         assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config_resized.json")
+    }
+
+    @Test
+    fun `Required fields for custom logging`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "hello",
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationValidationError("Required something here")
+
     }
 }
