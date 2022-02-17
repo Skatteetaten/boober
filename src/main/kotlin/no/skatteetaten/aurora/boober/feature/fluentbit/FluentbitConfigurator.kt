@@ -41,7 +41,7 @@ class FluentbitConfigurator {
             val applicationSplunkOutputs = otherConfig.joinToString("\n\n") {
                 it.run {
                     generateSplunkOutput(
-                        matcherTag = name,
+                        matcherTag = "$name-$sourceType",
                         index = index,
                         sourceType = sourceType,
                         retryLimit = retryLimit
