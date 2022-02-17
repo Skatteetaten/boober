@@ -14,7 +14,7 @@ import no.skatteetaten.aurora.boober.feature.fluentbit.FluentbitSidecarFeature
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
-import no.skatteetaten.aurora.boober.utils.singleApplicationValidationError
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
@@ -147,7 +147,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `Required fields for custom logging`() {
+    fun `Should validate required fields for custom logging`() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
@@ -162,7 +162,180 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationValidationError("Required something here")
+        }.singleApplicationErrorResult("When using custom logger both fluentbit and application loggers are required")
+    }
 
+    @Test
+    fun `Should validate only one of custom or standard loggers`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "loggers": {
+                    "gc": "gc_log"
+                },
+                "custom": { "otherName": {
+                        "index": "hello",
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Cannot use both custom loggers and the default loggers")
+    }
+
+    @Test
+    fun `Should validate only one of custom or default index`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "index": "openshift-test",
+                "custom": {
+                    "otherName": {
+                        "index": "hello",
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Cannot use both custom loggers and the default loggers")
+    }
+
+    @Test
+    fun `Should validate required fields for custom logger`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("missing required field index")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "openshift",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("missing required field sourcetype")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "openshift",
+                        "sourcetype": "fluentbit"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("missing required field pattern")
+    }
+
+    @Test
+    fun `Should validate that sourcetype is within supported sourcetypes`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "openshift",
+                        "sourcetype": "unsupported",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("value=unsupported is not one of the supported ones")
+    }
+
+    @Test
+    fun `Should not create fluentbit when index is empty`() {
+        val (dcResource) = generateResources(
+            """{
+             "logging" : {
+                "index": "",
+                "loggers": {
+                    "gc": "gc_log"
+                }
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 0
+        )
+        val dc = dcResource.resource as DeploymentConfig
+
+        assertThat(dc.spec.template.spec.containers.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `Should not create fluentbit when index is not configured`() {
+        val (dcResource) = generateResources(
+            """{
+             "logging" : {
+                "loggers": {
+                    "gc": "gc_log"
+                }
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 0
+        )
+        val dc = dcResource.resource as DeploymentConfig
+
+        assertThat(dc.spec.template.spec.containers.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `Should be able to create fluentbit sidecar with custom loggers`() {
+        val (dcResource, parserResource, configResource, secretResource) = generateResources(
+            """{
+             "logging" : {
+                "custom": {
+                    "application": {
+                        "index": "openshift-test",
+                        "pattern": "application.log",
+                        "sourcetype": "log4j"
+                    },
+                    "fluentbit": {
+                        "index": "openshift-test",
+                        "pattern": "fluentbit",
+                        "sourcetype": "fluentbit"
+                    }
+                }
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 3
+        )
+        val dc = dcResource.resource as DeploymentConfig
+
+        assertThat(dc.spec.template.spec.containers.size).isEqualTo(2)
+
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume, sidecar container and annotation")
+            .auroraResourceMatchesFile("dc_custom.json")
+
+        assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config_custom.json")
     }
 }

@@ -54,7 +54,8 @@ fun AuroraDeploymentSpec.validateRequiredLoggersForCustom(): IllegalArgumentExce
 
 fun AuroraDeploymentSpec.validateOnlyOneOfCustomOrStandardLogger(): IllegalArgumentException? {
     val isCustomConfigured = this.getSubKeyValues("$FEATURE_FIELD_NAME/custom").isNotEmpty()
-    val isLoggingConfigured = !this.loggingIndex.isNullOrEmpty()
+    val isPredefinedLoggersConfigured = this.getSubKeyValues("$FEATURE_FIELD_NAME/loggers").isNotEmpty()
+    val isLoggingConfigured = !this.loggingIndex.isNullOrEmpty() || isPredefinedLoggersConfigured
 
     if (isCustomConfigured && isLoggingConfigured) {
         return IllegalArgumentException("Cannot use both custom loggers and the default loggers. If you wish to use custom loggers, then remove index and loggers")
@@ -123,6 +124,8 @@ fun AuroraDeploymentSpec.isFluentbitDisabled(): Boolean {
 
     return isNotcustomConfig && loggingIndexNotSet
 }
+
+val supportedFluentbitSourcetypes = listOf("fluentbit", "_json", "access_combined", "gc_log", "log4j")
 
 fun getKnownSourceType(logType: String): String {
     return when (logType) {

@@ -1,0 +1,147 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "simple"
+    },
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "metadata": {
+        "annotations": {
+          "splunk.com/exclude": "true"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "name": "simple"
+          },
+          {
+            "env": [
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "HEC_TOKEN",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "HEC_TOKEN",
+                    "name": "simple-hec",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "SPLUNK_HOST",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "SPLUNK_HOST",
+                    "name": "simple-hec",
+                    "optional": false
+                  }
+                }
+              },
+              {
+                "name": "SPLUNK_PORT",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "SPLUNK_PORT",
+                    "name": "simple-hec",
+                    "optional": false
+                  }
+                }
+              }
+            ],
+            "image": "docker.registry/fluent/fluent-bit@sha:1234",
+            "name": "simple-fluent-sidecar",
+            "resources": {
+              "limits": {
+                "memory": "100Mi",
+                "cpu": "300m"
+              },
+              "requests": {
+                "memory": "20Mi",
+                "cpu": "10m"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/fluent-bit/parser",
+                "name": "simple-fluent-parser"
+              },
+              {
+                "mountPath": "/fluent-bit/etc",
+                "name": "simple-fluent-config"
+              },
+              {
+                "mountPath": "/u01/logs",
+                "name": "application-log-volume"
+              }
+            ]
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "volumes": [
+          {
+            "configMap": {
+              "name": "simple-fluent-config"
+            },
+            "name": "simple-fluent-config"
+          },
+          {
+            "configMap": {
+              "name": "simple-fluent-parser"
+            },
+            "name": "simple-fluent-parser"
+          }
+        ]
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

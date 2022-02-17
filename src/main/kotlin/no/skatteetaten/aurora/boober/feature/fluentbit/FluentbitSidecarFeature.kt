@@ -84,8 +84,6 @@ class FluentbitSidecarFeature(
         ) + loggers + customLogger
     }
 
-    // TODO: validate that if custom is used, then no others are allowed
-    // TODO: validate that custom sourcetypes are of known types
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
@@ -143,14 +141,27 @@ class FluentbitSidecarFeature(
                 listOf(
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/index",
-                        validator = { it.required("index is required when using custom logging") }
+                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom$key is missing required field index") }
                     ),
                     AuroraConfigFieldHandler(
-                        "$FEATURE_FIELD_NAME/custom/$key/pattern"
+                        "$FEATURE_FIELD_NAME/custom/$key/pattern",
+                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom$key is missing required field pattern") }
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/sourcetype",
-                        validator = { it.required("sourcetype is required when using custom logging") }
+                        validator = {
+                            if (it == null) {
+                                IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom$key is missing required field sourcetype")
+                            } else {
+
+                                val configuredSourcetype = it.textValue()
+                                if (configuredSourcetype !in supportedFluentbitSourcetypes) {
+                                    IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom/$key/sourcetype with value=$configuredSourcetype is not one of the supported ones")
+                                } else {
+                                    null
+                                }
+                            }
+                        }
                     )
                 )
             }
