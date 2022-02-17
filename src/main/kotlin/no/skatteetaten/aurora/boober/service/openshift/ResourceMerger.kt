@@ -77,7 +77,7 @@ private fun updateService(mergedResource: JsonNode, existingResource: JsonNode) 
 }
 
 private fun mergeLabelsFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
-    mergedResource.updateField(existingResource, "/metadata", "labels")
+    mergedResource.mergeField(existingResource, "/metadata", "labels")
 
 private fun mergeAnnotationsFrom(mergedResource: ObjectNode, existingResource: ObjectNode) =
     mergedResource.mergeField(existingResource, "/metadata", "annotations")
