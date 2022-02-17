@@ -108,12 +108,14 @@ openshift:
 integrations:
     operations:
         scope: dev
+    mattermost:
+        url: http://locaklhost
     dbh:
-        url: https://dbh-aurora.${openshift.cluster}.paas.skead.no
+        url: https://dbh-aup.apps.${openshift.cluster}.paas.skead.no
     cantus:
         url: https://cantus-aup.apps.${openshift.cluster}.paas.skead.no
     skap:
-        url: https://skap-aurora.${openshift.cluster}.paas.skead.no
+        url: https://skap-aup.apps.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:

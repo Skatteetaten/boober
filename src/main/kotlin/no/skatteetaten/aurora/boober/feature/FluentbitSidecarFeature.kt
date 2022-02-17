@@ -106,7 +106,6 @@ class FluentbitSidecarFeature(
         }.toSet()
         val customLogger = getCustomLoggerHandlers(cmd.applicationFiles)
 
-
         return setOf(
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/index"),
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/bufferSize", defaultValue = 20)
@@ -221,12 +220,19 @@ class FluentbitSidecarFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        val index = adc.loggingIndex ?: return
-        if (index == "") return
+        // val index = adc.loggingIndex ?: return
+        // if (index == "") return
         if (!shouldGenerateAndModify(adc)) {
             resources
                 .mapNotNull { getTemplate(it) }
-                .forEach { setTemplateAnnotation(it, SPLUNK_CONNECT_INDEX_TAG, index) }
+                .forEach {
+                    setTemplateAnnotation(
+                        template = it,
+                        annotationKey = SPLUNK_CONNECT_INDEX_TAG,
+                        // Previously index here for annotationValue, what happens when index is not set
+                        annotationValue = ""
+                    )
+                }
         } else {
             val configVolume = newVolume {
                 name = adc.fluentConfigName
@@ -243,22 +249,25 @@ class FluentbitSidecarFeature(
 
             val container = createFluentbitContainer(adc, context)
             resources.forEach {
-                val template = getTemplate(it) ?: return@forEach
-                modifyAuroraResource(it, template, configVolume, parserVolume, container)
+                modifyAuroraResource(it, configVolume, parserVolume, container)
             }
         }
     }
 
     private fun getTemplate(resource: AuroraResource): PodTemplateSpec? {
-        var template: PodTemplateSpec? = null
-        if (resource.resource.kind == "DeploymentConfig") {
-            val dc: DeploymentConfig = resource.resource as DeploymentConfig
-            template = dc.spec.template
-        } else if (resource.resource.kind == "Deployment") {
-            val dc: Deployment = resource.resource as Deployment
-            template = dc.spec.template
+        return when (resource.resource.kind) {
+            "DeploymentConfig" -> {
+                val dc: DeploymentConfig = resource.resource as DeploymentConfig
+
+                dc.spec.template
+            }
+            "Deployment" -> {
+                val dc: Deployment = resource.resource as Deployment
+
+                dc.spec.template
+            }
+            else -> null
         }
-        return template
     }
 
     private fun setTemplateAnnotation(template: PodTemplateSpec, annotationKey: String, annotationValue: String) {
@@ -286,16 +295,21 @@ class FluentbitSidecarFeature(
 
     private fun modifyAuroraResource(
         auroraResource: AuroraResource,
-        template: PodTemplateSpec,
         configVolume: Volume,
         parserVolume: Volume,
         container: Container
     ) {
-        val podSpec = template.spec
+        val template = getTemplate(auroraResource) ?: return
         modifyResource(auroraResource, "Added fluentbit volume, sidecar container and annotation")
-        podSpec.volumes = podSpec.volumes.addIfNotNull(configVolume)
-        podSpec.volumes = podSpec.volumes.addIfNotNull(parserVolume)
-        podSpec.containers = podSpec.containers.addIfNotNull(container)
+
+        val podSpec = template.spec
+
+        podSpec.run {
+            volumes = podSpec.volumes.addIfNotNull(configVolume)
+            volumes = podSpec.volumes.addIfNotNull(parserVolume)
+            containers = podSpec.containers.addIfNotNull(container)
+        }
+
         // Add annotation to exclude pods having fluentbit sidecar from being logged by node deployd splunk connect.
         setTemplateAnnotation(template, SPLUNK_CONNECT_EXCLUDE_TAG, "true")
     }
@@ -365,19 +379,22 @@ class FluentbitSidecarFeature(
     }
 
     fun getCustomLoggerHandlers(applicationFiles: List<AuroraConfigFile>): List<AuroraConfigFieldHandler> {
-        return applicationFiles.findSubKeys(FEATURE_FIELD_NAME).flatMap { key ->
-            listOf(
-                AuroraConfigFieldHandler(
-                    "$FEATURE_FIELD_NAME/custom/index",
-                    validator = { it.required("index is required when using custom logging") }),
-                AuroraConfigFieldHandler(
-                    "$FEATURE_FIELD_NAME/custom/pattern",
-                    validator = { it.required("pattern is required when using custom logging") }),
-                AuroraConfigFieldHandler(
-                    "$FEATURE_FIELD_NAME/custom/sourcetype",
-                    validator = { it.required("sourcetype is required when using custom logging") })
-            )
-        }
+        return applicationFiles.findSubKeys("$FEATURE_FIELD_NAME/custom")
+            .flatMap { key ->
+                listOf(
+                    AuroraConfigFieldHandler(
+                        "$FEATURE_FIELD_NAME/custom/$key/index",
+                        validator = { it.required("index is required when using custom logging") }
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$FEATURE_FIELD_NAME/custom/$key/pattern"
+                    ),
+                    AuroraConfigFieldHandler(
+                        "$FEATURE_FIELD_NAME/custom/$key/sourcetype",
+                        validator = { it.required("sourcetype is required when using custom logging") }
+                    )
+                )
+            }
     }
 }
 
@@ -503,26 +520,19 @@ class FluentBitConfigurator {
         }
 
         val fluentbitLoggerOrNull = loggingConfigs.find { it.name == "fluentbit" }
-        val fluentbitSelfLogger = if (fluentbitLoggerOrNull != null) {
-            listOf(
-                getFluentbitLogInputAndFilter(fluentbitLoggerOrNull.filePattern),
-                generateSplunkOutput(matcherTag = "fluentbit", index = fluentbitLoggerOrNull.index, sourceType = "fluentbit")
-            )
-        } else emptyList()
+        val fluentbitInputOrNull = fluentbitLoggerOrNull?.let {
+            getFluentbitLogInputAndFilter(fluentbitLoggerOrNull.filePattern)
+        }
 
-        val applicationFluentbitLoggerConfig = listOf(
+        return listOfNotNull(
             fluentbitService,
             logInputList,
+            fluentbitInputOrNull,
             timeParserFilter,
             multilineLog4jFilter,
             getModifyFilter(application, cluster),
             applicationSplunkOutputs
-        )
-
-        // TODO: verify order is not important here, can input + filter come after an ouput
-        val fluentbitConfig = applicationFluentbitLoggerConfig + fluentbitSelfLogger
-
-        return fluentbitConfig.joinToString("\n\n")
+        ).joinToString("\n\n")
             .replace(
                 "$ {",
                 "\${"
@@ -542,28 +552,29 @@ class FluentBitConfigurator {
     private fun getLoggInputList(
         loggerIndexes: List<LoggingConfig>,
         bufferSize: Int
-    ) = loggerIndexes.joinToString("\n\n") { log ->
-        """
-    |[INPUT]
-    |   Name            tail
-    |   Path            /u01/logs/${log.filePattern}
-    |   Path_Key        source
-    |   Exclude_Path    ${log.excludePattern}
-    |   Read_From_Head  true
-    |   Tag             ${log.name}
-    |   DB              /u01/logs/${log.name}.db
-    |   Buffer_Max_Size 512k
-    |   Skip_Long_Lines On
-    |   Mem_Buf_Limit   ${bufferSize}MB
-    |   Rotate_Wait     10
-    |   Key             event
-    """.trimMargin()
-    }
+    ) = loggerIndexes.filter { it.name != "fluentbit" }
+        .joinToString("\n\n") { log ->
+            """
+            |[INPUT]
+            |   Name            tail
+            |   Path            /u01/logs/${log.filePattern}
+            |   Path_Key        source
+            |   Exclude_Path    ${log.excludePattern}
+            |   Read_From_Head  true
+            |   Tag             ${log.name}
+            |   DB              /u01/logs/${log.name}.db
+            |   Buffer_Max_Size 512k
+            |   Skip_Long_Lines On
+            |   Mem_Buf_Limit   ${bufferSize}MB
+            |   Rotate_Wait     10
+            |   Key             event
+            """.trimMargin()
+        }
 
     // Input for the log file produced by fluentbit
     // Filters it to stdout
     private fun getFluentbitLogInputAndFilter(pattern: String): String {
-            return """
+        return """
         |[INPUT]
         |   Name             tail
         |   Path             /u01/logs/$pattern
