@@ -232,10 +232,11 @@ class AlertsFeature : Feature {
 
         val list = mutableListOf<String>()
 
-        if (!implConnection.isNullOrEmpty()) {
-            list.add(implConnection)
-        } else if (!implConnections.isNullOrEmpty()) {
+        // if connections property is set then ignore connection property
+        if (!implConnections.isNullOrEmpty()) {
             list.addAll(implConnections)
+        } else if (!implConnection.isNullOrEmpty()) {
+            list.add(implConnection)
         } else {
             throw IllegalStateException("one of $confPath/connection and $confPath/connections must be defined")
         }
