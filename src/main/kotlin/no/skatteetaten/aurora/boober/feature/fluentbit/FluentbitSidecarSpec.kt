@@ -33,11 +33,25 @@ data class LoggingConfig(
 )
 
 fun AuroraDeploymentSpec.validateFluentbit(): List<Exception> {
-    if (isFluentbitDisabled()) return emptyList()
+    val loggingField = this.getSubKeyValues(FEATURE_FIELD_NAME)
+    if (loggingField.isEmpty()) return emptyList()
+
     val onlyOneOfLoggerTypes = validateOnlyOneOfCustomOrStandardLogger()
     val validateRequiredLoggersForCustomIfPresent = validateRequiredLoggersForCustom()
+    val validateIndexIsSetWhenUsingLoggers = validateIndexIsSetWhenUsingLoggers()
 
-    return listOfNotNull(onlyOneOfLoggerTypes, validateRequiredLoggersForCustomIfPresent)
+    return listOfNotNull(onlyOneOfLoggerTypes, validateRequiredLoggersForCustomIfPresent, validateIndexIsSetWhenUsingLoggers)
+}
+
+fun AuroraDeploymentSpec.validateIndexIsSetWhenUsingLoggers(): IllegalArgumentException? {
+    if (this.loggingIndex == null) {
+        val loggers = this.getSubKeyValues("$FEATURE_FIELD_NAME/loggers")
+        if (loggers.isNotEmpty()) {
+            return IllegalArgumentException("Missing required field logging/index, it is required when logging/loggers is used")
+        }
+    }
+
+    return null
 }
 
 fun AuroraDeploymentSpec.validateRequiredLoggersForCustom(): IllegalArgumentException? {
@@ -45,8 +59,8 @@ fun AuroraDeploymentSpec.validateRequiredLoggersForCustom(): IllegalArgumentExce
 
     if (customLoggerNames.isEmpty()) return null
 
-    if (!customLoggerNames.containsAll(listOf("application", "fluentbit"))) {
-        return IllegalArgumentException("When using custom logger both fluentbit and application loggers are required")
+    if (!customLoggerNames.contains("application")) {
+        return IllegalArgumentException("When using custom logger, application logger is required")
     }
 
     return null
@@ -79,17 +93,9 @@ val AuroraDeploymentSpec.configuredLoggers
 fun AuroraDeploymentSpec.getLoggingIndexes(defaultIndex: String): List<LoggingConfig> {
     val loggers = this.getLoggingIndexNames(defaultIndex)
 
-    val fluentbitLogger = LoggingConfig(
-        name = "fluentbit",
-        sourceType = "fluentbit",
-        index = defaultIndex,
-        filePattern = "fluentbit",
-        excludePattern = getLogRotationExcludePattern("fluentbit")
-    )
-
     return loggers.map { (logType, index) ->
-        val filePattern = getKnownFilePattern(logType)
-        val sourceType = getKnownSourceType(logType)
+        val filePattern = logTypeToFilePattern(logType)
+        val sourceType = logTypeToSourcetype(logType)
         LoggingConfig(
             name = logType,
             sourceType = sourceType,
@@ -97,7 +103,7 @@ fun AuroraDeploymentSpec.getLoggingIndexes(defaultIndex: String): List<LoggingCo
             filePattern = filePattern,
             excludePattern = getLogRotationExcludePattern(filePattern)
         )
-    } + listOf(fluentbitLogger)
+    }
 }
 
 private fun AuroraDeploymentSpec.getLoggingIndexNames(
@@ -125,19 +131,18 @@ fun AuroraDeploymentSpec.isFluentbitDisabled(): Boolean {
     return isNotcustomConfig && loggingIndexNotSet
 }
 
-val supportedFluentbitSourcetypes = listOf("fluentbit", "_json", "access_combined", "gc_log", "log4j")
+val supportedFluentbitSourcetypes = listOf("_json", "access_combined", "gc_log", "log4j")
 
-fun getKnownSourceType(logType: String): String {
-    return when (logType) {
+fun logTypeToSourcetype(logType: String): String =
+    when (logType) {
         logAuditJson -> "_json"
         logAccess -> "access_combined"
         logGC -> "gc_log"
         else -> "log4j"
     }
-}
 
-fun getKnownFilePattern(logger: String): String {
-    return when (logger) {
+fun logTypeToFilePattern(logType: String): String =
+    when (logType) {
         logApplication -> "*.log"
         logAuditText -> "*.audit.text"
         logAuditJson -> "*.audit.json"
@@ -148,11 +153,8 @@ fun getKnownFilePattern(logger: String): String {
         logStacktrace -> "*.stacktrace"
         else -> "*.log"
     }
-}
 
-fun getLogRotationExcludePattern(logFilePattern: String): String {
-    return logFilePattern.replace("*", "*.[1-9]")
-}
+fun getLogRotationExcludePattern(logFilePattern: String): String = logFilePattern.replace("*", "*.[1-9]")
 
 fun AuroraDeploymentSpec.createFluentbitConfigMap(
     allConfiguredLoggers: List<LoggingConfig>,
@@ -176,8 +178,8 @@ fun AuroraDeploymentSpec.createFluentbitConfigMap(
     }
 }
 
-fun AuroraDeploymentSpec.getCustomLoggerConfig(configuredCustomLoggerFields: List<String>): List<LoggingConfig> {
-    return configuredCustomLoggerFields.map {
+fun AuroraDeploymentSpec.getCustomLoggerConfig(configuredCustomLoggerFields: List<String>): List<LoggingConfig> =
+    configuredCustomLoggerFields.map {
         val index: String = this["$FEATURE_FIELD_NAME/custom/$it/index"]
         val pattern: String = this["$FEATURE_FIELD_NAME/custom/$it/pattern"]
         val sourceType: String = this["$FEATURE_FIELD_NAME/custom/$it/sourcetype"]
@@ -190,7 +192,6 @@ fun AuroraDeploymentSpec.getCustomLoggerConfig(configuredCustomLoggerFields: Lis
             excludePattern = getLogRotationExcludePattern(pattern)
         )
     }
-}
 
 fun AuroraDeploymentSpec.createFluentbitContainer(imagePath: String): Container {
     val hecSecretName = getHecSecretName(this.name)

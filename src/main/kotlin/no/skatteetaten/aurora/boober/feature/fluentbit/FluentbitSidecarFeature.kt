@@ -156,7 +156,7 @@ class FluentbitSidecarFeature(
 
                                 val configuredSourcetype = it.textValue()
                                 if (configuredSourcetype !in supportedFluentbitSourcetypes) {
-                                    IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom/$key/sourcetype with value=$configuredSourcetype is not one of the supported ones")
+                                    IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom/$key/sourcetype with value=$configuredSourcetype is not one of $supportedFluentbitSourcetypes")
                                 } else {
                                     null
                                 }

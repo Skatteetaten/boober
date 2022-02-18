@@ -162,7 +162,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationErrorResult("When using custom logger both fluentbit and application loggers are required")
+        }.singleApplicationErrorResult("When using custom logger, application logger is required")
     }
 
     @Test
@@ -270,7 +270,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationErrorResult("value=unsupported is not one of the supported ones")
+        }.singleApplicationErrorResult("value=unsupported is not one of [_json, access_combined")
     }
 
     @Test
@@ -293,19 +293,17 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `Should not create fluentbit when index is not configured`() {
-        val (dcResource) = generateResources(
-            """{
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
              "logging" : {
                 "loggers": {
                     "gc": "gc_log"
                 }
              } 
            }""",
-            createEmptyDeploymentConfig(), emptyList(), 0
-        )
-        val dc = dcResource.resource as DeploymentConfig
-
-        assertThat(dc.spec.template.spec.containers.size).isEqualTo(1)
+            )
+        }.singleApplicationErrorResult("Missing required field logging/index")
     }
 
     @Test
@@ -319,10 +317,10 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                         "pattern": "application.log",
                         "sourcetype": "log4j"
                     },
-                    "fluentbit": {
-                        "index": "openshift-test",
-                        "pattern": "fluentbit",
-                        "sourcetype": "fluentbit"
+                    "access": {
+                        "index": "openshift-other",
+                        "pattern": "access.log",
+                        "sourcetype": "access_combined"
                     }
                 }
              } 

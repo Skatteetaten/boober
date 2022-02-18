@@ -36,9 +36,8 @@ class FluentbitConfigurator {
             bufferSize: Int,
             retryLimit: Int?
         ): String {
-            val (fluentbitConfig, otherConfig) = allConfiguredLoggers.partition { it.name == "fluentbit" }
-            val logInputList = getLoggInputList(otherConfig, bufferSize)
-            val applicationSplunkOutputs = otherConfig.joinToString("\n\n") {
+            val logInputList = getLoggInputList(allConfiguredLoggers, bufferSize)
+            val applicationSplunkOutputs = allConfiguredLoggers.joinToString("\n\n") {
                 it.run {
                     generateSplunkOutput(
                         matcherTag = "$name-$sourceType",
@@ -49,20 +48,16 @@ class FluentbitConfigurator {
                 }
             }
 
-            val fluentbitConfigOrNull = fluentbitConfig.firstOrNull()
+            val fluentbitIndex = allConfiguredLoggers.find { it.name == logApplication }?.index
+                ?: throw IllegalArgumentException("Application logger has not been provided")
 
-            val fluentbitSplunkOutput = fluentbitConfigOrNull?.let {
-                generateSplunkOutput(matcherTag = it.name, index = it.index, sourceType = it.sourceType)
-            }
-
-            val fluentbitInputOrNull = fluentbitConfigOrNull?.let {
-                getFluentbitLogInputAndFilter(it.filePattern)
-            }
+            val fluentbitSplunkOutput =
+                generateSplunkOutput(matcherTag = "fluentbit", index = fluentbitIndex, sourceType = "fluentbit")
 
             return listOfNotNull(
                 fluentbitService,
                 logInputList,
-                fluentbitInputOrNull,
+                fluentbitLogInputAndFilter,
                 timeParserFilter,
                 multilineLog4jFilter,
                 getModifyFilter(application, cluster),
@@ -108,11 +103,10 @@ class FluentbitConfigurator {
 
         // Input for the log file produced by fluentbit
         // Filters it to stdout
-        private fun getFluentbitLogInputAndFilter(pattern: String): String {
-            return """
+        private val fluentbitLogInputAndFilter: String = """
         |[INPUT]
         |   Name             tail
-        |   Path             /u01/logs/$pattern
+        |   Path             /u01/logs/fluentbit
         |   Path_Key         source
         |   Tag              fluentbit
         |   Refresh_Interval 5
@@ -123,7 +117,6 @@ class FluentbitConfigurator {
         |   Name             stdout
         |   Match            fluentbit
         """.trimMargin()
-        }
 
         // Parser filter to assign it to application tag records
         private val timeParserFilter = """
