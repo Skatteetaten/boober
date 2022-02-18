@@ -24,7 +24,8 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
             "splunk.url",
             "8080",
             "0",
-            "300m"
+            "300m",
+            5
         )
 
     private val cantusService: CantusService = mockk()

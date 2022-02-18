@@ -68,6 +68,7 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.port}") val splunkPort: String,
     @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String,
     @Value("\${splunk.fluentbit.resources.cpu.limit}") val cpuLimitFluentbit: String,
+    @Value("\${splunk.fluentbit.retry.limit}") val retryLimit: Int? = null
 ) : AbstractResolveTagFeature(cantusService) {
 
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
@@ -122,11 +123,12 @@ class FluentbitSidecarFeature(
             }
             data = mapOf(
                 "fluent-bit.conf" to fluentBitConfigurator.generateFluentBitConfig(
-                    index,
-                    loggerIndexes,
-                    adc.name,
-                    adc.cluster,
-                    adc.bufferSize
+                    defaultIndex = index,
+                    loggingConfigs = loggerIndexes,
+                    application = adc.name,
+                    cluster = adc.cluster,
+                    bufferSize = adc.bufferSize,
+                    retryLimit = retryLimit
                 )
             )
         }
@@ -397,12 +399,13 @@ class FluentBitConfigurator {
         loggingConfigs: List<LoggingConfig>,
         application: String,
         cluster: String,
-        bufferSize: Int
+        bufferSize: Int,
+        retryLimit: Int?
     ): String {
         val logInputList = getLoggInputList(loggingConfigs, bufferSize)
         val applicationSplunkOutputs = loggingConfigs.joinToString("\n\n") {
             it.run {
-                generateSplunkOutput(matcherTag = name, index = index, sourceType = sourceType)
+                generateSplunkOutput(matcherTag = name, index = index, sourceType = sourceType, retryLimit = retryLimit)
             }
         }
 
@@ -510,24 +513,33 @@ class FluentBitConfigurator {
      * The output extracts fields by using event_field and record accessor. Fields are added to the record by a previous filter
      * Event_key extracts the "event" key from the record and uses it to build up the HEC payload
      */
-    private fun generateSplunkOutput(matcherTag: String, index: String, sourceType: String): String = """
-    |[OUTPUT]
-    |   Name                       splunk
-    |   Match                      $matcherTag 
-    |   Host                       $ {SPLUNK_HOST}
-    |   Port                       $ {SPLUNK_PORT}
-    |   Splunk_token               $ {HEC_TOKEN}
-    |   TLS                        On
-    |   TLS.Verify                 Off
-    |   event_index                $index
-    |   event_sourcetype           $sourceType
-    |   event_host                 $ {POD_NAME}
-    |   event_source               ${'$'}source
-    |   event_field                application ${'$'}name
-    |   event_field                cluster ${'$'}cluster
-    |   event_field                environment ${'$'}environment
-    |   event_field                nodetype ${'$'}nodetype
-    |   event_key                  ${'$'}event
-    |   net.keepalive_idle_timeout 10
-    """.trimMargin()
+    private fun generateSplunkOutput(matcherTag: String, index: String, sourceType: String, retryLimit: Int? = null): String {
+        val retryConfigOrEmpty = retryLimit?.let {
+            """
+            |
+            |   Retry_Limit $it
+        """.trimMargin()
+        } ?: ""
+
+        return """
+        |[OUTPUT]
+        |   Name                       splunk
+        |   Match                      $matcherTag 
+        |   Host                       $ {SPLUNK_HOST}
+        |   Port                       $ {SPLUNK_PORT}
+        |   Splunk_token               $ {HEC_TOKEN}
+        |   TLS                        On
+        |   TLS.Verify                 Off
+        |   event_index                $index
+        |   event_sourcetype           $sourceType
+        |   event_host                 $ {POD_NAME}
+        |   event_source               ${'$'}source
+        |   event_field                application ${'$'}name
+        |   event_field                cluster ${'$'}cluster
+        |   event_field                environment ${'$'}environment
+        |   event_field                nodetype ${'$'}nodetype
+        |   event_key                  ${'$'}event
+        |   net.keepalive_idle_timeout 10
+        """.trimMargin() + retryConfigOrEmpty
+    }
 }

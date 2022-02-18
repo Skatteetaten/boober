@@ -43,18 +43,6 @@ class ResourceMergerTest : ResourceLoader() {
         }
     }
 
-    @ParameterizedTest
-    @EnumSource(OpenShiftResourceTypeTestData::class)
-    fun `Should accept that element to retain might be missing for `(test: OpenShiftResourceTypeTestData) {
-        val type = test.name.lowercase()
-        val oldResource = loadJsonResource("$type.json")
-        val newResource = loadJsonResource("$type-new.json")
-        val merged = mergeWithExistingResource(newResource, oldResource)
-        test.fields.forEach {
-            assertThat(merged.at(it)).isEqualTo(oldResource.at(it))
-        }
-    }
-
     @Test
     fun `Should accept changes to sidecar container images`() {
         val oldDc = loadJsonResource("deploymentconfig.json")
@@ -63,5 +51,31 @@ class ResourceMergerTest : ResourceLoader() {
         val sidecarImageField = "/spec/template/spec/containers/1/image"
 
         assertThat(merged.at(sidecarImageField)).isEqualTo(newDc.at(sidecarImageField))
+    }
+
+    @Test
+    fun `Should load image information from the correct, existing application container`() {
+        val oldDc = loadJsonResource("deploymentconfig-prependedsidecar.json")
+        val newDc = loadJsonResource("deploymentconfig-new.json")
+        val merged = mergeWithExistingResource(newDc, oldDc)
+        val containersField = "/spec/template/spec/containers"
+        val oldApplicationImageField = "$containersField/1/image"
+        val newApplicationImageField = "$containersField/0/image"
+        val newAppendedSidecarImageField = "$containersField/1/image"
+
+        assertThat(merged.at(newApplicationImageField)).isEqualTo(oldDc.at(oldApplicationImageField))
+        assertThat(merged.at(newAppendedSidecarImageField)).isEqualTo(newDc.at(newAppendedSidecarImageField))
+        assertThat(merged.at(containersField).size()).isEqualTo(newDc.at(containersField).size())
+    }
+
+    @Test
+    fun `Should preserve project labels`() {
+        val oldNamespace = loadJsonResource("namespace.json")
+        val newNamespace = loadJsonResource("namespace-new.json")
+        val merged = mergeWithExistingResource(newNamespace, oldNamespace)
+        val labelsField = "/metadata/labels"
+
+        assertThat(merged.at(labelsField)["network.openshift.io/policy-group"]).isEqualTo(oldNamespace.at(labelsField)["network.openshift.io/policy-group"])
+        assertThat(merged.at("$labelsField/affiliation")).isEqualTo(newNamespace.at("$labelsField/affiliation"))
     }
 }
