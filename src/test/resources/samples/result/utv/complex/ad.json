@@ -7,7 +7,7 @@
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "komplex",
       "id": "1234567890",
@@ -38,7 +38,7 @@
     "releaseTo": "komplex",
     "deployTag": "komplex",
     "command": {
-      "overrideFiles": {},
+      "overrideFiles": { },
       "applicationDeploymentRef": {
         "environment": "utv",
         "application": "complex"
@@ -67,6 +67,11 @@
         "notificationLocation": "test2",
         "type": "Mattermost"
       }
-    ]
+    ],
+    "build": {
+      "baseImageName": "wingnut11",
+      "baseImageVersion": 2,
+      "type": "java"
+    }
   }
 }

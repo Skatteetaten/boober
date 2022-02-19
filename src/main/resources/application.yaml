@@ -65,6 +65,8 @@ boober:
     webseal:
         suffix: ".amutv.skead.no"
     productionlevel: "u"
+    build:
+        generateBuildConfig: true
 
 auroraconfig:
     builder:

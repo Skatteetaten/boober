@@ -12,7 +12,7 @@ import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class BuildFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = BuildFeature("test.docker.com", "1")
+        get() = BuildFeature("test.docker.com", "1", true)
 
     @Test
     fun `should disable feature if deploy type`() {

@@ -97,6 +97,8 @@ boober:
     webseal:
         suffix: ".test.webseal"
     productionlevel: "u"
+    build:
+        generateBuildConfig: true
 
 auroraconfig:
     builder:
