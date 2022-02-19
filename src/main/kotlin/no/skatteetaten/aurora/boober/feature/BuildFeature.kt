@@ -18,6 +18,8 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeploymentBuildInformation
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 
 @Service
@@ -26,7 +28,7 @@ class BuildFeature(
     @Value("\${auroraconfig.builder.version}") val builderVersion: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return listOf(TemplateType.localDevelopment, TemplateType.development).contains(header.type)
+        return header.type == TemplateType.development
     }
 
     override fun validate(
@@ -58,10 +60,9 @@ class BuildFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        // If localDevelopment we build image locally and push to registry, so we use default deploy strategy
-        if (adc.type == TemplateType.localDevelopment) return emptySet()
-
-        return setOf(generateResource(createBuild(adc)))
+        // TODO: Check OpenShift version
+        return emptySet()
+        // return setOf(generateResource(createBuild(adc)))
     }
 
     override fun modify(
@@ -70,6 +71,16 @@ class BuildFeature(
         context: FeatureContext
     ) {
         resources.forEach {
+            if (it.resource.kind == "ApplicationDeployment") {
+                modifyResource(it, "Add build information")
+                val ad: ApplicationDeployment = it.resource as ApplicationDeployment
+                ad.spec.build = ApplicationDeploymentBuildInformation(
+                    baseImageName = adc.applicationPlatform.baseImageName,
+                    baseImageVersion = adc.applicationPlatform.baseImageVersion,
+                    type = adc.applicationPlatform.name
+                )
+            }
+
             if (it.resource.kind == "ImageStream") {
                 modifyResource(it, "Remove spec from imagestream")
                 val imageStream: ImageStream = it.resource as ImageStream
@@ -77,7 +88,6 @@ class BuildFeature(
             }
 
             if (it.resource.kind == "DeploymentConfig") {
-
                 modifyResource(it, "Change imageChangeTrigger to follow latest")
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
                 dc.spec.triggers.forEach { dtp ->

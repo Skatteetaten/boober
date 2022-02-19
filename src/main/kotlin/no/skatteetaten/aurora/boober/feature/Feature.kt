@@ -134,7 +134,6 @@ enum class TemplateType(
     job(auroraGeneratedDeployment = false),
     deploy,
     development,
-    localDevelopment,
     localTemplate(false, false),
     template(false, false)
 }

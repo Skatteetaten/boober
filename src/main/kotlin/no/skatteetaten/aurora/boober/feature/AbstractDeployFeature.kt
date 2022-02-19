@@ -213,7 +213,6 @@ abstract class AbstractDeployFeature(
         return header.type in listOf(
             TemplateType.deploy,
             TemplateType.development,
-            TemplateType.localDevelopment,
         ) && enable(header.applicationPlatform)
     }
 
