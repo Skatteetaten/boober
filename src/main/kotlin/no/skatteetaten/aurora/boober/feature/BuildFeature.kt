@@ -69,9 +69,6 @@ class BuildFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        // If localDevelopment we build image locally and push to registry, so we use default deploy strategy
-        if (adc.type == TemplateType.localDevelopment) return
-
         resources.forEach {
             if (it.resource.kind == "ImageStream") {
                 modifyResource(it, "Remove spec from imagestream")
