@@ -141,17 +141,17 @@ class FluentbitSidecarFeature(
                 listOf(
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/index",
-                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom$key is missing required field index") }
+                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom/$key is missing required field index") }
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/pattern",
-                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom$key is missing required field pattern") }
+                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom/$key is missing required field pattern") }
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/sourcetype",
                         validator = {
                             if (it == null) {
-                                IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom$key is missing required field sourcetype")
+                                IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom/$key is missing required field sourcetype")
                             } else {
 
                                 val configuredSourcetype = it.textValue()
