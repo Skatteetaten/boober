@@ -17,6 +17,9 @@ splunk:
         retry:
             limit: 5
         tag: "1.6.10"
+        resources:
+            cpu:
+                limit: "300m"
 
 integrations:
     operations:
