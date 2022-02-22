@@ -20,8 +20,10 @@ fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentCont
     this.isSuccess()
         .transform { mae ->
             val errors = mae.second.map { it.errors }
-            if (errors.size > 1 && errors.isNotEmpty()) {
+            if (errors.size > 1) {
                 throw IllegalArgumentException("More than one error")
+            } else if (errors.isEmpty()) {
+                throw IllegalArgumentException("Does not contain any errors")
             } else {
                 errors.first().errors.first()
             }

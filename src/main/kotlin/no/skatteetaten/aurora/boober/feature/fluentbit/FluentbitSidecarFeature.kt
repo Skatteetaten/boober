@@ -20,6 +20,8 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.oneOf
+import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.required
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
@@ -141,31 +143,29 @@ class FluentbitSidecarFeature(
                 listOf(
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/index",
-                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom/$key is missing required field index") }
+                        validator = { it.required("Field is required") }
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/pattern",
-                        validator = { it.required("Field=$FEATURE_FIELD_NAME/custom/$key is missing required field pattern") }
+                        validator = {
+                            it.pattern(
+                                "^[A-Za-z-]+\\.[A-Za-z]+\$",
+                                "Is not properly formatted. You need to have exactly one period(.) and conform to the following regex '^[A-Za-z-]+\\.[A-Za-z]+\$'"
+                            )
+                        }
                     ),
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/sourcetype",
-                        validator = {
-                            if (it == null) {
-                                IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom/$key is missing required field sourcetype")
-                            } else {
-
-                                val configuredSourcetype = it.textValue()
-                                if (configuredSourcetype !in supportedFluentbitSourcetypes) {
-                                    IllegalArgumentException("Field=$FEATURE_FIELD_NAME/custom/$key/sourcetype with value=$configuredSourcetype is not one of $supportedFluentbitSourcetypes")
-                                } else {
-                                    null
-                                }
-                            }
-                        }
+                        validator = { it.oneOf(supportedFluentbitSourcetypes) }
                     )
                 )
             }
     }
+
+    private fun validate(fieldConstraint: Boolean, validationErrorMessage: String): IllegalArgumentException? =
+        if (!fieldConstraint) {
+            IllegalArgumentException(validationErrorMessage)
+        } else null
 
     private fun Set<AuroraResource>.addVolumesAndContainer(
         container: Container,
@@ -213,15 +213,12 @@ class FluentbitSidecarFeature(
             }
     }
 
-    private fun getPodTemplateSpec(auroraResource: AuroraResource): PodTemplateSpec? {
-        val hasMetadata = auroraResource.resource
-
-        return when (hasMetadata) {
+    private fun getPodTemplateSpec(auroraResource: AuroraResource): PodTemplateSpec? =
+        when (val hasMetadata = auroraResource.resource) {
             is Deployment -> hasMetadata.spec.template
             is DeploymentConfig -> hasMetadata.spec.template
             else -> null
         }
-    }
 
     private fun ObjectMeta.addAnnotation(entry: Pair<String, String>) {
         if (this.annotations.isNullOrEmpty()) {

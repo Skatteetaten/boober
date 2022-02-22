@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.feature
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
@@ -221,7 +223,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationErrorResult("missing required field index")
+        }.singleApplicationErrorResult("Field is required")
 
         assertThat {
             createAuroraDeploymentContext(
@@ -236,7 +238,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationErrorResult("missing required field sourcetype")
+        }.singleApplicationErrorResult("Field is required")
 
         assertThat {
             createAuroraDeploymentContext(
@@ -251,7 +253,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationErrorResult("missing required field pattern")
+        }.singleApplicationErrorResult("Field is required")
     }
 
     @Test
@@ -270,7 +272,27 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationErrorResult("value=unsupported is not one of [_json, access_combined")
+        }.singleApplicationErrorResult("Must be one of [_json, access_combined")
+    }
+
+    @ValueSource(strings = ["application", "application.log.other", "application231243.log", ".", "", "da.", ".log"])
+    @ParameterizedTest
+    fun `Should validate that pattern is within regex`(illegalPattern: String) {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "application": {
+                        "index": "openshift",
+                        "sourcetype": "log4j",
+                        "pattern": "$illegalPattern"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Is not properly formatted. You need to have exactly one period")
     }
 
     @Test

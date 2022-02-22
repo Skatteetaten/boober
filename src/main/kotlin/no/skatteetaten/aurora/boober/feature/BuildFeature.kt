@@ -29,17 +29,6 @@ class BuildFeature(
         return header.type == TemplateType.development
     }
 
-    override fun validate(
-        adc: AuroraDeploymentSpec,
-        fullValidation: Boolean,
-        context: FeatureContext
-    ): List<Exception> {
-        if (adc.deployState == DeploymentState.deployment) {
-            throw AuroraDeploymentSpecValidationException("Development type is not supported for deployState=deployment")
-        }
-        return emptyList()
-    }
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
         val applicationPlatform: ApplicationPlatform = header.applicationPlatform
@@ -56,6 +45,18 @@ class BuildFeature(
             )
         )
     }
+
+    override fun validate(
+        adc: AuroraDeploymentSpec,
+        fullValidation: Boolean,
+        context: FeatureContext
+    ): List<Exception> {
+        if (adc.deployState == DeploymentState.deployment) {
+            throw AuroraDeploymentSpecValidationException("Development type is not supported for deployState=deployment")
+        }
+        return emptyList()
+    }
+
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         return setOf(generateResource(createBuild(adc)))

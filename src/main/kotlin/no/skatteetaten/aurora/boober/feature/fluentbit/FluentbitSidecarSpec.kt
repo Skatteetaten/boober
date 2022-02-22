@@ -37,18 +37,23 @@ fun AuroraDeploymentSpec.validateFluentbit(): List<Exception> {
     if (loggingField.isEmpty()) return emptyList()
 
     val onlyOneOfLoggerTypes = validateOnlyOneOfCustomOrStandardLogger()
-    val validateRequiredLoggersForCustomIfPresent = validateRequiredLoggersForCustom()
+    val isCustomLogger = this.getSubKeyValues("$FEATURE_FIELD_NAME/custom").isNotEmpty()
+
+    if (isCustomLogger) {
+        val validateRequiredLoggersForCustomIfPresent = validateRequiredLoggersForCustom()
+        return listOfNotNull(onlyOneOfLoggerTypes, validateRequiredLoggersForCustomIfPresent)
+    }
+
     val validateIndexIsSetWhenUsingLoggers = validateIndexIsSetWhenUsingLoggers()
 
-    return listOfNotNull(onlyOneOfLoggerTypes, validateRequiredLoggersForCustomIfPresent, validateIndexIsSetWhenUsingLoggers)
+    return listOfNotNull(onlyOneOfLoggerTypes, validateIndexIsSetWhenUsingLoggers)
 }
 
 fun AuroraDeploymentSpec.validateIndexIsSetWhenUsingLoggers(): IllegalArgumentException? {
-    if (this.loggingIndex == null) {
-        val loggers = this.getSubKeyValues("$FEATURE_FIELD_NAME/loggers")
-        if (loggers.isNotEmpty()) {
-            return IllegalArgumentException("Missing required field logging/index, it is required when logging/loggers is used")
-        }
+    val loggers = this.getSubKeyValues("$FEATURE_FIELD_NAME/loggers")
+
+    if (loggers.isNotEmpty() && this.loggingIndex == null) {
+        return IllegalArgumentException("Missing required field logging/index, it is required when logging/loggers is used")
     }
 
     return null
@@ -56,8 +61,6 @@ fun AuroraDeploymentSpec.validateIndexIsSetWhenUsingLoggers(): IllegalArgumentEx
 
 fun AuroraDeploymentSpec.validateRequiredLoggersForCustom(): IllegalArgumentException? {
     val customLoggerNames = this.getSubKeyValues("$FEATURE_FIELD_NAME/custom")
-
-    if (customLoggerNames.isEmpty()) return null
 
     if (!customLoggerNames.contains("application")) {
         return IllegalArgumentException("When using custom logger, application logger is required")
@@ -154,7 +157,7 @@ fun logTypeToFilePattern(logType: String): String =
         else -> "*.log"
     }
 
-fun getLogRotationExcludePattern(logFilePattern: String): String = logFilePattern.replace("*", "*.[1-9]")
+fun getLogRotationExcludePattern(logFilePattern: String): String = logFilePattern.replaceFirst(".", ".[1-9].")
 
 fun AuroraDeploymentSpec.createFluentbitConfigMap(
     allConfiguredLoggers: List<LoggingConfig>,
