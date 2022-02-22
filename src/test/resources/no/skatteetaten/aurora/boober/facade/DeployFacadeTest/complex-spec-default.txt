@@ -1,6 +1,14 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
                   static | applicationDeploymentId: "1234567890"
+                         | alerts:
+                         |   alert:
+            complex.json |     enabled: true
+            complex.json |     expr: "test-expression"
+            complex.json |     delay: "1"
+            complex.json |     connection: "mattermost"
+            complex.json |     connections: ["aurora"]
+            complex.json |     severity: "warning"
               about.json | schemaVersion: "v1"
             complex.json | type: "development"
                  default | deployState: "deploymentConfig"

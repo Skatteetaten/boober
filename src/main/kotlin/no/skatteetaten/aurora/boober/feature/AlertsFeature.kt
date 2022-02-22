@@ -46,8 +46,18 @@ class AlertsFeature : Feature {
         "expr",
         "delay",
         "connection",
+        "connections",
         "severity"
     )
+
+    fun containsDeprecatedConnection(spec: AuroraDeploymentSpec): Boolean {
+        val k = spec.fields.filter {
+            it.key.contains("alerts") &&
+                it.key.contains("connection") &&
+                !it.key.contains("connections")
+        }.map { it.key }.firstOrNull() ?: return false
+        return !spec.getOrNull<String>(k).isNullOrEmpty()
+    }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val alertsDefaults = setOf(

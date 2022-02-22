@@ -1,0 +1,47 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "Alert",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "komplex",
+      "booberDeployId": "deploy1"
+    },
+    "name": "komplex-alert",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "application": {
+      "affiliation": "paas",
+      "cluster": "utv",
+      "environment": "utv",
+      "name": "komplex"
+    },
+    "prometheus": {
+      "expr": "test-expression"
+    },
+    "alert": {
+      "delay": "1",
+      "severity": "warning",
+      "connections": [
+        "aurora"
+      ],
+      "enabled": true,
+      "summary": "oppsummering av alarm er ikke angitt",
+      "description": "beskrivelse av alarm er ikke angitt"
+    }
+  }
+}
