@@ -282,12 +282,10 @@ class ToxiproxySidecarFeature(
                             "-c",
                             """
                                 i=0;
-                                s=1;
-                                while [ ${"$"}i -ne 10 -a ${"$"}s -ne 0 ]; do
+                                while [ ${"$"}i -ne 10 ]; do
                                     i=$((${"$"}i+1));
                                     sleep 1;
                                     nc -zv 127.0.0.1 ${PortNumbers.TOXIPROXY_ADMIN_PORT} && exit;
-                                    s=$?;
                                 done;
                                 exit 1;
                             """.trim().replace(Regex("\\s+"), " ")
