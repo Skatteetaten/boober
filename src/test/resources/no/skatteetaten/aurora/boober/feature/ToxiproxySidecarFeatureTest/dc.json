@@ -46,7 +46,7 @@
                   "command": [
                     "sh",
                     "-c",
-                    "i=0; s=1; while [ $i -ne 10 -a $s -ne 0 ]; do i=$(($i+1)); sleep 1; nc -zv 127.0.0.1 8474; s=$?; done; if [ $s -ne 0 ]; then exit; fi;"
+                    "i=0; s=1; while [ $i -ne 10 -a $s -ne 0 ]; do i=$(($i+1)); sleep 1; nc -zv 127.0.0.1 8474 && exit; s=$?; done; exit 1;"
                   ]
                 }
               }
