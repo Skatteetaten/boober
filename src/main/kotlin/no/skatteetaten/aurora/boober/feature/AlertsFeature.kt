@@ -33,6 +33,7 @@ class AlertsFeature : Feature {
     enum class Errors(val message: String) {
         MissingAlertEnabledProp("alerts/<name>/enabled or alertsDefaults/enabled is required in alert configuration"),
         MissingAlertConnectionProp("alerts/<name>/connection or alertsDefaults/connection is required in alert configuration"),
+        InvalidLegacyConnectionAndConnectionsProp("legacy connection and connections properties cannot be set at the same time"),
         MissingAlertDelayProp("alerts/<name>/delay or alertsDefaults/delay is required in alert configuration"),
         MissingAlertExpression("alerts/<name>/expr is required in alert configuration"),
         MissingAlertSeverity("alerts/<name>/severity is required in alert configuration")
@@ -100,7 +101,7 @@ class AlertsFeature : Feature {
                 adc.getOrNull<String>("$defaultsName/enabled").isNullOrEmpty()
         }
 
-        val isConnectionPropertyMissing = alarms.any {
+        val isLegacyConnectionPropertyMissing = alarms.any {
             adc.getOrNull<String>("$featureName/$it/connection").isNullOrEmpty() &&
                 adc.getOrNull<String>("$defaultsName/connection").isNullOrEmpty()
         }
@@ -128,8 +129,10 @@ class AlertsFeature : Feature {
             validationErrors.add(AuroraDeploymentSpecValidationException(Errors.MissingAlertEnabledProp.message))
         }
 
-        if (isConnectionPropertyMissing && isConnectionsPropertyMissing) {
+        if (isLegacyConnectionPropertyMissing && isConnectionsPropertyMissing) {
             validationErrors.add(AuroraDeploymentSpecValidationException(Errors.MissingAlertConnectionProp.message))
+        } else if (!isLegacyConnectionPropertyMissing && !isConnectionsPropertyMissing) {
+            validationErrors.add(AuroraDeploymentSpecValidationException(Errors.InvalidLegacyConnectionAndConnectionsProp.message))
         }
 
         if (isDelayPropertyMissing) {
@@ -190,20 +193,16 @@ class AlertsFeature : Feature {
     private fun AuroraDeploymentSpec.extractConfiguration(alertName: String): AlertConfiguration {
         val confPath = "$featureName/$alertName"
 
-        // non-nullable w. no-default
         val confExpression = this.get<String>("$confPath/expr")
         val confSeverity = this.get<String>("$confPath/severity")
 
-        // nullable w. conf-default + fallback
-        val confEnabled = this.getWithDefaultFallback(confPath, "enabled", false, defaultsName)
-        val confDelay = this.getWithDefaultFallback(confPath, "delay", "1", defaultsName)
+        val confEnabled = this.getOrDefault<Boolean>(featureName, alertName, "enabled")
+        val confDelay = this.getOrDefault<String>(featureName, alertName, "delay")
 
-        // nullable w. fallback
-        val confSummary = this.getWithDefaultFallback(confPath, "summary", "oppsummering av alarm er ikke angitt")
-        val confDescription = this.getWithDefaultFallback(confPath, "description", "beskrivelse av alarm er ikke angitt")
+        val confSummary = this.getOrNull<String>("$confPath/summary") ?: "oppsummering av alarm er ikke angitt"
+        val confDescription = this.getOrNull<String>("$confPath/description") ?: "beskrivelse av alarm er ikke angitt"
 
-        // connection rules handling
-        val confConnections = this.getAlertConnectionRules(confPath)
+        val confConnections = this.getAlertConnectionRules(alertName)
 
         return AlertConfiguration(
             enabled = confEnabled,
@@ -216,41 +215,18 @@ class AlertsFeature : Feature {
         )
     }
 
-    private inline fun <reified T> AuroraDeploymentSpec.getWithDefaultFallback(
-        root: String,
-        key: String,
-        fallback: T,
-        defaultRoot: String? = null
-    ): T {
-        val v = this.getOrNull<T>("$root/$key")
-        val d = if (defaultRoot != null) {
-            this.getOrNull<T>("$defaultRoot/$key")
-        } else {
+    private fun AuroraDeploymentSpec.getAlertConnectionRules(alertName: String): List<String> {
+        val legacyConnection = try {
+            this.getOrDefault<String>(featureName, alertName, "connection")
+        } catch (e: NullPointerException) {
             null
         }
-        return v ?: d ?: fallback
-    }
-
-    private fun AuroraDeploymentSpec.getAlertConnectionRules(confPath: String): List<String> {
-        val alertConnection = this.getOrNull<String>("$confPath/connection")
-        val defaultsConnection = this.getOrNull<String>("$defaultsName/connection")
-        val implConnection = alertConnection ?: defaultsConnection
-
-        val alertsConnections = this.getOrNull<List<String>>("$confPath/connections")
-        val defaultsConnections = this.getOrNull<List<String>>("$defaultsName/connections")
-        val implConnections = alertsConnections ?: defaultsConnections
-
-        val list = mutableListOf<String>()
-
-        // if connections property is set then ignore connection property
-        if (!implConnections.isNullOrEmpty()) {
-            list.addAll(implConnections)
-        } else if (!implConnection.isNullOrEmpty()) {
-            list.add(implConnection)
-        } else {
-            throw IllegalStateException("one of $confPath/connection and $confPath/connections must be defined")
+        val listConnections = try {
+            this.getOrDefault<List<String>>(featureName, alertName, "connections")
+        } catch (e: NullPointerException) {
+            null
         }
 
-        return list
+        return listConnections ?: listOf(legacyConnection!!)
     }
 }

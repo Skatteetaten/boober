@@ -107,7 +107,7 @@ class AlertsFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should generate alert resource with multipl connection rules`() {
+    fun `should generate alert resource with multiple connection rules`() {
         val generatedResources = generateResources(
             """{
               "alerts": {
@@ -184,5 +184,29 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         val alert = (generatedResources[0].resource as Alerts).spec.alert
         assertThat(alert.delay).isEqualTo("2")
         assertThat(alert.connections).containsOnly("en-annen-koblingsregel")
+    }
+
+    @Test
+    fun `should fail validation when legacy connection and new connections is defined`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                  "alertsDefaults": {
+                    "connections": [
+                      "aurora-email"
+                    ]
+                  },
+                  "alerts": {
+                    "is-down": {
+                      "enabled": true,
+                      "delay": 1,
+                      "expr": "test",
+                      "connection": "aurora-mattermost",
+                      "severity": "warning"
+                    }
+                  }
+                }"""
+            )
+        }.singleApplicationErrorResult(AlertsFeature.Errors.InvalidLegacyConnectionAndConnectionsProp.message)
     }
 }
