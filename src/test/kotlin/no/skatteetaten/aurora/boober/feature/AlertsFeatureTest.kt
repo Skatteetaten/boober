@@ -50,7 +50,6 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         }.applicationErrorResult(
             AlertsFeature.Errors.MissingAlertExpression.message,
             AlertsFeature.Errors.MissingAlertConnectionProp.message,
-            AlertsFeature.Errors.MissingAlertDelayProp.message,
             AlertsFeature.Errors.MissingAlertSeverity.message
         )
     }
