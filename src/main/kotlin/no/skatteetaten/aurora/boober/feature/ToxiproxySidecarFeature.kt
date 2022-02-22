@@ -43,12 +43,12 @@ private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be 
 private const val TOXIPROXY_CONFIGS_CONTEXT_KEY = "toxiproxyConfigs"
 
 val FeatureContext.toxiproxyConfigs: List<ToxiproxyConfig>
-    get() = this.getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
+    get() = getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
 
 private const val SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY = "secretNameToPortMap"
 
 private val FeatureContext.secretNameToPortMap: Map<String, Int>
-    get() = this.getContextKey(SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY)
+    get() = getContextKey(SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY)
 
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(

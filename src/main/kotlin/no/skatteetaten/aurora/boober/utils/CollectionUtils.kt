@@ -149,6 +149,8 @@ fun <K, V> Map<K, V>?.takeIfNotEmpty(): Map<K, V>? {
     return this.takeIf { it?.isEmpty() == false }
 }
 
+fun <K, V> List<Map<K, V>>.toMap(): Map<K, V> = fold(emptyMap()) { acc, map -> acc + map }
+
 // Implemented based on https://github.com/openzipkin/brave/issues/820#issuecomment-447614394
 private class TracingContextElement : ThreadContextElement<CurrentTraceContext.Scope?>, AbstractCoroutineContextElement(Key) {
     private val currentTraceContext: CurrentTraceContext? = Tracing.current()?.currentTraceContext()

@@ -9,6 +9,7 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaForAppRequest
 import no.skatteetaten.aurora.boober.utils.UrlParser
+import no.skatteetaten.aurora.boober.utils.toMap
 import java.net.URI
 import java.nio.charset.Charset
 import java.util.Base64
@@ -160,7 +161,7 @@ internal fun AuroraDeploymentSpec.databasesFromSecrets(
         Pair(toxiproxyConfig, secretNameToPortMap)
     }
     .unzip()
-    .run { Pair(first, second.fold(emptyMap()) { acc, map -> acc + map }) }
+    .run { Pair(first, second.toMap()) }
 
 internal fun MutableMap<String, String>.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort: Int) {
     this["jdbcurl"] = this["jdbcurl"]
