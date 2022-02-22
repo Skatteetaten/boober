@@ -62,10 +62,10 @@ class AlertsFeature : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val alertsDefaults = setOf(
-            AuroraConfigFieldHandler("$defaultsName/enabled"),
+            AuroraConfigFieldHandler("$defaultsName/enabled", defaultValue = false),
             AuroraConfigFieldHandler("$defaultsName/connection"),
             AuroraConfigFieldHandler("$defaultsName/connections"),
-            AuroraConfigFieldHandler("$defaultsName/delay")
+            AuroraConfigFieldHandler("$defaultsName/delay", defaultValue = "1")
         )
         val definedAlerts = cmd.applicationFiles.getDefinedAlerts()
             .flatMap { name ->
@@ -91,6 +91,10 @@ class AlertsFeature : Feature {
         context: FeatureContext
     ): List<Exception> {
         val alarms = adc.getDefinedAlerts()
+
+        if (alarms.isEmpty()) {
+            return emptyList()
+        }
 
         val isExprConfigMissing = alarms.any {
             adc.getOrNull<String>("$featureName/$it/expr").isNullOrEmpty()

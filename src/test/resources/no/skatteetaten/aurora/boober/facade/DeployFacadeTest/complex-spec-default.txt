@@ -7,8 +7,10 @@
             complex.json |     expr: "test-expression"
             complex.json |     delay: "1"
             complex.json |     connection: "mattermost"
-            complex.json |     connections: ["aurora"]
             complex.json |     severity: "warning"
+                         | alertsDefaults:
+                 default |   enabled: false
+                 default |   delay: "1"
               about.json | schemaVersion: "v1"
             complex.json | type: "development"
                  default | deployState: "deploymentConfig"

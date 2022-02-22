@@ -7,7 +7,6 @@
             complex.json |     expr: "test-expression"
             complex.json |     delay: "1"
             complex.json |     connection: "mattermost"
-            complex.json |     connections: ["aurora"]
             complex.json |     severity: "warning"
               about.json | schemaVersion: "v1"
             complex.json | type: "development"

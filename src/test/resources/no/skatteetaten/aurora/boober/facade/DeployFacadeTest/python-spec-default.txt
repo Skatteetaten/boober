@@ -1,6 +1,9 @@
          static | applicationDeploymentRef: "utv/python"
          static | configVersion: "master"
          static | applicationDeploymentId: "1234567890"
+                | alertsDefaults:
+        default |   enabled: false
+        default |   delay: "1"
      about.json | schemaVersion: "v1"
      about.json | type: "deploy"
         default | deployState: "deploymentConfig"

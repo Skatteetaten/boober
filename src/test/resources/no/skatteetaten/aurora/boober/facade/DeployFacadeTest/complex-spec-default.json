@@ -71,20 +71,6 @@
           }
         ]
       },
-      "connections": {
-        "source": "complex.json",
-        "value": [
-          "aurora"
-        ],
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": [
-              "aurora"
-            ]
-          }
-        ]
-      },
       "severity": {
         "source": "complex.json",
         "value": "warning",
@@ -95,6 +81,28 @@
           }
         ]
       }
+    }
+  },
+  "alertsDefaults": {
+    "enabled": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": "1",
+      "sources": [
+        {
+          "name": "default",
+          "value": "1"
+        }
+      ]
     }
   },
   "schemaVersion": {

@@ -1,6 +1,9 @@
         static | applicationDeploymentRef: "utv/web"
         static | configVersion: "master"
         static | applicationDeploymentId: "1234567890"
+               | alertsDefaults:
+       default |   enabled: false
+       default |   delay: "1"
     about.json | schemaVersion: "v1"
       web.json | type: "development"
        default | deployState: "deploymentConfig"

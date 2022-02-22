@@ -71,20 +71,6 @@
           }
         ]
       },
-      "connections": {
-        "source": "complex.json",
-        "value": [
-          "aurora"
-        ],
-        "sources": [
-          {
-            "name": "complex.json",
-            "value": [
-              "aurora"
-            ]
-          }
-        ]
-      },
       "severity": {
         "source": "complex.json",
         "value": "warning",

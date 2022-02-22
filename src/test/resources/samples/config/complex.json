@@ -81,9 +81,6 @@
       "expr": "test-expression",
       "delay": "1",
       "connection": "mattermost",
-      "connections": [
-        "aurora"
-      ],
       "severity": "warning"
     }
   },
