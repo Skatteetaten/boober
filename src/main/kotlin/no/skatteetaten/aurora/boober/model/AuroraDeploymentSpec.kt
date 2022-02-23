@@ -128,6 +128,16 @@ data class AuroraDeploymentSpec(
             ?: get("$defaultRoot/$suffix")
     }
 
+    inline fun <reified T> getOrDefaultElseNull(
+        root: String,
+        index: String,
+        suffix: String,
+        defaultRoot: String = "${root}Defaults"
+    ): T? {
+        return getOrNull("$root/$index/$suffix")
+            ?: getOrNull("$defaultRoot/$suffix")
+    }
+
     /**
      * Extracts a config field declared either as a delimited string (ie. "value1, value2") or as a JSON array
      * (ie. ["value1", "value2"]) as a String list.

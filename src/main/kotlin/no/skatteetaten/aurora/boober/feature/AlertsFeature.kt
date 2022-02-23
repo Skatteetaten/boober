@@ -51,15 +51,6 @@ class AlertsFeature : Feature {
         "severity"
     )
 
-    fun containsDeprecatedConnection(spec: AuroraDeploymentSpec): Boolean {
-        val k = spec.fields.filter {
-            it.key.contains("alerts") &&
-                it.key.contains("connection") &&
-                !it.key.contains("connections")
-        }.map { it.key }.firstOrNull() ?: return false
-        return !spec.getOrNull<String>(k).isNullOrEmpty()
-    }
-
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         val alertsDefaults = setOf(
             AuroraConfigFieldHandler("$defaultsName/enabled", defaultValue = false),
@@ -220,17 +211,21 @@ class AlertsFeature : Feature {
     }
 
     private fun AuroraDeploymentSpec.getAlertConnectionRules(alertName: String): List<String> {
-        val legacyConnection = try {
-            this.getOrDefault<String>(featureName, alertName, "connection")
-        } catch (e: NullPointerException) {
-            null
-        }
-        val listConnections = try {
-            this.getOrDefault<List<String>>(featureName, alertName, "connections")
-        } catch (e: NullPointerException) {
-            null
-        }
+        val listConnections = this.getOrDefaultElseNull<List<String>>(featureName, alertName, "connections")
 
-        return listConnections ?: listOf(legacyConnection!!)
+        return if (listConnections != null) {
+            listConnections
+        } else {
+            val connection = getOrDefaultElseNull<String>(featureName, alertName, "connection")
+            listOfNotNull(connection)
+        }
+    }
+
+    fun containsDeprecatedConnection(spec: AuroraDeploymentSpec): Boolean {
+        val isAlertsConfigured = spec.getSubKeyValues(featureName).isNotEmpty()
+        if (!isAlertsConfigured) return false
+
+        val alertFields = spec.getSubKeys(featureName).keys
+        return alertFields.any { it.contains(Regex("connection$")) }
     }
 }

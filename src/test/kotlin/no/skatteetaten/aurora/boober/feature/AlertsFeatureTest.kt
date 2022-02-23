@@ -1,17 +1,18 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.contains
+import assertk.assertions.containsOnly
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.openshift.Alerts
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrorResult
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
-import org.junit.jupiter.api.Test
-import assertk.assertions.containsOnly
 
 class AlertsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -207,5 +208,52 @@ class AlertsFeatureTest : AbstractFeatureTest() {
                 }"""
             )
         }.singleApplicationErrorResult(AlertsFeature.Errors.InvalidLegacyConnectionAndConnectionsProp.message)
+    }
+
+    @Test
+    fun `when using legacy connection property then legacy check should return true`() {
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+                  "alerts": {
+                    "is-down": {
+                      "enabled": true,
+                      "delay": "1",
+                      "expr": "test",
+                      "connection": "aurora-mattermost",
+                      "severity": "warning"
+                    }
+                  }
+                }""".trimMargin()
+        )
+        val alertsFeature = feature as AlertsFeature
+        val containsDeprecatedConnection = alertsFeature.containsDeprecatedConnection(spec)
+        assertThat(containsDeprecatedConnection).isTrue()
+    }
+
+    @Test
+    fun `when using connections property then legacy check should false`() {
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+                  "alerts": {
+                    "is-down": {
+                      "enabled": true,
+                      "delay": "1",
+                      "expr": "test",
+                      "connections": ["aurora-mattermost"],
+                      "severity": "warning"
+                    }
+                  }
+                }""".trimMargin()
+        )
+        val alertsFeature = feature as AlertsFeature
+        val containsDeprecatedConnection = alertsFeature.containsDeprecatedConnection(spec)
+        assertThat(containsDeprecatedConnection).isFalse()
+    }
+
+    @Test
+    fun `when alert is not configured then legacy check should return false`() {
+        val spec = createAuroraDeploymentSpecForFeature("""{}""")
+        val alertsFeature = feature as AlertsFeature
+        assertThat(alertsFeature.containsDeprecatedConnection(spec)).isFalse()
     }
 }
