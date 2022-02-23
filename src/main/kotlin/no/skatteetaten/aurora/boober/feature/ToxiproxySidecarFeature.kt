@@ -36,6 +36,7 @@ import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.compressWhitespace
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 import org.springframework.beans.factory.annotation.Value
@@ -281,14 +282,12 @@ class ToxiproxySidecarFeature(
                             "sh",
                             "-c",
                             """
-                                i=0;
-                                while [ ${"$"}i -ne 10 ]; do
-                                    i=$((${"$"}i+1));
+                                for i in $(seq 1 10); do
                                     sleep 1;
                                     nc -zv 127.0.0.1 ${PortNumbers.TOXIPROXY_ADMIN_PORT} && exit;
                                 done;
                                 exit 1;
-                            """.trim().replace(Regex("\\s+"), " ")
+                            """.compressWhitespace()
                         )
                     }
                 }
