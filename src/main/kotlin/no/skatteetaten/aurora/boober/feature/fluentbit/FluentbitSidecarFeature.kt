@@ -164,11 +164,6 @@ class FluentbitSidecarFeature(
             }
     }
 
-    private fun validate(fieldConstraint: Boolean, validationErrorMessage: String): IllegalArgumentException? =
-        if (!fieldConstraint) {
-            IllegalArgumentException(validationErrorMessage)
-        } else null
-
     private fun Set<AuroraResource>.addVolumesAndContainer(
         container: Container,
         fluentConfigVolume: Volume,
