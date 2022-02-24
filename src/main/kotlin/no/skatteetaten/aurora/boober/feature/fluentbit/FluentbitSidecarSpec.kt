@@ -196,7 +196,7 @@ fun AuroraDeploymentSpec.getCustomLoggerConfig(configuredCustomLoggerFields: Lis
         )
     }
 
-fun AuroraDeploymentSpec.createFluentbitContainer(imagePath: String): Container {
+fun AuroraDeploymentSpec.createFluentbitContainer(imagePath: String, cpuLimit: String): Container {
     val hecSecretName = getHecSecretName(this.name)
     val hecEnvVariables = listOf(
         newEnvVar {
@@ -248,9 +248,8 @@ fun AuroraDeploymentSpec.createFluentbitContainer(imagePath: String): Container 
         )
         resources {
             limits = mapOf(
-                // TODO? Add as config parameter
                 "memory" to Quantity("${adc.bufferSize * 5}Mi"),
-                "cpu" to Quantity("300m")
+                "cpu" to Quantity(cpuLimitFluentbit)
             )
             requests = mapOf(
                 "memory" to Quantity("${adc.bufferSize}Mi"),

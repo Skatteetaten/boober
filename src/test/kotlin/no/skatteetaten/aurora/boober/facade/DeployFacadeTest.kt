@@ -115,7 +115,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse().setResponseCode(200)
             }
 
-            // This is a empty environment so no resources exist
+            // This is an empty environment so no resources exist
             rule({ method == "GET" }) {
                 path?.let { it ->
                     if (it.endsWith("/projects/paas-utv")) {
@@ -246,7 +246,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             rule({ method == "GET" && path!!.endsWith("aurora-token") || path!!.endsWith("pvc") }) {
                 MockResponse().setResponseCode(200)
             }
-            // This is a empty environment so no resources exist
+            // This is an empty environment so no resources exist
             rule({ method == "GET" }) {
                 MockResponse().setResponseCode(404)
             }

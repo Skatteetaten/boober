@@ -51,6 +51,7 @@ class FluentbitSidecarFeature(
     @Value("\${splunk.hec.url}") val splunkUrl: String,
     @Value("\${splunk.hec.port}") val splunkPort: String,
     @Value("\${splunk.fluentbit.tag}") val fluentBitTag: String,
+    @Value("\${splunk.fluentbit.resources.cpu.limit}") val cpuLimitFluentbit: String,
     @Value("\${splunk.fluentbit.retry.limit}") val retryLimit: Int? = null
 ) : AbstractResolveTagFeature(cantusService) {
 
@@ -188,7 +189,7 @@ class FluentbitSidecarFeature(
     fun Set<AuroraResource>.addFluentbitContainer(adc: AuroraDeploymentSpec, context: FeatureContext) {
         val fluentParserVolume = createFluentbitVolume(adc.fluentParserName)
         val fluentConfigVolume = createFluentbitVolume(adc.fluentConfigName)
-        val container = adc.createFluentbitContainer(context.imageMetadata.getFullImagePath())
+        val container = adc.createFluentbitContainer(context.imageMetadata.getFullImagePath(), cpuLimitFluentbit)
 
         this.addVolumesAndContainer(container, fluentConfigVolume, fluentParserVolume)
     }
