@@ -24,6 +24,20 @@ import no.skatteetaten.aurora.boober.feature.type
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
+val fluentbitContainerSupportedTypes = listOf(TemplateType.deploy, TemplateType.development)
+
+private fun getHecSecretName(name: String) = "$name-hec"
+private const val FEATURE_FIELD_NAME = "logging"
+val AuroraDeploymentSpec.fluentConfigName: String get() = "${this.name}-fluent-config"
+val AuroraDeploymentSpec.fluentParserName: String get() = "${this.name}-fluent-parser"
+val AuroraDeploymentSpec.bufferSize: Int get() = this["logging/bufferSize"]
+val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
+val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
+const val hecTokenKey: String = "HEC_TOKEN"
+const val splunkHostKey: String = "SPLUNK_HOST"
+const val splunkPortKey: String = "SPLUNK_PORT"
+
+
 data class LoggingConfig(
     val name: String,
     val sourceType: String,
@@ -31,6 +45,8 @@ data class LoggingConfig(
     val filePattern: String,
     val excludePattern: String
 )
+
+fun AuroraDeploymentSpec.shouldCreateFluentbitContainer(): Boolean = this.type in fluentbitContainerSupportedTypes
 
 fun AuroraDeploymentSpec.validateFluentbit(): List<Exception> {
     val loggingField = this.getSubKeyValues(FEATURE_FIELD_NAME)
@@ -290,17 +306,3 @@ fun AuroraDeploymentSpec.createHecSecret(hecToken: String, splunkUrl: String, sp
     }
 }
 
-fun AuroraDeploymentSpec.shouldCreateFluentbitContainer(): Boolean = this.type in fluentbitContainerSupportedTypes
-
-val fluentbitContainerSupportedTypes = listOf(TemplateType.deploy, TemplateType.development)
-
-private fun getHecSecretName(name: String) = "$name-hec"
-private const val FEATURE_FIELD_NAME = "logging"
-val AuroraDeploymentSpec.fluentConfigName: String get() = "${this.name}-fluent-config"
-val AuroraDeploymentSpec.fluentParserName: String get() = "${this.name}-fluent-parser"
-val AuroraDeploymentSpec.bufferSize: Int get() = this["logging/bufferSize"]
-val AuroraDeploymentSpec.fluentSideCarContainerName: String get() = "${this.name}-fluent-sidecar"
-val AuroraDeploymentSpec.loggingIndex: String? get() = this.getOrNull<String>("logging/index")
-const val hecTokenKey: String = "HEC_TOKEN"
-const val splunkHostKey: String = "SPLUNK_HOST"
-const val splunkPortKey: String = "SPLUNK_PORT"
