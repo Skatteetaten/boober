@@ -150,7 +150,7 @@ class FluentbitSidecarFeature(
                         "$FEATURE_FIELD_NAME/custom/$key/pattern",
                         validator = {
                             it.pattern(
-                                "^[A-Za-z-]+\\.[A-Za-z]+\$",
+                                "^[A-Za-z-*]+\\.[A-Za-z]+\$",
                                 "Is not properly formatted. You need to have exactly one period(.) and conform to the following regex '^[A-Za-z-]+\\.[A-Za-z]+\$'"
                             )
                         }

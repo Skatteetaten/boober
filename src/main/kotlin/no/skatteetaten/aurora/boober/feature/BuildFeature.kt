@@ -57,7 +57,6 @@ class BuildFeature(
         return emptyList()
     }
 
-
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         return setOf(generateResource(createBuild(adc)))
     }

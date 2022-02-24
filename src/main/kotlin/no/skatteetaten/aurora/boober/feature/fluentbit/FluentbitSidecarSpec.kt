@@ -249,7 +249,7 @@ fun AuroraDeploymentSpec.createFluentbitContainer(imagePath: String, cpuLimit: S
         resources {
             limits = mapOf(
                 "memory" to Quantity("${adc.bufferSize * 5}Mi"),
-                "cpu" to Quantity(cpuLimitFluentbit)
+                "cpu" to Quantity(cpuLimit)
             )
             requests = mapOf(
                 "memory" to Quantity("${adc.bufferSize}Mi"),

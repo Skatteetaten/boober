@@ -337,12 +337,12 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
                 "custom": {
                     "application": {
                         "index": "openshift-test",
-                        "pattern": "application.log",
+                        "pattern": "application-*.log",
                         "sourcetype": "log4j"
                     },
                     "access": {
                         "index": "openshift-other",
-                        "pattern": "access.log",
+                        "pattern": "*-access.log",
                         "sourcetype": "access_combined"
                     }
                 }
