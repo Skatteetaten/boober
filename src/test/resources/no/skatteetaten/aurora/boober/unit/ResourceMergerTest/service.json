@@ -14,7 +14,7 @@
       "updatedBy": "m89870"
     },
     "annotations": {
-      "prometheus.io/path": "/prometheus",
+      "prometheus.io/path": "/actuator/prometheus",
       "prometheus.io/port": "8082",
       "prometheus.io/scheme": "http",
       "prometheus.io/scrape": "true",

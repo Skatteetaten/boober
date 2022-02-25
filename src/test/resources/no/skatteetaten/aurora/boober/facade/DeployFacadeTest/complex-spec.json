@@ -572,15 +572,15 @@
   "prometheus": {
     "path": {
       "source": "complex.json",
-      "value": "/prometheus",
+      "value": "/actuator/prometheus",
       "sources": [
         {
           "name": "default",
-          "value": "/prometheus"
+          "value": "/actuator/prometheus"
         },
         {
           "name": "complex.json",
-          "value": "/prometheus"
+          "value": "/actuator/prometheus"
         }
       ]
     },

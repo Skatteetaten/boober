@@ -8,7 +8,7 @@
     "index": "test-index"
   },
   "prometheus": {
-    "path": "/prometheus",
+    "path": "/actuator/prometheus",
     "port": "8082"
   },
   "management": {

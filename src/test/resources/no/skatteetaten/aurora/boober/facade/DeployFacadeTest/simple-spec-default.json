@@ -418,11 +418,11 @@
     ],
     "path": {
       "source": "default",
-      "value": "/prometheus",
+      "value": "/actuator/prometheus",
       "sources": [
         {
           "name": "default",
-          "value": "/prometheus"
+          "value": "/actuator/prometheus"
         }
       ]
     },

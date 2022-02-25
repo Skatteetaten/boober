@@ -66,7 +66,7 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   type: "recreate"
             complex.json | serviceAccount: "aurora-fraggle"
                          | prometheus:
-            complex.json |   path: "/prometheus"
+            complex.json |   path: "/actuator/prometheus"
             complex.json |   port: "8082"
             complex.json | liveness: true
                          | mounts:

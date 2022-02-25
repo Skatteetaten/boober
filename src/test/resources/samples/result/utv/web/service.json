@@ -5,7 +5,7 @@
     "annotations": {
       "prometheus.io/scheme": "http",
       "prometheus.io/scrape": "true",
-      "prometheus.io/path": "/prometheus",
+      "prometheus.io/path": "/actuator/prometheus",
       "prometheus.io/port": "8081"
     },
     "labels": {

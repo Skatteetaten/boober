@@ -236,7 +236,7 @@ abstract class AbstractDeployFeature(
             ),
             AuroraConfigFieldHandler(
                 "prometheus/path",
-                defaultValue = "/prometheus"
+                defaultValue = "/actuator/prometheus"
             ),
             AuroraConfigFieldHandler("prometheus/port", defaultValue = 8081),
 

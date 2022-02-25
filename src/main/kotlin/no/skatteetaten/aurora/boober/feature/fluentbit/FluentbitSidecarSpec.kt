@@ -37,7 +37,6 @@ const val hecTokenKey: String = "HEC_TOKEN"
 const val splunkHostKey: String = "SPLUNK_HOST"
 const val splunkPortKey: String = "SPLUNK_PORT"
 
-
 data class LoggingConfig(
     val name: String,
     val sourceType: String,
@@ -305,4 +304,3 @@ fun AuroraDeploymentSpec.createHecSecret(hecToken: String, splunkUrl: String, sp
         }
     }
 }
-
