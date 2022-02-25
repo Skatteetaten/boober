@@ -7,7 +7,7 @@
       "app": "easy",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "easy",
       "deployTag": "1",
@@ -49,10 +49,11 @@
           "app": "easy",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "easy",
-          "deployTag": "1"
+          "deployTag": "1",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {
@@ -275,7 +276,7 @@
         "restartPolicy": "Always",
         "volumes": [
           {
-            "emptyDir": {},
+            "emptyDir": { },
             "name": "application-log-volume"
           },
           {

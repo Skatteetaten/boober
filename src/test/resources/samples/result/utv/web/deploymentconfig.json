@@ -7,7 +7,7 @@
       "app": "web",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "web",
       "deployTag": "develop-SNAPSHOT",
@@ -49,10 +49,11 @@
           "app": "web",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "web",
-          "deployTag": "develop-SNAPSHOT"
+          "deployTag": "develop-SNAPSHOT",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {
@@ -318,7 +319,7 @@
             "name": "web-toxiproxy-config"
           },
           {
-            "emptyDir": {},
+            "emptyDir": { },
             "name": "application-log-volume"
           }
         ]
