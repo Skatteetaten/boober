@@ -75,6 +75,15 @@
   "bigip": {
     "service": "simple-utv"
   },
+  "alerts": {
+    "alert": {
+      "enabled": true,
+      "expr": "test-expression",
+      "delay": "1",
+      "connection": "mattermost",
+      "severity": "warning"
+    }
+  },
   "liveness": true,
   "releaseTo": "komplex",
   "deployStrategy": {

@@ -1,6 +1,9 @@
         static | applicationDeploymentRef: "utv/ah"
         static | configVersion: "master"
         static | applicationDeploymentId: "1234567890"
+               | alertsDefaults:
+       default |   enabled: false
+       default |   delay: "1"
     about.json | schemaVersion: "v1"
        ah.json | type: "localTemplate"
        default | deployState: "deploymentConfig"

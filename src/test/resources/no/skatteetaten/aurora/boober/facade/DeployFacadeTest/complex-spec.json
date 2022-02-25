@@ -29,6 +29,60 @@
       }
     ]
   },
+  "alerts": {
+    "alert": {
+      "enabled": {
+        "source": "complex.json",
+        "value": true,
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": true
+          }
+        ]
+      },
+      "expr": {
+        "source": "complex.json",
+        "value": "test-expression",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "test-expression"
+          }
+        ]
+      },
+      "delay": {
+        "source": "complex.json",
+        "value": "1",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "1"
+          }
+        ]
+      },
+      "connection": {
+        "source": "complex.json",
+        "value": "mattermost",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "mattermost"
+          }
+        ]
+      },
+      "severity": {
+        "source": "complex.json",
+        "value": "warning",
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": "warning"
+          }
+        ]
+      }
+    }
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1",

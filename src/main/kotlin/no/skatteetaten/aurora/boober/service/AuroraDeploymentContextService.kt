@@ -4,6 +4,7 @@ import org.apache.commons.text.StringSubstitutor
 import org.springframework.stereotype.Service
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
+import no.skatteetaten.aurora.boober.feature.AlertsFeature
 import no.skatteetaten.aurora.boober.feature.BigIpFeature
 import no.skatteetaten.aurora.boober.feature.CertificateFeature
 import no.skatteetaten.aurora.boober.feature.ConfigFeature
@@ -288,6 +289,14 @@ class AuroraDeploymentContextService(
             "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
         } else null
 
-        return listOfNotNull(websealWarning, stsWarning).addIfNotNull(configKeysWithSpecialCharacters)
+        val alertsConnection = features.filter { (feature, spec) ->
+            feature is AlertsFeature && feature.containsDeprecatedConnection(spec)
+        }.isNotEmpty()
+
+        val alertsWarning = if (alertsConnection) {
+            "The property 'connection' on alerts is deprecated. Please use the connections property"
+        } else null
+
+        return listOfNotNull(websealWarning, stsWarning, alertsWarning).addIfNotNull(configKeysWithSpecialCharacters)
     }
 }
