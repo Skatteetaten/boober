@@ -28,8 +28,6 @@ utv/about.json | cluster: "utv"
        default | debug: false
        ah.json | version: "1.3.4"
        default | management: false
-               | logging:
-       default |   bufferSize: 20
                | parameters:
        ah.json |   FEED_NAME: "feed"
        ah.json |   DOMAIN_NAME: "localhost"
@@ -64,3 +62,5 @@ utv/about.json | cluster: "utv"
        default |   managedRoute: false
                |   apim:
        default |     enabled: false
+               | logging:
+       default |   bufferSize: 20

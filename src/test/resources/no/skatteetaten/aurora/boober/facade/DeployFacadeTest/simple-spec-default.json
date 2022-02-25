@@ -343,18 +343,6 @@
       }
     }
   },
-  "logging": {
-    "bufferSize": {
-      "source": "default",
-      "value": 20,
-      "sources": [
-        {
-          "name": "default",
-          "value": 20
-        }
-      ]
-    }
-  },
   "artifactId": {
     "source": "fileName",
     "value": "simple",
@@ -721,6 +709,18 @@
           }
         ]
       }
+    }
+  },
+  "logging": {
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
     }
   }
 }

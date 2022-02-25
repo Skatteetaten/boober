@@ -44,21 +44,19 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
         return ret
     }
 
-    if (this is ObjectNode) {
-        return inner("", this)
+    return if (this is ObjectNode) {
+        inner("", this)
     } else {
-        return listOf()
+        listOf()
     }
 }
 
-fun JsonNode.getBoolean(nodeName: String): Boolean {
-    val valueNode = this[nodeName]
-    return when (valueNode) {
+fun JsonNode.getBoolean(nodeName: String): Boolean =
+    when (val valueNode = this[nodeName]) {
         is BooleanNode -> valueNode.booleanValue()
         is TextNode -> valueNode.textValue() == "true"
         else -> false
     }
-}
 
 fun JsonNode.atNullable(path: String): JsonNode? {
     val value = this.at(path.ensureStartWith("/"))
@@ -77,7 +75,7 @@ fun JsonNode.annotation(name: String): String? {
         return null
     }
 
-    val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations) ?: return null
+    val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations)
     return entries[name]
 }
 
@@ -105,11 +103,12 @@ val JsonNode.namespacedResourceUrl: String
 val JsonNode.namespacedNamedUrl: String
     get() = "${this.namespacedResourceUrl}/${this.openshiftName}"
 
-val JsonNode.appropriateResourceAndNamedUrl get() = if (this.namespace.isEmpty()) {
-    this.resourceUrl to this.namedUrl
-} else {
-    this.namespacedResourceUrl to this.namespacedNamedUrl
-}
+val JsonNode.appropriateResourceAndNamedUrl
+    get() = if (this.namespace.isEmpty()) {
+        this.resourceUrl to this.namedUrl
+    } else {
+        this.namespacedResourceUrl to this.namespacedNamedUrl
+    }
 
 val JsonNode.appropriateNamedUrl: String get() = appropriateResourceAndNamedUrl.second
 
@@ -179,7 +178,7 @@ fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
 fun JsonNode?.pattern(pattern: String, message: String, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {
-            IllegalArgumentException(message)
+            IllegalArgumentException("Field is required")
         } else {
             null
         }
@@ -248,7 +247,7 @@ fun JsonNode?.boolean(required: Boolean = false): Exception? {
 fun JsonNode?.oneOf(candidates: List<String>, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {
-            IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
+            IllegalArgumentException("Field is required")
         } else {
             null
         }

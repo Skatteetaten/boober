@@ -59,7 +59,7 @@ class BuildFeatureTest : AbstractFeatureTest() {
            "groupId" : "org.test"
         }"""
             )
-        }.singleApplicationErrorResult("Version must be a 128 characters or less, alphanumeric and can contain dots and dashes.")
+        }.singleApplicationErrorResult("Field is required")
     }
 
     @Test
