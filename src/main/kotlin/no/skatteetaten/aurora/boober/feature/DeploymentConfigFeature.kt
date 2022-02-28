@@ -19,6 +19,7 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
+import no.skatteetaten.aurora.boober.service.CantusService
 
 const val ANNOTATION_BOOBER_DEPLOYTAG = "boober.skatteetaten.no/deployTag"
 
@@ -50,7 +51,7 @@ val AuroraDeploymentSpec.managementPath
     }
 
 @Service
-class DeploymentConfigFeature : Feature {
+class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
@@ -174,6 +175,11 @@ class DeploymentConfigFeature : Feature {
 
     fun createEnvVars(adc: AuroraDeploymentSpec): Map<String, String> {
 
+        // Muligens en for dyr operasjon
+        val manifest = cantusService.getImageInformation(adc.groupId.replace(".", "_"), adc.name, adc.version)
+        val segment: String? = adc.getOrNull("segment")
+        val klientID = "${segment ?: adc.affiliation}-${adc.name}/${manifest?.appVersion ?: adc.version}"
+
         val debugEnv = if (adc["debug"]) {
             mapOf(
                 "ENABLE_REMOTE_DEBUG" to "true",
@@ -184,7 +190,8 @@ class DeploymentConfigFeature : Feature {
         return mapOf(
             "OPENSHIFT_CLUSTER" to adc["cluster"],
             "APP_NAME" to adc.name,
-            "SPLUNK_INDEX" to adc.splunkIndex
+            "SPLUNK_INDEX" to adc.splunkIndex,
+            "AURORA_HEADER_KLIENTID" to klientID
         ).addIfNotNull(debugEnv).filterNullValues()
     }
 
