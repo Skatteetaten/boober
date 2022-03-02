@@ -6,10 +6,11 @@
     "namespace": "paas-utv"
   },
   "spec": {
-    "path":       "/unique",
-    "openapiUrl": "https://openapi",
+    "apiName": "super-api",
+    "version": "v1",
+    "path": "/path/to/api",
+    "openApiUrl": "https://openapi",
     "serviceUrl": "https://service",
-    "policies":   [],
-    "apiHost":    "api.apimanagement.dev.skatteetaten.io"
+    "policies": []
   }
 }
