@@ -297,7 +297,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     @Test
     fun `Should fail with an error message when portVarible points to an inexistent variable`() {
 
-        val errorMessage = assertThrows<MultiApplicationValidationException> {
+        val validation = assertThrows<MultiApplicationValidationException> {
             generateResources(
                 """{
                     "toxiproxy": {
@@ -314,7 +314,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 createEmptyService(),
                 createEmptyDeploymentConfig()
             )
-        }.errors.first().errors.first().message
+        }
+        val errorMessage = validation.errors.first().errors.first().message
 
         val expectedErrorMessage =
             "Found Toxiproxy config for a port variable named INEXISTENT_PORT_VAR, but there is no such environment variable."

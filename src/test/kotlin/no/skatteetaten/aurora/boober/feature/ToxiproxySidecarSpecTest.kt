@@ -5,49 +5,6 @@ import assertk.assertThat
 import assertk.assertions.isEqualTo
 
 class ToxiproxySidecarSpecTest {
-
-    @Test
-    fun findVarNameInFieldNameTest() {
-
-        mapOf(
-            "toxiproxy/endpointsFromConfig/test" to "test",
-            "toxiproxy/endpointsFromConfig/test/enabled" to "test",
-            "toxiproxy/endpointsFromConfig/test/proxyname" to "test",
-            "toxiproxy/endpointsFromConfig/test/initialEnabledState" to "test",
-            "toxiproxy/endpointsFromConfig/test2" to "test2",
-            "toxiproxy/endpointsFromConfig/test2/enabled" to "test2",
-            "toxiproxy/endpointsFromConfig/test2/proxyname" to "test2",
-            "toxiproxy/endpointsFromConfig/test2/initialEnabledState" to "test2"
-        ).forEach { (fieldName, expectedResult) ->
-            assertThat(findVarNameInFieldName(ToxiproxyUrlSource.CONFIG_VAR, fieldName)).isEqualTo(expectedResult)
-        }
-
-        mapOf(
-            "toxiproxy/database/test" to "test",
-            "toxiproxy/database/test/enabled" to "test",
-            "toxiproxy/database/test/proxyname" to "test",
-            "toxiproxy/database/test2" to "test2",
-            "toxiproxy/database/test2/enabled" to "test2",
-            "toxiproxy/database/test2/proxyname" to "test2"
-        ).forEach { (fieldName, expectedResult) ->
-            assertThat(findVarNameInFieldName(ToxiproxyUrlSource.DB_SECRET, fieldName)).isEqualTo(expectedResult)
-        }
-    }
-
-    @Test
-    fun findProxyNameInServerAndPortFieldNameTest() {
-        mapOf(
-            "toxiproxy/serverAndPortFromConfig/test/serverVariable" to "test",
-            "toxiproxy/serverAndPortFromConfig/test/portVariable" to "test",
-            "toxiproxy/serverAndPortFromConfig/test/initialEnabledState" to "test",
-            "toxiproxy/serverAndPortFromConfig/test2/serverVariable" to "test2",
-            "toxiproxy/serverAndPortFromConfig/test2/portVariable" to "test2",
-            "toxiproxy/serverAndPortFromConfig/test2/initialEnabledState" to "test2"
-        ).forEach { (fieldName, expectedResult) ->
-            assertThat(findProxyNameInServerAndPortFieldName(fieldName)).isEqualTo(expectedResult)
-        }
-    }
-
     @Test
     fun getNextPortNumberTest() {
         val toxiproxyConfigs = listOf(
