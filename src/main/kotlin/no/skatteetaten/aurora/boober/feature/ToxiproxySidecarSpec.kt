@@ -14,6 +14,8 @@ import no.skatteetaten.aurora.boober.utils.toMap
 
 private const val FEATURE_NAME = "toxiproxy"
 
+private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
+
 internal object ToxiproxyField {
     const val database = "$FEATURE_NAME/database"
     const val endpointsFromConfig = "$FEATURE_NAME/endpointsFromConfig"
@@ -154,40 +156,62 @@ internal fun AuroraDeploymentSpec.serversAndPortsFromConfig(initialPort: Int): L
         }
 }
 
-// TODO: This is very complex. Should potentially be two operations.
 internal fun AuroraDeploymentSpec.databasesFromSecrets(
     initialPort: Int,
     databaseSchemaProvisioner: DatabaseSchemaProvisioner,
     userDetailsProvider: UserDetailsProvider
-): Pair<List<ToxiproxyConfig>, Map<String, Int>> = findDatabases(this)
-    .filter {
-        // TODO: other method for simplified check?
-        this[ToxiproxyField.database] || this["${ToxiproxyField.database}/${it.name}/enabled"]
-    }
-    .createSchemaRequests(userDetailsProvider, this)
-    .associateWith { databaseSchemaProvisioner.findSchema(it) }
-    .filterNot { it.value == null }
-    .toList()
-    .mapIndexed { i, (request, schema) ->
+): Pair<List<ToxiproxyConfig>, Map<String, Int>> {
+    val schemas = findDatabases(this)
+        .filter {
+            this[ToxiproxyField.database] || this.getOrNull<Boolean>("${ToxiproxyField.database}/${it.name}/enabled") == true
+        }
+        .createSchemaRequests(userDetailsProvider, this)
+        .mapNotNull { request ->
+            val schema = databaseSchemaProvisioner.findSchema(request)
+
+            if (schema != null) {
+                request to schema
+            } else null
+        }
+
+    return schemas.mapIndexed { i, (request, schema) ->
         val dbName = request.details.schemaName
-        // TODO: Why can schema be null?
-        val proxyname = this.getOrNull<String>("${ToxiproxyField.database}/$dbName/proxyname") ?: "database_${schema!!.id}"
-        // TODO: add default value in handler?
-        val enabled = this.getOrNull<Boolean>("${ToxiproxyField.database}/$dbName/initialEnabledState") ?: true
+        val proxyname =
+            this.getOrNull<String>("${ToxiproxyField.database}/$dbName/proxyname") ?: "database_${schema.id}"
 
         val port = initialPort + i
         val toxiproxyConfig = ToxiproxyConfig(
             name = proxyname,
             listen = "0.0.0.0:$port",
-            upstream = schema!!.databaseInstance.host + ":" + schema.databaseInstance.port,
-            enabled = enabled
+            upstream = schema.databaseInstance.host + ":" + schema.databaseInstance.port,
+            enabled = this.getOrNull("${ToxiproxyField.database}/$dbName/initialEnabledState") ?: true
         )
 
         val secretNameToPortMap = mapOf(request.getSecretName(prefix = name) to port)
         Pair(toxiproxyConfig, secretNameToPortMap)
     }
-    .unzip()
-    .run { Pair(first, second.toMap()) }
+        .unzip()
+        .run { Pair(first, second.toMap()) }
+}
+
+internal fun AuroraDeploymentSpec.allToxiproxyConfigsAndSecretNameToPortMap(
+    databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    userDetailsProvider: UserDetailsProvider
+): Pair<List<ToxiproxyConfig>, Map<String, Int>> {
+    var nextPortNumber = FIRST_PORT_NUMBER
+    val appToxiproxyConfig = listOf(ToxiproxyConfig())
+    val endpointsFromConfig = this.endpointsFromConfig(nextPortNumber)
+    nextPortNumber = endpointsFromConfig.getNextPortNumber(numberIfEmpty = nextPortNumber)
+    val serversAndPortsFromConfig = this.serversAndPortsFromConfig(nextPortNumber)
+    nextPortNumber = serversAndPortsFromConfig.getNextPortNumber(numberIfEmpty = nextPortNumber)
+    val (databases, secretNameToPortMap) = this.databasesFromSecrets(
+        nextPortNumber, databaseSchemaProvisioner, userDetailsProvider
+    )
+
+    return listOf(
+        appToxiproxyConfig, endpointsFromConfig, serversAndPortsFromConfig, databases
+    ).flatten() to secretNameToPortMap
+}
 
 internal fun MutableMap<String, String>.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort: Int) {
     this["jdbcurl"] = this["jdbcurl"]
@@ -223,11 +247,13 @@ private fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<ToxiproxyEndp
     val toxiProxyEndpointConfigNames = getSubKeyValues(ToxiproxyField.endpointsFromConfig)
 
     return toxiProxyEndpointConfigNames.filter { name ->
-        // TODO: filter simple config. How is it done other places?
         this["${ToxiproxyField.endpointsFromConfig}/$name/enabled"]
     }.map { configField ->
+        val proxyName =
+            this.getOrNull("${ToxiproxyField.endpointsFromConfig}/$configField/proxyname") ?: "endpoint_$configField"
+
         ToxiproxyEndpoint(
-            proxyName = this["${ToxiproxyField.endpointsFromConfig}/$configField/proxyname"],
+            proxyName = proxyName,
             varName = configField,
             enabled = this["${ToxiproxyField.endpointsFromConfig}/$configField/initialEnabledState"]
         )
@@ -260,7 +286,7 @@ private fun AuroraDeploymentSpec.getToxiproxyServerAndPortNames(): List<String> 
 private fun AuroraDeploymentSpec.getToxiproxyEndpointOrDbNames(fieldName: String): List<String> {
     val envVars = this.getSubKeyValues(fieldName)
     return envVars.map {
-        this["$fieldName/$it/proxyname"]
+        this.getOrNull("$fieldName/$it/proxyname") ?: "endpoint_$it"
     }
 }
 

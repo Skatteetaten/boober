@@ -576,6 +576,16 @@
     ]
   },
   "toxiproxy": {
+    "database": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
     "source": "web.json",
     "value": true,
     "sources": [
