@@ -93,7 +93,7 @@ class ToxiproxySidecarFeature(
         cmd: AuroraContextCommand
     ): Set<AuroraConfigFieldHandler> = with(cmd.applicationFiles) {
         listOf(
-            dbHandlers(),
+            toxiproxyDbHandlers(),
             endpointsFromConfigHandlers(),
             findServerAndPortHandlers(),
             findConfigFieldHandlers(),
@@ -184,8 +184,8 @@ class ToxiproxySidecarFeature(
         }
     }
 
-    fun List<AuroraConfigFile>.dbHandlers() =
-        this.createToxiproxyFieldHandlers(ToxiproxyField.database, defaultProxynameValue = "database") + listOf(
+    fun List<AuroraConfigFile>.toxiproxyDbHandlers() =
+        this.createToxiproxyFieldHandlers(ToxiproxyField.database) + listOf(
             AuroraConfigFieldHandler(
                 ToxiproxyField.database,
                 canBeSimplifiedConfig = true,
@@ -195,12 +195,9 @@ class ToxiproxySidecarFeature(
         )
 
     fun List<AuroraConfigFile>.endpointsFromConfigHandlers() =
-        this.createToxiproxyFieldHandlers(ToxiproxyField.endpointsFromConfig, defaultProxynameValue = "endpoint")
+        this.createToxiproxyFieldHandlers(ToxiproxyField.endpointsFromConfig)
 
-    fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(
-        fieldName: String,
-        defaultProxynameValue: String
-    ): List<AuroraConfigFieldHandler> {
+    fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(fieldName: String): List<AuroraConfigFieldHandler> {
         return findSubKeysExpanded(fieldName).flatMap { fieldNameWithKeys ->
             listOf(
                 AuroraConfigFieldHandler(

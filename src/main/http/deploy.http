@@ -5,12 +5,8 @@ Content-Type: application/json
 {
   "applicationDeploymentRefs": [
     {
-      "environment": "utv05",
-      "application": "boober"
-    },
-    {
-      "environment": "utv05",
-      "application": "gobo"
+      "environment": "",
+      "application": "whoami"
     }
   ]
 }
