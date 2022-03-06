@@ -95,7 +95,14 @@ internal fun AuroraDeploymentSpec.missingServerAndPortVariableErrors(): List<Aur
 internal fun AuroraDeploymentSpec.missingDbErrors(): List<AuroraDeploymentSpecValidationException> {
     val toxiproxyDbNames = this.getSubKeyValues("$FEATURE_NAME/database")
         .filter {
-            this[ToxiproxyField.database] || this["${ToxiproxyField.database}/$it/enabled"]
+            // TODO": this is wrong we need simplified for database and simplified for specific db and enabled
+            if (this.isSimplifiedConfig(ToxiproxyField.database)) {
+                this[ToxiproxyField.database]
+            } else if (this.isSimplifiedConfig("${ToxiproxyField.database}/$it")) {
+                this["${ToxiproxyField.database}/$it"]
+            } else {
+                this["${ToxiproxyField.database}/$it/enabled"]
+            }
         }
 
     return toxiproxyDbNames.mapNotNull { toxiproxyDbName ->
@@ -163,7 +170,13 @@ internal fun AuroraDeploymentSpec.databasesFromSecrets(
 ): Pair<List<ToxiproxyConfig>, Map<String, Int>> {
     val schemas = findDatabases(this)
         .filter {
-            this[ToxiproxyField.database] || this.getOrNull<Boolean>("${ToxiproxyField.database}/${it.name}/enabled") == true
+            if (this.isSimplifiedConfig(ToxiproxyField.database)) {
+                this[ToxiproxyField.database]
+            } else if (this.isSimplifiedConfig("${ToxiproxyField.database}/${it.name}")) {
+                this["${ToxiproxyField.database}/${it.name}"]
+            } else {
+                this["${ToxiproxyField.database}/${it.name}/enabled"]
+            }
         }
         .createSchemaRequests(userDetailsProvider, this)
         .mapNotNull { request ->
@@ -247,7 +260,11 @@ private fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<ToxiproxyEndp
     val toxiProxyEndpointConfigNames = getSubKeyValues(ToxiproxyField.endpointsFromConfig)
 
     return toxiProxyEndpointConfigNames.filter { name ->
-        this["${ToxiproxyField.endpointsFromConfig}/$name/enabled"]
+        if (this.isSimplifiedConfig("${ToxiproxyField.endpointsFromConfig}/$name")) {
+            this["${ToxiproxyField.endpointsFromConfig}/$name"]
+        } else {
+            this["${ToxiproxyField.endpointsFromConfig}/$name/enabled"]
+        }
     }.map { configField ->
         val proxyName =
             this.getOrNull("${ToxiproxyField.endpointsFromConfig}/$configField/proxyname") ?: "endpoint_$configField"
