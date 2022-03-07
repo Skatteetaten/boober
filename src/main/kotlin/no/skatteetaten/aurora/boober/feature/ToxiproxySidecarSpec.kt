@@ -95,7 +95,6 @@ internal fun AuroraDeploymentSpec.missingServerAndPortVariableErrors(): List<Aur
 internal fun AuroraDeploymentSpec.missingDbErrors(): List<AuroraDeploymentSpecValidationException> {
     val toxiproxyDbNames = this.getSubKeyValues("$FEATURE_NAME/database")
         .filter {
-            // TODO": this is wrong we need simplified for database and simplified for specific db and enabled
             if (this.isSimplifiedConfig(ToxiproxyField.database)) {
                 this[ToxiproxyField.database]
             } else if (this.isSimplifiedConfig("${ToxiproxyField.database}/$it")) {
