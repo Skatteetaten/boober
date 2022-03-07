@@ -257,9 +257,9 @@ internal fun List<ToxiproxyConfig>.getNextPortNumber(numberIfEmpty: Int) =
 // Return a list of proxynames and corresponding environment variable names
 // If proxyname is not set, it defaults to "endpoint_<variable name>"
 private fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<ToxiproxyEndpoint> {
-    val toxiProxyEndpointConfigNames = getSubKeyValues(ToxiproxyField.endpointsFromConfig)
+    val toxiproxyEndpointConfigNames = getSubKeyValues(ToxiproxyField.endpointsFromConfig)
 
-    return toxiProxyEndpointConfigNames.filter { name ->
+    return toxiproxyEndpointConfigNames.filter { name ->
         if (this.isSimplifiedConfig("${ToxiproxyField.endpointsFromConfig}/$name")) {
             this["${ToxiproxyField.endpointsFromConfig}/$name"]
         } else {
