@@ -170,13 +170,12 @@ internal fun AuroraDeploymentSpec.databasesFromSecrets(
 ): Pair<List<ToxiproxyConfig>, Map<String, Int>> {
     val schemas = findDatabases(this)
         .filter {
-            if (this.isSimplifiedConfig(ToxiproxyField.database)) {
-                this[ToxiproxyField.database]
-            } else if (this.isSimplifiedConfig("${ToxiproxyField.database}/${it.name}")) {
-                this["${ToxiproxyField.database}/${it.name}"]
-            } else {
-                this["${ToxiproxyField.database}/${it.name}/enabled"]
+            val databaseEnabledField = when {
+                isSimplifiedConfig(ToxiproxyField.database) -> ToxiproxyField.database
+                isSimplifiedConfig("${ToxiproxyField.database}/${it.name}") -> "${ToxiproxyField.database}/${it.name}"
+                else -> "${ToxiproxyField.database}/${it.name}/enabled"
             }
+            this[databaseEnabledField]
         }
         .createSchemaRequests(userDetailsProvider, this)
         .mapNotNull { request ->
