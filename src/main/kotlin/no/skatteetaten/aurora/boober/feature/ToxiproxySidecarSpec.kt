@@ -301,8 +301,9 @@ private fun AuroraDeploymentSpec.getToxiproxyServerAndPortNames(): List<String> 
 // Find all proxy names of a given url source (endpoints or database)
 private fun AuroraDeploymentSpec.getToxiproxyEndpointOrDbNames(fieldName: String): List<String> {
     val envVars = this.getSubKeyValues(fieldName)
+    val defaultPrefix = if (fieldName == ToxiproxyField.database) "database" else "endpoint"
     return envVars.map {
-        this.getOrNull("$fieldName/$it/proxyname") ?: "endpoint_$it"
+        this.getOrNull("$fieldName/$it/proxyname") ?: "${defaultPrefix}_$it"
     }
 }
 
