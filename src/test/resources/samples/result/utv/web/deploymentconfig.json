@@ -75,6 +75,17 @@
               }
             ],
             "image": "docker.registry:5000/shopify/toxiproxy:2.1.3",
+            "lifecycle": {
+              "postStart": {
+                "exec": {
+                  "command": [
+                    "sh",
+                    "-c",
+                    "for i in $(seq 1 10); do sleep 1; nc -zv 127.0.0.1 8474 && exit; done; exit 1;"
+                  ]
+                }
+              }
+            },
             "name": "web-toxiproxy-sidecar",
             "ports": [
               {
