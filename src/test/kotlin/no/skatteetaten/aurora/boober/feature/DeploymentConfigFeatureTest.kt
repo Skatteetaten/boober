@@ -1,24 +1,48 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
+import io.mockk.every
+import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
+import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.ImageTagResource
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
 
 class DeploymentConfigFeatureTest : AbstractFeatureTest() {
+    private val cantusService: CantusService = mockk()
+
     override val feature: Feature
-        get() = DeploymentConfigFeature()
+        get() = DeploymentConfigFeature(cantusService)
+
+    @BeforeEach
+    fun setupMock() {
+        every {
+            cantusService.getImageInformation(
+                "no_skatteetaten_aurora", "simple", "1"
+            )
+        } returns
+            ImageTagResource(
+                "1.0.0-b1.0.0-wingnut12",
+                "1.0.0",
+                "1",
+                "sha:1234567",
+                "docker.registry/no_skatteetaten_aurora/clinger",
+            )
+    }
 
     @Test
     fun `should allow objects if validation is boolean and not required`() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "management" : {
                       "path" : "/foo"
@@ -33,6 +57,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : true
                     
@@ -46,6 +71,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : "true"
                     
@@ -59,6 +85,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : "TRUE"
                     
@@ -72,6 +99,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : "fasle"
                     
@@ -95,6 +123,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     fun `deploy type should have default resource requirements`() {
         val spec = createAuroraDeploymentSpecForFeature(
             """{
+                "groupId": "no.skatteetaten.aurora",
            "type": "deploy", 
            "version" : "1"
         }"""
@@ -108,6 +137,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
 
         val (dcResource, adResource) = modifyResources(
             """{ 
+                "groupId": "no.skatteetaten.aurora",
                 "version" : "1"
            }""",
             createEmptyDeploymentConfig(), createEmptyApplicationDeployment()
@@ -130,7 +160,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
 
         val (dcResource, adResource) = generateResources(
             app = """{ 
-                
+                "groupId": "no.skatteetaten.aurora",
                 "version" : "1",
                 "releaseTo" : "test", 
                 "splunkIndex" : "test",

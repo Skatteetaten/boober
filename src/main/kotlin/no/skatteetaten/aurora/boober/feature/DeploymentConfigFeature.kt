@@ -92,7 +92,8 @@ class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
             AuroraConfigFieldHandler("alarm", defaultValue = true, validator = { it.boolean() }),
             AuroraConfigFieldHandler("pause", defaultValue = false, validator = { it.boolean() }),
             AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("debug", defaultValue = false, validator = { it.boolean() })
+            AuroraConfigFieldHandler("debug", defaultValue = false, validator = { it.boolean() }),
+            header.groupIdHandler
         ).addIfNotNull(templateSpecificHeaders)
     }
 
@@ -175,10 +176,11 @@ class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
 
     fun createEnvVars(adc: AuroraDeploymentSpec): Map<String, String> {
 
-        // Muligens en for dyr operasjon
-        val manifest = cantusService.getImageInformation(adc.groupId.replace(".", "_"), adc.name, adc.version)
-        val segment: String? = adc.getOrNull("segment")
-        val klientID = "${segment ?: adc.affiliation}-${adc.name}/${manifest?.appVersion ?: adc.version}"
+        val headerEnv = if (adc.type == TemplateType.deploy) {
+            mapOf(
+                "AURORA_HEADER_KLIENTID" to createKlientIDHeader(adc)
+            )
+        } else null
 
         val debugEnv = if (adc["debug"]) {
             mapOf(
@@ -191,8 +193,7 @@ class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
             "OPENSHIFT_CLUSTER" to adc["cluster"],
             "APP_NAME" to adc.name,
             "SPLUNK_INDEX" to adc.splunkIndex,
-            "AURORA_HEADER_KLIENTID" to klientID
-        ).addIfNotNull(debugEnv).filterNullValues()
+        ).addIfNotNull(debugEnv).addIfNotNull(headerEnv).filterNullValues()
     }
 
     fun createDcLabels(adc: AuroraDeploymentSpec): Map<String, String> {
@@ -202,5 +203,12 @@ class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
         } else null
 
         return mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel).normalizeLabels()
+    }
+
+    private fun createKlientIDHeader(adc: AuroraDeploymentSpec): String {
+        // TODO: Muligens en for dyr operasjon
+        val manifest = cantusService.getImageInformation(adc.groupId.replace(".", "_"), adc.name, adc.version)
+        val segment: String? = adc.getOrNull("segment")
+        return "${segment ?: adc.affiliation}/${adc.name}/${manifest?.appVersion ?: adc.version}"
     }
 }
