@@ -116,7 +116,6 @@ class DatabaseFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-
         val databases = context.databases
         if (databases.isEmpty()) return
 
