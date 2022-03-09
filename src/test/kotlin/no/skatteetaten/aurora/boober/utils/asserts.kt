@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
+import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isSuccess
@@ -89,15 +90,7 @@ fun <T> Assert<Result<T>>.configErrors(messages: List<String>) {
     this.isFailure()
         .isInstanceOf(AuroraConfigException::class)
         .transform { ace ->
-            val errors = ace.errors.map { it.asWarning() }.distinct()
-
-            if (errors.size != messages.size) {
-                this.expected("You do not expect all error messages. Actual error messages are ${errors.size}")
-            }
-            errors.zip(messages).forEach { (actual, expected) ->
-                if (!actual.contains(expected)) {
-                    this.expected(":${show(actual)} to contain:${show(expected)}")
-                }
-            }
+            val errors = ace.errors.map { it.message }.distinct()
+            assertThat(errors).containsExactlyInAnyOrder(*messages.toTypedArray())
         }
 }

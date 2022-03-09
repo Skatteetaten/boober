@@ -42,7 +42,7 @@ class AzureFeature(
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return jwtToStsConverter.handlers(sidecarVersion) +
             auroraAzureApp.handlers() +
-            auroraApim.handlers(cmd)
+            auroraApim.handlers(cmd.applicationFiles)
     }
 
     override fun createContext(

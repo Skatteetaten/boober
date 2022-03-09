@@ -1,51 +1,56 @@
 package no.skatteetaten.aurora.boober.feature.azure
 
-import java.util.stream.Stream
 import com.fkorotkov.kubernetes.newObjectMeta
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
-import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.findSubKeys
+import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
+import no.skatteetaten.aurora.boober.model.openshift.ApimPolicy
 import no.skatteetaten.aurora.boober.model.openshift.ApimSpec
 import no.skatteetaten.aurora.boober.model.openshift.AuroraApim
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.isValidDns
-import no.skatteetaten.aurora.boober.utils.startsWithSlash
+import no.skatteetaten.aurora.boober.utils.notEndsWith
+import no.skatteetaten.aurora.boober.utils.startsWith
 import no.skatteetaten.aurora.boober.utils.validUrl
+import no.skatteetaten.aurora.boober.utils.versionPattern
 
 val AuroraDeploymentSpec.isApimEnabled: Boolean
     get() {
         return this.getOrNull(AuroraAzureApimSubPart.ConfigPath.enabled) ?: false
     }
 
-val AuroraDeploymentSpec.azureApimPolicies: Map<String, Boolean>?
-    get() {
-        //  Somewhat strange construction in order to avoid error with null as typeCast
-        val rawGroup = this.getOrNull<Any>(AuroraAzureApimSubPart.ConfigPath.policies) ?: return null
-        return rawGroup as Map<String, Boolean>
-    }
-
 class AuroraAzureApimSubPart {
     object ConfigPath {
         private const val root = "azure/apim"
         const val enabled = "$root/enabled"
+        const val apiName = "$root/apiName"
+        const val version = "$root/version"
         const val path = "$root/path"
-        const val openapiUrl = "$root/openapiUrl"
+        const val openApiUrl = "$root/openApiUrl"
         const val serviceUrl = "$root/serviceUrl"
         const val policies = "$root/policies"
-        const val apiHost = "$root/apiHost"
     }
 
     fun generate(adc: AuroraDeploymentSpec, azureFeature: AzureFeature): Set<AuroraResource> {
         return if (adc.isApimEnabled) {
+            val apiName: String = adc[ConfigPath.apiName]
+            val version: String = adc[ConfigPath.version]
             val path: String = adc[ConfigPath.path]
-            val openapiUrl: String = adc[ConfigPath.openapiUrl]
+            val openApiUrl: String = adc[ConfigPath.openApiUrl]
             val serviceUrl: String = adc[ConfigPath.serviceUrl]
-            val apiHost: String = adc[ConfigPath.apiHost]
+
+            val policies = adc.findSubKeys(ConfigPath.policies).mapNotNull { policyName ->
+                if (adc.getOrNull<Boolean>("${ConfigPath.policies}/$policyName/enabled") == true) {
+                    // Here we could read in any additional properties of the policy.
+                    ApimPolicy(name = policyName)
+                } else {
+                    null
+                }
+            }.toSet()
 
             setOf(
                 azureFeature.generateResource(
@@ -55,11 +60,13 @@ class AuroraAzureApimSubPart {
                             namespace = adc.namespace
                         },
                         spec = ApimSpec(
+                            apiName = apiName,
+                            version = version,
                             path = path,
-                            openapiUrl = openapiUrl,
+                            openApiUrl = openApiUrl,
                             serviceUrl = serviceUrl,
-                            policies = adc.azureApimPolicies!!.filterValues { it }.map { (k, _) -> k }.toList(),
-                            apiHost = apiHost
+                            // We sort for predictability, the order does not matter:
+                            policies = policies.sortedBy { it.name }
                         )
                     )
                 )
@@ -74,66 +81,60 @@ class AuroraAzureApimSubPart {
     ): List<Exception> {
         val errors = mutableListOf<Exception>()
         if (adc.isApimEnabled) {
-            Stream.of(
+            listOf(
+                ConfigPath.apiName,
+                ConfigPath.version,
                 ConfigPath.path,
-                ConfigPath.openapiUrl,
+                ConfigPath.openApiUrl,
                 ConfigPath.serviceUrl,
-                ConfigPath.apiHost
             ).forEach {
                 if (adc.getOrNull<String>(it) == null) {
                     errors.add(AuroraDeploymentSpecValidationException("You need to configure $it"))
                 }
-            }
-
-            if (adc.azureApimPolicies == null) {
-                errors.add(AuroraDeploymentSpecValidationException("You need to configure ${ConfigPath.policies}"))
             }
         }
 
         return errors
     }
 
-    fun handlers(cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> =
-        setOf(
+    fun handlers(applicationFiles: List<AuroraConfigFile>): Set<AuroraConfigFieldHandler> {
+
+        val policyHandlers = applicationFiles.findSubKeysExpanded(ConfigPath.policies).map { policyName ->
+            AuroraConfigFieldHandler(
+                "$policyName/enabled",
+                validator = { it.boolean(required = true) }
+            )
+        }.toSet()
+
+        return setOf(
             AuroraConfigFieldHandler(
                 ConfigPath.enabled,
                 defaultValue = false,
                 validator = { it.boolean(required = false) }
             ),
             AuroraConfigFieldHandler(
-                ConfigPath.path,
-                validator = { it.startsWithSlash(ConfigPath.path) }
+                ConfigPath.apiName
             ),
             AuroraConfigFieldHandler(
-                ConfigPath.openapiUrl,
-                validator = { it.validUrl(required = false) }
+                ConfigPath.path,
+                validator = {
+                    it.startsWith("/", "Path should start with a slash.", required = false)
+                        ?: it.notEndsWith("/", "Path should not end with a slash.", required = false)
+                }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.version,
+                validator = { it.versionPattern(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.openApiUrl,
+                validator = { it.validUrl(required = false, requireHttps = true) }
             ),
             AuroraConfigFieldHandler(
                 ConfigPath.serviceUrl,
-                validator = { it.validUrl(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                ConfigPath.policies
-            ),
-            AuroraConfigFieldHandler(
-                ConfigPath.apiHost,
-                validator = { it.isValidDns() }
+                validator = { it.validUrl(required = false, requireHttps = true) }
             ),
             AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
-        ) + handlePolicyMap(cmd)
-
-    private fun handlePolicyMap(cmd: AuroraContextCommand) =
-        if (cmd.applicationFiles.findSubKeys(ConfigPath.policies).isEmpty()) {
-            emptySet()
-        } else {
-            cmd.applicationFiles.findSubKeys(ConfigPath.policies).flatMap { key ->
-                setOf(
-                    AuroraConfigFieldHandler(
-                        "${ConfigPath.policies}/$key",
-                        defaultValue = false,
-                        validator = { it.boolean() }
-                    )
-                )
-            }
-        }
+        ) + policyHandlers
+    }
 }

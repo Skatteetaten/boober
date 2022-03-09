@@ -41,11 +41,11 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
              "azure" : {
                 "apim": {
                     "enabled"    : true,
-                    "path"       : "/unique",      
-                    "openapiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service",
-                    "policies"   : {},  
-                    "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
+                    "apiName"    : "super-api",
+                    "version"    : "v1", 
+                    "path"       : "/path/to/api",
+                    "openApiUrl" : "https://openapi",
+                    "serviceUrl" : "https://service"
                 }
               }
            }""",
@@ -57,17 +57,28 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `if disabled policies are not taken into consideration`() {
+    fun `if policies are filtered, added and sorted`() {
         val (_, auroraAzureApp) = generateResources(
             """{
              "azure" : {
                 "apim": {
                     "enabled"    : true,
-                    "path"       : "/unique",      
-                    "openapiUrl" : "https://openapi",
+                    "apiName"    : "super-api",
+                    "version"    : "v1", 
+                    "path"       : "/path/to/api",
+                    "openApiUrl" : "https://openapi",
                     "serviceUrl" : "https://service",
-                    "policies"   : {"justDisable":false, "disabledToo": false},  
-                    "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
+                    "policies"   : {
+                                        "policy2": {
+                                            "enabled": true
+                                         },
+                                        "policy1": {
+                                            "enabled": true
+                                         },
+                                        "policy3": {
+                                            "enabled": false
+                                         }
+                                    }
                 }
               }
            }""",
@@ -75,42 +86,23 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
-            .auroraResourceMatchesFile("aurora-azure-apim.json")
+            .auroraResourceMatchesFile("aurora-azure-apim-with-policies.json")
     }
 
     @Test
-    fun `that policies need to boolean type boolean`() {
+    fun `if policies must be a list`() {
         Assertions.assertThrows(MultiApplicationValidationException::class.java) {
             generateResources(
                 """{
              "azure" : {
                 "apim": {
                     "enabled"    : true,
-                    "path"       : "/unique",      
-                    "openapiUrl" : "https://openapi",
+                    "apiName"    : "super-api",
+                    "version"    : "v1", 
+                    "path"       : "path/to/api",
+                    "openApiUrl" : "https://openapi",
                     "serviceUrl" : "https://service",
-                    "policies"   : {"justDisable": "string-value-is-intentionally-wrong"},  
-                    "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
-                }
-              }
-           }""",
-                createEmptyDeploymentConfig(), createdResources = 1
-            )
-        }
-    }
-
-    @Test
-    fun `if apim is declared, you need to declare policies explicitly`() {
-        Assertions.assertThrows(MultiApplicationValidationException::class.java) {
-            generateResources(
-                """{
-             "azure" : {
-                "apim": {
-                    "enabled"    : true,
-                    "path"       : "/unique",      
-                    "openapiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service",
-                    "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
+                    "policies"   : "awsome policy"
                 }
               }
            }""",
@@ -126,11 +118,11 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
              "azure" : {
                 "apim": {
                     "enabled"    : false,
-                    "path"       : "/unique",      
-                    "openapiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service",
-                    "policies"   : {},  
-                    "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
+                    "apiName"    : "super-api",
+                    "version"    : "v1", 
+                    "path"       : "/path/to/api",
+                    "openApiUrl" : "https://openapi",
+                    "serviceUrl" : "https://service"
                 }
               }
            }""",
@@ -146,11 +138,53 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
              "azure" : {
                 "apim": {
                     "enabled"    : true,
-                    "path"       : "invalid-if-it-does-not-start-with-slash",      
-                    "openapiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service",
-                    "policies"   : {},  
-                    "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
+                    "apiName"    : "super-api",
+                    "version"    : "v1", 
+                    "path"       : "/should/not/end/with/slash/",
+                    "openApiUrl" : "https://openapi",
+                    "serviceUrl" : "https://service"
+                }
+              }
+           }""",
+                createEmptyDeploymentConfig(), createdResources = 1
+            )
+        }
+    }
+
+    @Test
+    fun `invalid version gives error`() {
+        Assertions.assertThrows(MultiApplicationValidationException::class.java) {
+            generateResources(
+                """{
+             "azure" : {
+                "apim": {
+                    "enabled"    : true,
+                    "apiName"    : "super-api",
+                    "version"    : "versjon1", 
+                    "path"       : "path",
+                    "openApiUrl" : "https://openapi",
+                    "serviceUrl" : "https://service"
+                }
+              }
+           }""",
+                createEmptyDeploymentConfig(), createdResources = 1
+            )
+        }
+    }
+
+    @Test
+    fun `invalid openApiUrl gives error`() {
+        Assertions.assertThrows(MultiApplicationValidationException::class.java) {
+            generateResources(
+                """{
+             "azure" : {
+                "apim": {
+                    "enabled"    : true,
+                    "apiName"    : "super-api",
+                    "version"    : "v1", 
+                    "path"       : "/path",
+                    "openApiUrl" : "openapi",
+                    "serviceUrl" : "https://service"
                 }
               }
            }""",
@@ -172,12 +206,12 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                   "version": "0.4.0"
                 },
                 "apim": {
-                  "enabled"    : true,
-                  "path"       : "/unique",      
-                  "openapiUrl" : "https://openapi",
-                  "serviceUrl" : "https://service",
-                  "policies"   : {},  
-                  "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
+                    "enabled"    : true,
+                    "apiName"    : "super-api",
+                    "version"    : "v1", 
+                    "path"       : "/path/to/api",
+                    "openApiUrl" : "https://openapi",
+                    "serviceUrl" : "https://service"
                 }
               }
         }""",
@@ -186,30 +220,5 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
 
         assertThat(auroraApim).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-apim.json")
-    }
-
-    @Test
-    fun `that policies can be defined`() {
-        val (_, auroraAzureApp) = generateResources(
-            """{
-             "azure" : {
-                "apim": {
-                    "enabled"    : true,
-                    "path"       : "/unique",      
-                    "openapiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service",
-                    "policies"   : {
-                        "policy-a": true,
-                        "policy-b": true
-                    },  
-                    "apiHost"    : "api.apimanagement.dev.skatteetaten.io"   
-                }
-              }
-           }""",
-            createEmptyDeploymentConfig(), createdResources = 1
-        )
-
-        assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
-            .auroraResourceMatchesFile("aurora-azure-apim-with-policies.json")
     }
 }
