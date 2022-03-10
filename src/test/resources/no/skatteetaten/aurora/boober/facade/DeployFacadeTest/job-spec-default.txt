@@ -30,9 +30,9 @@ utv/about.json | cluster: "utv"
        default | alarm: true
        default | pause: false
        default | debug: false
+      fileName | artifactId: "job"
       job.json | version: "1"
        default | management: false
-      fileName | artifactId: "job"
       job.json | serviceAccount: "foo"
       job.json | schedule: "0/5 * * * *"
        default | suspend: false

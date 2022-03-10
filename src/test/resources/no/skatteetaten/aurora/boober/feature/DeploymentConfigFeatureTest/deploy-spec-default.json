@@ -69,6 +69,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
+  },
   "groupId": {
     "source": "utv/simple.json",
     "value": "no.skatteetaten.aurora",

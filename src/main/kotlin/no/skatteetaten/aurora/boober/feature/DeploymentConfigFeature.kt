@@ -93,8 +93,9 @@ class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
             AuroraConfigFieldHandler("pause", defaultValue = false, validator = { it.boolean() }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("debug", defaultValue = false, validator = { it.boolean() }),
-            header.groupIdHandler
-        ).addIfNotNull(templateSpecificHeaders)
+        )
+            .addIfNotNull(gavHandlers(header, cmd))
+            .addIfNotNull(templateSpecificHeaders)
     }
 
     override fun modify(
@@ -207,8 +208,8 @@ class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
 
     private fun createKlientIDHeader(adc: AuroraDeploymentSpec): String {
         // TODO: Muligens en for dyr operasjon
-        val manifest = cantusService.getImageInformation(adc.groupId.replace(".", "_"), adc.name, adc.version)
+        val manifest = cantusService.getImageInformation(adc.groupId.replace(".", "_"), adc.artifactId, adc.version)
         val segment: String? = adc.getOrNull("segment")
-        return "${segment ?: adc.affiliation}/${adc.name}/${manifest?.appVersion ?: adc.version}"
+        return "${segment ?: adc.affiliation}/${adc.artifactId}/${manifest?.appVersion ?: adc.version}"
     }
 }

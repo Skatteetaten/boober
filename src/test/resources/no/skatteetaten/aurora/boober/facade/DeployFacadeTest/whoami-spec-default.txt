@@ -33,6 +33,7 @@ utv/about.json | cluster: "utv"
        default | alarm: true
        default | pause: false
        default | debug: false
+      fileName | artifactId: "whoami"
    whoami.json | version: "1"
                | resources:
                |   cpu:
@@ -41,7 +42,6 @@ utv/about.json | cluster: "utv"
                |   memory:
        default |     min: "128Mi"
        default |     max: "512Mi"
-      fileName | artifactId: "whoami"
                | deployStrategy:
        default |   type: "rolling"
        default |   timeout: 180

@@ -287,6 +287,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "job",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "job"
+      }
+    ]
+  },
   "version": {
     "source": "job.json",
     "value": "1",
@@ -304,16 +314,6 @@
       {
         "name": "default",
         "value": false
-      }
-    ]
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "job",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "job"
       }
     ]
   },
