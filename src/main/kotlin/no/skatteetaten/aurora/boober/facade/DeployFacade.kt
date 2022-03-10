@@ -109,9 +109,7 @@ class DeployFacade(
         watch.start("store result")
         return deployLogService.markRelease(deployResultsAfterNotifications).also {
             watch.stop()
-            watch.taskInfo.forEach {
-                logger.info("deployMs={} deployAction={}", it.timeMillis, it.taskName)
-            }
+            logger.info("Deploy: ${watch.prettyPrint()}")
         }
     }
 
