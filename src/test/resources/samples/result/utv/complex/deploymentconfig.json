@@ -51,7 +51,8 @@
           "affiliation": "paas",
           "name": "komplex",
           "deployTag": "komplex",
-          "paused": "true"
+          "paused": "true",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {

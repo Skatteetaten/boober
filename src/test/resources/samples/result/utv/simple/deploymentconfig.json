@@ -52,7 +52,8 @@
           "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "simple",
-          "deployTag": "1"
+          "deployTag": "1",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {

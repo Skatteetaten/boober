@@ -131,11 +131,11 @@ class AuroraConfigFacadeTest(
             )
         }.configErrors(
             listOf(
-                "GroupId must be set",
-                "/templateFile is not a valid",
-                "/parameters/FEED_NAME is not a valid",
-                "/parameters/DOMAIN_NAME is not a valid",
-                "/parameters/DB_NAME is not a valid"
+                "GroupId must be set and be shorter then 200 characters",
+                "/templateFile is not a valid config field pointer",
+                "/parameters/FEED_NAME is not a valid config field pointer",
+                "/parameters/DOMAIN_NAME is not a valid config field pointer",
+                "/parameters/DB_NAME is not a valid config field pointer",
             )
         )
     }
