@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
@@ -18,7 +19,6 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.springframework.stereotype.Service
 
 const val ANNOTATION_BOOBER_DEPLOYTAG = "boober.skatteetaten.no/deployTag"
 
@@ -178,7 +178,7 @@ class DeploymentConfigFeature() : Feature {
 
         val headerEnv = if (adc.type == TemplateType.deploy) {
             mapOf(
-                "AURORA_HEADER_KLIENTID" to createKlientIDHeader(adc)
+                "AURORA_KLIENTID" to createAuroraKlientId(adc)
             )
         } else null
 
@@ -205,7 +205,7 @@ class DeploymentConfigFeature() : Feature {
         return mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel).normalizeLabels()
     }
 
-    private fun createKlientIDHeader(adc: AuroraDeploymentSpec): String {
+    private fun createAuroraKlientId(adc: AuroraDeploymentSpec): String {
         val segment: String? = adc.getOrNull("segment")
         return "${segment ?: adc.affiliation}/${adc.artifactId}/\${APP_VERSION}"
     }

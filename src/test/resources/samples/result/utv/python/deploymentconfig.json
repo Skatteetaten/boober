@@ -119,7 +119,7 @@
                 "value": "python"
               },
               {
-                "name": "AURORA_HEADER_KLIENTID",
+                "name": "AURORA_KLIENTID",
                 "value": "aurora/python/${APP_VERSION}"
               },
               {

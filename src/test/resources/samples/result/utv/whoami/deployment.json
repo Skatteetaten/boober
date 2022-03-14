@@ -188,7 +188,7 @@
                 "value": "whoami"
               },
               {
-                "name": "AURORA_HEADER_KLIENTID",
+                "name": "AURORA_KLIENTID",
                 "value": "aurora/whoami/${APP_VERSION}"
               }
             ],

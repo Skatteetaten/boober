@@ -59,7 +59,7 @@
                 "value": "5005"
               },
               {
-                "name": "AURORA_HEADER_KLIENTID",
+                "name": "AURORA_KLIENTID",
                 "value": "aurora/simple/${APP_VERSION}"
               }
             ],
