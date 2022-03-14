@@ -110,7 +110,7 @@ class DeployFacade(
         return deployLogService.markRelease(deployResultsAfterNotifications).also {
             watch.stop()
             watch.taskInfo.forEach {
-                logger.info("deployMs={} deployAction={}", it.timeMillis, it.taskName)
+                logger.info("deployMs={} deployAction={} applications={}", it.timeMillis, it.taskName, applicationDeploymentRefs.size)
             }
         }
     }
