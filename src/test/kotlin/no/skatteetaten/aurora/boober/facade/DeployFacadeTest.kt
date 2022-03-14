@@ -78,16 +78,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         val adr = ApplicationDeploymentRef("utv", "easy")
         val resultFiles = adr.getResultFiles()
 
-        cantusMock {
-            rule({ path.endsWith("/manifest") }) {
-                val cantusManifestResponseFile = "cantusManifestResponse.json"
-                MockResponse()
-                    .setBody(loadBufferResource(cantusManifestResponseFile, "$packageName/DeployFacadeTest"))
-                    .setResponseCode(200)
-                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-            }
-        }
-
         skapMock {
             rule {
                 MockResponse()
