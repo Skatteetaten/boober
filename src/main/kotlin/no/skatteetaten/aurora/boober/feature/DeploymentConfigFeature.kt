@@ -19,7 +19,6 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import org.springframework.stereotype.Service
-import no.skatteetaten.aurora.boober.service.CantusService
 
 const val ANNOTATION_BOOBER_DEPLOYTAG = "boober.skatteetaten.no/deployTag"
 
@@ -51,7 +50,7 @@ val AuroraDeploymentSpec.managementPath
     }
 
 @Service
-class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
+class DeploymentConfigFeature() : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
@@ -207,9 +206,7 @@ class DeploymentConfigFeature(val cantusService: CantusService) : Feature {
     }
 
     private fun createKlientIDHeader(adc: AuroraDeploymentSpec): String {
-        // TODO: Muligens en for dyr operasjon
-        val manifest = cantusService.getImageInformation(adc.groupId.replace(".", "_"), adc.artifactId, adc.version)
         val segment: String? = adc.getOrNull("segment")
-        return "${segment ?: adc.affiliation}/${adc.artifactId}/${manifest?.appVersion ?: adc.version}"
+        return "${segment ?: adc.affiliation}/${adc.artifactId}/\${APP_VERSION}"
     }
 }

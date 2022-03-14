@@ -120,7 +120,7 @@
               },
               {
                 "name": "AURORA_HEADER_KLIENTID",
-                "value": "aurora/python/1"
+                "value": "aurora/python/${APP_VERSION}"
               },
               {
                 "name": "ROUTE_NAME",

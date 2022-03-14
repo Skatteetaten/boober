@@ -124,7 +124,7 @@
               },
               {
                 "name": "AURORA_HEADER_KLIENTID",
-                "value": "aurora/simple/1"
+                "value": "aurora/simple/${APP_VERSION}"
               },
               {
                 "name": "ROUTE_NAME",

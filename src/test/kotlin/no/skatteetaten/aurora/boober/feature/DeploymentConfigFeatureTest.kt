@@ -1,41 +1,18 @@
 package no.skatteetaten.aurora.boober.feature
 
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
-import io.mockk.every
-import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
-import no.skatteetaten.aurora.boober.service.CantusService
-import no.skatteetaten.aurora.boober.service.ImageTagResource
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 
 class DeploymentConfigFeatureTest : AbstractFeatureTest() {
-    private val cantusService: CantusService = mockk()
-
     override val feature: Feature
-        get() = DeploymentConfigFeature(cantusService)
-
-    @BeforeEach
-    fun setupMock() {
-        every {
-            cantusService.getImageInformation(
-                "no_skatteetaten_aurora", "simple", "1"
-            )
-        } returns
-            ImageTagResource(
-                "1.0.0-b1.0.0-wingnut12",
-                "1.0.0",
-                "1",
-                "sha:1234567",
-                "docker.registry/no_skatteetaten_aurora/clinger",
-            )
-    }
+        get() = DeploymentConfigFeature()
 
     @Test
     fun `should allow objects if validation is boolean and not required`() {
