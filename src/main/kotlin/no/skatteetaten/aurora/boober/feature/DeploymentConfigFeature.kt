@@ -207,6 +207,7 @@ class DeploymentConfigFeature() : Feature {
 
     private fun createAuroraKlientId(adc: AuroraDeploymentSpec): String {
         val segment: String? = adc.getOrNull("segment")
+        // APP_VERSION is available for all images created by Architect
         return "${segment ?: adc.affiliation}/${adc.artifactId}/\${APP_VERSION}"
     }
 }
