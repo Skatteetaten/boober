@@ -1,0 +1,178 @@
+{
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/template",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/template"
+      }
+    ]
+  },
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
+  },
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
+  },
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
+  },
+  "type": {
+    "source": "template.json",
+    "value": "template",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      },
+      {
+        "name": "template.json",
+        "value": "template"
+      }
+    ]
+  },
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
+  },
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
+    }
+  },
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
+  },
+  "name": {
+    "source": "template.json",
+    "value": "template",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "template"
+      },
+      {
+        "name": "template.json",
+        "value": "template"
+      }
+    ]
+  },
+  "releaseTo": {
+    "source": "template.json",
+    "value": "something",
+    "sources": [
+      {
+        "name": "template.json",
+        "value": "something"
+      }
+    ]
+  },
+  "version": {
+    "source": "template.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "template.json",
+        "value": "1"
+      }
+    ]
+  },
+  "parameters": {
+    "FEED_NAME": {
+      "source": "template.json",
+      "value": "test",
+      "sources": [
+        {
+          "name": "template.json",
+          "value": "test"
+        }
+      ]
+    },
+    "DB_NAME": {
+      "source": "template.json",
+      "value": "test",
+      "sources": [
+        {
+          "name": "template.json",
+          "value": "test"
+        }
+      ]
+    }
+  },
+  "template": {
+    "source": "template.json",
+    "value": "atomhopper",
+    "sources": [
+      {
+        "name": "template.json",
+        "value": "atomhopper"
+      }
+    ]
+  }
+}

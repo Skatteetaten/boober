@@ -18,6 +18,8 @@ import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
+import no.skatteetaten.aurora.boober.utils.ResourcePrettyPrinter
+import no.skatteetaten.aurora.boober.utils.TestFile
 import no.skatteetaten.aurora.boober.utils.UUIDGenerator
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.jsonMapper
@@ -101,7 +103,36 @@ abstract class AbstractSpringBootAuroraConfigTest : AbstractSpringBootTest() {
         val generatedObjects = auroraDeployResult.openShiftResponses.mapNotNull {
             it.responseBody
         }
-        val resultFiles = auroraDeployResult.command.applicationDeploymentRef.getResultFiles()
+
+        val resultFiles: Map<String, TestFile?>
+        if (shouldOverwriteResources) {
+            val createdFiles = mutableMapOf<String, TestFile?>()
+            val cluster = auroraDeployResult.deployCommand.context.cmd.applicationFiles.map {
+                it.asJsonNode["cluster"]?.textValue()
+            }.filterNotNull().first()
+            val applicationName = auroraDeployResult.deployCommand.context.cmd.applicationFiles.map {
+                it.asJsonNode["name"]?.textValue()
+            }.filterNotNull().first()
+
+            val baseFolder = "samples/result/$cluster/$applicationName"
+            generatedObjects.forEach { generatedObject ->
+                val kind = generatedObject["kind"].textValue().lowercase()
+                val name = generatedObject.at("/metadata/name").textValue()
+                val resourceName = "$kind-$name.json"
+                val writer = jsonMapper().writer(ResourcePrettyPrinter())
+                overwriteResource(resourceName, writer.writeValueAsString(generatedObject), baseFolder)
+                val path = File(getResourceUrl(resourceName, baseFolder).toURI()).absolutePath.substringAfter("resources/")
+                val testFile = TestFile(
+                    path = path,
+                    content = loadJsonResource(resourceName, baseFolder)
+                )
+                createdFiles["$kind/$name"] = testFile
+            }
+            resultFiles = createdFiles.toMap()
+        } else {
+            resultFiles = auroraDeployResult.command.applicationDeploymentRef.getResultFiles()
+        }
+
         val keys = resultFiles.keys
 
         generatedObjects.forEach { generatedObject ->

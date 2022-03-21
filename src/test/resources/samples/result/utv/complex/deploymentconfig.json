@@ -526,7 +526,7 @@
           ],
           "from": {
             "kind": "ImageStreamTag",
-            "name": "komplex:latest"
+            "name": "komplex:default"
           }
         },
         "type": "ImageChange"
