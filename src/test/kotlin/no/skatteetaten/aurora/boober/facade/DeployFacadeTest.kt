@@ -88,6 +88,22 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
 
+        cantusMock {
+            rule({ path.endsWith("/manifest") }) {
+                val cantusManifestResponseFile = "cantusManifestFailureResponse.json"
+                MockResponse()
+                    .setBody(loadBufferResource(cantusManifestResponseFile))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+            rule {
+                MockResponse()
+                    .setBody(""" { "success" : true }""")
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+        }
+
         dbhMock {
             rule({
                 path.contains("application%3Dsimple")
