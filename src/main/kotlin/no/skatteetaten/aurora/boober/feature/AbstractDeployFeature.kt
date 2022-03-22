@@ -83,7 +83,7 @@ val AuroraDeploymentSpec.namespace
             else -> "$affiliation-$envName"
         }
     }
-val AuroraDeploymentSpec.releaseTo: String? get() = if (this.type == TemplateType.deploy) { this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() } } else { null }
+val AuroraDeploymentSpec.releaseTo: String? get() = if (this.type == TemplateType.deploy || this.type == TemplateType.cronjob) { this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() } } else { null }
 val AuroraDeploymentSpec.groupId: String get() = this["groupId"]
 val AuroraDeploymentSpec.artifactId: String get() = this["artifactId"]
 val AuroraDeploymentSpec.envAutoDeploy: Boolean get() = this["env/autoDeploy"] ?: false
