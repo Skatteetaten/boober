@@ -8,27 +8,22 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import assertk.Assert
-import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
-import mu.KotlinLogging
+import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfig
 import no.skatteetaten.aurora.boober.service.AuroraConfigService
 import no.skatteetaten.aurora.boober.service.AuroraDeployResult
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
-import no.skatteetaten.aurora.boober.utils.ResourcePrettyPrinter
 import no.skatteetaten.aurora.boober.utils.TestFile
 import no.skatteetaten.aurora.boober.utils.UUIDGenerator
 import no.skatteetaten.aurora.boober.utils.getResultFiles
-import no.skatteetaten.aurora.boober.utils.jsonMapper
 import no.skatteetaten.aurora.boober.utils.openshiftKind
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.MockRules
-
-private val logger = KotlinLogging.logger {}
 
 /*
 
@@ -74,13 +69,6 @@ abstract class AbstractSpringBootAuroraConfigTest : AbstractSpringBootTest() {
             secrets = secrets,
             permissions = listOf("APP_PaaS_utv")
         )
-
-        /*
-        val vault= vaultService.findFileInVault(auroraConfigRef.name, vaultName, "latest.properties")
-        val props=PropertiesLoaderUtils
-            .loadProperties(ByteArrayResource(vault))
-        logger.info{props}
-         */
     }
 
     fun prepareTestAuroraConfig(config: AuroraConfig = getAuroraConfigSamples()) {
@@ -104,40 +92,19 @@ abstract class AbstractSpringBootAuroraConfigTest : AbstractSpringBootTest() {
             it.responseBody
         }
 
-        val resultFiles: Map<String, TestFile?>
-        if (shouldOverwriteResources) {
-            val createdFiles = mutableMapOf<String, TestFile?>()
-            val cluster = auroraDeployResult.deployCommand.context.cmd.applicationFiles.map {
-                it.asJsonNode["cluster"]?.textValue()
-            }.filterNotNull().first()
-            val applicationName = auroraDeployResult.deployCommand.context.cmd.applicationFiles.map {
-                it.asJsonNode["name"]?.textValue()
-            }.filterNotNull().first()
-
-            val baseFolder = "samples/result/$cluster/$applicationName"
-            generatedObjects.forEach { generatedObject ->
-                val kind = generatedObject["kind"].textValue().lowercase()
-                val name = generatedObject.at("/metadata/name").textValue()
-                val resourceName = "$kind-$name.json"
-                val writer = jsonMapper().writer(ResourcePrettyPrinter())
-                overwriteResource(resourceName, writer.writeValueAsString(generatedObject), baseFolder)
-                val path = File(getResourceUrl(resourceName, baseFolder).toURI()).absolutePath.substringAfter("resources/")
-                val testFile = TestFile(
-                    path = path,
-                    content = loadJsonResource(resourceName, baseFolder)
-                )
-                createdFiles["$kind/$name"] = testFile
-            }
-            resultFiles = createdFiles.toMap()
-        } else {
-            resultFiles = auroraDeployResult.command.applicationDeploymentRef.getResultFiles()
-        }
-
-        val keys = resultFiles.keys
+        val resultFilesMapping = auroraDeployResult.command.applicationDeploymentRef.getResultFiles().toMutableMap()
+        val keys = resultFilesMapping.keys
+        val applicationDeploymentRef = auroraDeployResult.deployCommand.context.cmd.applicationDeploymentRef
 
         generatedObjects.forEach { generatedObject ->
-            val key = generatedObject.getKey()
-            assertThat(keys).contains(key)
+            val resultFileMappingKey = generatedObject.getKey()
+            if (!keys.contains(resultFileMappingKey) && shouldOverwriteResources) {
+                val kind = generatedObject.at("/kind").textValue()
+                val name = generatedObject.at("/metadata/name").textValue()
+                val testFile = createFile(kind, name, applicationDeploymentRef)
+                resultFilesMapping["$kind/$name".lowercase()] = testFile
+            }
+            assertThat(keys).contains(resultFileMappingKey)
 
             if (generatedObject.openshiftKind == "secret") {
                 val data = generatedObject["data"] as ObjectNode
@@ -148,30 +115,27 @@ abstract class AbstractSpringBootAuroraConfigTest : AbstractSpringBootTest() {
                 val auroraConfigField = generatedObject.at("/spec/command/auroraConfig") as ObjectNode
                 auroraConfigField.replace("resolvedRef", TextNode("123abb"))
             }
-            val resultFile = resultFiles[key]!!
+            val resultFile = resultFilesMapping[resultFileMappingKey]!!
             val name = resultFile.path.substringAfterLast("/")
             val path = resultFile.path.substringBeforeLast("/")
 
             assertThat(resultFile.content).jsonEquals(expected = generatedObject, name = name, folder = path)
         }
         val generatedObjectNames = generatedObjects.map { it.getKey() }.toSortedSet()
-        val expected = resultFiles.keys.toSortedSet()
+        val expected = resultFilesMapping.keys.toSortedSet()
         assertThat(generatedObjectNames).isEqualTo(expected)
     }
-}
 
-// This is done as text comparison and not jsonNode equals to get easier diff when they dif
-fun compareJson(expected: JsonNode, actual: JsonNode, name: String? = null): Boolean {
-    val writer = jsonMapper().writerWithDefaultPrettyPrinter()
-    val targetString = writer.writeValueAsString(actual)
-    val nodeString = writer.writeValueAsString(expected)
-
-    name?.let {
-        logger.info { "Comparing file with name=$name" }
+    private fun createFile(kind: String, name: String, appDeploymentRef: ApplicationDeploymentRef): TestFile {
+        val baseFolder = "samples/result/${appDeploymentRef.environment}/${appDeploymentRef.application}"
+        val resourceName = "$kind-$name.json".lowercase()
+        overwriteResource(resourceName, "{}", baseFolder)
+        return TestFile(
+            path = File(getResourceUrl(resourceName, baseFolder).toURI())
+                .absolutePath.substringAfter("resources/"),
+            content = loadJsonResource(resourceName, baseFolder)
+        )
     }
-
-    assertThat(targetString).isEqualTo(nodeString)
-    return true
 }
 
 fun JsonNode.getKey(): String {

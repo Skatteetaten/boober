@@ -285,9 +285,9 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
 
-        val templateJson = ResourceLoader().loadResource("atomhopper.json", "samples/config/templates")
         bitbucketMock {
             rule {
+                val templateJson = ResourceLoader().loadResource("atomhopper.json", "samples/config/templates")
                 MockResponse().setBody(templateJson).setResponseCode(200)
             }
         }
