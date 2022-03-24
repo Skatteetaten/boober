@@ -44,21 +44,19 @@ fun JsonNode.findAllPointers(maxLevel: Int): List<String> {
         return ret
     }
 
-    if (this is ObjectNode) {
-        return inner("", this)
+    return if (this is ObjectNode) {
+        inner("", this)
     } else {
-        return listOf()
+        listOf()
     }
 }
 
-fun JsonNode.getBoolean(nodeName: String): Boolean {
-    val valueNode = this[nodeName]
-    return when (valueNode) {
+fun JsonNode.getBoolean(nodeName: String): Boolean =
+    when (val valueNode = this[nodeName]) {
         is BooleanNode -> valueNode.booleanValue()
         is TextNode -> valueNode.textValue() == "true"
         else -> false
     }
-}
 
 fun JsonNode.atNullable(path: String): JsonNode? {
     val value = this.at(path.ensureStartWith("/"))
@@ -77,7 +75,7 @@ fun JsonNode.annotation(name: String): String? {
         return null
     }
 
-    val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations) ?: return null
+    val entries = jacksonObjectMapper().treeToValue<Map<String, String>>(annotations)
     return entries[name]
 }
 
@@ -105,11 +103,12 @@ val JsonNode.namespacedResourceUrl: String
 val JsonNode.namespacedNamedUrl: String
     get() = "${this.namespacedResourceUrl}/${this.openshiftName}"
 
-val JsonNode.appropriateResourceAndNamedUrl get() = if (this.namespace.isEmpty()) {
-    this.resourceUrl to this.namedUrl
-} else {
-    this.namespacedResourceUrl to this.namespacedNamedUrl
-}
+val JsonNode.appropriateResourceAndNamedUrl
+    get() = if (this.namespace.isEmpty()) {
+        this.resourceUrl to this.namedUrl
+    } else {
+        this.namespacedResourceUrl to this.namespacedNamedUrl
+    }
 
 val JsonNode.appropriateNamedUrl: String get() = appropriateResourceAndNamedUrl.second
 
@@ -165,11 +164,44 @@ fun JsonNode.mergeField(source: ObjectNode, root: String, field: String) {
     rootNode.replace(field, mergedObject)
 }
 
-fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
-    if (this == null || !this.isTextual) {
+fun JsonNode?.startsWith(pattern: String, message: String, required: Boolean = true): Exception? {
+    if (this == null) {
+        return if (required) {
+            IllegalArgumentException(message)
+        } else {
+            // The field is null, and not required. OK:
+            null
+        }
+    }
+
+    if (!this.isTextual) {
+        // When the field is present, it should be textual:
+        return IllegalArgumentException("Field should have a text value")
+    }
+
+    if (!this.textValue().startsWith(pattern)) {
         return IllegalArgumentException(message)
     }
-    if (!this.textValue().startsWith(pattern)) {
+
+    return null
+}
+
+fun JsonNode?.notEndsWith(pattern: String, message: String, required: Boolean = true): Exception? {
+    if (this == null) {
+        return if (required) {
+            IllegalArgumentException(message)
+        } else {
+            // The field is null, and not required. OK:
+            null
+        }
+    }
+
+    if (!this.isTextual) {
+        // When the field is present, it should be textual:
+        return IllegalArgumentException("Field should have a text value")
+    }
+
+    if (this.textValue().endsWith(pattern)) {
         return IllegalArgumentException(message)
     }
 
@@ -179,13 +211,35 @@ fun JsonNode?.startsWith(pattern: String, message: String): Exception? {
 fun JsonNode?.pattern(pattern: String, message: String, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {
-            IllegalArgumentException(message)
+            IllegalArgumentException("Field is required")
         } else {
             null
         }
     }
     if (!Regex(pattern).matches(this.textValue())) {
         return IllegalArgumentException(message)
+    }
+
+    return null
+}
+
+fun JsonNode?.versionPattern(required: Boolean = true): Exception? {
+    if (this == null) {
+        return if (required) {
+            IllegalArgumentException("Field is required")
+        } else {
+            // The field is null, and not required. OK:
+            null
+        }
+    }
+
+    if (!this.isTextual) {
+        // When the field is present, it should be textual:
+        return IllegalArgumentException("Field should have a text value")
+    }
+
+    if (!Regex("v[0-9]{1,3}").matches(this.textValue())) {
+        return IllegalArgumentException("Please specify version with vX. Examples v1, v2 etc.")
     }
 
     return null
@@ -248,7 +302,7 @@ fun JsonNode?.boolean(required: Boolean = false): Exception? {
 fun JsonNode?.oneOf(candidates: List<String>, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {
-            IllegalArgumentException("Must be one of [" + candidates.joinToString() + "]")
+            IllegalArgumentException("Field is required")
         } else {
             null
         }
@@ -306,21 +360,7 @@ fun JsonNode?.isListOrEmpty(required: Boolean = false): Exception? {
     return null
 }
 
-fun JsonNode?.startsWithSlash(elementName: String, required: Boolean = false): Exception? {
-    return if (this == null) {
-        if (required) {
-            IllegalArgumentException("Need to supply $elementName")
-        } else {
-            null
-        }
-    } else if (!this.textValue().startsWith("/")) {
-        IllegalArgumentException("$elementName must start with a slash, i.e. /, it contains ${this.textValue()}")
-    } else {
-        null
-    }
-}
-
-fun JsonNode?.validUrl(required: Boolean = true): Exception? {
+fun JsonNode?.validUrl(required: Boolean = true, requireHttps: Boolean = false): Exception? {
     if (this == null || !this.isTextual || this.textValue().isBlank()) {
         return if (required) {
             IllegalArgumentException("Need to set a valid URL.")
@@ -332,6 +372,9 @@ fun JsonNode?.validUrl(required: Boolean = true): Exception? {
         URI.create(this.textValue())
     } catch (e: IllegalArgumentException) {
         return e
+    }
+    if (requireHttps && !this.textValue().startsWith("https://")) {
+        return IllegalArgumentException("URL should start with https://")
     }
     return null
 }

@@ -90,6 +90,13 @@ logging:
             hibernate: WARN
             springframework: WARN
             apache: WARN
+
+splunk:
+    fluentbit:
+        resources:
+            cpu:
+                limit: "300m"
+
 server:
     tomcat:
         mbeanregistry:
@@ -106,16 +113,19 @@ server:
 
 openshift:
     cluster: utv04
+    majorversion: 4
 
 integrations:
     operations:
         scope: dev
+    mattermost:
+        url: http://locaklhost
     dbh:
-        url: https://dbh-aurora.${openshift.cluster}.paas.skead.no
+        url: https://dbh-aup.apps.${openshift.cluster}.paas.skead.no
     cantus:
         url: https://cantus-aup.apps.${openshift.cluster}.paas.skead.no
     skap:
-        url: https://skap-aurora.${openshift.cluster}.paas.skead.no
+        url: https://skap-aup.apps.${openshift.cluster}.paas.skead.no
     fiona:
         url: http://fiona-aurora.${openshift.cluster}.paas.skead.no
     herkimer:
@@ -141,6 +151,9 @@ splunk:
         token: token
     fluentbit:
         tag: "1.8.11"
+        retry:
+            limit: 5
+
 
 aurora:
     token:

@@ -1,6 +1,9 @@
         static | applicationDeploymentRef: "utv/simple"
         static | configVersion: "master"
         static | applicationDeploymentId: "1234567890"
+               | alertsDefaults:
+       default |   enabled: false
+       default |   delay: "1"
     about.json | schemaVersion: "v1"
     about.json | type: "deploy"
        default | deployState: "deploymentConfig"
@@ -34,8 +37,6 @@ utv/about.json | cluster: "utv"
                |   memory:
        default |     min: "128Mi"
        default |     max: "512Mi"
-               | logging:
-       default |   bufferSize: 20
       fileName | artifactId: "simple"
                | deployStrategy:
        default |   type: "rolling"
@@ -73,3 +74,5 @@ utv/about.json | cluster: "utv"
        default |   managedRoute: false
                |   apim:
        default |     enabled: false
+               | logging:
+       default |   bufferSize: 20

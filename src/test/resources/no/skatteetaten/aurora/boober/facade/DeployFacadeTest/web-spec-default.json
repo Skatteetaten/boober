@@ -29,6 +29,28 @@
       }
     ]
   },
+  "alertsDefaults": {
+    "enabled": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": "1",
+      "sources": [
+        {
+          "name": "default",
+          "value": "1"
+        }
+      ]
+    }
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1",
@@ -409,18 +431,6 @@
       }
     }
   },
-  "logging": {
-    "bufferSize": {
-      "source": "default",
-      "value": 20,
-      "sources": [
-        {
-          "name": "default",
-          "value": 20
-        }
-      ]
-    }
-  },
   "route": {
     "source": "web.json",
     "value": true,
@@ -777,6 +787,18 @@
           }
         ]
       }
+    }
+  },
+  "logging": {
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
     }
   }
 }

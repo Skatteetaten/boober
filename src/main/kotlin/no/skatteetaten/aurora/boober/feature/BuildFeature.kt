@@ -26,7 +26,7 @@ import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationExcep
 class BuildFeature(
     @Value("\${integrations.docker.registry}") val dockerRegistryUrl: String,
     @Value("\${auroraconfig.builder.version}") val builderVersion: String,
-    @Value("\${boober.build.generateBuildConfig}") val generateBuildConfig: Boolean
+    @Value("\${openshift.majorversion:3}") val openshiftVersion: String
 ) : Feature {
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type == TemplateType.development
@@ -61,8 +61,13 @@ class BuildFeature(
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
-        return if (generateBuildConfig) setOf(generateResource(createBuild(adc)))
-        else emptySet()
+        val shouldGenerateBuildConfig = openshiftVersion != "4"
+
+        if (shouldGenerateBuildConfig) {
+            return setOf(generateResource(createBuild(adc)))
+        }
+
+        return emptySet()
     }
 
     override fun modify(

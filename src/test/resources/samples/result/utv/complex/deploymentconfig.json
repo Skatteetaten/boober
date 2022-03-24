@@ -51,7 +51,8 @@
           "affiliation": "paas",
           "name": "komplex",
           "deployTag": "komplex",
-          "paused": "true"
+          "paused": "true",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {
@@ -456,7 +457,7 @@
         "serviceAccount": "aurora-fraggle",
         "volumes": [
           {
-            "emptyDir": {},
+            "emptyDir": { },
             "name": "application-log-volume"
           },
           {
@@ -476,18 +477,6 @@
             "secret": {
               "secretName": "komplex-foo-db"
             }
-          },
-          {
-            "configMap": {
-              "name": "komplex-fluent-config"
-            },
-            "name": "komplex-fluent-config"
-          },
-          {
-            "configMap": {
-              "name": "komplex-fluent-parser"
-            },
-            "name": "komplex-fluent-parser"
           },
           {
             "name": "aurora-token-mount",
@@ -512,6 +501,18 @@
             "secret": {
               "secretName": "komplex-sts"
             }
+          },
+          {
+            "configMap": {
+              "name": "komplex-fluent-config"
+            },
+            "name": "komplex-fluent-config"
+          },
+          {
+            "configMap": {
+              "name": "komplex-fluent-parser"
+            },
+            "name": "komplex-fluent-parser"
           }
         ]
       }

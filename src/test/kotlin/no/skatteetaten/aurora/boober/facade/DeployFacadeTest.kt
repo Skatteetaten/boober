@@ -115,7 +115,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 MockResponse().setResponseCode(200)
             }
 
-            // This is a empty environment so no resources exist
+            // This is an empty environment so no resources exist
             rule({ method == "GET" }) {
                 path?.let { it ->
                     if (it.endsWith("/projects/paas-utv")) {
@@ -246,7 +246,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             rule({ method == "GET" && path!!.endsWith("aurora-token") || path!!.endsWith("pvc") }) {
                 MockResponse().setResponseCode(200)
             }
-            // This is a empty environment so no resources exist
+            // This is an empty environment so no resources exist
             rule({ method == "GET" }) {
                 MockResponse().setResponseCode(404)
             }
@@ -302,6 +302,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                 listOf(
                     "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
                     "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service",
+                    "The property 'connection' on alerts is deprecated. Please use the connections property",
                     "Config key=THIS.VALUE was normalized to THIS_VALUE",
                     "Was unable to resolve dockerDigest for image=docker.registry:5000/fluent/fluent-bit:1.6.10. Using tag instead."
                 )

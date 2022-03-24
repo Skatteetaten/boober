@@ -43,9 +43,19 @@ data class AuroraApim(
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApimSpec(
+    val apiName: String,
+    val version: String,
     val path: String,
-    val openapiUrl: String,
+    val openApiUrl: String,
     val serviceUrl: String,
-    val policies: List<String>,
-    val apiHost: String
+    val policies: List<ApimPolicy>
+)
+
+/**
+ * This is an object to enable later extenions, with policy specific configuration.
+ */
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ApimPolicy(
+    val name: String
 )

@@ -1,6 +1,9 @@
         static | applicationDeploymentRef: "utv/job"
         static | configVersion: "master"
         static | applicationDeploymentId: "1234567890"
+               | alertsDefaults:
+       default |   enabled: false
+       default |   delay: "1"
     about.json | schemaVersion: "v1"
       job.json | type: "cronjob"
        default | deployState: "deploymentConfig"
@@ -29,8 +32,6 @@ utv/about.json | cluster: "utv"
        default | debug: false
       job.json | version: "1"
        default | management: false
-               | logging:
-       default |   bufferSize: 20
       fileName | artifactId: "job"
       job.json | serviceAccount: "foo"
       job.json | schedule: "0/5 * * * *"
@@ -60,3 +61,5 @@ utv/about.json | cluster: "utv"
       job.json |     keys: ["BAR","FOO"]
       job.json |     keyMappings: {"BAR":"BAZ"}
        default | sts: false
+               | logging:
+       default |   bufferSize: 20

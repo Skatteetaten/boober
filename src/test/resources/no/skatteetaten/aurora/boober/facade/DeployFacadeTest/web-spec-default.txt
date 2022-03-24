@@ -1,6 +1,9 @@
         static | applicationDeploymentRef: "utv/web"
         static | configVersion: "master"
         static | applicationDeploymentId: "1234567890"
+               | alertsDefaults:
+       default |   enabled: false
+       default |   delay: "1"
     about.json | schemaVersion: "v1"
       web.json | type: "development"
        default | deployState: "deploymentConfig"
@@ -43,8 +46,6 @@ utv/about.json | cluster: "utv"
                |   memory:
        default |     min: "128Mi"
        default |     max: "512Mi"
-               | logging:
-       default |   bufferSize: 20
       web.json | route: true
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"
@@ -82,3 +83,5 @@ utv/about.json | cluster: "utv"
        default |   managedRoute: false
                |   apim:
        default |     enabled: false
+               | logging:
+       default |   bufferSize: 20
