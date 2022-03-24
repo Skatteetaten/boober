@@ -461,6 +461,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "complex",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "complex"
+      }
+    ]
+  },
   "version": {
     "source": "complex.json",
     "value": "1",
@@ -532,16 +542,6 @@
         ]
       }
     }
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "complex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
-      }
-    ]
   },
   "deployStrategy": {
     "type": {

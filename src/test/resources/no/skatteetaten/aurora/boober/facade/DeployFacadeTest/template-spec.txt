@@ -11,6 +11,7 @@ utv/about.json | cluster: "utv"
     folderName | envName: "utv"
  template.json | name: "template"
  template.json | releaseTo: "something"
+      fileName | artifactId: "template"
  template.json | version: "1"
                | parameters:
  template.json |   FEED_NAME: "test"
