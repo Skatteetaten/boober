@@ -133,6 +133,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "template",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "template"
+      }
+    ]
+  },
   "version": {
     "source": "template.json",
     "value": "1",

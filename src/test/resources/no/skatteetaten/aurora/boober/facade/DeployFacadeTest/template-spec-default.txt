@@ -28,6 +28,7 @@ utv/about.json | cluster: "utv"
        default | alarm: true
        default | pause: false
        default | debug: false
+      fileName | artifactId: "template"
  template.json | version: "1"
        default | management: false
        default | route: false
