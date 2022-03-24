@@ -411,6 +411,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 sourceIndex = 2,
                 featureIndex = 2
             )
+            .auroraResourceMatchesFile("dcWithDatabaseMapping.json")
 
         assertThat(secretResource)
             .auroraResourceModifiedByThisFeatureWithComment(
@@ -640,5 +641,73 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             "Found Toxiproxy config for database named db1, but there is no such database configured."
 
         assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should not add Toxiproxy for database when database is false`() {
+
+        httpMockServer(5000) {
+            rule {
+                json(
+                    DbApiEnvelope(
+                        "ok",
+                        listOf(
+                            createDbhSchema(
+                                UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060"),
+                                "jdbc:oracle:thin:@host:1234/dbname",
+                                DatabaseSchemaInstance(1234, "host")
+                            )
+                        )
+                    )
+                )
+            }
+        }
+
+        val (_, dcResource, _, configResource) = generateResources(
+            """{
+                "toxiproxy": {"database": false},
+                "database": true
+            }""",
+            mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
+            createdResources = 2
+        )
+        assertThat(dcResource).auroraResourceMatchesFile("dcWithDatabaseMapping.json")
+        assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
+    }
+
+    @Test
+    fun `Should not add Toxiproxy for database when the enabled field for the database is false`() {
+
+        httpMockServer(5000) {
+            rule {
+                json(
+                    DbApiEnvelope(
+                        "ok",
+                        listOf(
+                            createDbhSchema(
+                                UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060"),
+                                "jdbc:oracle:thin:@host:1234/dbname",
+                                DatabaseSchemaInstance(1234, "host")
+                            )
+                        )
+                    )
+                )
+            }
+        }
+
+        val (_, dcResource, _, configResource) = generateResources(
+            """{
+                "toxiproxy": {
+                    "database": {
+                        "customdbname": {"enabled": false}
+                    }
+                },
+                "database": {"customdbname": true}
+            }""",
+            mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
+            createdResources = 2
+        )
+        assertThat(dcResource).auroraResourceMatchesFile("dcWithCustomDatabaseMapping.json")
+        assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
     }
 }
