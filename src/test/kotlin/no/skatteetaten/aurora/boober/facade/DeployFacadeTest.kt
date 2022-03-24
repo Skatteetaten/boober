@@ -197,7 +197,6 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }
 
         val result = facade.executeDeploy(auroraConfigRef, listOf(adr))
-
         assertThat(result).auroraDeployResultMatchesFiles()
     }
 

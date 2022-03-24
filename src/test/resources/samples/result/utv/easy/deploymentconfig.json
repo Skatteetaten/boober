@@ -123,6 +123,10 @@
                 "value": "easy"
               },
               {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/simple/${APP_VERSION}"
+              },
+              {
                 "name": "ROUTE_NAME",
                 "value": "easy-paas-utv.test"
               },

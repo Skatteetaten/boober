@@ -39,6 +39,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
+  },
   "management": {
     "source": "default",
     "value": false,

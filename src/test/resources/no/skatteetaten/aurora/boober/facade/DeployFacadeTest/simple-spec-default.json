@@ -309,6 +309,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "simple",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "simple"
+      }
+    ]
+  },
   "version": {
     "source": "simple.json",
     "value": "1",
@@ -364,16 +374,6 @@
         ]
       }
     }
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "simple",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "simple"
-      }
-    ]
   },
   "deployStrategy": {
     "type": {

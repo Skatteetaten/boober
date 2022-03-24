@@ -333,6 +333,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "whoami",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "whoami"
+      }
+    ]
+  },
   "version": {
     "source": "whoami.json",
     "value": "1",
@@ -388,16 +398,6 @@
         ]
       }
     }
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "whoami",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "whoami"
-      }
-    ]
   },
   "deployStrategy": {
     "type": {

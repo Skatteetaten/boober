@@ -14,8 +14,8 @@ utv/about.json | cluster: "utv"
                | databaseDefaults:
    simple.json |   tryReuse: true
    simple.json | database: true
-   simple.json | version: "1"
       fileName | artifactId: "simple"
+   simple.json | version: "1"
    simple.json | route: true
    simple.json | s3: true
                | s3Defaults:

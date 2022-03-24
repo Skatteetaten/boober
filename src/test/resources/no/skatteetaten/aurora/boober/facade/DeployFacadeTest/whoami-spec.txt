@@ -17,6 +17,6 @@ utv/about.json | cluster: "utv"
    whoami.json |       enabled: true
    whoami.json | groupId: "org.test"
    whoami.json | database: true
-   whoami.json | version: "1"
       fileName | artifactId: "whoami"
+   whoami.json | version: "1"
    whoami.json | toxiproxy: true

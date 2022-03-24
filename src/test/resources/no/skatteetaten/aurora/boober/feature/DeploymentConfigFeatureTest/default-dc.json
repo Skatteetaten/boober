@@ -43,6 +43,10 @@
               {
                 "name": "APP_NAME",
                 "value": "simple"
+              },
+              {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/simple/${APP_VERSION}"
               }
             ],
             "name": "simple",

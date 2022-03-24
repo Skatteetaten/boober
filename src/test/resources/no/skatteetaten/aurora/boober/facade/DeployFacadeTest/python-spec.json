@@ -185,6 +185,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "python",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "python"
+      }
+    ]
+  },
   "version": {
     "source": "utv/python.json",
     "value": "1",
@@ -196,16 +206,6 @@
       {
         "name": "utv/python.json",
         "value": "1"
-      }
-    ]
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "python",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "python"
       }
     ]
   },

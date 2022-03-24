@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
@@ -8,7 +9,6 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
-import org.junit.jupiter.api.Test
 
 class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -19,6 +19,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "management" : {
                       "path" : "/foo"
@@ -33,6 +34,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : true
                     
@@ -46,6 +48,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : "true"
                     
@@ -59,6 +62,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : "TRUE"
                     
@@ -72,6 +76,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraConfigFieldHandlers(
                 """{ 
+                "groupId": "no.skatteetaten.aurora",
                     "version" : "1",
                     "pause" : "fasle"
                     
@@ -95,6 +100,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     fun `deploy type should have default resource requirements`() {
         val spec = createAuroraDeploymentSpecForFeature(
             """{
+                "groupId": "no.skatteetaten.aurora",
            "type": "deploy", 
            "version" : "1"
         }"""
@@ -108,6 +114,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
 
         val (dcResource, adResource) = modifyResources(
             """{ 
+                "groupId": "no.skatteetaten.aurora",
                 "version" : "1"
            }""",
             createEmptyDeploymentConfig(), createEmptyApplicationDeployment()
@@ -130,7 +137,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
 
         val (dcResource, adResource) = generateResources(
             app = """{ 
-                
+                "groupId": "no.skatteetaten.aurora",
                 "version" : "1",
                 "releaseTo" : "test", 
                 "splunkIndex" : "test",

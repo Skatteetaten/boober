@@ -15,8 +15,8 @@ utv/python.json | groupId: "org.test"
                 | databaseDefaults:
 utv/python.json |   tryReuse: true
 utv/python.json | database: true
-utv/python.json | version: "1"
        fileName | artifactId: "python"
+utv/python.json | version: "1"
 utv/python.json | route: true
 utv/python.json | s3: true
                 | s3Defaults:
