@@ -25,6 +25,7 @@ import assertk.assertions.messageContains
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
+import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.singleApplicationDeployError
 import no.skatteetaten.aurora.boober.utils.singleApplicationValidationError
@@ -84,6 +85,22 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                     .setBody(loadBufferResource("keystore.jks"))
                     .setHeader("key-password", "ca")
                     .setHeader("store-password", "")
+            }
+        }
+
+        cantusMock {
+            rule({ path.endsWith("/manifest") }) {
+                val cantusManifestResponseFile = "cantusManifestFailureResponse.json"
+                MockResponse()
+                    .setBody(loadBufferResource(cantusManifestResponseFile))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+            rule {
+                MockResponse()
+                    .setBody(""" { "success" : true }""")
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             }
         }
 
@@ -185,7 +202,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["complex", "whoami", "simple", "web", "ah", "job", "python"])
+    @CsvSource(value = ["complex", "whoami", "simple", "web", "ah", "job", "python", "template"])
     fun `deploy application`(app: String) {
 
         skapMock {
@@ -270,7 +287,8 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         bitbucketMock {
             rule {
-                MockResponse().setResponseCode(200).setBody("OK!")
+                val templateJson = ResourceLoader().loadResource("atomhopper.json", "samples/config/templates")
+                MockResponse().setBody(templateJson).setResponseCode(200)
             }
         }
 

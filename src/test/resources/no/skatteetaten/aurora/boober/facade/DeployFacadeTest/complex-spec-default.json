@@ -117,7 +117,7 @@
   },
   "type": {
     "source": "complex.json",
-    "value": "development",
+    "value": "deploy",
     "sources": [
       {
         "name": "about.json",
@@ -125,7 +125,7 @@
       },
       {
         "name": "complex.json",
-        "value": "development"
+        "value": "deploy"
       }
     ]
   },
@@ -353,80 +353,6 @@
       ]
     }
   },
-  "artifactId": {
-    "source": "fileName",
-    "value": "complex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
-      }
-    ]
-  },
-  "groupId": {
-    "source": "complex.json",
-    "value": "org.test",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "org.test"
-      }
-    ]
-  },
-  "version": {
-    "source": "complex.json",
-    "value": "1",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "1"
-      }
-    ]
-  },
-  "builder": {
-    "name": {
-      "source": "default",
-      "value": "architect",
-      "sources": [
-        {
-          "name": "default",
-          "value": "architect"
-        }
-      ]
-    },
-    "version": {
-      "source": "default",
-      "value": "1",
-      "sources": [
-        {
-          "name": "default",
-          "value": "1"
-        }
-      ]
-    }
-  },
-  "baseImage": {
-    "name": {
-      "source": "default",
-      "value": "wingnut11",
-      "sources": [
-        {
-          "name": "default",
-          "value": "wingnut11"
-        }
-      ]
-    },
-    "version": {
-      "source": "default",
-      "value": 1,
-      "sources": [
-        {
-          "name": "default",
-          "value": 1
-        }
-      ]
-    }
-  },
   "certificate": {
     "commonName": {
       "source": "complex.json",
@@ -438,6 +364,16 @@
         }
       ]
     }
+  },
+  "groupId": {
+    "source": "complex.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "complex.json",
+        "value": "org.test"
+      }
+    ]
   },
   "config": {
     "FOO": {
@@ -629,6 +565,16 @@
       }
     ]
   },
+  "version": {
+    "source": "complex.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "complex.json",
+        "value": "1"
+      }
+    ]
+  },
   "resources": {
     "cpu": {
       "min": {
@@ -690,6 +636,16 @@
         ]
       }
     }
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "complex",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "complex"
+      }
+    ]
   },
   "deployStrategy": {
     "type": {

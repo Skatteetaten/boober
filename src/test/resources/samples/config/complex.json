@@ -2,7 +2,7 @@
   "name": "komplex",
   "version": "1",
   "groupId": "org.test",
-  "type": "development",
+  "type": "deploy",
   "splunkIndex": "test-index",
   "logging": {
     "index": "test-index"

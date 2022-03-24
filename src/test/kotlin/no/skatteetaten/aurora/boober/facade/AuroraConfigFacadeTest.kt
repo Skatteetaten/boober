@@ -454,6 +454,10 @@ class AuroraConfigFacadeTest(
             }
         }
 
+        bitbucketMock {
+            rule { mockJsonFromFile("atomhopper.json") }
+        }
+
         val auroraConfigSamples = getAuroraConfigSamples()
         val validated = facade.validateAuroraConfig(
             auroraConfigSamples,
@@ -616,7 +620,7 @@ class AuroraConfigFacadeTest(
         }
 
         val searchForApplications = facade.searchForApplications("master", "utv")
-        assertThat(searchForApplications.size).isEqualTo(8)
+        assertThat(searchForApplications.size).isEqualTo(9)
     }
 
     @Test

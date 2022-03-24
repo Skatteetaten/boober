@@ -162,8 +162,8 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
                 "type" : "template",
                 "releaseTo" : "test", 
                 "splunkIndex" : "test",
-                "debug" : true
-                
+                "debug" : true,
+                "version" : "1"
            }""",
             resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
             createdResources = 0
