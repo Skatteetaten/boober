@@ -10,7 +10,6 @@ import no.skatteetaten.aurora.boober.utils.findOpenShiftApiPrefix
 import no.skatteetaten.aurora.boober.utils.kindsWithoutNamespace
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.RequestEntity
 import org.springframework.http.ResponseEntity
@@ -79,7 +78,7 @@ open class OpenShiftResourceClient(
     private fun <T> exchange(requestEntity: RequestEntity<T>, retry: Boolean = true) = try {
         restTemplateWrapper.exchange(requestEntity, retry)
     } catch (e: HttpClientErrorException) {
-        if (e.statusCode != HttpStatus.NOT_FOUND) {
+        if (!e.statusCode.is4xxClientError) {
 
             val message = try {
                 val jsonError = jacksonObjectMapper().readTree(e.responseBodyAsByteArray)
