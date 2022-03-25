@@ -67,11 +67,6 @@
         "notificationLocation": "test2",
         "type": "Mattermost"
       }
-    ],
-    "build": {
-      "baseImageName": "wingnut11",
-      "baseImageVersion": 2,
-      "type": "java"
-    }
+    ]
   }
 }
