@@ -231,7 +231,7 @@ class OpenShiftClient(
 
         val apiUrl = generateUrl(kind, namespace)
         val url = "$apiUrl?labelSelector=$queryString"
-        val body = getClientForKind(kind).get(url = url, retry = false)?.body
+        val body = getClientForKind(kind).get(url)?.body
 
         val items = body?.get("items")?.toList() ?: emptyList()
         return items.filterIsInstance<ObjectNode>()
