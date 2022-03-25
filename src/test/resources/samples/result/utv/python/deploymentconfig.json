@@ -119,6 +119,10 @@
                 "value": "python"
               },
               {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/python/${APP_VERSION}"
+              },
+              {
                 "name": "ROUTE_NAME",
                 "value": "python-paas-utv.test"
               },

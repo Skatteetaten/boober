@@ -22,7 +22,7 @@ dependencies {
     implementation("com.github.ben-manes.caffeine:caffeine:3.0.5")
     implementation("org.apache.commons:commons-text:1.9")
 
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.2")
 
     // TODO: 2.7.1 er nyere en 3.0, det er viktig at vi kjører denne og ikke 3.0 job formatet er feil i 3.0
     implementation("com.fkorotkov:kubernetes-dsl:2.8.1")

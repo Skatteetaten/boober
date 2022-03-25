@@ -57,6 +57,10 @@
               {
                 "name": "DEBUG_PORT",
                 "value": "5005"
+              },
+              {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/simple/${APP_VERSION}"
               }
             ],
             "name": "simple",

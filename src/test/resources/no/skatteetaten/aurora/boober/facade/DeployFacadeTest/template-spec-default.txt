@@ -1,11 +1,11 @@
-        static | applicationDeploymentRef: "utv/simple"
+        static | applicationDeploymentRef: "utv/template"
         static | configVersion: "master"
         static | applicationDeploymentId: "1234567890"
                | alertsDefaults:
        default |   enabled: false
        default |   delay: "1"
     about.json | schemaVersion: "v1"
-    about.json | type: "deploy"
+ template.json | type: "template"
        default | deployState: "deploymentConfig"
        default | applicationPlatform: "java"
     about.json | affiliation: "paas"
@@ -14,38 +14,24 @@ utv/about.json | cluster: "utv"
                | permissions:
     about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
     folderName | envName: "utv"
-      fileName | name: "simple"
+ template.json | name: "template"
                | env:
        default |   autoDeploy: false
        default | certificate: false
-   simple.json | groupId: "org.test"
                | databaseDefaults:
        default |   flavor: "ORACLE_MANAGED"
        default |   generate: true
-   simple.json |   tryReuse: true
+       default |   tryReuse: false
        default |   name: "@name@"
-   simple.json | database: true
-       default | management: true
+       default | database: false
+ template.json | releaseTo: "something"
        default | alarm: true
        default | pause: false
        default | debug: false
-      fileName | artifactId: "simple"
-   simple.json | version: "1"
-               | resources:
-               |   cpu:
-       default |     min: "10m"
-       default |     max: "2000m"
-               |   memory:
-       default |     min: "128Mi"
-       default |     max: "512Mi"
-               | deployStrategy:
-       default |   type: "rolling"
-       default |   timeout: 180
-       default | replicas: 1
-       default | prometheus: true
-       default | readiness: true
-       default | liveness: false
-   simple.json | route: true
+      fileName | artifactId: "template"
+ template.json | version: "1"
+       default | management: false
+       default | route: false
                | routeDefaults:
        default |   host: "@name@-@affiliation@-@env@"
                |   tls:
@@ -58,12 +44,16 @@ utv/about.json | cluster: "utv"
                |   azure:
        default |     enabled: false
        default |     cnameTtl: 300
-   simple.json | s3: true
+       default | s3: false
                | s3Defaults:
-   simple.json |   bucketName: "mybucket"
-   simple.json |   objectArea: "default"
+       default |   bucketName: ""
+       default |   objectArea: ""
        default |   tenant: "paas-utv"
-   simple.json | sts: true
+       default | sts: false
+               | parameters:
+ template.json |   FEED_NAME: "test"
+ template.json |   DB_NAME: "test"
+ template.json | template: "atomhopper"
        default | toxiproxy: false
        default | webseal: false
                | azure:

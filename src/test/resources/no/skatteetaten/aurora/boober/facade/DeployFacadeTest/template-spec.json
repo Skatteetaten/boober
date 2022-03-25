@@ -1,11 +1,11 @@
 {
   "applicationDeploymentRef": {
     "source": "static",
-    "value": "utv/ah",
+    "value": "utv/template",
     "sources": [
       {
         "name": "static",
-        "value": "utv/ah"
+        "value": "utv/template"
       }
     ]
   },
@@ -40,16 +40,16 @@
     ]
   },
   "type": {
-    "source": "ah.json",
-    "value": "localTemplate",
+    "source": "template.json",
+    "value": "template",
     "sources": [
       {
         "name": "about.json",
         "value": "deploy"
       },
       {
-        "name": "ah.json",
-        "value": "localTemplate"
+        "name": "template.json",
+        "value": "template"
       }
     ]
   },
@@ -110,100 +110,78 @@
     ]
   },
   "name": {
-    "source": "fileName",
-    "value": "ah",
+    "source": "template.json",
+    "value": "template",
     "sources": [
       {
         "name": "fileName",
-        "value": "ah"
+        "value": "template"
+      },
+      {
+        "name": "template.json",
+        "value": "template"
       }
     ]
   },
-  "config": {
-    "FOO": {
-      "source": "ah.json",
-      "value": "bar",
-      "sources": [
-        {
-          "name": "ah.json",
-          "value": "bar"
-        }
-      ]
-    }
-  },
-  "database": {
-    "source": "ah.json",
-    "value": true,
+  "releaseTo": {
+    "source": "template.json",
+    "value": "something",
     "sources": [
       {
-        "name": "default",
-        "value": false
-      },
-      {
-        "name": "ah.json",
-        "value": true
+        "name": "template.json",
+        "value": "something"
       }
     ]
   },
   "artifactId": {
     "source": "fileName",
-    "value": "ah",
+    "value": "template",
     "sources": [
       {
         "name": "fileName",
-        "value": "ah"
+        "value": "template"
       }
     ]
   },
   "version": {
-    "source": "ah.json",
-    "value": "1.3.4",
+    "source": "template.json",
+    "value": "1",
     "sources": [
       {
-        "name": "ah.json",
-        "value": "1.3.4"
+        "name": "template.json",
+        "value": "1"
       }
     ]
   },
   "parameters": {
     "FEED_NAME": {
-      "source": "ah.json",
-      "value": "feed",
+      "source": "template.json",
+      "value": "test",
       "sources": [
         {
-          "name": "ah.json",
-          "value": "feed"
-        }
-      ]
-    },
-    "DOMAIN_NAME": {
-      "source": "ah.json",
-      "value": "localhost",
-      "sources": [
-        {
-          "name": "ah.json",
-          "value": "localhost"
+          "name": "template.json",
+          "value": "test"
         }
       ]
     },
     "DB_NAME": {
-      "source": "ah.json",
-      "value": "feed",
+      "source": "template.json",
+      "value": "test",
       "sources": [
         {
-          "name": "ah.json",
-          "value": "feed"
+          "name": "template.json",
+          "value": "test"
         }
       ]
     }
   },
-  "templateFile": {
-    "source": "ah.json",
-    "value": "templates/atomhopper.json",
+  "template": {
+    "source": "template.json",
+    "value": "atomhopper",
     "sources": [
       {
-        "name": "ah.json",
-        "value": "templates/atomhopper.json"
+        "name": "template.json",
+        "value": "atomhopper"
       }
     ]
   }

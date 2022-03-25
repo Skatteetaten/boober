@@ -1,0 +1,11 @@
+{
+  "name": "template",
+  "version": "1",
+  "type": "template",
+  "template": "atomhopper",
+  "releaseTo": "something",
+  "parameters": {
+    "FEED_NAME": "test",
+    "DB_NAME": "test"
+  }
+}

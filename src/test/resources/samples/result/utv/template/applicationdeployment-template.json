@@ -4,37 +4,37 @@
   "metadata": {
     "labels": {
       "operationScope": "aos-4016",
-      "app": "job",
+      "app": "template",
       "updatedBy": "hero",
       "updatedAt": "0",
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
-      "name": "job",
+      "name": "template",
       "id": "1234567890",
-      "applicationId": "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
+      "applicationId": "e71182e7453ea6592bec2c17c7293b37134606aa",
       "booberDeployId": "deploy1"
     },
-    "name": "job",
+    "name": "template",
     "namespace": "paas-utv",
     "uid": "123-123"
   },
   "spec": {
-    "applicationId": "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
+    "applicationId": "e71182e7453ea6592bec2c17c7293b37134606aa",
     "updatedAt": "1970-01-01T00:00:00Z",
     "selector": {
-      "name": "job"
+      "name": "template"
     },
     "applicationDeploymentId": "1234567890",
-    "applicationName": "job",
-    "runnableType": "CronJob",
-    "applicationDeploymentName": "job",
+    "applicationName": "aurora-atomhopper",
+    "runnableType": "DeploymentConfig",
+    "applicationDeploymentName": "template",
     "databases": [ ],
     "deployTag": "1",
     "command": {
       "overrideFiles": { },
       "applicationDeploymentRef": {
         "environment": "utv",
-        "application": "job"
+        "application": "template"
       },
       "auroraConfig": {
         "name": "paas",

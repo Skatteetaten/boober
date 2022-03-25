@@ -9,7 +9,7 @@
             complex.json |     connection: "mattermost"
             complex.json |     severity: "warning"
               about.json | schemaVersion: "v1"
-            complex.json | type: "development"
+            complex.json | type: "deploy"
               about.json | affiliation: "paas"
               about.json | segment: "aurora"
 utv/about-alternate.json | cluster: "utv"
@@ -35,11 +35,9 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |       enabled: true
                          | bigip:
             complex.json |   service: "simple-utv"
-                fileName | artifactId: "complex"
-            complex.json | groupId: "org.test"
-            complex.json | version: "1"
                          | certificate:
             complex.json |   commonName: "komplex"
+            complex.json | groupId: "org.test"
                          | config:
             complex.json |   FOO: "BAR"
             complex.json |   THIS.VALUE: "BAZ"
@@ -55,6 +53,8 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json | pause: true
             complex.json | splunkIndex: "test-index"
             complex.json | debug: true
+                fileName | artifactId: "complex"
+            complex.json | version: "1"
                          | resources:
                          |   cpu:
             complex.json |     min: "100m"

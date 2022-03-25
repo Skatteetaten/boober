@@ -1,11 +1,11 @@
 {
   "applicationDeploymentRef": {
     "source": "static",
-    "value": "utv/python",
+    "value": "utv/template",
     "sources": [
       {
         "name": "static",
-        "value": "utv/python"
+        "value": "utv/template"
       }
     ]
   },
@@ -62,12 +62,16 @@
     ]
   },
   "type": {
-    "source": "about.json",
-    "value": "deploy",
+    "source": "template.json",
+    "value": "template",
     "sources": [
       {
         "name": "about.json",
         "value": "deploy"
+      },
+      {
+        "name": "template.json",
+        "value": "template"
       }
     ]
   },
@@ -82,20 +86,12 @@
     ]
   },
   "applicationPlatform": {
-    "source": "utv/python.json",
-    "value": "python",
+    "source": "default",
+    "value": "java",
     "sources": [
       {
         "name": "default",
         "value": "java"
-      },
-      {
-        "name": "python.json",
-        "value": "python"
-      },
-      {
-        "name": "utv/python.json",
-        "value": "python"
       }
     ]
   },
@@ -156,12 +152,16 @@
     ]
   },
   "name": {
-    "source": "fileName",
-    "value": "python",
+    "source": "template.json",
+    "value": "template",
     "sources": [
       {
         "name": "fileName",
-        "value": "python"
+        "value": "template"
+      },
+      {
+        "name": "template.json",
+        "value": "template"
       }
     ]
   },
@@ -187,20 +187,6 @@
       }
     ]
   },
-  "groupId": {
-    "source": "utv/python.json",
-    "value": "org.test",
-    "sources": [
-      {
-        "name": "python.json",
-        "value": "org.test"
-      },
-      {
-        "name": "utv/python.json",
-        "value": "org.test"
-      }
-    ]
-  },
   "databaseDefaults": {
     "flavor": {
       "source": "default",
@@ -223,20 +209,12 @@
       ]
     },
     "tryReuse": {
-      "source": "utv/python.json",
-      "value": true,
+      "source": "default",
+      "value": false,
       "sources": [
         {
           "name": "default",
           "value": false
-        },
-        {
-          "name": "python.json",
-          "value": true
-        },
-        {
-          "name": "utv/python.json",
-          "value": true
         }
       ]
     },
@@ -252,50 +230,22 @@
     }
   },
   "database": {
-    "source": "utv/python.json",
-    "value": true,
+    "source": "default",
+    "value": false,
     "sources": [
       {
         "name": "default",
         "value": false
-      },
-      {
-        "name": "python.json",
-        "value": true
-      },
-      {
-        "name": "utv/python.json",
-        "value": true
       }
     ]
   },
-  "management": {
-    "path": {
-      "source": "default",
-      "value": "actuator",
-      "sources": [
-        {
-          "name": "default",
-          "value": "actuator"
-        }
-      ]
-    },
-    "port": {
-      "source": "default",
-      "value": "8081",
-      "sources": [
-        {
-          "name": "default",
-          "value": "8081"
-        }
-      ]
-    },
-    "source": "default",
-    "value": true,
+  "releaseTo": {
+    "source": "template.json",
+    "value": "something",
     "sources": [
       {
-        "name": "default",
-        "value": true
+        "name": "template.json",
+        "value": "something"
       }
     ]
   },
@@ -331,177 +281,25 @@
   },
   "artifactId": {
     "source": "fileName",
-    "value": "python",
+    "value": "template",
     "sources": [
       {
         "name": "fileName",
-        "value": "python"
+        "value": "template"
       }
     ]
   },
   "version": {
-    "source": "utv/python.json",
+    "source": "template.json",
     "value": "1",
     "sources": [
       {
-        "name": "python.json",
-        "value": "1"
-      },
-      {
-        "name": "utv/python.json",
+        "name": "template.json",
         "value": "1"
       }
     ]
   },
-  "resources": {
-    "cpu": {
-      "min": {
-        "source": "default",
-        "value": "10m",
-        "sources": [
-          {
-            "name": "default",
-            "value": "10m"
-          }
-        ]
-      },
-      "max": {
-        "source": "default",
-        "value": "2000m",
-        "sources": [
-          {
-            "name": "default",
-            "value": "2000m"
-          }
-        ]
-      }
-    },
-    "memory": {
-      "min": {
-        "source": "default",
-        "value": "128Mi",
-        "sources": [
-          {
-            "name": "default",
-            "value": "128Mi"
-          }
-        ]
-      },
-      "max": {
-        "source": "default",
-        "value": "512Mi",
-        "sources": [
-          {
-            "name": "default",
-            "value": "512Mi"
-          }
-        ]
-      }
-    }
-  },
-  "deployStrategy": {
-    "type": {
-      "source": "default",
-      "value": "rolling",
-      "sources": [
-        {
-          "name": "default",
-          "value": "rolling"
-        }
-      ]
-    },
-    "timeout": {
-      "source": "default",
-      "value": 180,
-      "sources": [
-        {
-          "name": "default",
-          "value": 180
-        }
-      ]
-    }
-  },
-  "replicas": {
-    "source": "default",
-    "value": 1,
-    "sources": [
-      {
-        "name": "default",
-        "value": 1
-      }
-    ]
-  },
-  "prometheus": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ],
-    "path": {
-      "source": "default",
-      "value": "/prometheus",
-      "sources": [
-        {
-          "name": "default",
-          "value": "/prometheus"
-        }
-      ]
-    },
-    "port": {
-      "source": "default",
-      "value": 8081,
-      "sources": [
-        {
-          "name": "default",
-          "value": 8081
-        }
-      ]
-    }
-  },
-  "readiness": {
-    "source": "default",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": true
-      }
-    ],
-    "port": {
-      "source": "default",
-      "value": 8080,
-      "sources": [
-        {
-          "name": "default",
-          "value": 8080
-        }
-      ]
-    },
-    "delay": {
-      "source": "default",
-      "value": 10,
-      "sources": [
-        {
-          "name": "default",
-          "value": 10
-        }
-      ]
-    },
-    "timeout": {
-      "source": "default",
-      "value": 1,
-      "sources": [
-        {
-          "name": "default",
-          "value": 1
-        }
-      ]
-    }
-  },
-  "liveness": {
+  "management": {
     "source": "default",
     "value": false,
     "sources": [
@@ -512,20 +310,12 @@
     ]
   },
   "route": {
-    "source": "utv/python.json",
-    "value": true,
+    "source": "default",
+    "value": false,
     "sources": [
       {
         "name": "default",
         "value": false
-      },
-      {
-        "name": "python.json",
-        "value": true
-      },
-      {
-        "name": "utv/python.json",
-        "value": true
       }
     ]
   },
@@ -618,90 +408,86 @@
     }
   },
   "s3": {
-    "source": "utv/python.json",
-    "value": true,
+    "source": "default",
+    "value": false,
     "sources": [
       {
         "name": "default",
         "value": false
-      },
-      {
-        "name": "python.json",
-        "value": true
-      },
-      {
-        "name": "utv/python.json",
-        "value": true
       }
     ]
   },
   "s3Defaults": {
     "bucketName": {
-      "source": "utv/python.json",
-      "value": "mybucket",
+      "source": "default",
+      "value": "",
       "sources": [
         {
           "name": "default",
           "value": ""
-        },
-        {
-          "name": "python.json",
-          "value": "mybucket"
-        },
-        {
-          "name": "utv/python.json",
-          "value": "mybucket"
         }
       ]
     },
     "objectArea": {
-      "source": "utv/python.json",
-      "value": "default",
+      "source": "default",
+      "value": "",
       "sources": [
         {
           "name": "default",
           "value": ""
-        },
-        {
-          "name": "python.json",
-          "value": "default"
-        },
-        {
-          "name": "utv/python.json",
-          "value": "default"
         }
       ]
     },
     "tenant": {
-      "source": "utv/python.json",
+      "source": "default",
       "value": "paas-utv",
       "sources": [
         {
           "name": "default",
-          "value": "paas-utv"
-        },
-        {
-          "name": "utv/python.json",
           "value": "paas-utv"
         }
       ]
     }
   },
   "sts": {
-    "source": "utv/python.json",
-    "value": true,
+    "source": "default",
+    "value": false,
     "sources": [
       {
         "name": "default",
         "value": false
-      },
+      }
+    ]
+  },
+  "parameters": {
+    "FEED_NAME": {
+      "source": "template.json",
+      "value": "test",
+      "sources": [
+        {
+          "name": "template.json",
+          "value": "test"
+        }
+      ]
+    },
+    "DB_NAME": {
+      "source": "template.json",
+      "value": "test",
+      "sources": [
+        {
+          "name": "template.json",
+          "value": "test"
+        }
+      ]
+    }
+  },
+  "template": {
+    "source": "template.json",
+    "value": "atomhopper",
+    "sources": [
       {
-        "name": "python.json",
-        "value": true
-      },
-      {
-        "name": "utv/python.json",
-        "value": true
+        "name": "template.json",
+        "value": "atomhopper"
       }
     ]
   },

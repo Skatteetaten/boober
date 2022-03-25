@@ -166,6 +166,10 @@
                 "value": "5005"
               },
               {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/complex/${APP_VERSION}"
+              },
+              {
                 "name": "VOLUME_AURORA_TOKEN",
                 "value": "/u01/secrets/app/aurora-token"
               },
@@ -526,7 +530,7 @@
           ],
           "from": {
             "kind": "ImageStreamTag",
-            "name": "komplex:latest"
+            "name": "komplex:default"
           }
         },
         "type": "ImageChange"

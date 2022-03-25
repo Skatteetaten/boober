@@ -155,16 +155,6 @@
       }
     ]
   },
-  "version": {
-    "source": "simple.json",
-    "value": "1",
-    "sources": [
-      {
-        "name": "simple.json",
-        "value": "1"
-      }
-    ]
-  },
   "artifactId": {
     "source": "fileName",
     "value": "simple",
@@ -172,6 +162,16 @@
       {
         "name": "fileName",
         "value": "simple"
+      }
+    ]
+  },
+  "version": {
+    "source": "simple.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "simple.json",
+        "value": "1"
       }
     ]
   },

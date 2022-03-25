@@ -47,7 +47,7 @@ fun findApiVersion(kind: String): String =
 
 val apiGroups: Map<String, List<String>> =
     mapOf(
-        "skatteetaten.no/v1" to listOf("applicationdeployment", "bigip", "auroracname", "auroraazurecname", "auroraazureapp", "auroraapim"),
+        "skatteetaten.no/v1" to listOf("applicationdeployment", "bigip", "auroracname", "auroraazurecname", "auroraazureapp", "auroraapim", "alert"),
         "apps.openshift.io/v1" to listOf("deploymentconfig", "deploymentrequest"),
         "apps/v1" to listOf("deployment"),
         "route.openshift.io/v1" to listOf("route"),

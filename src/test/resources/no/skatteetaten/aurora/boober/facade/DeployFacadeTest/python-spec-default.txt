@@ -29,6 +29,7 @@ utv/python.json | database: true
         default | alarm: true
         default | pause: false
         default | debug: false
+       fileName | artifactId: "python"
 utv/python.json | version: "1"
                 | resources:
                 |   cpu:
@@ -37,7 +38,6 @@ utv/python.json | version: "1"
                 |   memory:
         default |     min: "128Mi"
         default |     max: "512Mi"
-       fileName | artifactId: "python"
                 | deployStrategy:
         default |   type: "rolling"
         default |   timeout: 180

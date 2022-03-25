@@ -95,7 +95,7 @@
   },
   "type": {
     "source": "complex.json",
-    "value": "development",
+    "value": "deploy",
     "sources": [
       {
         "name": "about.json",
@@ -103,7 +103,7 @@
       },
       {
         "name": "complex.json",
-        "value": "development"
+        "value": "deploy"
       }
     ]
   },
@@ -301,36 +301,6 @@
       ]
     }
   },
-  "artifactId": {
-    "source": "fileName",
-    "value": "complex",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "complex"
-      }
-    ]
-  },
-  "groupId": {
-    "source": "complex.json",
-    "value": "org.test",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "org.test"
-      }
-    ]
-  },
-  "version": {
-    "source": "complex.json",
-    "value": "1",
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": "1"
-      }
-    ]
-  },
   "certificate": {
     "commonName": {
       "source": "complex.json",
@@ -342,6 +312,16 @@
         }
       ]
     }
+  },
+  "groupId": {
+    "source": "complex.json",
+    "value": "org.test",
+    "sources": [
+      {
+        "name": "complex.json",
+        "value": "org.test"
+      }
+    ]
   },
   "config": {
     "FOO": {
@@ -478,6 +458,26 @@
       {
         "name": "complex.json",
         "value": true
+      }
+    ]
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "complex",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "complex"
+      }
+    ]
+  },
+  "version": {
+    "source": "complex.json",
+    "value": "1",
+    "sources": [
+      {
+        "name": "complex.json",
+        "value": "1"
       }
     ]
   },
