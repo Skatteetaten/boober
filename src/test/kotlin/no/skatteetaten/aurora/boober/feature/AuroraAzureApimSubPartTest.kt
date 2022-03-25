@@ -70,7 +70,11 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                     "serviceUrl" : "https://service",
                     "policies"   : {
                                         "policy2": {
-                                            "enabled": true
+                                            "enabled": true,
+                                            "parameters": {
+                                                "param1": "value1",
+                                                "param2": "value2"
+                                            }
                                          },
                                         "policy1": {
                                             "enabled": true
