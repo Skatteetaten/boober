@@ -662,6 +662,16 @@
     ]
   },
   "toxiproxy": {
+    "database": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
     "source": "whoami.json",
     "value": true,
     "sources": [

@@ -13,4 +13,6 @@ object PortNumbers {
     const val TOXIPROXY_ADMIN_PORT = 8474
     const val JOLOKIA_HTTP_PORT = 8778
     const val NODE_PORT = 9090
+    const val DEFAULT_POSTGRES_PORT = 5432
+    const val DEFAULT_ORACLE_PORT = 1521
 }

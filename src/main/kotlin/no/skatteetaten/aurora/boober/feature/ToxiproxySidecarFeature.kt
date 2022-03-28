@@ -1,7 +1,6 @@
-// ktlint-disable indent
-
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.beans.factory.annotation.Value
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.exec
@@ -21,6 +20,7 @@ import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -34,23 +34,31 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.model.findConfigFieldHandlers
 import no.skatteetaten.aurora.boober.model.findSubKeysExpanded
 import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.UserDetailsProvider
+import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.compressWhitespace
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
-import org.springframework.beans.factory.annotation.Value
-
-private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
 private const val TOXIPROXY_CONFIGS_CONTEXT_KEY = "toxiproxyConfigs"
 
 val FeatureContext.toxiproxyConfigs: List<ToxiproxyConfig>
-    get() = this.getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
+    get() = getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
+
+private const val SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY = "secretNameToPortMap"
+
+private const val FEATURE_NAME = "toxiproxy"
+
+private val FeatureContext.secretNameToPortMap: Map<String, Int>
+    get() = getContextKey(SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY)
 
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
+    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val userDetailsProvider: UserDetailsProvider,
     @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {
 
@@ -65,24 +73,23 @@ class ToxiproxySidecarFeature(
         cmd: AuroraContextCommand,
         validationContext: Boolean
     ): Map<String, Any> {
-
         val toxiProxyTag = spec.toxiproxyVersion
 
         if (validationContext || toxiProxyTag == null) {
             return emptyMap()
         }
 
-        val appToxiproxyConfig = listOf(ToxiproxyConfig())
-        val endpointsFromConfig = spec.endpointsFromConfig(FIRST_PORT_NUMBER)
-        val nextPortNumber = endpointsFromConfig.getNextPortNumber(numberIfEmpty = FIRST_PORT_NUMBER)
-        val serversAndPortsFromConfig = spec.serversAndPortsFromConfig(nextPortNumber)
-        val toxiproxyConfigs = appToxiproxyConfig + endpointsFromConfig + serversAndPortsFromConfig
+        val (toxiproxyConfigs, secretNameToPortMap) = spec.allToxiproxyConfigsAndSecretNameToPortMap(
+            databaseSchemaProvisioner,
+            userDetailsProvider
+        )
 
         return createImageMetadataContext(
-            repo = "shopify",
-            name = "toxiproxy",
-            tag = toxiProxyTag
-        ) + mapOf(TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs)
+            repo = "shopify", name = "toxiproxy", tag = toxiProxyTag
+        ) + mapOf(
+            TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs,
+            SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY to secretNameToPortMap
+        )
     }
 
     override fun handlers(
@@ -90,82 +97,27 @@ class ToxiproxySidecarFeature(
         cmd: AuroraContextCommand
     ): Set<AuroraConfigFieldHandler> = with(cmd.applicationFiles) {
         listOf(
-            findEndpointHandlers(),
+            toxiproxyDbHandlers(),
+            endpointsFromConfigHandlers(),
             findServerAndPortHandlers(),
             findConfigFieldHandlers(),
             listOf(
                 AuroraConfigFieldHandler(
-                    "toxiproxy",
-                    defaultValue = false,
-                    validator = { it.boolean() },
-                    canBeSimplifiedConfig = true
+                    FEATURE_NAME, defaultValue = false, validator = { it.boolean() }, canBeSimplifiedConfig = true
                 ),
-                AuroraConfigFieldHandler("toxiproxy/version", defaultValue = sidecarVersion),
-                AuroraConfigFieldHandler("toxiproxy/endpointsFromConfig"),
-                AuroraConfigFieldHandler("toxiproxy/serverAndPortFromConfig")
-            )
+                AuroraConfigFieldHandler(ToxiproxyField.version, defaultValue = sidecarVersion),
+                AuroraConfigFieldHandler(ToxiproxyField.endpointsFromConfig),
+                AuroraConfigFieldHandler(ToxiproxyField.serverAndPortFromConfig)
+            ),
+            dbHandlers(cmd)
         ).flatten().toSet()
     }
-
-    fun List<AuroraConfigFile>.findEndpointHandlers(): List<AuroraConfigFieldHandler> =
-        findSubKeysExpanded("toxiproxy/endpointsFromConfig").flatMap { endpoint ->
-            listOf(
-                AuroraConfigFieldHandler(
-                    endpoint,
-                    defaultValue = true,
-                    validator = { it.boolean() },
-                    canBeSimplifiedConfig = true
-                ),
-                AuroraConfigFieldHandler(
-                    "$endpoint/proxyname",
-                    defaultValue = generateProxyNameFromVarName(findVarNameInEndpointFieldName(endpoint))
-                ),
-                AuroraConfigFieldHandler(
-                    "$endpoint/enabled",
-                    defaultValue = true,
-                    validator = { it.boolean() }
-                ),
-                AuroraConfigFieldHandler(
-                    "$endpoint/initialEnabledState",
-                    defaultValue = true,
-                    validator = { it.boolean() }
-                )
-            )
-        }
-
-    fun List<AuroraConfigFile>.findServerAndPortHandlers(): List<AuroraConfigFieldHandler> =
-        findSubKeysExpanded("toxiproxy/serverAndPortFromConfig").flatMap { proxyname ->
-            listOf(
-                AuroraConfigFieldHandler(proxyname),
-                AuroraConfigFieldHandler(
-                    "$proxyname/serverVariable",
-                    validator = { it.notBlank("Server variable must be set") }
-                ),
-                AuroraConfigFieldHandler(
-                    "$proxyname/portVariable",
-                    validator = { it.notBlank("Port variable must be set") }
-                ),
-                AuroraConfigFieldHandler(
-                    "$proxyname/initialEnabledState",
-                    defaultValue = true,
-                    validator = { it.boolean() }
-                )
-            )
-        }
 
     override fun validate(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         context: FeatureContext
-    ): List<Exception> = if (fullValidation) {
-        with(adc) {
-            listOf(
-                missingEndpointVariableErrors(),
-                missingServerAndPortVariableErrors(),
-                proxynameDuplicateErrors()
-            ).flatten()
-        }
-    } else { emptyList() }
+    ): List<Exception> = adc.validateToxiproxy()
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
@@ -225,14 +177,79 @@ class ToxiproxySidecarFeature(
                     }
                     modifyResource(it, "Changed targetPort to point to toxiproxy")
                 }
+                "Secret" -> {
+                    val secret: Secret = it.resource as Secret
+                    context.secretNameToPortMap[secret.metadata.name]?.let { toxiproxyPort ->
+                        secret.data.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort)
+                        modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
+                    }
+                }
             }
         }
     }
 
+    fun List<AuroraConfigFile>.toxiproxyDbHandlers() =
+        this.createToxiproxyFieldHandlers(ToxiproxyField.database) + listOf(
+            AuroraConfigFieldHandler(
+                ToxiproxyField.database,
+                canBeSimplifiedConfig = true,
+                defaultValue = false,
+                validator = { it.boolean() }
+            )
+        )
+
+    fun List<AuroraConfigFile>.endpointsFromConfigHandlers() =
+        this.createToxiproxyFieldHandlers(ToxiproxyField.endpointsFromConfig)
+
+    fun List<AuroraConfigFile>.createToxiproxyFieldHandlers(fieldName: String): List<AuroraConfigFieldHandler> {
+        return findSubKeysExpanded(fieldName).flatMap { fieldNameWithKeys ->
+            listOf(
+                AuroraConfigFieldHandler(
+                    fieldNameWithKeys,
+                    defaultValue = true,
+                    validator = { it.boolean() },
+                    canBeSimplifiedConfig = true
+                ),
+                AuroraConfigFieldHandler(
+                    "$fieldNameWithKeys/proxyname",
+                ),
+                AuroraConfigFieldHandler(
+                    "$fieldNameWithKeys/enabled",
+                    defaultValue = true,
+                    validator = { it.boolean() }
+                ),
+                AuroraConfigFieldHandler(
+                    "$fieldNameWithKeys/initialEnabledState",
+                    defaultValue = true,
+                    validator = { it.boolean() }
+                )
+            )
+        }
+    }
+
+    fun List<AuroraConfigFile>.findServerAndPortHandlers(): List<AuroraConfigFieldHandler> =
+        findSubKeysExpanded(ToxiproxyField.serverAndPortFromConfig).flatMap { proxyname ->
+            listOf(
+                AuroraConfigFieldHandler(proxyname),
+                AuroraConfigFieldHandler(
+                    "$proxyname/serverVariable",
+                    validator = { it.notBlank("Server variable must be set") }
+                ),
+                AuroraConfigFieldHandler(
+                    "$proxyname/portVariable",
+                    validator = { it.notBlank("Port variable must be set") }
+                ),
+                AuroraConfigFieldHandler(
+                    "$proxyname/initialEnabledState",
+                    defaultValue = true,
+                    validator = { it.boolean() }
+                )
+            )
+        }
+
     private fun createToxiproxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
         val containerPorts = mapOf(
-            "http" to PortNumbers.TOXIPROXY_HTTP_PORT,
-            "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
+            "http" to PortNumbers.TOXIPROXY_HTTP_PORT, "management" to PortNumbers.TOXIPROXY_ADMIN_PORT
         )
 
         val imageMetadata = context.imageMetadata
@@ -258,12 +275,10 @@ class ToxiproxySidecarFeature(
             )
             resources {
                 limits = mapOf(
-                    "memory" to Quantity("256Mi"),
-                    "cpu" to Quantity("1")
+                    "memory" to Quantity("256Mi"), "cpu" to Quantity("1")
                 )
                 requests = mapOf(
-                    "memory" to Quantity("128Mi"),
-                    "cpu" to Quantity("10m")
+                    "memory" to Quantity("128Mi"), "cpu" to Quantity("10m")
                 )
             }
             image = imageMetadata.getFullImagePath()

@@ -439,12 +439,16 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 fun createRestorableSchema(id: UUID = UUID.randomUUID()) =
     RestorableSchema(setToCooldownAt = 0L, deleteAfter = 0L, databaseSchema = createDbhSchema(id))
 
-fun createDbhSchema(id: UUID = UUID.randomUUID()) =
+fun createDbhSchema(
+    id: UUID = UUID.randomUUID(),
+    jdbcUrl: String = "foo/bar/baz",
+    databaseInstance: DatabaseSchemaInstance = DatabaseSchemaInstance(1512, "localhost")
+) =
     DbhSchema(
         id = id.toString(),
         type = "SCHEMA",
-        databaseInstance = DatabaseSchemaInstance(1512, "localhost"),
-        jdbcUrl = "foo/bar/baz",
+        databaseInstance = databaseInstance,
+        jdbcUrl = jdbcUrl,
         labels = mapOf(
             "affiliation" to "paas",
             "name" to "myApp"

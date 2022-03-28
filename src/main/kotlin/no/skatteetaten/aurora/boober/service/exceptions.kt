@@ -108,3 +108,5 @@ class GitReferenceException(message: String, cause: Throwable? = null) : Service
 class DeployLogServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
 
 class NotificationServiceException(message: String, cause: Throwable? = null) : ServiceException(message, cause)
+
+class UrlValidationException(message: String) : ServiceException(message)
