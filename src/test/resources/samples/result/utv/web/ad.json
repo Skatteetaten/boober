@@ -7,7 +7,7 @@
       "app": "web",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "web",
       "id": "1234567890",
@@ -28,11 +28,11 @@
     "applicationName": "web",
     "runnableType": "DeploymentConfig",
     "applicationDeploymentName": "web",
-    "databases": [],
+    "databases": [ ],
     "managementPath": ":8081/actuator",
     "deployTag": "develop-SNAPSHOT",
     "command": {
-      "overrideFiles": {},
+      "overrideFiles": { },
       "applicationDeploymentRef": {
         "environment": "utv",
         "application": "web"
@@ -42,6 +42,11 @@
         "refName": "master",
         "resolvedRef": "123abb"
       }
+    },
+    "build": {
+      "baseImageName": "wrench16",
+      "baseImageVersion": 1,
+      "type": "web"
     }
   }
 }

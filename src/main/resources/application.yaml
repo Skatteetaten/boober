@@ -111,6 +111,7 @@ server:
 
 openshift:
     cluster: utv04
+    majorversion: 4
 
 integrations:
     operations:

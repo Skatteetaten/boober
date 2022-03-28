@@ -24,7 +24,7 @@ utv/about.json | cluster: "utv"
        default |   name: "architect"
        default |   version: "1"
                | baseImage:
-       default |   name: "wrench12"
+       default |   name: "wrench16"
        default |   version: 1
        default | certificate: false
                | config:

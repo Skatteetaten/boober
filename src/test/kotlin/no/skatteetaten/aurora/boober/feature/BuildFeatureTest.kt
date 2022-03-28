@@ -4,15 +4,17 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.ImageStream
+import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 
 class BuildFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
-        get() = BuildFeature("test.docker.com", "1")
+        get() = BuildFeature("test.docker.com", "1", "3")
 
     @Test
     fun `should disable feature if deploy type`() {
@@ -101,5 +103,48 @@ class BuildFeatureTest : AbstractFeatureTest() {
         )
 
         assertThat(spec).auroraDeploymentSpecMatches("spec-default.json")
+    }
+}
+
+class BuildFeatureOcp4Test : AbstractFeatureTest() {
+    override val feature: Feature
+        get() = BuildFeature("test.docker.com", "1", "4")
+
+    @Test
+    fun `Without buildconfig`() {
+        val (dcResources, isResource, adResource) = generateResources(
+            """{
+           "type": "development", 
+           "groupId": "org.test",
+           "version" : "1"
+        }""",
+            mutableSetOf(
+                createEmptyDeploymentConfig(),
+                createEmptyImageStream(),
+                createEmptyApplicationDeployment()
+            ),
+            createdResources = 0
+        )
+
+        val deploymentConfig = dcResources.resource as DeploymentConfig
+        val trigger = deploymentConfig.spec.triggers.first()
+        assertThat(dcResources).auroraResourceModifiedByThisFeatureWithComment("Change imageChangeTrigger to follow latest")
+        assertThat(trigger.type).isEqualTo("ImageChange")
+        assertThat(trigger.imageChangeParams.from.name).isEqualTo("simple:latest")
+
+        assertThat(isResource).auroraResourceModifiedByThisFeatureWithComment("Remove spec from imagestream")
+        val imageStream = isResource.resource as ImageStream
+
+        assertThat(imageStream.spec).isNull()
+
+        assertThat(adResource).auroraResourceModifiedByThisFeatureWithComment("Add build information")
+
+        val ad = adResource.resource as ApplicationDeployment
+        assertThat(ad.spec.build).isNotNull()
+            .given {
+                assertThat(it.type).isEqualTo("java")
+                assertThat(it.baseImageName).isEqualTo("wingnut11")
+                assertThat(it.baseImageVersion).isEqualTo(2)
+            }
     }
 }

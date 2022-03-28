@@ -232,11 +232,11 @@
   "baseImage": {
     "name": {
       "source": "default",
-      "value": "wrench12",
+      "value": "wrench16",
       "sources": [
         {
           "name": "default",
-          "value": "wrench12"
+          "value": "wrench16"
         }
       ]
     },

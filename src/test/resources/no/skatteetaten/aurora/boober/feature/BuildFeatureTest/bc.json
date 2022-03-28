@@ -29,7 +29,7 @@
           },
           {
             "name": "DOCKER_BASE_VERSION",
-            "value": "1"
+            "value": "2"
           },
           {
             "name": "DOCKER_BASE_IMAGE",
