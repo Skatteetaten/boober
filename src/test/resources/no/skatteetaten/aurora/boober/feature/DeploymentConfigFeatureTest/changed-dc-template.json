@@ -3,7 +3,7 @@
   "kind": "DeploymentConfig",
   "metadata": {
     "labels": {
-      "deployTag": "test"
+      "deployTag": "1"
     },
     "name": "simple",
     "namespace": "paas-utv"
@@ -26,10 +26,10 @@
     "template": {
       "metadata": {
         "annotations": {
-          "boober.skatteetaten.no/deployTag": "test"
+          "boober.skatteetaten.no/deployTag": "1"
         },
         "labels": {
-          "deployTag": "test"
+          "deployTag": "1"
         }
       },
       "spec": {
@@ -59,8 +59,8 @@
             ],
             "name": "simple",
             "resources": {
-              "limits": {},
-              "requests": {}
+              "limits": { },
+              "requests": { }
             }
           }
         ],

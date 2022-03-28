@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.feature
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
@@ -10,20 +12,23 @@ import assertk.assertions.isNull
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
+import no.skatteetaten.aurora.boober.feature.fluentbit.FluentbitSidecarFeature
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 
 class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
         get() = FluentbitSidecarFeature(
             cantusService,
-            FluentBitConfigurator(),
             "test_hec",
             "splunk.url",
             "8080",
-            "0"
+            "0",
+            "300m",
+            5
         )
 
     private val cantusService: CantusService = mockk()
@@ -48,8 +53,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should add fluentbit to dc`() {
-        // mockVault("foo")
+    fun `should add fluentbit sidecar to dc`() {
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
             """{
              "logging" : {
@@ -76,7 +80,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should validate but not generate sidecar setup for templates`() {
+    fun `should add splunk connect annotations for templates and no sidecar`() {
         val (dcResource) = generateResources(
             """{
              "type" : "template",
@@ -94,7 +98,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should validate but not generate sidecar setup for cronjob`() {
+    fun `should add splunk connect annotations for cronjob and no sidecar`() {
         val (dcResource) = generateResources(
             """{
              "type" : "cronjob",
@@ -112,7 +116,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `should validate and not generate sidecar setup for templates with empty index`() {
+    fun `should not add annotations or sidecar when index is not set for template`() {
         val (dcResource) = generateResources(
             """{
              "type" : "template",
@@ -128,7 +132,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `setting buffer size should be reflected in deployment config and fluent bit config`() {
+    fun `setting buffer size should be reflected in deploymentconfig and fluentbit config`() {
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
             """{
              "logging" : {
@@ -143,5 +147,216 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
             .auroraResourceMatchesFile("dc_resized.json")
 
         assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config_resized.json")
+    }
+
+    @Test
+    fun `Should validate required fields for custom logging`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "hello",
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("When using custom logger, application logger is required")
+    }
+
+    @Test
+    fun `Should validate only one of custom or standard loggers`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "loggers": {
+                    "gc": "gc_log"
+                },
+                "custom": { "otherName": {
+                        "index": "hello",
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Cannot use both custom loggers and the default loggers")
+    }
+
+    @Test
+    fun `Should validate only one of custom or default index`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "index": "openshift-test",
+                "custom": {
+                    "otherName": {
+                        "index": "hello",
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Cannot use both custom loggers and the default loggers")
+    }
+
+    @Test
+    fun `Should validate required fields for custom logger`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "sourcetype": "log4j",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Field is required")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "openshift",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Field is required")
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "openshift",
+                        "sourcetype": "fluentbit"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Field is required")
+    }
+
+    @Test
+    fun `Should validate that sourcetype is within supported sourcetypes`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "otherName": {
+                        "index": "openshift",
+                        "sourcetype": "unsupported",
+                        "pattern": "application.log"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Must be one of [_json, access_combined")
+    }
+
+    @ValueSource(strings = ["application", "application.log.other", "application231243.log", ".", "", "da.", ".log"])
+    @ParameterizedTest
+    fun `Should validate that pattern is within regex`(illegalPattern: String) {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "custom": {
+                    "application": {
+                        "index": "openshift",
+                        "sourcetype": "log4j",
+                        "pattern": "$illegalPattern"
+                    }
+                }
+             } 
+           }"""
+            )
+        }.singleApplicationErrorResult("Is not properly formatted. You need to have exactly one period")
+    }
+
+    @Test
+    fun `Should not create fluentbit when index is empty`() {
+        val (dcResource) = generateResources(
+            """{
+             "logging" : {
+                "index": "",
+                "loggers": {
+                    "gc": "gc_log"
+                }
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 0
+        )
+        val dc = dcResource.resource as DeploymentConfig
+
+        assertThat(dc.spec.template.spec.containers.size).isEqualTo(1)
+    }
+
+    @Test
+    fun `Should not create fluentbit when index is not configured`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "logging" : {
+                "loggers": {
+                    "gc": "gc_log"
+                }
+             } 
+           }""",
+            )
+        }.singleApplicationErrorResult("Missing required field logging/index")
+    }
+
+    @Test
+    fun `Should be able to create fluentbit sidecar with custom loggers`() {
+        val (dcResource, parserResource, configResource, secretResource) = generateResources(
+            """{
+             "logging" : {
+                "custom": {
+                    "application": {
+                        "index": "openshift-test",
+                        "pattern": "application-*.log",
+                        "sourcetype": "log4j"
+                    },
+                    "access": {
+                        "index": "openshift-other",
+                        "pattern": "*-access.log",
+                        "sourcetype": "access_combined"
+                    }
+                }
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 3
+        )
+        val dc = dcResource.resource as DeploymentConfig
+
+        assertThat(dc.spec.template.spec.containers.size).isEqualTo(2)
+
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume, sidecar container and annotation")
+            .auroraResourceMatchesFile("dc_custom.json")
+
+        assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config_custom.json")
     }
 }

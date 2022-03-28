@@ -1,5 +1,7 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.apache.commons.codec.digest.DigestUtils
+import org.springframework.beans.factory.annotation.Value
 import com.fkorotkov.kubernetes.apps.metadata
 import com.fkorotkov.kubernetes.apps.newDeployment
 import com.fkorotkov.kubernetes.apps.rollingUpdate
@@ -62,8 +64,6 @@ import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.pattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
-import org.apache.commons.codec.digest.DigestUtils
-import org.springframework.beans.factory.annotation.Value
 
 val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: this["envName"]
 val AuroraDeploymentSpec.name get(): String = this["name"]
@@ -83,7 +83,7 @@ val AuroraDeploymentSpec.namespace
             else -> "$affiliation-$envName"
         }
     }
-val AuroraDeploymentSpec.releaseTo: String? get() = this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() }
+val AuroraDeploymentSpec.releaseTo: String? get() = if (this.type == TemplateType.deploy || this.type == TemplateType.cronjob) { this.getOrNull<String>("releaseTo")?.takeUnless { it.isEmpty() } } else { null }
 val AuroraDeploymentSpec.groupId: String get() = this["groupId"]
 val AuroraDeploymentSpec.artifactId: String get() = this["artifactId"]
 val AuroraDeploymentSpec.envAutoDeploy: Boolean get() = this["env/autoDeploy"] ?: false
@@ -212,7 +212,7 @@ abstract class AbstractDeployFeature(
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return header.type in listOf(
             TemplateType.deploy,
-            TemplateType.development
+            TemplateType.development,
         ) && enable(header.applicationPlatform)
     }
 
@@ -514,6 +514,9 @@ abstract class AbstractDeployFeature(
                     matchLabels = mapOf("name" to adc.name)
                 }
                 template {
+                    metadata {
+                        labels = mapOf("name" to adc.name)
+                    }
                     spec {
                         volumes = volumes + newVolume {
                             name = "application-log-volume"

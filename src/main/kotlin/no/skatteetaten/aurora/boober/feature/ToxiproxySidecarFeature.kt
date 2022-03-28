@@ -3,6 +3,8 @@ package no.skatteetaten.aurora.boober.feature
 import org.springframework.beans.factory.annotation.Value
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fkorotkov.kubernetes.configMap
+import com.fkorotkov.kubernetes.exec
+import com.fkorotkov.kubernetes.lifecycle
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newConfigMap
 import com.fkorotkov.kubernetes.newContainer
@@ -10,6 +12,7 @@ import com.fkorotkov.kubernetes.newContainerPort
 import com.fkorotkov.kubernetes.newProbe
 import com.fkorotkov.kubernetes.newVolume
 import com.fkorotkov.kubernetes.newVolumeMount
+import com.fkorotkov.kubernetes.postStart
 import com.fkorotkov.kubernetes.resources
 import com.fkorotkov.kubernetes.tcpSocket
 import io.fabric8.kubernetes.api.model.Container
@@ -35,6 +38,7 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.compressWhitespace
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 
@@ -286,6 +290,23 @@ class ToxiproxySidecarFeature(
                 timeoutSeconds = 1
             }
             args = listOf("-config", "$configPath/toxiproxy/config.json", "-host=0.0.0.0")
+            lifecycle {
+                postStart {
+                    exec {
+                        command = listOf(
+                            "sh",
+                            "-c",
+                            """
+                                for i in $(seq 1 10); do
+                                    sleep 1;
+                                    nc -zv 127.0.0.1 ${PortNumbers.TOXIPROXY_ADMIN_PORT} && exit;
+                                done;
+                                exit 1;
+                            """.compressWhitespace()
+                        )
+                    }
+                }
+            }
         }
     }
 }

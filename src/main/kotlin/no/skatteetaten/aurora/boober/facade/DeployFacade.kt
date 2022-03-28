@@ -54,11 +54,11 @@ class DeployFacade(
         }
         val watch = StopWatch("deploy")
 
-        watch.start("contextCommand")
+        watch.start("checkoutAuroraConfig")
         val commands = createContextCommands(ref, applicationDeploymentRefs, overrides)
         watch.stop()
 
-        watch.start("ADC")
+        watch.start("validateAuroraConfig")
         val validContexts = createAuroraDeploymentContexts(commands)
         watch.stop()
 
@@ -94,22 +94,24 @@ class DeployFacade(
         val environmentResults = if (deploy) createNamespaces(validContexts) else emptyMap()
         watch.stop()
 
-        watch.start("deployCommand")
+        watch.start("generateModifyResources")
         val deployCommands = validContexts.createDeployCommand(deploy)
         watch.stop()
 
-        watch.start("deploy")
+        watch.start("deployToOpenShift")
         val deployResults = openShiftDeployer.performDeployCommands(environmentResults, deployCommands)
         watch.stop()
 
-        watch.start("send notification")
+        watch.start("sendNotification")
         val deployResultsAfterNotifications = notificationService.sendDeployNotifications(deployResults)
         watch.stop()
 
-        watch.start("store result")
+        watch.start("storeResultToGit")
         return deployLogService.markRelease(deployResultsAfterNotifications).also {
             watch.stop()
-            logger.info("Deploy: ${watch.prettyPrint()}")
+            watch.taskInfo.forEach {
+                logger.info("deployMs={} deployAction={} applications={}", it.timeMillis, it.taskName, applicationDeploymentRefs.size)
+            }
         }
     }
 
@@ -156,7 +158,7 @@ class DeployFacade(
                     it.cmd,
                     ContextCreationErrors(
                         it.cmd,
-                        listOf(java.lang.IllegalArgumentException("Not valid in this cluster"))
+                        listOf(IllegalArgumentException("Not valid in this cluster"))
                     )
                 )
             }

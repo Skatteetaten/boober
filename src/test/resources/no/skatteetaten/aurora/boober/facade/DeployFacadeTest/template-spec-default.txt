@@ -1,0 +1,68 @@
+        static | applicationDeploymentRef: "utv/template"
+        static | configVersion: "master"
+        static | applicationDeploymentId: "1234567890"
+               | alertsDefaults:
+       default |   enabled: false
+       default |   delay: "1"
+    about.json | schemaVersion: "v1"
+ template.json | type: "template"
+       default | deployState: "deploymentConfig"
+       default | applicationPlatform: "java"
+    about.json | affiliation: "paas"
+    about.json | segment: "aurora"
+utv/about.json | cluster: "utv"
+               | permissions:
+    about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+    folderName | envName: "utv"
+ template.json | name: "template"
+               | env:
+       default |   autoDeploy: false
+       default | certificate: false
+               | databaseDefaults:
+       default |   flavor: "ORACLE_MANAGED"
+       default |   generate: true
+       default |   tryReuse: false
+       default |   name: "@name@"
+       default | database: false
+ template.json | releaseTo: "something"
+       default | alarm: true
+       default | pause: false
+       default | debug: false
+      fileName | artifactId: "template"
+ template.json | version: "1"
+       default | management: false
+       default | route: false
+               | routeDefaults:
+       default |   host: "@name@-@affiliation@-@env@"
+               |   tls:
+       default |     enabled: false
+       default |     insecurePolicy: "None"
+       default |     termination: "edge"
+               |   cname:
+       default |     enabled: false
+       default |     ttl: 300
+               |   azure:
+       default |     enabled: false
+       default |     cnameTtl: 300
+       default | s3: false
+               | s3Defaults:
+       default |   bucketName: ""
+       default |   objectArea: ""
+       default |   tenant: "paas-utv"
+       default | sts: false
+               | parameters:
+ template.json |   FEED_NAME: "test"
+ template.json |   DB_NAME: "test"
+ template.json | template: "atomhopper"
+       default | toxiproxy: false
+       default | webseal: false
+               | azure:
+               |   jwtToStsConverter:
+       default |     enabled: false
+       default |     version: "0.4.0"
+       default |     ivGroupsRequired: false
+       default |   managedRoute: false
+               |   apim:
+       default |     enabled: false
+               | logging:
+       default |   bufferSize: 20

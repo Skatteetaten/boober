@@ -60,7 +60,7 @@ data class PrometheusConfig(
 data class AlertConfig(
     val delay: String,
     val severity: String,
-    val connection: String,
+    val connections: List<String>,
     val enabled: Boolean,
     val summary: String,
     val description: String

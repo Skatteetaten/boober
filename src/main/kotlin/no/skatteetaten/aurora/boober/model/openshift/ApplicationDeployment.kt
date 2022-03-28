@@ -60,7 +60,16 @@ data class ApplicationDeploymentSpec(
     var deployTag: String? = null,
     var command: ApplicationDeploymentCommand? = null,
     var message: String? = null,
-    var notifications: Set<Notification>? = null
+    var notifications: Set<Notification>? = null,
+    var build: ApplicationDeploymentBuildInformation? = null,
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ApplicationDeploymentBuildInformation(
+    val baseImageName: String,
+    val baseImageVersion: Int,
+    val type: String
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)

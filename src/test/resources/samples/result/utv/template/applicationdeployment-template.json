@@ -1,0 +1,46 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "template",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "template",
+      "id": "1234567890",
+      "applicationId": "e71182e7453ea6592bec2c17c7293b37134606aa",
+      "booberDeployId": "deploy1"
+    },
+    "name": "template",
+    "namespace": "paas-utv",
+    "uid": "123-123"
+  },
+  "spec": {
+    "applicationId": "e71182e7453ea6592bec2c17c7293b37134606aa",
+    "updatedAt": "1970-01-01T00:00:00Z",
+    "selector": {
+      "name": "template"
+    },
+    "applicationDeploymentId": "1234567890",
+    "applicationName": "aurora-atomhopper",
+    "runnableType": "DeploymentConfig",
+    "applicationDeploymentName": "template",
+    "databases": [ ],
+    "deployTag": "1",
+    "command": {
+      "overrideFiles": { },
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "template"
+      },
+      "auroraConfig": {
+        "name": "paas",
+        "refName": "master",
+        "resolvedRef": "123abb"
+      }
+    }
+  }
+}

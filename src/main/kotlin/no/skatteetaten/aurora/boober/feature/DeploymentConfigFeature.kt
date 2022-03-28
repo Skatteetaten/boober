@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
@@ -18,7 +19,6 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
-import org.springframework.stereotype.Service
 
 const val ANNOTATION_BOOBER_DEPLOYTAG = "boober.skatteetaten.no/deployTag"
 
@@ -50,7 +50,7 @@ val AuroraDeploymentSpec.managementPath
     }
 
 @Service
-class DeploymentConfigFeature : Feature {
+class DeploymentConfigFeature() : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
 
@@ -91,8 +91,10 @@ class DeploymentConfigFeature : Feature {
             AuroraConfigFieldHandler("alarm", defaultValue = true, validator = { it.boolean() }),
             AuroraConfigFieldHandler("pause", defaultValue = false, validator = { it.boolean() }),
             AuroraConfigFieldHandler("splunkIndex"),
-            AuroraConfigFieldHandler("debug", defaultValue = false, validator = { it.boolean() })
-        ).addIfNotNull(templateSpecificHeaders)
+            AuroraConfigFieldHandler("debug", defaultValue = false, validator = { it.boolean() }),
+        )
+            .addIfNotNull(gavHandlers(header, cmd))
+            .addIfNotNull(templateSpecificHeaders)
     }
 
     override fun modify(
@@ -174,6 +176,12 @@ class DeploymentConfigFeature : Feature {
 
     fun createEnvVars(adc: AuroraDeploymentSpec): Map<String, String> {
 
+        val headerEnv = if (adc.type == TemplateType.deploy) {
+            mapOf(
+                "AURORA_KLIENTID" to createAuroraKlientId(adc)
+            )
+        } else null
+
         val debugEnv = if (adc["debug"]) {
             mapOf(
                 "ENABLE_REMOTE_DEBUG" to "true",
@@ -184,8 +192,8 @@ class DeploymentConfigFeature : Feature {
         return mapOf(
             "OPENSHIFT_CLUSTER" to adc["cluster"],
             "APP_NAME" to adc.name,
-            "SPLUNK_INDEX" to adc.splunkIndex
-        ).addIfNotNull(debugEnv).filterNullValues()
+            "SPLUNK_INDEX" to adc.splunkIndex,
+        ).addIfNotNull(debugEnv).addIfNotNull(headerEnv).filterNullValues()
     }
 
     fun createDcLabels(adc: AuroraDeploymentSpec): Map<String, String> {
@@ -195,5 +203,11 @@ class DeploymentConfigFeature : Feature {
         } else null
 
         return mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel).normalizeLabels()
+    }
+
+    private fun createAuroraKlientId(adc: AuroraDeploymentSpec): String {
+        val segment: String? = adc.getOrNull("segment")
+        // APP_VERSION is available for all images created by Architect
+        return "${segment ?: adc.affiliation}/${adc.artifactId}/\${APP_VERSION}"
     }
 }

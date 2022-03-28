@@ -7,7 +7,7 @@
       "app": "python",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "python",
       "deployTag": "1",
@@ -49,10 +49,11 @@
           "app": "python",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "python",
-          "deployTag": "1"
+          "deployTag": "1",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {
@@ -116,6 +117,10 @@
               {
                 "name": "APP_NAME",
                 "value": "python"
+              },
+              {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/python/${APP_VERSION}"
               },
               {
                 "name": "ROUTE_NAME",
@@ -266,7 +271,7 @@
         "restartPolicy": "Always",
         "volumes": [
           {
-            "emptyDir": {},
+            "emptyDir": { },
             "name": "application-log-volume"
           },
           {

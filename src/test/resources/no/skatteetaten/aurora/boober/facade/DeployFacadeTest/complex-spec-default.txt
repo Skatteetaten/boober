@@ -1,8 +1,18 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
                   static | applicationDeploymentId: "1234567890"
+                         | alerts:
+                         |   alert:
+            complex.json |     enabled: true
+            complex.json |     expr: "test-expression"
+            complex.json |     delay: "1"
+            complex.json |     connection: "mattermost"
+            complex.json |     severity: "warning"
+                         | alertsDefaults:
+                 default |   enabled: false
+                 default |   delay: "1"
               about.json | schemaVersion: "v1"
-            complex.json | type: "development"
+            complex.json | type: "deploy"
                  default | deployState: "deploymentConfig"
                  default | applicationPlatform: "java"
               about.json | affiliation: "paas"
@@ -31,17 +41,9 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |       enabled: true
                          | bigip:
             complex.json |   service: "simple-utv"
-                fileName | artifactId: "complex"
-            complex.json | groupId: "org.test"
-            complex.json | version: "1"
-                         | builder:
-                 default |   name: "architect"
-                 default |   version: "1"
-                         | baseImage:
-                 default |   name: "wingnut11"
-                 default |   version: 1
                          | certificate:
             complex.json |   commonName: "komplex"
+            complex.json | groupId: "org.test"
                          | config:
             complex.json |   FOO: "BAR"
             complex.json |   THIS.VALUE: "BAZ"
@@ -63,6 +65,8 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json | pause: true
             complex.json | splunkIndex: "test-index"
             complex.json | debug: true
+                fileName | artifactId: "complex"
+            complex.json | version: "1"
                          | resources:
                          |   cpu:
             complex.json |     min: "100m"
@@ -70,9 +74,6 @@ utv/about-alternate.json |   ttl: "1d"
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
-                         | logging:
-            complex.json |   index: "test-index"
-                 default |   bufferSize: 20
                          | deployStrategy:
             complex.json |   type: "recreate"
                  default |   timeout: 180
@@ -167,3 +168,6 @@ utv/about-alternate.json |   ttl: "1d"
                  default |   managedRoute: false
                          |   apim:
                  default |     enabled: false
+                         | logging:
+            complex.json |   index: "test-index"
+                 default |   bufferSize: 20

@@ -29,6 +29,28 @@
       }
     ]
   },
+  "alertsDefaults": {
+    "enabled": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": "1",
+      "sources": [
+        {
+          "name": "default",
+          "value": "1"
+        }
+      ]
+    }
+  },
   "schemaVersion": {
     "source": "about.json",
     "value": "v1",
@@ -311,6 +333,16 @@
       }
     ]
   },
+  "artifactId": {
+    "source": "fileName",
+    "value": "whoami",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "whoami"
+      }
+    ]
+  },
   "version": {
     "source": "whoami.json",
     "value": "1",
@@ -366,28 +398,6 @@
         ]
       }
     }
-  },
-  "logging": {
-    "bufferSize": {
-      "source": "default",
-      "value": 20,
-      "sources": [
-        {
-          "name": "default",
-          "value": 20
-        }
-      ]
-    }
-  },
-  "artifactId": {
-    "source": "fileName",
-    "value": "whoami",
-    "sources": [
-      {
-        "name": "fileName",
-        "value": "whoami"
-      }
-    ]
   },
   "deployStrategy": {
     "type": {
@@ -749,6 +759,18 @@
           }
         ]
       }
+    }
+  },
+  "logging": {
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
     }
   }
 }

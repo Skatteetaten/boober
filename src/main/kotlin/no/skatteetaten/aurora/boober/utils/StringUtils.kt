@@ -100,3 +100,5 @@ fun convertValueToString(value: Any): String {
 }
 
 fun String.dockerGroupSafeName() = this.replace(".", "_")
+
+fun String.compressWhitespace() = trim().replace(Regex("\\s+"), " ")

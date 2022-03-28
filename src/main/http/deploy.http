@@ -6,7 +6,7 @@ Content-Type: application/json
   "applicationDeploymentRefs": [
     {
       "environment": "",
-      "application": "whoami"
+      "application": "referanse-kotlin"
     }
   ]
 }

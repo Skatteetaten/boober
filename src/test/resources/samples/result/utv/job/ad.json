@@ -7,7 +7,7 @@
       "app": "job",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "job",
       "id": "1234567890",
@@ -28,10 +28,10 @@
     "applicationName": "job",
     "runnableType": "CronJob",
     "applicationDeploymentName": "job",
-    "databases": [],
+    "databases": [ ],
     "deployTag": "1",
     "command": {
-      "overrideFiles": {},
+      "overrideFiles": { },
       "applicationDeploymentRef": {
         "environment": "utv",
         "application": "job"

@@ -7,7 +7,7 @@
       "app": "web",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "web",
       "booberDeployId": "deploy1"
@@ -51,7 +51,7 @@
           },
           {
             "name": "DOCKER_BASE_IMAGE",
-            "value": "aurora/wrench12"
+            "value": "aurora/wrench16"
           },
           {
             "name": "PUSH_EXTRA_TAGS",

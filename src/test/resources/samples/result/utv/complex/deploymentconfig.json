@@ -51,7 +51,8 @@
           "affiliation": "paas",
           "name": "komplex",
           "deployTag": "komplex",
-          "paused": "true"
+          "paused": "true",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {
@@ -163,6 +164,10 @@
               {
                 "name": "DEBUG_PORT",
                 "value": "5005"
+              },
+              {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/complex/${APP_VERSION}"
               },
               {
                 "name": "VOLUME_AURORA_TOKEN",
@@ -456,7 +461,7 @@
         "serviceAccount": "aurora-fraggle",
         "volumes": [
           {
-            "emptyDir": {},
+            "emptyDir": { },
             "name": "application-log-volume"
           },
           {
@@ -476,18 +481,6 @@
             "secret": {
               "secretName": "komplex-foo-db"
             }
-          },
-          {
-            "configMap": {
-              "name": "komplex-fluent-config"
-            },
-            "name": "komplex-fluent-config"
-          },
-          {
-            "configMap": {
-              "name": "komplex-fluent-parser"
-            },
-            "name": "komplex-fluent-parser"
           },
           {
             "name": "aurora-token-mount",
@@ -512,6 +505,18 @@
             "secret": {
               "secretName": "komplex-sts"
             }
+          },
+          {
+            "configMap": {
+              "name": "komplex-fluent-config"
+            },
+            "name": "komplex-fluent-config"
+          },
+          {
+            "configMap": {
+              "name": "komplex-fluent-parser"
+            },
+            "name": "komplex-fluent-parser"
           }
         ]
       }
@@ -525,7 +530,7 @@
           ],
           "from": {
             "kind": "ImageStreamTag",
-            "name": "komplex:latest"
+            "name": "komplex:default"
           }
         },
         "type": "ImageChange"

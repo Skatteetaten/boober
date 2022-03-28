@@ -47,6 +47,10 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
         } returns ResponseEntity.ok(loadJsonResource("response_version.json"))
 
         every {
+            userClient.get(any(), any())
+        } returns ResponseEntity.ok().build()
+
+        every {
             userClient.getAuthorizationHeaders()
         } returns HttpHeaders()
         Instants.determineNow = { Instant.EPOCH }
@@ -105,7 +109,7 @@ class OpenShiftCommandServiceCreateDeleteCommandsTest : ResourceLoader() {
 
         val commands = openShiftCommandBuilder.createOpenShiftDeleteCommands(name, namespace, deployId)
 
-        listOf("BuildConfig", "DeploymentConfig", "ImageStream", "Service", "Secret", "BigIp").forEach {
+        listOf("Route", "DeploymentConfig", "ImageStream", "Service", "Secret", "BigIp").forEach {
             assertThat(containsKind(it, commands)).isTrue()
         }
     }

@@ -7,7 +7,7 @@
       "app": "simple",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "simple",
       "deployTag": "1",
@@ -49,10 +49,11 @@
           "app": "simple",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "simple",
-          "deployTag": "1"
+          "deployTag": "1",
+          "booberDeployId": "deploy1"
         }
       },
       "spec": {
@@ -120,6 +121,10 @@
               {
                 "name": "APP_NAME",
                 "value": "simple"
+              },
+              {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/simple/${APP_VERSION}"
               },
               {
                 "name": "ROUTE_NAME",
@@ -275,7 +280,7 @@
         "restartPolicy": "Always",
         "volumes": [
           {
-            "emptyDir": {},
+            "emptyDir": { },
             "name": "application-log-volume"
           },
           {

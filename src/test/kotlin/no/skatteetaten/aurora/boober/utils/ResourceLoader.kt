@@ -110,7 +110,12 @@ open class ResourceLoader {
             if (targetString.equals(nodeString, false)) return
             if (shouldOverwriteResources == true && allowOverwrite) {
                 overwriteResource(name, targetString, folder = folder)
-                assertThat(loadJsonResource(name)).jsonEquals(expected, name, folder = folder, allowOverwrite = false)
+                assertThat(loadJsonResource(name, folder = folder)).jsonEquals(
+                    expected,
+                    name,
+                    folder = folder,
+                    allowOverwrite = false
+                )
             } else {
                 this.fail(actual, expected)
             }

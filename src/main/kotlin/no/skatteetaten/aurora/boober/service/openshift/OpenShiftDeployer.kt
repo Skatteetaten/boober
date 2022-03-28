@@ -16,6 +16,9 @@ import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Namespace
 import io.fabric8.kubernetes.api.model.ObjectReference
+import io.fabric8.kubernetes.api.model.PodTemplateSpec
+import io.fabric8.kubernetes.api.model.apps.Deployment
+import io.fabric8.openshift.api.model.DeploymentConfig
 import io.fabric8.openshift.api.model.RoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
 import mu.KotlinLogging
@@ -265,9 +268,22 @@ class OpenShiftDeployer(
         val namespace = context.spec.namespace
         val name = context.spec.name
 
+        fun getPodTemplateIfApplicable(resource: HasMetadata): PodTemplateSpec? {
+            return when (resource) {
+                is Deployment -> resource.spec.template
+                is DeploymentConfig -> resource.spec.template
+                else -> null
+            }
+        }
+
         val jsonResources = deployCommand.resources.filter {
             it.createdSource.feature != ApplicationDeploymentFeature::class.java
         }.map { resource ->
+            val podTemplateSpec = getPodTemplateIfApplicable(resource.resource)
+            if (podTemplateSpec != null) {
+                podTemplateSpec.metadata.labels = podTemplateSpec.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
+            }
+
             resource.resource.metadata.labels =
                 resource.resource.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
             resource.resource.metadata.ownerReferences.find {

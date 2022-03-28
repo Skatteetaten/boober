@@ -1,8 +1,15 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
                   static | applicationDeploymentId: "1234567890"
+                         | alerts:
+                         |   alert:
+            complex.json |     enabled: true
+            complex.json |     expr: "test-expression"
+            complex.json |     delay: "1"
+            complex.json |     connection: "mattermost"
+            complex.json |     severity: "warning"
               about.json | schemaVersion: "v1"
-            complex.json | type: "development"
+            complex.json | type: "deploy"
               about.json | affiliation: "paas"
               about.json | segment: "aurora"
 utv/about-alternate.json | cluster: "utv"
@@ -28,11 +35,9 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |       enabled: true
                          | bigip:
             complex.json |   service: "simple-utv"
-                fileName | artifactId: "complex"
-            complex.json | groupId: "org.test"
-            complex.json | version: "1"
                          | certificate:
             complex.json |   commonName: "komplex"
+            complex.json | groupId: "org.test"
                          | config:
             complex.json |   FOO: "BAR"
             complex.json |   THIS.VALUE: "BAZ"
@@ -48,6 +53,8 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json | pause: true
             complex.json | splunkIndex: "test-index"
             complex.json | debug: true
+                fileName | artifactId: "complex"
+            complex.json | version: "1"
                          | resources:
                          |   cpu:
             complex.json |     min: "100m"
@@ -55,8 +62,6 @@ utv/about-alternate.json |   ttl: "1d"
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
-                         | logging:
-            complex.json |   index: "test-index"
                          | deployStrategy:
             complex.json |   type: "recreate"
             complex.json | serviceAccount: "aurora-fraggle"
@@ -102,3 +107,5 @@ utv/about-alternate.json |   ttl: "1d"
                          | webseal:
             complex.json |   host: "test"
             complex.json |   roles: "admin,dev,@name@"
+                         | logging:
+            complex.json |   index: "test-index"

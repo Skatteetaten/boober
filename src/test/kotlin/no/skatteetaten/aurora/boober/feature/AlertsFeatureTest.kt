@@ -1,16 +1,18 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.contains
+import assertk.assertions.containsOnly
 import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
 import assertk.assertions.isTrue
 import no.skatteetaten.aurora.boober.model.openshift.Alerts
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.applicationErrorResult
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
-import org.junit.jupiter.api.Test
 
 class AlertsFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -49,7 +51,6 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         }.applicationErrorResult(
             AlertsFeature.Errors.MissingAlertExpression.message,
             AlertsFeature.Errors.MissingAlertConnectionProp.message,
-            AlertsFeature.Errors.MissingAlertDelayProp.message,
             AlertsFeature.Errors.MissingAlertSeverity.message
         )
     }
@@ -106,6 +107,34 @@ class AlertsFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should generate alert resource with multiple connection rules`() {
+        val generatedResources = generateResources(
+            """{
+              "alerts": {
+                "isdown": {
+                  "enabled": true,
+                  "expr": "ac",
+                  "delay": 1,
+                  "connections": [
+                    "aurora-mattermost",
+                    "connection2"
+                  ],
+                  "severity": "warning"
+                }
+              }
+            }"""
+        )
+
+        assertThat(generatedResources).hasSize(1)
+        val resource = generatedResources[0].resource as Alerts
+        val alertSpec = resource.spec
+        val metadata = resource.metadata
+        assertThat(alertSpec.prometheus.expr).isEqualTo("ac")
+        assertThat(alertSpec.alert.enabled).isTrue()
+        assertThat(metadata.name).contains("simple-")
+    }
+
+    @Test
     fun `should use configuration from alertsDefaults if defined for missing configuration values`() {
         val generatedResources = generateResources(
             """{
@@ -126,7 +155,7 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         assertThat(generatedResources).hasSize(1)
         val alert = (generatedResources[0].resource as Alerts).spec.alert
         assertThat(alert.delay).isEqualTo("4")
-        assertThat(alert.connection).isEqualTo("koblingsregel")
+        assertThat(alert.connections).containsOnly("koblingsregel")
         assertThat(alert.severity).isEqualTo("critical")
     }
 
@@ -154,6 +183,77 @@ class AlertsFeatureTest : AbstractFeatureTest() {
         assertThat(generatedResources).hasSize(1)
         val alert = (generatedResources[0].resource as Alerts).spec.alert
         assertThat(alert.delay).isEqualTo("2")
-        assertThat(alert.connection).isEqualTo("en-annen-koblingsregel")
+        assertThat(alert.connections).containsOnly("en-annen-koblingsregel")
+    }
+
+    @Test
+    fun `should fail validation when legacy connection and new connections is defined`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+                  "alertsDefaults": {
+                    "connections": [
+                      "aurora-email"
+                    ]
+                  },
+                  "alerts": {
+                    "is-down": {
+                      "enabled": true,
+                      "delay": 1,
+                      "expr": "test",
+                      "connection": "aurora-mattermost",
+                      "severity": "warning"
+                    }
+                  }
+                }"""
+            )
+        }.singleApplicationErrorResult(AlertsFeature.Errors.InvalidLegacyConnectionAndConnectionsProp.message)
+    }
+
+    @Test
+    fun `when using legacy connection property then legacy check should return true`() {
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+                  "alerts": {
+                    "is-down": {
+                      "enabled": true,
+                      "delay": "1",
+                      "expr": "test",
+                      "connection": "aurora-mattermost",
+                      "severity": "warning"
+                    }
+                  }
+                }""".trimMargin()
+        )
+        val alertsFeature = feature as AlertsFeature
+        val containsDeprecatedConnection = alertsFeature.containsDeprecatedConnection(spec)
+        assertThat(containsDeprecatedConnection).isTrue()
+    }
+
+    @Test
+    fun `when using connections property then legacy check should false`() {
+        val spec = createAuroraDeploymentSpecForFeature(
+            """{
+                  "alerts": {
+                    "is-down": {
+                      "enabled": true,
+                      "delay": "1",
+                      "expr": "test",
+                      "connections": ["aurora-mattermost"],
+                      "severity": "warning"
+                    }
+                  }
+                }""".trimMargin()
+        )
+        val alertsFeature = feature as AlertsFeature
+        val containsDeprecatedConnection = alertsFeature.containsDeprecatedConnection(spec)
+        assertThat(containsDeprecatedConnection).isFalse()
+    }
+
+    @Test
+    fun `when alert is not configured then legacy check should return false`() {
+        val spec = createAuroraDeploymentSpecForFeature("""{}""")
+        val alertsFeature = feature as AlertsFeature
+        assertThat(alertsFeature.containsDeprecatedConnection(spec)).isFalse()
     }
 }
