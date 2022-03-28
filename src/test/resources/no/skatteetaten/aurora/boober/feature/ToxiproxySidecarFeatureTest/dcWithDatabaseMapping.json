@@ -40,6 +40,17 @@
               }
             ],
             "image": "docker.registry/shopify/toxiproxy@sha:1234",
+            "lifecycle": {
+              "postStart": {
+                "exec": {
+                  "command": [
+                    "sh",
+                    "-c",
+                    "for i in $(seq 1 10); do sleep 1; nc -zv 127.0.0.1 8474 && exit; done; exit 1;"
+                  ]
+                }
+              }
+            },
             "name": "simple-toxiproxy-sidecar",
             "ports": [
               {
