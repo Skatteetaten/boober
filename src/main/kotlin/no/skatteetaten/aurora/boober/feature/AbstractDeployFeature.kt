@@ -94,7 +94,6 @@ val AuroraDeploymentSpec.dockerImagePath: String get() = "$dockerGroup/${this.ar
 // TODO: This version/deployTag can be empty if template and version is not set in auroraConfig, can we just enforce
 // TODO: everybody to have version for template and say it is required?
 val AuroraDeploymentSpec.version: String get() = this["version"]
-val AuroraDeploymentSpec.dockerTag: String get() = releaseTo ?: version
 
 val podEnvVariables = listOf(
     newEnvVar {
@@ -361,9 +360,9 @@ abstract class AbstractDeployFeature(
                     name = "default"
                     from {
                         kind = "DockerImage"
-                        name = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+                        name = "$dockerRegistry/${adc.dockerImagePath}:${adc.version}"
                     }
-                    if (!AuroraVersion.isFullAuroraVersion(adc.dockerTag)) {
+                    if (!AuroraVersion.isFullAuroraVersion(adc.version)) {
                         importPolicy {
                             scheduled = true
                         }
@@ -380,7 +379,7 @@ abstract class AbstractDeployFeature(
         containerArgs: List<String> = emptyList()
     ): Container {
 
-        val dockerImage = "$dockerRegistry/${adc.dockerImagePath}:${adc.dockerTag}"
+        val dockerImage = "$dockerRegistry/${adc.dockerImagePath}:${adc.version}"
 
         return newContainer {
 

@@ -63,7 +63,7 @@ class JobFeature(
         return createImageMetadataContext(
             repo = spec.dockerGroup,
             name = spec.artifactId,
-            tag = spec.dockerTag
+            tag = spec.version
         )
     }
 

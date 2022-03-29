@@ -10,7 +10,7 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "komplex",
-      "deployTag": "komplex",
+      "deployTag": "1",
       "paused": "true",
       "booberDeployId": "deploy1"
     },
@@ -39,7 +39,7 @@
     "template": {
       "metadata": {
         "annotations": {
-          "boober.skatteetaten.no/deployTag": "komplex",
+          "boober.skatteetaten.no/deployTag": "1",
           "splunk.com/exclude": "true"
         },
         "labels": {
@@ -50,7 +50,7 @@
           "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "komplex",
-          "deployTag": "komplex",
+          "deployTag": "1",
           "paused": "true",
           "booberDeployId": "deploy1"
         }
