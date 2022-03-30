@@ -3,7 +3,7 @@
   "kind": "DeploymentConfig",
   "metadata": {
     "labels": {
-      "deployTag": "test",
+      "deployTag": "1",
       "paused": "true"
     },
     "name": "simple",
@@ -27,10 +27,10 @@
     "template": {
       "metadata": {
         "annotations": {
-          "boober.skatteetaten.no/deployTag": "test"
+          "boober.skatteetaten.no/deployTag": "1"
         },
         "labels": {
-          "deployTag": "test",
+          "deployTag": "1",
           "paused": "true"
         }
       },
