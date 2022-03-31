@@ -526,6 +526,21 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
                 this.expected(":${show(expected)} and:${show(actual)} to be the same")
             }
         }
+
+    fun <T : Feature> Assert<AuroraResource>.auroraResourceModifiedByFeatureWithComment(
+        feature: Class<T>,
+        comment: String
+    ) =
+        transform { ar ->
+            val actual = ar.sources.first { it.feature == feature }
+            val expectedFeature = features.filterIsInstance(feature).first()
+            val expected = AuroraResourceSource(expectedFeature::class.java, comment)
+            if (actual == expected) {
+                ar
+            } else {
+                this.expected(":${show(expected)} and:${show(actual)} to be the same")
+            }
+        }
 }
 
 inline fun <reified T : HasMetadata> List<AuroraResource>.findResourceByType(): T =

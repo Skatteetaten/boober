@@ -64,19 +64,18 @@ class ToxiproxySidecarFeatureNoDbTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 1
             )
 
         val service = serviceResource.resource as Service
         assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Added toxiproxy volume and sidecar container",
-                sourceIndex = 1,
-                featureIndex = 1
             )
             .auroraResourceMatchesFile("dc.json")
 
