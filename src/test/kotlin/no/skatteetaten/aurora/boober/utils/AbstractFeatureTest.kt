@@ -1,11 +1,10 @@
 package no.skatteetaten.aurora.boober.utils
 
-import assertk.Assert
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isInstanceOf
-import assertk.assertions.support.expected
-import assertk.assertions.support.show
+import java.time.Instant
+import java.util.Locale
+import java.util.stream.Collectors
+import kotlin.reflect.KClass
+import org.junit.jupiter.api.BeforeEach
 import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newContainer
 import com.fkorotkov.kubernetes.newEnvVar
@@ -27,6 +26,12 @@ import com.fkorotkov.openshift.spec
 import com.fkorotkov.openshift.strategy
 import com.fkorotkov.openshift.template
 import com.fkorotkov.openshift.to
+import assertk.Assert
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.support.expected
+import assertk.assertions.support.show
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.VolumeProjection
@@ -56,17 +61,12 @@ import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.getAuroraConfigSamples
-import org.junit.jupiter.api.BeforeEach
-import java.time.Instant
-import java.util.Locale
-import java.util.stream.Collectors
-import kotlin.reflect.KClass
 
 /**
- Abstract class to test a single feature
- Override the feature variable with the Feature you want to test
+Abstract class to test a single feature
+Override the feature variable with the Feature you want to test
 
- Look at the helper methods in this class to create handlers/resources for this feature
+Look at the helper methods in this class to create handlers/resources for this feature
 
  */
 
@@ -392,7 +392,8 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
         if (invalid.isNotEmpty()) {
             throw MultiApplicationValidationException(
                 errors = invalid.map { it.errors },
-                errorMessage = invalid.flatMap { it.errors.errors }.map { it.message ?: "" }.joinToString(separator = ",")
+                errorMessage = invalid.flatMap { it.errors.errors }.map { it.message ?: "" }
+                    .joinToString(separator = ",")
             )
         }
 
@@ -485,19 +486,20 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
         actual
     }
 
-    fun Assert<AuroraResource>.auroraResourceCreatedByTarget(target: Class<*>): Assert<AuroraResource> = transform { actual ->
-        val expected = features.stream()
-            .map { it::class.java }
-            .filter { it == target }
-            .findFirst()
-        if (expected.isPresent && expected.get() == actual.createdSource.feature) {
-            actual
-        } else if (expected.isPresent) {
-            this.expected(":${show(expected.get())} and:${show(actual.createdSource.feature)} to be the same")
-        } else {
-            this.expected("Could not find feature ${target.simpleName} as part of the features under test")
+    fun Assert<AuroraResource>.auroraResourceCreatedByTarget(target: Class<*>): Assert<AuroraResource> =
+        transform { actual ->
+            val expected = features.stream()
+                .map { it::class.java }
+                .filter { it == target }
+                .findFirst()
+            if (expected.isPresent && expected.get() == actual.createdSource.feature) {
+                actual
+            } else if (expected.isPresent) {
+                this.expected(":${show(expected.get())} and:${show(actual.createdSource.feature)} to be the same")
+            } else {
+                this.expected("Could not find feature ${target.simpleName} as part of the features under test")
+            }
         }
-    }
 
     fun Assert<AuroraResource>.auroraResourceCreatedByThisFeature(): Assert<AuroraResource> = transform { actual ->
         val expected = features.stream()
@@ -512,33 +514,38 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
         }
     }
 
-    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(
-        comment: String,
-        sourceIndex: Int = 0,
-        featureIndex: Int = 0
-    ) =
+    /**
+     * Use this if you are testing only one feature that modifies one resource.
+     * @see auroraResourceModifiedByFeatureWithComment for testing with multiple features/resoures
+     */
+    fun Assert<AuroraResource>.auroraResourceModifiedByThisFeatureWithComment(comment: String) =
         transform { ar ->
-            val actual = ar.sources.toList()[sourceIndex]
-            val expected = AuroraResourceSource(features[featureIndex]::class.java, comment)
-            if (actual == expected) {
-                ar
-            } else {
-                this.expected(":${show(expected)} and:${show(actual)} to be the same")
+            val actual = ar.sources.toList().firstOrNull()
+            val expected = AuroraResourceSource(features.first()::class.java, comment)
+
+            when (actual) {
+                expected -> ar
+                null -> this.expected("Sources does not contain value from expected feature.")
+                else -> this.expected(":${show(expected)} and:${show(actual)} to be the same")
             }
         }
 
+    /**
+     * Use this if you are testing one or multiple features that modify one or many resources
+     */
     fun <T : Feature> Assert<AuroraResource>.auroraResourceModifiedByFeatureWithComment(
         feature: Class<T>,
         comment: String
     ) =
         transform { ar ->
-            val actual = ar.sources.first { it.feature == feature }
+            val actual = ar.sources.filter { it.feature == feature }.firstOrNull { it.comment == comment }
             val expectedFeature = features.filterIsInstance(feature).first()
             val expected = AuroraResourceSource(expectedFeature::class.java, comment)
-            if (actual == expected) {
-                ar
-            } else {
-                this.expected(":${show(expected)} and:${show(actual)} to be the same")
+
+            when (actual) {
+                expected -> ar
+                null -> this.expected("Sources does not contain value from expected feature.")
+                else -> this.expected(":${show(expected)} and:${show(actual)} to be the same")
             }
         }
 }

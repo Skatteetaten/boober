@@ -82,19 +82,18 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 2
             )
 
         val service = serviceResource.resource as Service
         assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Added toxiproxy volume and sidecar container",
-                sourceIndex = 1,
-                featureIndex = 2
             )
             .auroraResourceMatchesFile("dc.json")
 
@@ -137,19 +136,18 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 2
             )
 
         val service = serviceResource.resource as Service
         assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
-                comment = "Added toxiproxy volume and sidecar container",
-                sourceIndex = 1,
-                featureIndex = 2
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
+                comment = "Added toxiproxy volume and sidecar container"
             )
             .auroraResourceMatchesFile("dcWithEndpointMapping.json")
 
@@ -196,19 +194,18 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 2
             )
 
         val service = serviceResource.resource as Service
         assertThat(service.spec.ports.first().targetPort).isEqualTo(IntOrString(PortNumbers.TOXIPROXY_HTTP_PORT))
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Added toxiproxy volume and sidecar container",
-                sourceIndex = 1,
-                featureIndex = 2
             )
             .auroraResourceMatchesFile("dcWithServerAndPortMapping.json")
 
@@ -400,23 +397,22 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 2
             )
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Added toxiproxy volume and sidecar container",
-                sourceIndex = 2,
-                featureIndex = 2
             )
             .auroraResourceMatchesFile("dcWithDatabaseMapping.json")
 
         assertThat(secretResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed JDBC URL to point to Toxiproxy",
-                featureIndex = 2
             )
 
         val jdbcUrl = Base64
@@ -480,28 +476,27 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 2
             )
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Added toxiproxy volume and sidecar container",
-                sourceIndex = 2,
-                featureIndex = 2
             )
 
         assertThat(secretResource1)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed JDBC URL to point to Toxiproxy",
-                featureIndex = 2
             )
 
         assertThat(secretResource2)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed JDBC URL to point to Toxiproxy",
-                featureIndex = 2
             )
 
         val jdbcUrl1 = Base64
@@ -581,28 +576,27 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         )
 
         assertThat(serviceResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed targetPort to point to toxiproxy",
-                featureIndex = 2
             )
 
         assertThat(dcResource)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Added toxiproxy volume and sidecar container",
-                sourceIndex = 2,
-                featureIndex = 2
             )
 
         assertThat(secretResource1)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed JDBC URL to point to Toxiproxy",
-                featureIndex = 2
             )
 
         assertThat(secretResource2)
-            .auroraResourceModifiedByThisFeatureWithComment(
+            .auroraResourceModifiedByFeatureWithComment(
+                feature = ToxiproxySidecarFeature::class.java,
                 comment = "Changed JDBC URL to point to Toxiproxy",
-                featureIndex = 2
             )
 
         val jdbcUrl1 = Base64
