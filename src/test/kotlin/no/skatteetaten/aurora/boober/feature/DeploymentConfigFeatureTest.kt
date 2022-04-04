@@ -153,7 +153,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations")
 
         val ad = adResource.resource as ApplicationDeployment
-        assertThat(ad.spec.deployTag).isEqualTo("test")
+        assertThat(ad.spec.deployTag).isEqualTo("1")
         assertThat(ad.spec.managementPath).isEqualTo(":8081/actuator")
         assertThat(ad.spec.splunkIndex).isEqualTo("test")
         assertThat(ad.spec.releaseTo).isEqualTo("test")

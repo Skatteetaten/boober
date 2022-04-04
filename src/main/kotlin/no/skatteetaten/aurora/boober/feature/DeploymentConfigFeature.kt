@@ -111,7 +111,7 @@ class DeploymentConfigFeature() : Feature {
                 val spec = ad.spec
                 spec.splunkIndex = adc.splunkIndex
                 spec.releaseTo = adc.releaseTo
-                spec.deployTag = adc.dockerTag
+                spec.deployTag = adc.version
                 spec.managementPath = adc.managementPath
             } else if (it.resource.kind == "DeploymentConfig") {
                 val dc: DeploymentConfig = it.resource as DeploymentConfig
@@ -123,7 +123,7 @@ class DeploymentConfigFeature() : Feature {
 
                 dc.spec.template.metadata.labels = dc.spec.template.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
                 dc.spec.template.metadata.annotations = mutableMapOf(
-                    ANNOTATION_BOOBER_DEPLOYTAG to adc.dockerTag
+                    ANNOTATION_BOOBER_DEPLOYTAG to adc.version
                 )
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
 
@@ -141,7 +141,7 @@ class DeploymentConfigFeature() : Feature {
                 deployment.spec.template.metadata.labels =
                     deployment.spec.template.metadata.labels.addIfNotNull(dcLabels)
                 deployment.spec.template.metadata.annotations = mapOf(
-                    ANNOTATION_BOOBER_DEPLOYTAG to adc.dockerTag
+                    ANNOTATION_BOOBER_DEPLOYTAG to adc.version
                 )
                 deployment.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
 
@@ -202,7 +202,7 @@ class DeploymentConfigFeature() : Feature {
             "paused" to "true"
         } else null
 
-        return mapOf("deployTag" to adc.dockerTag).addIfNotNull(pauseLabel).normalizeLabels()
+        return mapOf("deployTag" to adc.version).addIfNotNull(pauseLabel).normalizeLabels()
     }
 
     private fun createAuroraKlientId(adc: AuroraDeploymentSpec): String {
