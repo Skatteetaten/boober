@@ -57,5 +57,6 @@ data class ApimSpec(
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ApimPolicy(
-    val name: String
+    val name: String,
+    val parameters: Map<String, String>
 )

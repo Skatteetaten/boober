@@ -13,6 +13,8 @@ import no.skatteetaten.aurora.boober.model.openshift.ApimSpec
 import no.skatteetaten.aurora.boober.model.openshift.AuroraApim
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.filterNullValues
+import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.notEndsWith
 import no.skatteetaten.aurora.boober.utils.startsWith
 import no.skatteetaten.aurora.boober.utils.validUrl
@@ -44,10 +46,18 @@ class AuroraAzureApimSubPart {
             val serviceUrl: String = adc[ConfigPath.serviceUrl]
 
             val policies = adc.findSubKeys(ConfigPath.policies).mapNotNull { policyName ->
+                // We only include policies which are enabled:
                 if (adc.getOrNull<Boolean>("${ConfigPath.policies}/$policyName/enabled") == true) {
-                    // Here we could read in any additional properties of the policy.
-                    ApimPolicy(name = policyName)
+                    val parameters = adc.findSubKeys("${ConfigPath.policies}/$policyName/parameters")
+                        .associateWith { key ->
+                            // Fetch the value for this key:
+                            adc.getOrNull<String>("${ConfigPath.policies}/$policyName/parameters/$key")
+                        }
+                        // Only take entries with a value:
+                        .filterNullValues()
+                    ApimPolicy(name = policyName, parameters = parameters)
                 } else {
+                    // This policy is not enabled:
                     null
                 }
             }.toSet()
@@ -99,12 +109,12 @@ class AuroraAzureApimSubPart {
 
     fun handlers(applicationFiles: List<AuroraConfigFile>): Set<AuroraConfigFieldHandler> {
 
-        val policyHandlers = applicationFiles.findSubKeysExpanded(ConfigPath.policies).map { policyName ->
-            AuroraConfigFieldHandler(
-                "$policyName/enabled",
-                validator = { it.boolean(required = true) }
-            )
-        }.toSet()
+        val policyHandlers = applicationFiles.findSubKeysExpanded(ConfigPath.policies)
+            .map { fullPolicyPath ->
+                createHandlersForPolicy(fullPolicyPath, applicationFiles)
+            }
+            // We now have a list with a list of handlers for each policy:
+            .flatten()
 
         return setOf(
             AuroraConfigFieldHandler(
@@ -136,5 +146,27 @@ class AuroraAzureApimSubPart {
             ),
             AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
         ) + policyHandlers
+    }
+
+    private fun createHandlersForPolicy(
+        fullPolicyPath: String,
+        applicationFiles: List<AuroraConfigFile>
+    ): List<AuroraConfigFieldHandler> {
+        // First create handler for the enabled toggle:
+        val enabledHandler = AuroraConfigFieldHandler(
+            "$fullPolicyPath/enabled",
+            validator = { it.boolean(required = true) }
+        )
+        // Then add handlers for all parameters found for this policy:
+        val parameterHandlers = applicationFiles
+            .findSubKeysExpanded("$fullPolicyPath/parameters")
+            .map { fullPolicyParameterPath ->
+                AuroraConfigFieldHandler(
+                    fullPolicyParameterPath,
+                    validator = { it.notBlank("Please provide value for $fullPolicyParameterPath!") }
+                )
+            }
+        // Create a set of all the handlers created for this policy:
+        return parameterHandlers + enabledHandler
     }
 }
