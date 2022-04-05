@@ -57,7 +57,7 @@ private val FeatureContext.secretNameToPortMap: Map<String, Int>
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
     cantusService: CantusService,
-    val databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    val databaseSchemaProvisioner: DatabaseSchemaProvisioner? = null,
     val userDetailsProvider: UserDetailsProvider,
     @Value("\${toxiproxy.sidecar.default.version:2.1.3}") val sidecarVersion: String
 ) : AbstractResolveTagFeature(cantusService) {

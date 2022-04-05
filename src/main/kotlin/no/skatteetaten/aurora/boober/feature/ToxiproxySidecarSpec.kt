@@ -206,7 +206,7 @@ internal fun AuroraDeploymentSpec.databasesFromSecrets(
 }
 
 internal fun AuroraDeploymentSpec.allToxiproxyConfigsAndSecretNameToPortMap(
-    databaseSchemaProvisioner: DatabaseSchemaProvisioner,
+    databaseSchemaProvisioner: DatabaseSchemaProvisioner?,
     userDetailsProvider: UserDetailsProvider
 ): Pair<List<ToxiproxyConfig>, Map<String, Int>> {
     var nextPortNumber = FIRST_PORT_NUMBER
@@ -215,9 +215,12 @@ internal fun AuroraDeploymentSpec.allToxiproxyConfigsAndSecretNameToPortMap(
     nextPortNumber = endpointsFromConfig.getNextPortNumber(numberIfEmpty = nextPortNumber)
     val serversAndPortsFromConfig = this.serversAndPortsFromConfig(nextPortNumber)
     nextPortNumber = serversAndPortsFromConfig.getNextPortNumber(numberIfEmpty = nextPortNumber)
-    val (databases, secretNameToPortMap) = this.databasesFromSecrets(
-        nextPortNumber, databaseSchemaProvisioner, userDetailsProvider
-    )
+
+    val (databases, secretNameToPortMap) = if (databaseSchemaProvisioner != null) {
+        this.databasesFromSecrets(nextPortNumber, databaseSchemaProvisioner, userDetailsProvider)
+    } else {
+        Pair(emptyList(), emptyMap())
+    }
 
     return listOf(
         appToxiproxyConfig, endpointsFromConfig, serversAndPortsFromConfig, databases
