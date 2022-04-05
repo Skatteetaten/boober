@@ -115,12 +115,16 @@
                 "value": "utv"
               },
               {
+                "name": "APP_OWNER",
+                "value": "aurora"
+              },
+              {
                 "name": "APP_NAME",
                 "value": "python"
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "aurora/python/${APP_VERSION}"
+                "value": "${APP_OWNER}/${APP_NAME}/${APP_VERSION}"
               },
               {
                 "name": "ROUTE_NAME",

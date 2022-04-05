@@ -30,7 +30,9 @@ fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<St
     }
 }
 
-val AuroraDeploymentSpec.splunkIndex: String? get() = this.getOrNull<String>("splunkIndex")
+val AuroraDeploymentSpec.splunkIndex: String?
+    get() =
+        this.getOrNull("logger/index") ?: this.getOrNull("splunkIndex")
 
 fun String.normalizeEnvVar(): String = this.replace(" ", "_").replace(".", "_").replace("-", "_")
 
@@ -178,7 +180,8 @@ class DeploymentConfigFeature() : Feature {
 
         val headerEnv = if (adc.type == TemplateType.deploy) {
             mapOf(
-                "AURORA_KLIENTID" to createAuroraKlientId(adc)
+                // APP_VERSION is available for all images created by Architect
+                "AURORA_KLIENTID" to "\${APP_OWNER}/\${APP_NAME}/\${APP_VERSION}"
             )
         } else null
 
@@ -191,6 +194,7 @@ class DeploymentConfigFeature() : Feature {
 
         return mapOf(
             "OPENSHIFT_CLUSTER" to adc["cluster"],
+            "APP_OWNER" to (adc.getOrNull("segment") ?: adc.affiliation),
             "APP_NAME" to adc.name,
             "SPLUNK_INDEX" to adc.splunkIndex,
         ).addIfNotNull(debugEnv).addIfNotNull(headerEnv).filterNullValues()
@@ -203,11 +207,5 @@ class DeploymentConfigFeature() : Feature {
         } else null
 
         return mapOf("deployTag" to adc.version).addIfNotNull(pauseLabel).normalizeLabels()
-    }
-
-    private fun createAuroraKlientId(adc: AuroraDeploymentSpec): String {
-        val segment: String? = adc.getOrNull("segment")
-        // APP_VERSION is available for all images created by Architect
-        return "${segment ?: adc.affiliation}/${adc.artifactId}/\${APP_VERSION}"
     }
 }

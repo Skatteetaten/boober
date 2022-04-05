@@ -119,12 +119,16 @@
                 "value": "utv"
               },
               {
+                "name": "APP_OWNER",
+                "value": "aurora"
+              },
+              {
                 "name": "APP_NAME",
                 "value": "easy"
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "aurora/simple/${APP_VERSION}"
+                "value": "${APP_OWNER}/${APP_NAME}/${APP_VERSION}"
               },
               {
                 "name": "ROUTE_NAME",

@@ -116,6 +116,10 @@
                 "value": "utv"
               },
               {
+                "name": "APP_OWNER",
+                "value": "aurora"
+              },
+              {
                 "name": "APP_NAME",
                 "value": "template"
               }

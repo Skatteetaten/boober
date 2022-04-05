@@ -150,6 +150,10 @@
                 "value": "utv"
               },
               {
+                "name": "APP_OWNER",
+                "value": "aurora"
+              },
+              {
                 "name": "APP_NAME",
                 "value": "komplex"
               },
@@ -167,7 +171,7 @@
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "aurora/complex/${APP_VERSION}"
+                "value": "${APP_OWNER}/${APP_NAME}/${APP_VERSION}"
               },
               {
                 "name": "VOLUME_AURORA_TOKEN",

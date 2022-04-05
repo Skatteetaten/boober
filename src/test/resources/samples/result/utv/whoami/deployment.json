@@ -184,12 +184,16 @@
                 "value": "utv"
               },
               {
+                "name": "APP_OWNER",
+                "value": "aurora"
+              },
+              {
                 "name": "APP_NAME",
                 "value": "whoami"
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "aurora/whoami/${APP_VERSION}"
+                "value": "${APP_OWNER}/${APP_NAME}/${APP_VERSION}"
               }
             ],
             "image": "docker.registry:5000/org_test/whoami:1",

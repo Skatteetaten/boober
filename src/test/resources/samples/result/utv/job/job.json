@@ -7,7 +7,7 @@
       "app": "job",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "job",
       "booberDeployId": "deploy1"
@@ -34,7 +34,7 @@
           "app": "job",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "job"
         }
@@ -61,6 +61,10 @@
                   {
                     "name": "OPENSHIFT_CLUSTER",
                     "value": "utv"
+                  },
+                  {
+                    "name": "APP_OWNER",
+                    "value": "aurora"
                   },
                   {
                     "name": "APP_NAME",
@@ -91,8 +95,8 @@
                 "imagePullPolicy": "Always",
                 "name": "job",
                 "resources": {
-                  "limits": {},
-                  "requests": {}
+                  "limits": { },
+                  "requests": { }
                 }
               }
             ],
