@@ -30,9 +30,7 @@ fun AuroraDeploymentSpec.quantity(resource: String, classifier: String): Pair<St
     }
 }
 
-val AuroraDeploymentSpec.splunkIndex: String?
-    get() =
-        this.getOrNull("logger/index") ?: this.getOrNull("splunkIndex")
+val AuroraDeploymentSpec.splunkIndex: String? get() = this.getOrNull<String>("splunkIndex")
 
 fun String.normalizeEnvVar(): String = this.replace(" ", "_").replace(".", "_").replace("-", "_")
 
