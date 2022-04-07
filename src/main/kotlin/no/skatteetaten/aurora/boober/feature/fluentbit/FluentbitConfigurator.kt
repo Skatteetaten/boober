@@ -145,6 +145,7 @@ class FluentbitConfigurator {
     |   Match *
     |   Add   host $ {POD_NAME}
     |   Add   environment $ {POD_NAMESPACE}
+    |   Add   version $ {APP_VERSION}
     |   Add   nodetype openshift
     |   Add   name $application
     |   Add   cluster $cluster
@@ -185,6 +186,7 @@ class FluentbitConfigurator {
         |   event_field                cluster ${'$'}cluster
         |   event_field                environment ${'$'}environment
         |   event_field                nodetype ${'$'}nodetype
+        |   event_field                version ${'$'}version
         |   event_key                  ${'$'}event
         |   net.keepalive_idle_timeout 10
         """.trimMargin() + retryConfigOrEmpty
