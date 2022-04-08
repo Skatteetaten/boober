@@ -33,6 +33,7 @@ class FluentbitConfigurator {
             allConfiguredLoggers: List<LoggingConfig>,
             application: String,
             cluster: String,
+            version: String,
             bufferSize: Int,
             retryLimit: Int?
         ): String {
@@ -60,7 +61,7 @@ class FluentbitConfigurator {
                 fluentbitLogInputAndFilter,
                 timeParserFilter,
                 multilineLog4jFilter,
-                getModifyFilter(application, cluster),
+                getModifyFilter(application, cluster, version),
                 applicationSplunkOutputs,
                 fluentbitSplunkOutput
             ).joinToString("\n\n")
@@ -139,13 +140,13 @@ class FluentbitConfigurator {
     """.trimMargin()
 
         // Fluentbit filter for adding splunk fields for application, cluster, environment, host and nodetype to the record
-        private fun getModifyFilter(application: String, cluster: String) = """
+        private fun getModifyFilter(application: String, cluster: String, version: String) = """
     |[FILTER]
     |   Name  modify
     |   Match *
     |   Add   host $ {POD_NAME}
     |   Add   environment $ {POD_NAMESPACE}
-    |   Add   version $ {APP_VERSION}
+    |   Add   version $version
     |   Add   nodetype openshift
     |   Add   name $application
     |   Add   cluster $cluster
