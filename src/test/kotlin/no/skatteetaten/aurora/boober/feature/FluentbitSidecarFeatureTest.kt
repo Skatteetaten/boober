@@ -56,6 +56,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     fun `should add fluentbit sidecar to dc`() {
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
             """{
+            "version": "0",
              "logging" : {
                 "index": "test-index",
                 "loggers": {
@@ -84,6 +85,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val (dcResource) = generateResources(
             """{
              "type" : "template",
+            "version": "0",
              "logging": {
                 "index": "test-index"
              }
@@ -102,6 +104,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val (dcResource) = generateResources(
             """{
              "type" : "cronjob",
+            "version": "0",
              "logging": {
                 "index": "test-index"
              }
@@ -120,6 +123,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val (dcResource) = generateResources(
             """{
              "type" : "template",
+            "version": "0",
              "logging": {
                 "index": ""
              }
@@ -135,6 +139,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     fun `setting buffer size should be reflected in deploymentconfig and fluentbit config`() {
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
             """{
+            "version": "0",
              "logging" : {
                 "index": "test-index",
                 "bufferSize": "10"
@@ -154,6 +159,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "custom": {
                     "otherName": {
@@ -173,6 +179,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "loggers": {
                     "gc": "gc_log"
@@ -194,6 +201,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "index": "openshift-test",
                 "custom": {
@@ -214,6 +222,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "custom": {
                     "otherName": {
@@ -229,6 +238,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "custom": {
                     "otherName": {
@@ -244,6 +254,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "custom": {
                     "otherName": {
@@ -262,6 +273,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "custom": {
                     "otherName": {
@@ -282,6 +294,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "custom": {
                     "application": {
@@ -300,6 +313,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     fun `Should not create fluentbit when index is empty`() {
         val (dcResource) = generateResources(
             """{
+            "version": "0",
              "logging" : {
                 "index": "",
                 "loggers": {
@@ -319,6 +333,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{
+            "version": "0",
              "logging" : {
                 "loggers": {
                     "gc": "gc_log"
@@ -333,6 +348,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     fun `Should be able to create fluentbit sidecar with custom loggers`() {
         val (dcResource, parserResource, configResource, secretResource) = generateResources(
             """{
+            "version": "0",
              "logging" : {
                 "custom": {
                     "application": {

@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
+import no.skatteetaten.aurora.boober.feature.versionHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -85,7 +86,7 @@ class FluentbitSidecarFeature(
         return setOf(
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/index"),
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/bufferSize", defaultValue = 20)
-        ) + loggers + customLogger
+        ) + loggers + customLogger + header.versionHandler
     }
 
     override fun validate(
