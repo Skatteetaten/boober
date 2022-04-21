@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature.fluentbit
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.configMap
 import com.fkorotkov.kubernetes.newVolume
@@ -45,6 +46,7 @@ private const val ALLOWED_FILE_PATTERN_REGEX = "^[A-Za-z-*]+\\.[A-Za-z]+\$"
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
  */
+@ConditionalOnProperty(value = ["openshift.majorversion"], havingValue = "4")
 @Service
 class FluentbitSidecarFeature(
     cantusService: CantusService,

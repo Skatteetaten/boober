@@ -121,3 +121,4 @@ management:
 
 openshift:
     cluster: utv
+    majorversion: 4
