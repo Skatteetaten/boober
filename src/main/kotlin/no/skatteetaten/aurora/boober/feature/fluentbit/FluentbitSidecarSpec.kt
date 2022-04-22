@@ -16,6 +16,7 @@ import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Secret
 import no.skatteetaten.aurora.boober.feature.TemplateType
 import no.skatteetaten.aurora.boober.feature.cluster
+import no.skatteetaten.aurora.boober.feature.isOCP3Cluster
 import no.skatteetaten.aurora.boober.feature.loggingMount
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
@@ -50,6 +51,12 @@ fun AuroraDeploymentSpec.shouldCreateFluentbitContainer(): Boolean = this.type i
 fun AuroraDeploymentSpec.validateFluentbit(): List<Exception> {
     val loggingField = this.getSubKeyValues(FEATURE_FIELD_NAME)
     if (loggingField.isEmpty()) return emptyList()
+
+    if (this.isOCP3Cluster()) {
+        return listOf(
+            IllegalArgumentException("Fluentbit configuration is not available in OCP3. Please remove logging/index.")
+        )
+    }
 
     val onlyOneOfLoggerTypes = validateOnlyOneOfCustomOrStandardLogger()
     val isCustomLogger = this.getSubKeyValues("$FEATURE_FIELD_NAME/custom").isNotEmpty()

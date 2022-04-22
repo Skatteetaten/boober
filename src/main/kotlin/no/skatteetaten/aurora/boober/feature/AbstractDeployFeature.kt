@@ -143,6 +143,8 @@ fun AuroraDeploymentSpec.probe(name: String): Probe? {
 }
 
 val AuroraDeploymentSpec.cluster: String get() = this["cluster"]
+val OCP3Clusters = listOf("utv", "utv-relay", "test", "test-relay", "prod", "prod-relay")
+fun AuroraDeploymentSpec.isOCP3Cluster(): Boolean = this.cluster in OCP3Clusters
 
 fun AuroraDeploymentSpec.extractPlaceHolders(): Map<String, String> {
     val segmentPair = this.getOrNull<String>("segment")?.let {
