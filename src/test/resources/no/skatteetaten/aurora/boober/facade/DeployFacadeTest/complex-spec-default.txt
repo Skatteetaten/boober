@@ -1,5 +1,6 @@
                   static | applicationDeploymentRef: "utv/complex"
                   static | configVersion: "master"
+                  static | namespace: "paas-utv"
                   static | applicationDeploymentId: "1234567890"
                          | alerts:
                          |   alert:

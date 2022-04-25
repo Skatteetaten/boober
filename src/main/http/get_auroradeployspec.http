@@ -1,4 +1,4 @@
-GET {{apiUrl}}//v1/auroradeployspec/paas/paas-jarle-utv/reference
+GET {{apiUrl}}//v1/auroradeployspec/aup/utv04/boober
 Authorization:Bearer {{token}}
 
 ###

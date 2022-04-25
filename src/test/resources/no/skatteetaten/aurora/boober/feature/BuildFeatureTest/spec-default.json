@@ -1,4 +1,14 @@
 {
+  "namespace": {
+    "source": "static",
+    "value": "paas-utv",
+    "sources": [
+      {
+        "name": "static",
+        "value": "paas-utv"
+      }
+    ]
+  },
   "applicationDeploymentId": {
     "source": "static",
     "value": "1234567890",

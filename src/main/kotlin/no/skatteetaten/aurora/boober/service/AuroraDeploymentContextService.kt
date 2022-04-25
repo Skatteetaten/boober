@@ -133,11 +133,11 @@ class AuroraDeploymentContextService(
         val headerHandlers = deployCommand.applicationDeploymentRef
             .run { HeaderHandlers.create(application, environment) }.handlers
         val headerSpec =
-            AuroraDeploymentSpec.create(
+            AuroraDeploymentSpec.createHeader(
                 handlers = headerHandlers,
                 files = deployCommand.applicationFiles,
                 applicationDeploymentRef = deployCommand.applicationDeploymentRef,
-                auroraConfigVersion = deployCommand.auroraConfig.ref
+                auroraConfigVersion = deployCommand.auroraConfig.ref,
             )
 
         val headerErrors = AuroraDeploymentSpecConfigFieldValidator(
@@ -145,6 +145,7 @@ class AuroraDeploymentContextService(
             fieldHandlers = headerHandlers,
             fields = headerSpec.fields
         ).validate(false)
+
         val filteredHeaderErrors = headerErrors.filter { it.type != ErrorType.WARNING }
         // throws exception for header errors that are not warnings
         if (!deployCommand.errorsAsWarnings && filteredHeaderErrors.isNotEmpty()) {
@@ -163,25 +164,26 @@ class AuroraDeploymentContextService(
         val allHandlers: Set<AuroraConfigFieldHandler> =
             featureHandlers.flatMap { it.value }.toSet().addIfNotNull(headerHandlers)
 
-        val applicationDeploymentId = headerSpec.run {
+        val applicationDeploymentId = headerSpec.let {
             idService?.generateOrFetchId(
                 ApplicationDeploymentCreateRequest(
-                    name = name,
-                    environmentName = envName,
-                    cluster = cluster,
-                    businessGroup = affiliation
+                    name = it.name,
+                    environmentName = it.envName,
+                    cluster = it.cluster,
+                    businessGroup = it.affiliation
                 )
-            ) ?: idServiceFallback?.generateOrFetchId(name, namespace)
+            ) ?: idServiceFallback?.generateOrFetchId(it.name, it.namespace)
                 ?: throw RuntimeException("Unable to generate applicationDeploymentId, no idService available")
         }
 
-        val spec = AuroraDeploymentSpec.create(
+        val spec = AuroraDeploymentSpec.createComplete(
             applicationDeploymentId = applicationDeploymentId,
             handlers = allHandlers,
             files = deployCommand.applicationFiles,
             applicationDeploymentRef = deployCommand.applicationDeploymentRef,
             auroraConfigVersion = deployCommand.auroraConfig.ref,
-            replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@")
+            replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@"),
+            namespace = headerSpec.namespace
         )
 
         val errors = AuroraDeploymentSpecConfigFieldValidator(
@@ -200,7 +202,7 @@ class AuroraDeploymentContextService(
         }
 
         val featureAdc: Map<Feature, AuroraDeploymentSpec> = featureHandlers.mapValues { (_, handlers) ->
-            val paths = handlers.map { it.name } + listOf("applicationDeploymentId")
+            val paths = handlers.map { it.name } + listOf("applicationDeploymentId", "namespace")
             val fields = spec.fields.filterKeys {
                 paths.contains(it)
             }
