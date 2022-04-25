@@ -40,7 +40,7 @@ open class ResourceLoader {
      * NOTE! This should always be false when merging to master
      * This enables you to overwrite resources, instead of manually copy pasting and rerunning tests
      */
-    val shouldOverwriteResources: Boolean = true
+    val shouldOverwriteResources: Boolean = false
 
     val mapper = jsonMapper()
 
