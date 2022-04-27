@@ -40,7 +40,7 @@ data class OpenshiftCommand(
     fun isType(operationType: OperationType, kind: String): Boolean {
 
         if (payload.openshiftKind != kind) return false
-        if (operationType != operationType) return false
+        if (this.operationType != operationType) return false
         return true
     }
 
