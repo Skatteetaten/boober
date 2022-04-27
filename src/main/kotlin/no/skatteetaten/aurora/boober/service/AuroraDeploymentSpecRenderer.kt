@@ -1,7 +1,9 @@
 package no.skatteetaten.aurora.boober.service
 
+import no.skatteetaten.aurora.boober.model.AuroraConfigField
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.deepSet
 
 data class SpecLine(val source: String, val indent: Int, val content: String)
 
@@ -57,4 +59,35 @@ fun renderSpecAsJson(deploymentSpec: AuroraDeploymentSpec, includeDefaults: Bool
             "sources" to field.value.sources.map { mapOf("name" to it.configFile.configName, "value" to it.value) }
         )
     }
+}
+fun AuroraDeploymentSpec.present(
+    includeDefaults: Boolean = true,
+    transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
+): Map<String, Any> {
+
+    val excludePaths = this.fields.filter { isSimplifiedAndDisabled(it.key) }.map { "${it.key}/" }
+    val map: MutableMap<String, Any> = mutableMapOf()
+    this.fields
+        .filter { field ->
+            val simpleCheck = if (field.value.canBeSimplified) {
+                this.isSimplifiedConfig(field.key)
+            } else {
+                true
+            }
+
+            val defaultCheck = if (!includeDefaults) {
+                field.value.name != "default"
+            } else {
+                true
+            }
+
+            val excludeCheck = excludePaths.none { field.key.startsWith(it) }
+
+            simpleCheck && defaultCheck && excludeCheck
+        }
+        .mapValues { transformer(it) }
+        .forEach {
+            map.deepSet(it.key.split("/"), it.value)
+        }
+    return map
 }

@@ -1,5 +1,6 @@
         static | applicationDeploymentRef: "utv/template"
         static | configVersion: "master"
+        static | namespace: "paas-utv"
         static | applicationDeploymentId: "1234567890"
                | alertsDefaults:
        default |   enabled: false

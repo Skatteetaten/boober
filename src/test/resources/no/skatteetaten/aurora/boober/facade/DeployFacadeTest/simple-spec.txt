@@ -1,5 +1,6 @@
         static | applicationDeploymentRef: "utv/simple"
         static | configVersion: "master"
+        static | namespace: "paas-utv"
         static | applicationDeploymentId: "1234567890"
     about.json | schemaVersion: "v1"
     about.json | type: "deploy"

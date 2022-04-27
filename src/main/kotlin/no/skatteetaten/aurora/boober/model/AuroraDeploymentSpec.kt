@@ -4,7 +4,6 @@ import com.fasterxml.jackson.module.kotlin.convertValue
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import no.skatteetaten.aurora.boober.utils.atNullable
 import no.skatteetaten.aurora.boober.utils.convertValueToString
-import no.skatteetaten.aurora.boober.utils.deepSet
 import no.skatteetaten.aurora.boober.utils.toMultiMap
 import org.apache.commons.text.StringSubstitutor
 
@@ -67,6 +66,17 @@ data class AuroraDeploymentSpec(
     fun getKeyMappings(keyMappingsExtractor: AuroraConfigFieldHandler?): Map<String, String>? =
         keyMappingsExtractor?.let { getOrNull(it.name) }
 
+    fun <T> featureEnabled(name: String, fn: (String) -> T?): T? {
+
+        // feature is disabled and has no specified subKeys
+        // adding a sub key implicitly enables a feature
+        if (isSimplifiedAndDisabled(name)) {
+            return null
+        }
+
+        return fn(name)
+    }
+
     fun isSimplifiedAndDisabled(name: String): Boolean {
         return isSimplifiedConfig(name) && !get<Boolean>(name)
     }
@@ -77,7 +87,7 @@ data class AuroraDeploymentSpec(
 
     /*
     In order to know if this is simplified config or not we need to find out what instruction is
-    specified in the most specific place. Each AuroraConfigFieldSource has a a precedence according to the
+    specified in the most specific place. Each AuroraConfigFieldSource has a precedence according to the
     AuroraConfigFileType enum.
      */
     fun isSimplifiedConfig(name: String): Boolean {
@@ -157,14 +167,50 @@ data class AuroraDeploymentSpec(
     inline fun <reified T> getOrNull(name: String): T? = fields[name]?.getNullableValue()
 
     companion object {
+        fun createHeader(
+            handlers: Set<AuroraConfigFieldHandler>,
+            files: List<AuroraConfigFile>,
+            applicationDeploymentRef: ApplicationDeploymentRef,
+            auroraConfigVersion: String,
+        ): AuroraDeploymentSpec {
+            return createBaseSpec(
+                handlers = handlers,
+                files = files,
+                applicationDeploymentRef = applicationDeploymentRef,
+                auroraConfigVersion = auroraConfigVersion
+            )
+        }
+        fun createComplete(
+            handlers: Set<AuroraConfigFieldHandler>,
+            files: List<AuroraConfigFile>,
+            applicationDeploymentRef: ApplicationDeploymentRef,
+            auroraConfigVersion: String,
+            replacer: StringSubstitutor,
+            namespace: String,
+            applicationDeploymentId: String
+        ): AuroraDeploymentSpec {
+            val additionalFields = mapOf(
+                "namespace" to namespace,
+                "applicationDeploymentId" to applicationDeploymentId
+            )
 
-        fun create(
-            applicationDeploymentId: String? = null,
+            return createBaseSpec(
+                handlers = handlers,
+                files = files,
+                applicationDeploymentRef = applicationDeploymentRef,
+                auroraConfigVersion = auroraConfigVersion,
+                replacer = replacer,
+                additionalFields = additionalFields
+            )
+        }
+
+        private fun createBaseSpec(
             handlers: Set<AuroraConfigFieldHandler>,
             files: List<AuroraConfigFile>,
             applicationDeploymentRef: ApplicationDeploymentRef,
             replacer: StringSubstitutor = StringSubstitutor(),
-            auroraConfigVersion: String
+            auroraConfigVersion: String,
+            additionalFields: Map<String, String> = emptyMap()
         ): AuroraDeploymentSpec {
 
             val mapper = jacksonObjectMapper()
@@ -180,17 +226,15 @@ data class AuroraDeploymentSpec(
                         AuroraConfigFieldSource(
                             AuroraConfigFile("static", "{}", isDefault = true),
                             mapper.convertValue(auroraConfigVersion)
-                        )
+                        ),
                 )
-            val applicationDeploymentStaticField = applicationDeploymentId?.let {
-                listOf(
-                    "applicationDeploymentId" to
-                        AuroraConfigFieldSource(
-                            AuroraConfigFile("static", "{}", isDefault = true),
-                            mapper.convertValue(it)
-                        )
+
+            val additionalStaticFields = additionalFields.map { (name, value) ->
+                name to AuroraConfigFieldSource(
+                    AuroraConfigFile("static", "{}", isDefault = true),
+                    mapper.convertValue(value)
                 )
-            } ?: emptyList()
+            }
 
             val fields: List<Pair<String, AuroraConfigFieldSource>> = handlers.flatMap { handler ->
                 val defaultValue = handler.defaultValue?.let {
@@ -230,58 +274,16 @@ data class AuroraDeploymentSpec(
             }
 
             val allFields: List<Pair<String, AuroraConfigFieldSource>> =
-                staticFields + applicationDeploymentStaticField + fields
+                staticFields + additionalStaticFields + fields
 
             val groupedFields: Map<String, AuroraConfigField> = allFields
                 .toMultiMap()
                 .mapValues { AuroraConfigField(it.value.toSet(), replacer) }
+
             return AuroraDeploymentSpec(
                 fields = groupedFields,
                 replacer = replacer
             )
         }
-    }
-
-    fun present(
-        includeDefaults: Boolean = true,
-        transformer: (Map.Entry<String, AuroraConfigField>) -> Map<String, Any>
-    ): Map<String, Any> {
-
-        val excludePaths = this.fields.filter { isSimplifiedAndDisabled(it.key) }.map { "${it.key}/" }
-        val map: MutableMap<String, Any> = mutableMapOf()
-        this.fields
-            .filter { field ->
-                val simpleCheck = if (field.value.canBeSimplified) {
-                    this.isSimplifiedConfig(field.key)
-                } else {
-                    true
-                }
-
-                val defaultCheck = if (!includeDefaults) {
-                    field.value.name != "default"
-                } else {
-                    true
-                }
-
-                val excludeCheck = excludePaths.none { field.key.startsWith(it) }
-
-                simpleCheck && defaultCheck && excludeCheck
-            }
-            .mapValues { transformer(it) }
-            .forEach {
-                map.deepSet(it.key.split("/"), it.value)
-            }
-        return map
-    }
-
-    fun <T> featureEnabled(name: String, fn: (String) -> T?): T? {
-
-        // feature is disabled and has no specified subKeys
-        // adding a sub key implicitly enables a feature
-        if (isSimplifiedAndDisabled(name)) {
-            return null
-        }
-
-        return fn(name)
     }
 }
