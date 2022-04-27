@@ -195,6 +195,7 @@ class OpenShiftCommandService(
         return apiResources
             .filter { kind -> kind.lowercase() != "auroracname" || openShiftClient.k8sVersionOfAtLeast("1.16") }
             .filter { kind -> kind.lowercase() != "auroraazurecname" || openShiftClient.k8sVersionOfAtLeast("1.16") }
+            .filter { kind -> kind.lowercase() != "auroraapim" || openShiftClient.k8sVersionOfAtLeast("1.16") }
             .filter { kind -> kind.lowercase() != "alert" || openShiftClient.k8sVersionOfAtLeast("1.16") }
             .flatMap { kind -> openShiftClient.getByLabelSelectors(kind, namespace, labelSelectors) }
             .map {

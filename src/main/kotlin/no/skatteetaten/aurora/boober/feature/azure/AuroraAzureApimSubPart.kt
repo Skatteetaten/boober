@@ -18,7 +18,6 @@ import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.notEndsWith
 import no.skatteetaten.aurora.boober.utils.startsWith
 import no.skatteetaten.aurora.boober.utils.validUrl
-import no.skatteetaten.aurora.boober.utils.versionPattern
 
 val AuroraDeploymentSpec.isApimEnabled: Boolean
     get() {
@@ -30,59 +29,72 @@ class AuroraAzureApimSubPart {
         private const val root = "azure/apim"
         const val enabled = "$root/enabled"
         const val apiName = "$root/apiName"
-        const val version = "$root/version"
         const val path = "$root/path"
-        const val openApiUrl = "$root/openApiUrl"
-        const val serviceUrl = "$root/serviceUrl"
-        const val policies = "$root/policies"
+        const val versions = "$root/versions"
+
+        // Inside a single version:
+        const val openApiUrl = "/openApiUrl"
+        const val serviceUrl = "/serviceUrl"
+        const val policies = "/policies"
     }
 
     fun generate(adc: AuroraDeploymentSpec, azureFeature: AzureFeature): Set<AuroraResource> {
         return if (adc.isApimEnabled) {
             val apiName: String = adc[ConfigPath.apiName]
-            val version: String = adc[ConfigPath.version]
             val path: String = adc[ConfigPath.path]
-            val openApiUrl: String = adc[ConfigPath.openApiUrl]
-            val serviceUrl: String = adc[ConfigPath.serviceUrl]
 
-            val policies = adc.findSubKeys(ConfigPath.policies).mapNotNull { policyName ->
-                // We only include policies which are enabled:
-                if (adc.getOrNull<Boolean>("${ConfigPath.policies}/$policyName/enabled") == true) {
-                    val parameters = adc.findSubKeys("${ConfigPath.policies}/$policyName/parameters")
-                        .associateWith { key ->
-                            // Fetch the value for this key:
-                            adc.getOrNull<String>("${ConfigPath.policies}/$policyName/parameters/$key")
-                        }
-                        // Only take entries with a value:
-                        .filterNullValues()
-                    ApimPolicy(name = policyName, parameters = parameters)
+            adc.findSubKeys(ConfigPath.versions).mapNotNull { version ->
+
+                val versionPath = ConfigPath.versions + "/" + version
+                if (adc.getOrNull<Boolean>("$versionPath/enabled") == true) {
+
+                    val policies = getApiVersionPolicies(adc, versionPath)
+
+                    azureFeature.generateResource(
+                        AuroraApim(
+                            _metadata = newObjectMeta {
+                                name = adc.name + "-" + apiName + "-" + version
+                                namespace = adc.namespace
+                            },
+                            spec = ApimSpec(
+                                apiName = apiName,
+                                version = version,
+                                path = path,
+                                openApiUrl = adc[versionPath + ConfigPath.openApiUrl],
+                                serviceUrl = adc[versionPath + ConfigPath.serviceUrl],
+                                // We sort for predictability, the order does not matter:
+                                policies = policies.sortedBy { it.name }
+                            )
+                        )
+                    )
                 } else {
-                    // This policy is not enabled:
+                    // This version is not enabled:
                     null
                 }
             }.toSet()
-
-            setOf(
-                azureFeature.generateResource(
-                    AuroraApim(
-                        _metadata = newObjectMeta {
-                            name = adc.name
-                            namespace = adc.namespace
-                        },
-                        spec = ApimSpec(
-                            apiName = apiName,
-                            version = version,
-                            path = path,
-                            openApiUrl = openApiUrl,
-                            serviceUrl = serviceUrl,
-                            // We sort for predictability, the order does not matter:
-                            policies = policies.sortedBy { it.name }
-                        )
-                    )
-                )
-            )
         } else {
             emptySet()
+        }
+    }
+
+    private fun getApiVersionPolicies(
+        adc: AuroraDeploymentSpec,
+        versionPath: String
+    ) = adc.findSubKeys(versionPath + ConfigPath.policies).mapNotNull { policyName ->
+        // We only include policies which are enabled:
+        if (adc.getOrNull<Boolean>("$versionPath${ConfigPath.policies}/$policyName/enabled") == true) {
+            val parameters =
+                adc.findSubKeys("$versionPath${ConfigPath.policies}/$policyName/parameters")
+                    .associateWith { key ->
+                        // Fetch the value for this key:
+                        adc.getOrNull<String>("$versionPath${ConfigPath.policies}/$policyName/parameters/$key")
+                    }
+                    // Only take entries with a value:
+                    .filterNullValues()
+            ApimPolicy(name = policyName, parameters = parameters)
+        } else {
+            // This policy is not enabled:
+            null
         }
     }
 
@@ -93,13 +105,16 @@ class AuroraAzureApimSubPart {
         if (adc.isApimEnabled) {
             listOf(
                 ConfigPath.apiName,
-                ConfigPath.version,
-                ConfigPath.path,
-                ConfigPath.openApiUrl,
-                ConfigPath.serviceUrl,
+                ConfigPath.path
             ).forEach {
                 if (adc.getOrNull<String>(it) == null) {
                     errors.add(AuroraDeploymentSpecValidationException("You need to configure $it"))
+                }
+            }
+
+            adc.findSubKeys(ConfigPath.versions).forEach { version ->
+                if (!Regex("v\\d{1,3}").matches(version)) {
+                    errors.add(AuroraDeploymentSpecValidationException("Invalid version $version. Please specify version with vX. Examples v1, v2 etc."))
                 }
             }
         }
@@ -109,11 +124,8 @@ class AuroraAzureApimSubPart {
 
     fun handlers(applicationFiles: List<AuroraConfigFile>): Set<AuroraConfigFieldHandler> {
 
-        val policyHandlers = applicationFiles.findSubKeysExpanded(ConfigPath.policies)
-            .map { fullPolicyPath ->
-                createHandlersForPolicy(fullPolicyPath, applicationFiles)
-            }
-            // We now have a list with a list of handlers for each policy:
+        val versionHandlers = applicationFiles.findSubKeysExpanded(ConfigPath.versions)
+            .map { fullVersionPath -> createHandlersForVersion(fullVersionPath, applicationFiles) }
             .flatten()
 
         return setOf(
@@ -132,30 +144,48 @@ class AuroraAzureApimSubPart {
                         ?: it.notEndsWith("/", "Path should not end with a slash.", required = false)
                 }
             ),
-            AuroraConfigFieldHandler(
-                ConfigPath.version,
-                validator = { it.versionPattern(required = false) }
-            ),
-            AuroraConfigFieldHandler(
-                ConfigPath.openApiUrl,
-                validator = { it.validUrl(required = false, requireHttps = true) }
-            ),
-            AuroraConfigFieldHandler(
-                ConfigPath.serviceUrl,
-                validator = { it.validUrl(required = false, requireHttps = true) }
-            ),
             AuroraConfigFieldHandler("webseal/host") // Needed to be able to run tests
+        ) + versionHandlers
+    }
+
+    private fun createHandlersForVersion(
+        fullVersionPath: String,
+        applicationFiles: List<AuroraConfigFile>
+    ): Set<AuroraConfigFieldHandler> {
+
+        val policyHandlers = applicationFiles.findSubKeysExpanded(fullVersionPath + ConfigPath.policies)
+            .map { fullPolicyPath ->
+                createHandlersForPolicy(fullPolicyPath, applicationFiles)
+            }
+            // We now have a list with a list of handlers for each policy:
+            .flatten()
+
+        return setOf(
+            AuroraConfigFieldHandler(
+                "$fullVersionPath/enabled",
+                defaultValue = false,
+                validator = { it.boolean(required = false) }
+            ),
+            AuroraConfigFieldHandler(
+                fullVersionPath + ConfigPath.openApiUrl,
+                validator = { it.validUrl(required = false, requireHttps = true) }
+            ),
+            AuroraConfigFieldHandler(
+                fullVersionPath + ConfigPath.serviceUrl,
+                validator = { it.validUrl(required = false, requireHttps = true) }
+            )
         ) + policyHandlers
     }
 
     private fun createHandlersForPolicy(
         fullPolicyPath: String,
         applicationFiles: List<AuroraConfigFile>
-    ): List<AuroraConfigFieldHandler> {
+    ): Set<AuroraConfigFieldHandler> {
         // First create handler for the enabled toggle:
         val enabledHandler = AuroraConfigFieldHandler(
             "$fullPolicyPath/enabled",
-            validator = { it.boolean(required = true) }
+            defaultValue = false,
+            validator = { it.boolean(required = false) }
         )
         // Then add handlers for all parameters found for this policy:
         val parameterHandlers = applicationFiles
@@ -165,7 +195,7 @@ class AuroraAzureApimSubPart {
                     fullPolicyParameterPath,
                     validator = { it.notBlank("Please provide value for $fullPolicyParameterPath!") }
                 )
-            }
+            }.toSet()
         // Create a set of all the handlers created for this policy:
         return parameterHandlers + enabledHandler
     }

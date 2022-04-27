@@ -223,28 +223,6 @@ fun JsonNode?.pattern(pattern: String, message: String, required: Boolean = true
     return null
 }
 
-fun JsonNode?.versionPattern(required: Boolean = true): Exception? {
-    if (this == null) {
-        return if (required) {
-            IllegalArgumentException("Field is required")
-        } else {
-            // The field is null, and not required. OK:
-            null
-        }
-    }
-
-    if (!this.isTextual) {
-        // When the field is present, it should be textual:
-        return IllegalArgumentException("Field should have a text value")
-    }
-
-    if (!Regex("v[0-9]{1,3}").matches(this.textValue())) {
-        return IllegalArgumentException("Please specify version with vX. Examples v1, v2 etc.")
-    }
-
-    return null
-}
-
 fun JsonNode?.durationString(): Exception? {
     if (this == null || !this.isTextual) {
         return null
