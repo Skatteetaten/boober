@@ -85,7 +85,6 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
         val (dcResource) = generateResources(
             """{
              "type" : "template",
-            "version": "0",
              "logging": {
                 "index": "test-index"
              }
