@@ -2,15 +2,15 @@
   "apiVersion": "skatteetaten.no/v1",
   "kind": "AuroraApim",
   "metadata": {
-    "name": "simple-super-api-v1",
+    "name": "simple-super-api-v2",
     "namespace": "paas-utv"
   },
   "spec": {
     "apiName": "super-api",
-    "version": "v1",
+    "version": "v2",
     "path": "/path/to/api",
-    "openApiUrl": "https://openapi",
-    "serviceUrl": "https://service",
+    "openApiUrl": "https://openapi2",
+    "serviceUrl": "https://service2",
     "policies": []
   }
 }

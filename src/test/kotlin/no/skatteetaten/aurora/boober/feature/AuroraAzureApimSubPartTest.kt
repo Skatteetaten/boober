@@ -42,10 +42,14 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "apim": {
                     "enabled"    : true,
                     "apiName"    : "super-api",
-                    "version"    : "v1", 
                     "path"       : "/path/to/api",
-                    "openApiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service"
+                    "versions"   : {
+                        "v1" : {
+                            "enabled"    : true,
+                            "openApiUrl" : "https://openapi",
+                            "serviceUrl" : "https://service"
+                        }
+                    }
                 }
               }
            }""",
@@ -57,39 +61,82 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `if policies are filtered, added and sorted`() {
-        val (_, auroraAzureApp) = generateResources(
+    fun `if multiple api versions are created`() {
+        val (_, auroraApimV1, auroraApimV2) = generateResources(
             """{
              "azure" : {
                 "apim": {
                     "enabled"    : true,
                     "apiName"    : "super-api",
-                    "version"    : "v1", 
                     "path"       : "/path/to/api",
-                    "openApiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service",
-                    "policies"   : {
-                                        "policy2": {
-                                            "enabled": true,
-                                            "parameters": {
-                                                "param1": "value1",
-                                                "param2": "value2"
-                                            }
-                                         },
-                                        "policy1": {
-                                            "enabled": true
-                                         },
-                                        "policy3": {
-                                            "enabled": false
-                                         }
+                    "versions"   : {
+                        "v1" : {
+                            "enabled"    : true,
+                            "openApiUrl" : "https://openapi",
+                            "serviceUrl" : "https://service"
+                        },
+                        "v2" : {
+                            "enabled"    : true,
+                            "openApiUrl" : "https://openapi2",
+                            "serviceUrl" : "https://service2"
+                        },
+                        "v3" : {
+                            "enabled"    : false,
+                            "openApiUrl" : "https://openapi",
+                            "serviceUrl" : "https://service"
+                        }
+                    }
+                }
+              }
+           }""",
+            createEmptyDeploymentConfig(), createdResources = 2
+        )
+
+        assertThat(auroraApimV1).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-apim.json")
+
+        assertThat(auroraApimV2).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-apim-v2.json")
+    }
+
+    @Test
+    fun `if policies are filtered, added and sorted`() {
+        val (_, auroraApim) = generateResources(
+            """{
+             "azure" : {
+                "apim": {
+                    "enabled"    : true,
+                    "apiName"    : "super-api",
+                    "path"       : "/path/to/api",
+                    "versions" : {
+                        "v1" : {
+                            "enabled"    : true,
+                            "openApiUrl" : "https://openapi",
+                            "serviceUrl" : "https://service",                          
+                            "policies"   : {
+                                "policy2": {
+                                    "enabled": true,
+                                    "parameters": {
+                                        "param1": "value1",
+                                        "param2": "value2"
                                     }
+                                },
+                                "policy1": {
+                                    "enabled": true
+                                 },
+                                "policy3": {
+                                    "enabled": false
+                                 }
+                            }          
+                        }
+                    }          
                 }
               }
            }""",
             createEmptyDeploymentConfig(), createdResources = 1
         )
 
-        assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
+        assertThat(auroraApim).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-apim-with-policies.json")
     }
 
@@ -102,11 +149,15 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "apim": {
                     "enabled"    : true,
                     "apiName"    : "super-api",
-                    "version"    : "v1", 
-                    "path"       : "path/to/api",
-                    "openApiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service",
-                    "policies"   : "awsome policy"
+                    "path"       : "/path/to/api",
+                    "versions" : {
+                        "v1" : {
+                          "enabled"    : true,
+                          "openApiUrl" : "https://openapi",
+                          "serviceUrl" : "https://service",
+                          "policies"   : "awsome policy"
+                        }
+                    }
                 }
               }
            }""",
@@ -123,10 +174,37 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "apim": {
                     "enabled"    : false,
                     "apiName"    : "super-api",
-                    "version"    : "v1", 
                     "path"       : "/path/to/api",
-                    "openApiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service"
+                    "versions" : {
+                        "v1" : {
+                              "enabled"    : true,
+                              "openApiUrl" : "https://openapi",
+                              "serviceUrl" : "https://service"
+                        }
+                    }
+                }
+              }
+           }""",
+            createEmptyDeploymentConfig(), createdResources = 0
+        )
+    }
+
+    @Test
+    fun `if version is disabled, no resource is created`() {
+        val (_) = generateResources(
+            """{
+             "azure" : {
+                "apim": {
+                    "enabled"    : true,
+                    "apiName"    : "super-api",
+                    "path"       : "/path/to/api",
+                    "versions" : {
+                        "v1" : {
+                              "enabled"    : false,
+                              "openApiUrl" : "https://openapi",
+                              "serviceUrl" : "https://service"
+                        }
+                    }
                 }
               }
            }""",
@@ -143,10 +221,14 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "apim": {
                     "enabled"    : true,
                     "apiName"    : "super-api",
-                    "version"    : "v1", 
                     "path"       : "/should/not/end/with/slash/",
-                    "openApiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service"
+                    "versions" : {
+                        "v1" : {
+                          "enabled"    : true,
+                          "openApiUrl" : "https://openapi",
+                          "serviceUrl" : "https://service"
+                        }
+                    }
                 }
               }
            }""",
@@ -164,10 +246,14 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "apim": {
                     "enabled"    : true,
                     "apiName"    : "super-api",
-                    "version"    : "versjon1", 
-                    "path"       : "path",
-                    "openApiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service"
+                    "path"       : "/path",
+                    "versions" : {
+                        "version1" : {
+                          "enabled"    : true,
+                          "openApiUrl" : "https://openapi",
+                          "serviceUrl" : "https://service"
+                        }
+                    }
                 }
               }
            }""",
@@ -185,10 +271,14 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "apim": {
                     "enabled"    : true,
                     "apiName"    : "super-api",
-                    "version"    : "v1", 
                     "path"       : "/path",
-                    "openApiUrl" : "openapi",
-                    "serviceUrl" : "https://service"
+                    "v1" : {
+                        "version1" : {
+                          "enabled"    : true,
+                          "openApiUrl" : "openapi",
+                          "serviceUrl" : "https://service"
+                        }
+                    }
                 }
               }
            }""",
@@ -210,12 +300,16 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                   "version": "0.4.0"
                 },
                 "apim": {
-                    "enabled"    : true,
-                    "apiName"    : "super-api",
-                    "version"    : "v1", 
-                    "path"       : "/path/to/api",
-                    "openApiUrl" : "https://openapi",
-                    "serviceUrl" : "https://service"
+                  "enabled"  : true,
+                  "apiName"  : "super-api",
+                  "path"     : "/path/to/api",
+                  "versions" : {
+                      "v1" : {
+                          "enabled"    : true,
+                          "openApiUrl" : "https://openapi",
+                          "serviceUrl" : "https://service"
+                      }
+                  }
                 }
               }
         }""",

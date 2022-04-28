@@ -64,18 +64,4 @@ class JsonNodeUtilsTest {
         val exception = TextNode.valueOf("https://secure.url").validUrl(requireHttps = true)
         assertThat(exception).isNull()
     }
-
-    @Test
-    fun `versionPattern should return exception when not a valid version`() {
-        val exception = TextNode.valueOf("not a version").versionPattern()
-        assertThat(exception).isNotNull()
-        assertThat(exception?.javaClass).isEqualTo(IllegalArgumentException::class.java)
-        assertThat(exception?.message).isEqualTo("Please specify version with vX. Examples v1, v2 etc.")
-    }
-
-    @Test
-    fun `versionPattern should return null with a valid version`() {
-        val exception = TextNode.valueOf("v123").versionPattern()
-        assertThat(exception).isNull()
-    }
 }
