@@ -21,6 +21,7 @@ import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.feature.podEnvVariables
 import no.skatteetaten.aurora.boober.feature.type
+import no.skatteetaten.aurora.boober.feature.version
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
@@ -189,6 +190,7 @@ fun AuroraDeploymentSpec.createFluentbitConfigMap(
                 allConfiguredLoggers = allConfiguredLoggers,
                 application = adc.name,
                 cluster = adc.cluster,
+                version = adc.version,
                 bufferSize = adc.bufferSize,
                 retryLimit = retryLimit
             )
