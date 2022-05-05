@@ -131,8 +131,8 @@ integrations:
         fallback:
             applikasjonsnavn: "1234567890"
     openshift:
-        port: 8443
-        url: https://api.${openshift.cluster}.paas.skead.no
+        port: 6443
+        url: https://api.${openshift.cluster}.paas.skead.no:${integrations.openshift.port}
     docker:
         releases: "container-registry-internal-release.aurora.skead.no:443"
         registry: "container-registry-internal-private-pull.aurora.skead.no:443"
