@@ -79,10 +79,10 @@ fun List<AuroraDeploymentContext>.createDeployCommand(
 }
 
 fun List<AuroraDeploymentContext>.createResources():
-        Map<AuroraDeploymentContext, List<Pair<ContextErrors?, Set<AuroraResource>?>>> {
+    Map<AuroraDeploymentContext, List<Pair<ContextErrors?, Set<AuroraResource>?>>> {
 
-    val generatedSequential = this.associateWith { context -> context.generateResources(true) }
-    val generatedParallel = this.parallelMap { context -> context to context.generateResources(false) }.toMap()
+    val generatedSequential = this.associateWith { context -> context.generateResources(RunType.SEQUENTIAL) }
+    val generatedParallel = this.parallelMap { context -> context to context.generateResources(RunType.PARALLEL) }.toMap()
 
     return this.associateWith { context ->
         val l1 = generatedSequential[context].orEmpty()
@@ -91,11 +91,11 @@ fun List<AuroraDeploymentContext>.createResources():
     }
 }
 
-fun AuroraDeploymentContext.generateResources(isRunSequential: Boolean): List<Pair<ContextErrors?, Set<AuroraResource>?>> =
+fun AuroraDeploymentContext.generateResources(runType: RunType): List<Pair<ContextErrors?, Set<AuroraResource>?>> =
     this.features.map { (feature, adc) ->
         val context = this.featureContext[feature] ?: emptyMap()
         try {
-            if (isRunSequential) {
+            if (runType == RunType.SEQUENTIAL) {
                 null to feature.generateSequentially(adc, context)
             } else {
                 null to feature.generate(adc, context)
@@ -112,7 +112,7 @@ fun AuroraDeploymentContext.generateResources(isRunSequential: Boolean): List<Pa
     }
 
 fun Map<AuroraDeploymentContext, List<Pair<ContextErrors?, Set<AuroraResource>?>>>.flattenErrorsOrFeatures():
-        List<ErrorsOrFeatures> {
+    List<ErrorsOrFeatures> {
     return this.map { (context, eitherErrorsOrFeatures) ->
         // There was some errors when generating so we gather them up and return them and no resources
         val errors = eitherErrorsOrFeatures.mapNotNull { it.first }
@@ -181,3 +181,8 @@ data class ErrorsOrFeatures(
     val ctx: AuroraDeploymentContext,
     val errorsOrFeatures: Pair<List<ContextErrors>, Set<AuroraResource>?>
 )
+
+enum class RunType {
+    SEQUENTIAL,
+    PARALLEL,
+}
