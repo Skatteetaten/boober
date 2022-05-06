@@ -150,7 +150,7 @@ fun AuroraDeploymentSpec.isFluentbitDisabled(): Boolean {
     return isNotcustomConfig && loggingIndexNotSet
 }
 
-val supportedFluentbitSourcetypes = listOf("_json", "access_combined", "gc_log", "log4j")
+val supportedFluentbitSourcetypes = listOf("_json", "access_combined", "gc_log", "log4j", "evalevent_xml", "ats:eval:xml")
 
 fun logTypeToSourcetype(logType: String): String =
     when (logType) {
