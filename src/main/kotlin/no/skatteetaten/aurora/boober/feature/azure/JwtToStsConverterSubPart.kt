@@ -152,6 +152,9 @@ class JwtToStsConverterSubPart {
                 EnvVarBuilder().withName("CLINGER_PROXY_SERVER_PORT")
                     .withValue(ports.first().containerPort.toString())
                     .build(),
+                EnvVarBuilder().withName("CLINGER_AURORAAZUREAPP_NAME")
+                    .withValue(adc.name)
+                    .build(),
                 EnvVarBuilder().withName("CLINGER_WEBSEAL_TRAFFIC_ACCEPTED")
                     .withValue(websealEnabled ?: "false")
                     .build()
