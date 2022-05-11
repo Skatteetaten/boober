@@ -718,6 +718,26 @@
             "value": false
           }
         ]
+      },
+      "ldapUserSecretRef": {
+        "source": "default",
+        "value": "",
+        "sources": [
+          {
+            "name": "default",
+            "value": ""
+          }
+        ]
+      },
+      "ldapUrl": {
+        "source": "default",
+        "value": "ldap://ldap.skead.no:389",
+        "sources": [
+          {
+            "name": "default",
+            "value": "ldap://ldap.skead.no:389"
+          }
+        ]
       }
     },
     "managedRoute": {
