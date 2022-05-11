@@ -29,7 +29,7 @@ fun AuroraDeploymentContext.validate(fullValidation: Boolean): Map<Feature, List
 fun List<AuroraDeploymentContext>.createDeployCommand(
     deploy: Boolean
 ): List<AuroraDeployCommand> {
-    val errorsOrFeatures = this.createResources()
+    val errorsOrFeatures = this.mergeGeneratedResources()
         .flattenErrorsOrFeatures()
 
     val result: List<Pair<List<ContextErrors>, AuroraDeployCommand?>> = errorsOrFeatures.parallelMap {
@@ -78,7 +78,7 @@ fun List<AuroraDeploymentContext>.createDeployCommand(
     return valid
 }
 
-fun List<AuroraDeploymentContext>.createResources():
+fun List<AuroraDeploymentContext>.mergeGeneratedResources():
     Map<AuroraDeploymentContext, List<Pair<ContextErrors?, Set<AuroraResource>?>>> {
 
     val generatedSequential = this.associateWith { context -> context.generateResources(RunType.SEQUENTIAL) }
@@ -95,11 +95,11 @@ fun AuroraDeploymentContext.generateResources(runType: RunType): List<Pair<Conte
     this.features.map { (feature, adc) ->
         val context = this.featureContext[feature] ?: emptyMap()
         try {
-            if (runType == RunType.SEQUENTIAL) {
-                null to feature.generateSequentially(adc, context)
-            } else {
-                null to feature.generate(adc, context)
+            val generatedResources = when (runType) {
+                RunType.SEQUENTIAL -> feature.generateSequentially(adc, context)
+                RunType.PARALLEL -> feature.generate(adc, context)
             }
+            null to generatedResources
         } catch (e: Throwable) {
             if (e is ExceptionList) {
                 ContextCreationErrors(this.cmd, e.exceptions) to null
@@ -120,16 +120,9 @@ fun Map<AuroraDeploymentContext, List<Pair<ContextErrors?, Set<AuroraResource>?>
             return@map ErrorsOrFeatures(context, Pair(errors, null))
         }
 
-        val featureResources = eitherErrorsOrFeatures.mapNotNull { it.second }.flatten().toSet()
-        val names = featureResources.map { "${it.resource.kind}/${it.resource.metadata.name}" }
+        val featureResources = eitherErrorsOrFeatures.featureResources()
 
-        val uniqueNames = names.toSet()
-
-        val duplicatedNames = uniqueNames.filter { uniqueName ->
-            names.count { uniqueName == it } != 1
-        }
-
-        // TODO: This failed Test this
+        val duplicatedNames = eitherErrorsOrFeatures.findDuplicatedNames()
         if (duplicatedNames.isNotEmpty()) {
             val namesString = duplicatedNames.joinToString(", ").lowercase()
             val error: List<ContextErrors> = listOf(
@@ -141,26 +134,41 @@ fun Map<AuroraDeploymentContext, List<Pair<ContextErrors?, Set<AuroraResource>?>
             return@map ErrorsOrFeatures(context, Pair(error, featureResources))
         }
 
-        // TODO: Message:     Resource with duplicate kind/name=Service/activemq-3-native,Service/activemq-3-admin,Route/activemq-3,ImageStream/amq-classic-single,DeploymentConfig/activemq-3,Secret/activemq-3-cert,Route/activemq-3,ApplicationDeployment/activemq-3,ProjectRequest/paas-m89870,Namespace/paas-m89870,RoleBinding/admin
-
         // Mutation!
-        val modifyErrors = context.features.mapNotNull {
-            val featureContext = context.featureContext[it.key] ?: emptyMap()
-            try {
-                it.key.modify(it.value, featureResources, featureContext)
-                null
-            } catch (e: Throwable) {
-                if (e is ExceptionList) {
-                    ContextCreationErrors(context.cmd, e.exceptions)
-                } else {
-                    ContextCreationErrors(context.cmd, listOf(e))
-                }
-            }
-        }
+        val modifyErrors = context.modifyResources(featureResources)
 
         return@map ErrorsOrFeatures(context, Pair(modifyErrors, featureResources))
     }
 }
+
+fun List<Pair<ContextErrors?, Set<AuroraResource>?>>.featureResources(): Set<AuroraResource> = this.mapNotNull {
+    it.second
+}.flatten().toSet()
+
+fun List<Pair<ContextErrors?, Set<AuroraResource>?>>.findDuplicatedNames(): List<String> {
+    val names = this.featureResources().map { "${it.resource.kind}/${it.resource.metadata.name}" }
+    val uniqueNames = names.toSet()
+    return uniqueNames.filter {
+        uniqueName ->
+        names.count { uniqueName == it } != 1
+    }
+}
+
+fun AuroraDeploymentContext.modifyResources(featureResources: Set<AuroraResource>):
+    List<ContextCreationErrors> =
+    this.features.mapNotNull {
+        val featureContext = this.featureContext[it.key] ?: emptyMap()
+        try {
+            it.key.modify(it.value, featureResources, featureContext)
+            null
+        } catch (e: Throwable) {
+            if (e is ExceptionList) {
+                ContextCreationErrors(this.cmd, e.exceptions)
+            } else {
+                ContextCreationErrors(this.cmd, listOf(e))
+            }
+        }
+    }
 
 typealias FeatureSpec = Map<Feature, AuroraDeploymentSpec>
 
