@@ -17,8 +17,6 @@ import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.Feature
-import no.skatteetaten.aurora.boober.feature.FeatureContext
-import no.skatteetaten.aurora.boober.feature.getContextKey
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -35,17 +33,8 @@ val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
 
 val AuroraDeploymentSpec.isIvGroupsEnabled: Boolean
     get() = (this.getOrNull(JwtToStsConverterSubPart.ConfigPath.ivGroupsRequired) ?: false) &&
-        this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUrl) != null &&
-        this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUserSecretRef) != null
-
-// Copied from AbstractResolveTagFeature in order to avoid inheriting from Feature
-private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
-
-// Copied from AbstractResolveTagFeature in order to avoid inheriting from Feature
-internal val FeatureContext.imageMetadata: ImageMetadata
-    get() = this.getContextKey(
-        IMAGE_METADATA_CONTEXT_KEY
-    )
+        (this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUrl) != null) &&
+        (this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUserSecretRef) != null)
 
 class JwtToStsConverterSubPart {
     object ConfigPath {
@@ -61,14 +50,14 @@ class JwtToStsConverterSubPart {
     fun modify(
         adc: AuroraDeploymentSpec,
         resources: Set<AuroraResource>,
-        context: FeatureContext,
+        imageMetadata: ImageMetadata,
         parent: Feature
     ) {
         if (!adc.isJwtToStsConverterEnabled) {
             return
         }
 
-        val container = createClingerProxyContainer(adc, context)
+        val container = createClingerProxyContainer(adc, imageMetadata)
         resources.forEach {
             if (it.resource.kind == "DeploymentConfig") {
                 parent.modifyResource(it, "Added clinger sidecar container")
@@ -95,13 +84,11 @@ class JwtToStsConverterSubPart {
         }
     }
 
-    internal fun createClingerProxyContainer(adc: AuroraDeploymentSpec, context: FeatureContext): Container {
+    internal fun createClingerProxyContainer(adc: AuroraDeploymentSpec, imageMetadata: ImageMetadata): Container {
         val containerPorts = mapOf(
             "http" to PortNumbers.CLINGER_PROXY_SERVER_PORT,
             "management" to PortNumbers.CLINGER_MANAGEMENT_SERVER_PORT
         )
-
-        val imageMetadata = context.imageMetadata
 
         return newContainer {
             name = "${adc.name}-clinger-mix" // Not naming it sidecar, as that will mask out secrets

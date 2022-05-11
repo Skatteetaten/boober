@@ -69,7 +69,7 @@ class AzureFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        jwtToStsConverter.modify(adc, resources, context, this)
+        jwtToStsConverter.modify(adc, resources, context.imageMetadata, this)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
