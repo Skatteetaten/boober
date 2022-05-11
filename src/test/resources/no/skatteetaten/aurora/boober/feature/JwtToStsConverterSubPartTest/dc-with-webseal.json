@@ -45,6 +45,22 @@
                 "name": "CLINGER_PROXY_SERVER_PORT",
                 "value" : "8100"
               }, {
+                "name":"POD_NAMESPACE",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.namespace"
+                  }
+                }
+              }, {
+                "name":"POD_NAME",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.name"
+                  }
+                }
+              }, {
                 "name": "CLINGER_DISCOVERY_URL",
                 "value" : "https://endpoint"
               }, {

@@ -8,7 +8,9 @@ import com.fkorotkov.kubernetes.resources
 import io.fabric8.kubernetes.api.model.Container
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
+import io.fabric8.kubernetes.api.model.EnvVarSource
 import io.fabric8.kubernetes.api.model.IntOrString
+import io.fabric8.kubernetes.api.model.ObjectFieldSelector
 import io.fabric8.kubernetes.api.model.Quantity
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
@@ -76,6 +78,8 @@ class JwtToStsConverterSubPart {
                 }
 
                 parent.modifyResource(it, "Changed targetPort to point to clinger")
+            } else if (it.resource.kind == "Secret") {
+                // map clinger_username/password file
             }
         }
     }
@@ -157,7 +161,9 @@ class JwtToStsConverterSubPart {
                     .build(),
                 EnvVarBuilder().withName("CLINGER_WEBSEAL_TRAFFIC_ACCEPTED")
                     .withValue(websealEnabled ?: "false")
-                    .build()
+                    .build(),
+                createEnvRef(name = "POD_NAMESPACE", apiVersion = "v1", fieldPath = "metadata.namespace"),
+                createEnvRef(name = "POD_NAME", apiVersion = "v1", fieldPath = "metadata.name")
             )
         ).addIfNotNull(
             createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.discoveryUrl))
@@ -166,12 +172,20 @@ class JwtToStsConverterSubPart {
         )
     }
 
-    private fun createEnvOrNull(key: String, value: String?): EnvVar? {
+    private fun createEnvOrNull(name: String, value: String?): EnvVar? {
         return if (value == null) {
             null
         } else {
-            EnvVarBuilder().withName(key).withValue(value).build()
+            EnvVarBuilder().withName(name).withValue(value).build()
         }
+    }
+
+    private fun createEnvRef(name: String, apiVersion: String, fieldPath: String): EnvVar {
+        return EnvVarBuilder().withName(name)
+            .withValueFrom(
+                EnvVarSource(null, ObjectFieldSelector(apiVersion, fieldPath), null, null)
+            )
+            .build()
     }
 
     fun handlers(sidecarVersion: String): Set<AuroraConfigFieldHandler> =

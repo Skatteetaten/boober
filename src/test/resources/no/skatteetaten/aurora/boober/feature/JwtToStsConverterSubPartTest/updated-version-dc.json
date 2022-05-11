@@ -51,6 +51,22 @@
                 "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
                 "value" : "false"
               }, {
+                "name":"POD_NAMESPACE",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.namespace"
+                  }
+                }
+              }, {
+                "name":"POD_NAME",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.name"
+                  }
+                }
+              }, {
                 "name": "CLINGER_DISCOVERY_URL",
                 "value" : "https://endpoint"
               }, {
