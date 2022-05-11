@@ -6,7 +6,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -29,8 +28,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import kotlin.reflect.KClass
-
-private val logger = KotlinLogging.logger { }
 
 private const val DATABASE_CONTEXT_KEY = "databases"
 
@@ -98,7 +95,7 @@ class DatabaseFeature(
             }
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+    override fun generateSequentially(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val databases = context.databases
 
         val schemaRequests = databases.createSchemaRequests(adc)

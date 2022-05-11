@@ -104,6 +104,13 @@ interface Feature {
     fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> = emptySet()
 
     /**
+     Generate a set of AuroraResource from this feature
+
+     Functionally equal to generate except this generation is intended to be run sequentially and not in parallel
+     */
+    fun generateSequentially(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> = emptySet()
+
+    /**
      Modify generated resources
 
      Resource modification of all features are run before the validate step occurs
