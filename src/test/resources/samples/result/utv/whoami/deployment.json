@@ -189,7 +189,7 @@
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "aurora/whoami/${APP_VERSION}"
+                "value": "whoami/${APP_VERSION}"
               }
             ],
             "image": "docker.registry:5000/org_test/whoami:1",

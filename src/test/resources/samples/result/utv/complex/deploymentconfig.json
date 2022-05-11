@@ -167,7 +167,7 @@
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "aurora/complex/${APP_VERSION}"
+                "value": "komplex/${APP_VERSION}"
               },
               {
                 "name": "VOLUME_AURORA_TOKEN",

@@ -60,7 +60,7 @@
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "aurora/simple/${APP_VERSION}"
+                "value": "simple/${APP_VERSION}"
               }
             ],
             "name": "simple",
