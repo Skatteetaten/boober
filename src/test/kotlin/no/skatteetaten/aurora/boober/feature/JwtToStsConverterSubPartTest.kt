@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
-            AzureFeature(cantusService, "0.4.0"),
+            AzureFeature(cantusService, "0.4.0", "ldap://default"),
             WebsealFeature(".test.skead.no")
         )
 
@@ -185,5 +185,26 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
             .auroraResourceMatchesFile("dc-webseal-true.json")
         assertThat(webseal).auroraResourceMatchesFile("webseal-route.json")
+    }
+
+    @Test
+    fun `clinger can have iv-groups enabled`() {
+
+        val (_, dcResource) = modifyResources(
+            """{
+             "azure" : {
+                "jwtToStsConverter": {
+                    "enabled": true,
+                    "discoveryUrl": "https://endpoint",
+                    "ivGroupsRequired": true,
+                    "ldapUserSecretRef": "foo-vault"
+                }
+              }
+           }""",
+            createEmptyService(), createEmptyDeploymentConfig()
+        )
+
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")
+            .auroraResourceMatchesFile("dc-ivgroups-true.json")
     }
 }

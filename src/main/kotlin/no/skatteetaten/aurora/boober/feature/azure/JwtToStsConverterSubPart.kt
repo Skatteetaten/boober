@@ -12,6 +12,7 @@ import io.fabric8.kubernetes.api.model.EnvVarSource
 import io.fabric8.kubernetes.api.model.IntOrString
 import io.fabric8.kubernetes.api.model.ObjectFieldSelector
 import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.SecretKeySelector
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
@@ -24,12 +25,18 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.ImageMetadata
+import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.validUrl
 
 val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
     get() = this.getOrNull(JwtToStsConverterSubPart.ConfigPath.enabled) ?: false
+
+val AuroraDeploymentSpec.isIvGroupsEnabled: Boolean
+    get() = (this.getOrNull(JwtToStsConverterSubPart.ConfigPath.ivGroupsRequired) ?: false) &&
+        this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUrl) != null &&
+        this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUserSecretRef) != null
 
 // Copied from AbstractResolveTagFeature in order to avoid inheriting from Feature
 private const val IMAGE_METADATA_CONTEXT_KEY = "imageMetadata"
@@ -47,6 +54,8 @@ class JwtToStsConverterSubPart {
         const val version = "$root/version"
         const val discoveryUrl = "$root/discoveryUrl"
         const val ivGroupsRequired = "$root/ivGroupsRequired"
+        const val ldapUserSecretRef = "$root/ldapUserSecretRef"
+        const val ldapUrl = "$root/ldapUrl"
     }
 
     fun modify(
@@ -79,7 +88,9 @@ class JwtToStsConverterSubPart {
 
                 parent.modifyResource(it, "Changed targetPort to point to clinger")
             } else if (it.resource.kind == "Secret") {
-                // map clinger_username/password file
+                if (adc.isIvGroupsEnabled && it.resource.metadata.name == adc.getOrNull(ConfigPath.ldapUserSecretRef)) {
+                    parent.modifyResource(it, "added LDAP secret ref from ${it.resource.metadata.name}")
+                }
             }
         }
     }
@@ -169,6 +180,13 @@ class JwtToStsConverterSubPart {
             createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.discoveryUrl))
         ).addIfNotNull(
             createEnvOrNull("CLINGER_IV_GROUPS_REQUIRED", adc.getOrNull<String>(ConfigPath.ivGroupsRequired))
+        ).addIf(
+            adc.isIvGroupsEnabled,
+            listOf(
+                createSecretRef("CLINGER_LDAP_USERNAME", adc[ConfigPath.ldapUserSecretRef], "ldap.username"),
+                createSecretRef("CLINGER_LDAP_PASSWORD", adc[ConfigPath.ldapUserSecretRef], "ldap.password"),
+                createEnvOrNull("CLINGER_LDAP_ADDRESS", adc[ConfigPath.ldapUrl])
+            )
         )
     }
 
@@ -188,7 +206,21 @@ class JwtToStsConverterSubPart {
             .build()
     }
 
-    fun handlers(sidecarVersion: String): Set<AuroraConfigFieldHandler> =
+    private fun createSecretRef(name: String, secretName: String, parameterInFile: String): EnvVar {
+
+        return EnvVarBuilder().withName(name)
+            .withValueFrom(
+                EnvVarSource(
+                    null, null, null,
+                    SecretKeySelector(
+                        parameterInFile, secretName, false
+                    )
+                )
+            )
+            .build()
+    }
+
+    fun handlers(sidecarVersion: String, defaultLdapUrl: String): Set<AuroraConfigFieldHandler> =
         setOf(
             AuroraConfigFieldHandler(
                 ConfigPath.enabled,
@@ -208,6 +240,15 @@ class JwtToStsConverterSubPart {
                 ConfigPath.ivGroupsRequired,
                 defaultValue = false,
                 validator = { it.boolean() }
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.ldapUserSecretRef,
+                defaultValue = ""
+            ),
+            AuroraConfigFieldHandler(
+                ConfigPath.ldapUrl,
+                defaultValue = defaultLdapUrl,
+                validator = { it.validUrl(required = false) }
             )
         )
 }
