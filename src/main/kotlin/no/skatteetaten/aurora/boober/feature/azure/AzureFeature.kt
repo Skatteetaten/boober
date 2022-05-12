@@ -26,7 +26,8 @@ import no.skatteetaten.aurora.boober.service.CantusService
 class AzureFeature(
     cantusService: CantusService,
     @Value("\${clinger.sidecar.default.version:0.4.0}") val sidecarVersion: String,
-    @Value("\${clinger.sidecar.default.ldapurl:ldap://ldap.skead.no:389}") val defaultLdapUrl: String
+    @Value("\${clinger.sidecar.default.ldapurl:ldap://ldap.skead.no:389}") val defaultLdapUrl: String,
+    @Value("\${clinger.sidecar.default.jwks:http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys}") val defaultAzureJwks: String
 ) : AbstractResolveTagFeature(cantusService) {
     private val jwtToStsConverter = JwtToStsConverterSubPart()
     private val auroraAzureApp = AuroraAzureAppSubPart()
@@ -41,7 +42,7 @@ class AzureFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return jwtToStsConverter.handlers(sidecarVersion, defaultLdapUrl) +
+        return jwtToStsConverter.handlers(sidecarVersion, defaultLdapUrl, defaultAzureJwks) +
             auroraAzureApp.handlers() +
             auroraApim.handlers(cmd.applicationFiles)
     }

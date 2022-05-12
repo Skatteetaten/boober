@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
-            AzureFeature(cantusService, "0.4.0", "ldap://default"),
+            AzureFeature(cantusService, "0.4.0", "ldap://default", "http://jwks"),
             WebsealFeature(".test.skead.no")
         )
 

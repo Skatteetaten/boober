@@ -206,7 +206,7 @@ class JwtToStsConverterSubPart {
             .build()
     }
 
-    fun handlers(sidecarVersion: String, defaultLdapUrl: String): Set<AuroraConfigFieldHandler> =
+    fun handlers(sidecarVersion: String, defaultLdapUrl: String, defaultAzureJwks: String): Set<AuroraConfigFieldHandler> =
         setOf(
             AuroraConfigFieldHandler(
                 ConfigPath.enabled,
@@ -219,6 +219,7 @@ class JwtToStsConverterSubPart {
             ),
             AuroraConfigFieldHandler(
                 ConfigPath.discoveryUrl,
+                defaultValue = defaultAzureJwks,
                 validator = { it.validUrl(required = false) }
             ),
 

@@ -67,6 +67,9 @@
                   }
                 }
               }, {
+                "name": "CLINGER_DISCOVERY_URL",
+                "value" : "http://jwks"
+              }, {
                 "name": "CLINGER_IV_GROUPS_REQUIRED",
                 "value" : "false"
               }

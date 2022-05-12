@@ -17,7 +17,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
             WebsealFeature(".test.skead.no"),
-            AzureFeature(cantusService, "0.4.0", "ldap://default")
+            AzureFeature(cantusService, "0.4.0", "ldap://default", "http://jwks")
         )
 
     private val cantusService: CantusService = mockk()

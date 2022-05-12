@@ -165,6 +165,7 @@ utv/about-alternate.json |   ttl: "1d"
                          |   jwtToStsConverter:
                  default |     enabled: false
                  default |     version: "0.4.0"
+                 default |     discoveryUrl: "http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys"
                  default |     ivGroupsRequired: false
                  default |     ldapUserSecretRef: ""
                  default |     ldapUrl: "ldap://ldap.skead.no:389"
