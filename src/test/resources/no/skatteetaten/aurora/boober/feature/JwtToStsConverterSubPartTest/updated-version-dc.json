@@ -75,6 +75,7 @@
               }
             ],
             "image": "docker.registry/no_skatteetaten_aurora/clinger@sha:11223344",
+            "imagePullPolicy":"Always",
             "livenessProbe": {
               "httpGet": {
                 "path": "/liveness",
