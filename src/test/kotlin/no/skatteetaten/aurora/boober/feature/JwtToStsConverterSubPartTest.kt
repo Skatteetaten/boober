@@ -197,7 +197,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
                     "enabled": true,
                     "discoveryUrl": "https://endpoint",
                     "ivGroupsRequired": true,
-                    "ldapUserSecretRef": "foo"
+                    "ldapUserVaultName": "foo"
                 }
               }
            }""",

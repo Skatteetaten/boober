@@ -575,7 +575,7 @@
           }
         ]
       },
-      "ldapUserSecretRef": {
+      "ldapUserVaultName": {
         "source": "default",
         "value": "",
         "sources": [

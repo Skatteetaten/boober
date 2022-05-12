@@ -65,7 +65,7 @@ utv/about.json | cluster: "utv"
        default |     version: "0.4.0"
        default |     discoveryUrl: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
        default |     ivGroupsRequired: false
-       default |     ldapUserSecretRef: ""
+       default |     ldapUserVaultName: ""
        default |     ldapUrl: "ldap://ldap.skead.no:389"
        default |   managedRoute: false
                |   apim:

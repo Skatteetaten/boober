@@ -34,7 +34,7 @@ val AuroraDeploymentSpec.isJwtToStsConverterEnabled: Boolean
 val AuroraDeploymentSpec.isIvGroupsEnabled: Boolean
     get() = (this.getOrNull(JwtToStsConverterSubPart.ConfigPath.ivGroupsRequired) ?: false) &&
         (this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUrl) != null) &&
-        (this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUserSecretRef) != null)
+        (this.getOrNull<String>(JwtToStsConverterSubPart.ConfigPath.ldapUserVaultName) != null)
 
 class JwtToStsConverterSubPart {
     object ConfigPath {
@@ -43,7 +43,7 @@ class JwtToStsConverterSubPart {
         const val version = "$root/version"
         const val discoveryUrl = "$root/discoveryUrl"
         const val ivGroupsRequired = "$root/ivGroupsRequired"
-        const val ldapUserSecretRef = "$root/ldapUserSecretRef"
+        const val ldapUserVaultName = "$root/ldapUserVaultName"
         const val ldapUrl = "$root/ldapUrl"
     }
 
@@ -174,7 +174,7 @@ class JwtToStsConverterSubPart {
     }
 
     private fun secretName(adc: AuroraDeploymentSpec): String =
-        "${adc.name}-${adc.get<String>(ConfigPath.ldapUserSecretRef)}-vault"
+        "${adc.name}-${adc.get<String>(ConfigPath.ldapUserVaultName)}-vault"
 
     private fun createEnvOrNull(name: String, value: String?): EnvVar? {
         return if (value == null) {
@@ -229,7 +229,7 @@ class JwtToStsConverterSubPart {
                 validator = { it.boolean() }
             ),
             AuroraConfigFieldHandler(
-                ConfigPath.ldapUserSecretRef,
+                ConfigPath.ldapUserVaultName,
                 defaultValue = ""
             ),
             AuroraConfigFieldHandler(
