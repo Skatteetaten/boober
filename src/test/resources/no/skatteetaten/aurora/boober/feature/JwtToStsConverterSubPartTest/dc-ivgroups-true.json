@@ -105,7 +105,7 @@
               "initialDelaySeconds": 10,
               "timeoutSeconds": 2
             },
-            "name": "simple-clinger-mix",
+            "name": "simple-clinger-sidecar",
             "ports": [
               {
                 "containerPort": 8100,

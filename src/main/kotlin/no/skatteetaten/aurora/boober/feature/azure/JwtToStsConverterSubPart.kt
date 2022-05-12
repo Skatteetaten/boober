@@ -87,7 +87,7 @@ class JwtToStsConverterSubPart {
         )
 
         return newContainer {
-            name = "${adc.name}-clinger-mix" // Not naming it sidecar, as that will mask out secrets
+            name = "${adc.name}-clinger-sidecar"
             ports = containerPorts.map {
                 newContainerPort {
                     name = it.key
