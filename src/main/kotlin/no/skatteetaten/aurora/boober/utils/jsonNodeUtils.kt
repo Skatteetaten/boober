@@ -208,7 +208,23 @@ fun JsonNode?.notEndsWith(pattern: String, message: String, required: Boolean = 
     return null
 }
 
-fun JsonNode?.pattern(pattern: String, message: String, required: Boolean = true): Exception? {
+fun JsonNode?.disallowedPattern(pattern: String, message: String, required: Boolean = true): Exception? {
+    if (this == null || !this.isTextual) {
+        return if (required) {
+            IllegalArgumentException("Field is required")
+        } else {
+            null
+        }
+    }
+
+    val allowedRegex = Regex(pattern).matches(this.textValue())
+    if (allowedRegex) {
+        return IllegalArgumentException(message)
+    }
+
+    return null
+}
+fun JsonNode?.allowedPattern(pattern: String, message: String, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {
             IllegalArgumentException("Field is required")

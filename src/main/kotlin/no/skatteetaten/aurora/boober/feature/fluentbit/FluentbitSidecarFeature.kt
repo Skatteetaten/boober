@@ -22,7 +22,7 @@ import no.skatteetaten.aurora.boober.model.findSubKeys
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.oneOf
-import no.skatteetaten.aurora.boober.utils.pattern
+import no.skatteetaten.aurora.boober.utils.allowedPattern
 import no.skatteetaten.aurora.boober.utils.required
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
@@ -151,7 +151,7 @@ class FluentbitSidecarFeature(
                     AuroraConfigFieldHandler(
                         "$FEATURE_FIELD_NAME/custom/$key/pattern",
                         validator = {
-                            it.pattern(
+                            it.allowedPattern(
                                 ALLOWED_FILE_PATTERN_REGEX,
                                 "Is not properly formatted. You need to have exactly one period(.) and conform to the following regex $ALLOWED_FILE_PATTERN_REGEX"
                             )

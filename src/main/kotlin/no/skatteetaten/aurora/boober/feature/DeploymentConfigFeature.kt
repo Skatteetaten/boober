@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
+import no.skatteetaten.aurora.boober.utils.disallowedPattern
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
@@ -87,7 +88,17 @@ class DeploymentConfigFeature() : Feature {
             // TODO: some of these should not be there for type=job
             AuroraConfigFieldHandler("management/path", defaultValue = "actuator"),
             AuroraConfigFieldHandler("management/port", defaultValue = "8081"),
-            AuroraConfigFieldHandler("releaseTo"),
+            AuroraConfigFieldHandler(
+                "releaseTo",
+                validator = {
+                    it.disallowedPattern(
+                        pattern = "^(\\d.*)|(latest\$)",
+                        required = false,
+                        message = "Disallowed value, neither semantic version nor latest are allowed values"
+                    )
+                }
+            ),
+            // TODO: dette alarm feltet blir ikke brukt til noe. Vi kan vel fjerne det?
             AuroraConfigFieldHandler("alarm", defaultValue = true, validator = { it.boolean() }),
             AuroraConfigFieldHandler("pause", defaultValue = false, validator = { it.boolean() }),
             AuroraConfigFieldHandler("splunkIndex"),
