@@ -76,8 +76,8 @@
                 "name":"CLINGER_LDAP_USERNAME",
                 "valueFrom": {
                   "secretKeyRef": {
-                    "key":"ldap.username",
-                    "name":"foo-vault",
+                    "key":"azure.ldap.username",
+                    "name":"simple-foo-vault",
                     "optional":false
                   }
                 }
@@ -85,8 +85,8 @@
                 "name":"CLINGER_LDAP_PASSWORD",
                 "valueFrom": {
                   "secretKeyRef":{
-                    "key":"ldap.password",
-                    "name":"foo-vault",
+                    "key":"azure.ldap.password",
+                    "name":"simple-foo-vault",
                     "optional":false
                   }
                 }

@@ -76,10 +76,6 @@ class JwtToStsConverterSubPart {
                 }
 
                 parent.modifyResource(it, "Changed targetPort to point to clinger")
-            } else if (it.resource.kind == "Secret") {
-                if (adc.isIvGroupsEnabled && it.resource.metadata.name == adc.getOrNull(ConfigPath.ldapUserSecretRef)) {
-                    parent.modifyResource(it, "added LDAP secret ref from ${it.resource.metadata.name}")
-                }
             }
         }
     }
@@ -170,12 +166,15 @@ class JwtToStsConverterSubPart {
         ).addIf(
             adc.isIvGroupsEnabled,
             listOf(
-                createSecretRef("CLINGER_LDAP_USERNAME", adc[ConfigPath.ldapUserSecretRef], "ldap.username"),
-                createSecretRef("CLINGER_LDAP_PASSWORD", adc[ConfigPath.ldapUserSecretRef], "ldap.password"),
+                createSecretRef("CLINGER_LDAP_USERNAME", secretName(adc), "azure.ldap.username"),
+                createSecretRef("CLINGER_LDAP_PASSWORD", secretName(adc), "azure.ldap.password"),
                 createEnvOrNull("CLINGER_LDAP_ADDRESS", adc[ConfigPath.ldapUrl])
             )
         )
     }
+
+    private fun secretName(adc: AuroraDeploymentSpec): String =
+        "${adc.name}-${adc.get<String>(ConfigPath.ldapUserSecretRef)}-vault"
 
     private fun createEnvOrNull(name: String, value: String?): EnvVar? {
         return if (value == null) {
