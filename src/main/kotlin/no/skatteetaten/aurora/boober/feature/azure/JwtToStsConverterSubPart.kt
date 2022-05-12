@@ -109,7 +109,6 @@ class JwtToStsConverterSubPart {
                 )
             }
             image = imageMetadata.getFullImagePath()
-            imagePullPolicy = "Always"
             readinessProbe = newProbe {
                 httpGet {
                     path = "/ready"
