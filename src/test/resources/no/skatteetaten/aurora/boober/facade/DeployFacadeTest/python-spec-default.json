@@ -759,11 +759,11 @@
       },
       "discoveryUrl": {
         "source": "default",
-        "value": "http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys",
+        "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
         "sources": [
           {
             "name": "default",
-            "value": "http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys"
+            "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
           }
         ]
       },

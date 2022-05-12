@@ -295,7 +295,7 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "azureAppFqdn": "saksmappa.amutv.skead.no",
                 "groups": [],
                 "jwtToStsConverter": {
-                  "discoveryUrl": "http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys",
+                  "discoveryUrl": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
                   "enabled": true,
                   "version": "0.4.0"
                 },

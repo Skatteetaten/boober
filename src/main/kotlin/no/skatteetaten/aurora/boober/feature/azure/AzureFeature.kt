@@ -27,7 +27,7 @@ class AzureFeature(
     cantusService: CantusService,
     @Value("\${clinger.sidecar.default.version:0.4.0}") val sidecarVersion: String,
     @Value("\${clinger.sidecar.default.ldapurl:ldap://ldap.skead.no:389}") val defaultLdapUrl: String,
-    @Value("\${clinger.sidecar.default.jwks:http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys}") val defaultAzureJwks: String
+    @Value("\${clinger.sidecar.default.jwks:http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys}") val defaultAzureJwks: String
 ) : AbstractResolveTagFeature(cantusService) {
     private val jwtToStsConverter = JwtToStsConverterSubPart()
     private val auroraAzureApp = AuroraAzureAppSubPart()
