@@ -30,8 +30,8 @@ class FluentbitConfigurator {
         |   type          regex
         |   key_content   event
         |   flush_timeout 1000
-        |   rule          "start_state" "/<EvaluationEvent.*/" "cont"
-        |   rule          "cont"        ".*"                   "cont"
+        |   rule          "start_state" "/<EvaluationEvent.*/"       "cont"
+        |   rule          "cont"        "/^(?!<EvaluationEvent).*$/" "cont"
         """.trimMargin()
 
         /**
