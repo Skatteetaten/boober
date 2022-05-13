@@ -217,8 +217,7 @@ fun JsonNode?.disallowedPattern(pattern: String, message: String, required: Bool
         }
     }
 
-    val allowedRegex = Regex(pattern).matches(this.textValue())
-    if (allowedRegex) {
+    if (Regex(pattern).matches(textValue())) {
         return IllegalArgumentException(message)
     }
 

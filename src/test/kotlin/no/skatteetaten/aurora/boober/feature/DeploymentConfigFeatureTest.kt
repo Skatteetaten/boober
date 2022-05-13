@@ -56,6 +56,19 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should not allow numbered version for releaseTo`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                "groupId": "no.skatteetaten.aurora",
+                "version" : "1",
+                "releaseTo": "123"
+               }"""
+            )
+        }.singleApplicationError("Disallowed")
+    }
+
+    @Test
     fun `should allow literal boolean value for pause flag`() {
         assertThat {
             createAuroraConfigFieldHandlers(
