@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test
 class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
-            AzureFeature(cantusService, "0.4.0", "ldap://default", "http://jwks"),
+            AzureFeature(cantusService, "0", "ldap://default", "http://jwks"),
             WebsealFeature(".test.skead.no")
         )
 
@@ -29,12 +29,12 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
     fun setupMock() {
         every {
             cantusService.getImageMetadata(
-                "no_skatteetaten_aurora", "clinger", "0.4.0"
+                "no_skatteetaten_aurora", "clinger", "0"
             )
         } returns
             ImageMetadata(
                 "docker.registry/no_skatteetaten_aurora/clinger",
-                "0.4.0",
+                "0",
                 "sha:1234567"
             )
         every {
@@ -80,7 +80,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
              "azure" : {
                 "jwtToStsConverter": {
                     "enabled": true,
-                    "version": "0.4.0", 
+                    "version": "0", 
                     "discoveryUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
                 }

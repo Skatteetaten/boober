@@ -547,11 +547,11 @@
       },
       "version": {
         "source": "default",
-        "value": "0.4.0",
+        "value": "0",
         "sources": [
           {
             "name": "default",
-            "value": "0.4.0"
+            "value": "0"
           }
         ]
       },
@@ -587,11 +587,11 @@
       },
       "ldapUrl": {
         "source": "default",
-        "value": "ldap://ldap.skead.no:389",
+        "value": "",
         "sources": [
           {
             "name": "default",
-            "value": "ldap://ldap.skead.no:389"
+            "value": ""
           }
         ]
       }
