@@ -400,7 +400,9 @@ abstract class AbstractMultiFeatureTest : ResourceLoader() {
         val generated = valid.stream()
             .map { adc ->
                 adc.features.flatMap {
-                    it.key.generate(it.value, valid.first().featureContext[it.key] ?: emptyMap())
+                    val seq = it.key.generateSequentially(it.value, valid.first().featureContext[it.key] ?: emptyMap())
+                    val par = it.key.generate(it.value, valid.first().featureContext[it.key] ?: emptyMap())
+                    seq + par
                 }
             }
             .flatMap { it.stream() }

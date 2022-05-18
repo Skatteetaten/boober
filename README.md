@@ -97,7 +97,7 @@ External resources that are needed for an application to start is processed in B
 process
 
 ### OpenShiftObjectGeneration
-Boober user [kubernetes-model](https://github.com/fabric8io/kubernetes-model) and [kubernetes-dsl](https://github.com/fkorotkov/k8s-kotlin-dsl) in order to transfer input into OpenShift objects.
+Boober uses [kubernetes-model](https://github.com/fabric8io/kubernetes-model) and [kubernetes-dsl](https://github.com/fkorotkov/k8s-kotlin-dsl) in order to transfer input into OpenShift objects.
 
 ### ObjectObjectUpdate
 When creating/updating state in OpenShift Boober has a very opinoinated approach. We do not use apply on the objects we
