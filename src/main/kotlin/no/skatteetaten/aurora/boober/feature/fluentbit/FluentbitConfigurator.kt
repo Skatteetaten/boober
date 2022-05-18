@@ -152,13 +152,13 @@ class FluentbitConfigurator {
         private val multilineEvalXmlFilter = """
         |[FILTER]
         |   name multiline
-        |   match evalevent_xml
+        |   match *-evalevent_xml
         |   multiline.key_content event
         |   multiline.parser multiline-evalevent-xml
         |
         |[FILTER]
         |   name multiline
-        |   match ats:eval:xml
+        |   match *-ats:eval:xml
         |   multiline.key_content event
         |   multiline.parser multiline-evalevent-xml
         """.trimMargin()
