@@ -22,6 +22,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -204,6 +205,26 @@ class JwtToStsConverterSubPart {
                 )
             )
             .build()
+    }
+
+    fun validate(
+        adc: AuroraDeploymentSpec
+    ): List<Exception> {
+        val errors = mutableListOf<Exception>()
+        if (adc.isIvGroupsEnabled &&
+            (
+                adc.getOrNull<String>(ConfigPath.ldapUserVaultName) == null ||
+                    adc.getOrNull<String>(ConfigPath.ldapUrl) == null
+                )
+        ) {
+            errors.add(
+                AuroraDeploymentSpecValidationException(
+                    "You need to specify ${ConfigPath.ldapUrl} and ${ConfigPath.ldapUserVaultName} when you set ${ConfigPath.ivGroupsRequired}"
+                )
+            )
+        }
+
+        return errors
     }
 
     fun handlers(sidecarVersion: String, defaultLdapUrl: String, defaultAzureJwks: String): Set<AuroraConfigFieldHandler> =

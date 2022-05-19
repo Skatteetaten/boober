@@ -82,6 +82,6 @@ class AzureFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        return auroraAzureApp.validate(adc) + auroraApim.validate(adc)
+        return auroraAzureApp.validate(adc) + auroraApim.validate(adc) + jwtToStsConverter.validate(adc)
     }
 }
