@@ -70,6 +70,9 @@
                 "name": "CLINGER_DISCOVERY_URL",
                 "value" : "https://endpoint"
               }, {
+                "name": "CLINGER_JWKS_URL",
+                "value" : "https://endpoint"
+              }, {
                 "name": "CLINGER_IV_GROUPS_REQUIRED",
                 "value" : "false"
               }
