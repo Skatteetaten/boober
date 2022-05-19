@@ -1461,7 +1461,7 @@
           }
         ]
       },
-      "discoveryUrl": {
+      "jwksUrl": {
         "source": "default",
         "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
         "sources": [

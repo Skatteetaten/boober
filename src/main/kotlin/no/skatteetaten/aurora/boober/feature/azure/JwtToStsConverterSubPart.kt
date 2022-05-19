@@ -42,7 +42,7 @@ class JwtToStsConverterSubPart {
         private const val root = "azure/jwtToStsConverter"
         const val enabled = "$root/enabled"
         const val version = "$root/version"
-        const val discoveryUrl = "$root/discoveryUrl"
+        const val jwksUrl = "$root/jwksUrl"
         const val ivGroupsRequired = "$root/ivGroupsRequired"
         const val ldapUserVaultName = "$root/ldapUserVaultName"
         const val ldapUrl = "$root/ldapUrl"
@@ -161,7 +161,9 @@ class JwtToStsConverterSubPart {
                 createEnvRef(name = "POD_NAME", apiVersion = "v1", fieldPath = "metadata.name")
             )
         ).addIfNotNull(
-            createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.discoveryUrl))
+            createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.jwksUrl))
+        ).addIfNotNull(
+            createEnvOrNull("CLINGER_JWKS_URL", adc.getOrNull<String>(ConfigPath.jwksUrl))
         ).addIfNotNull(
             createEnvOrNull("CLINGER_IV_GROUPS_REQUIRED", adc.getOrNull<String>(ConfigPath.ivGroupsRequired))
         ).addIf(
@@ -239,11 +241,10 @@ class JwtToStsConverterSubPart {
                 defaultValue = sidecarVersion
             ),
             AuroraConfigFieldHandler(
-                ConfigPath.discoveryUrl,
+                ConfigPath.jwksUrl,
                 defaultValue = defaultAzureJwks,
                 validator = { it.validUrl(required = false) }
             ),
-
             AuroraConfigFieldHandler(
                 ConfigPath.ivGroupsRequired,
                 defaultValue = false,

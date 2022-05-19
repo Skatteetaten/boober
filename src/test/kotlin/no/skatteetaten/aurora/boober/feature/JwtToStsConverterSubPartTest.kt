@@ -61,7 +61,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
              "azure" : {
                 "jwtToStsConverter": {
                     "enabled": true,
-                    "discoveryUrl": "https://endpoint",
+                    "jwksUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
                 }
               }
@@ -81,7 +81,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
                 "jwtToStsConverter": {
                     "enabled": true,
                     "version": "0", 
-                    "discoveryUrl": "https://endpoint",
+                    "jwksUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
                 }
               }
@@ -109,7 +109,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
                 "jwtToStsConverter": {
                     "enabled": true,
                     "version": "0.3.2", 
-                    "discoveryUrl": "https://endpoint",
+                    "jwksUrl": "https://endpoint",
                     "ivGroupsRequired": "false"
                 }
               }
@@ -155,7 +155,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
                 "groups": [],
                 "jwtToStsConverter": {
                     "enabled": true,
-                    "discoveryUrl": "https://endpoint"
+                    "jwksUrl": "https://endpoint"
                 }
               }
            }""",
@@ -175,7 +175,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
              "azure" : {
                 "jwtToStsConverter": {
                     "enabled": true,
-                    "discoveryUrl": "https://endpoint"
+                    "jwksUrl": "https://endpoint"
                 }
               }
            }""",
@@ -195,7 +195,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
              "azure" : {
                 "jwtToStsConverter": {
                     "enabled": true,
-                    "discoveryUrl": "https://endpoint",
+                    "jwksUrl": "https://endpoint",
                     "ivGroupsRequired": true,
                     "ldapUserVaultName": "foo"
                 }
