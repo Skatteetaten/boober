@@ -103,6 +103,12 @@ boober:
         suffix: ".test.webseal"
     productionlevel: "u"
 
+clinger:
+    sidecar:
+        default:
+            jwks: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
+            ldapurl: ""
+
 auroraconfig:
     builder:
         version: "1"
