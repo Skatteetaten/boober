@@ -17,7 +17,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
             WebsealFeature(".test.skead.no"),
-            AzureFeature(cantusService, "0.4.0")
+            AzureFeature(cantusService, "0", "ldap://default", "http://jwks")
         )
 
     private val cantusService: CantusService = mockk()
@@ -26,12 +26,12 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     fun setupMock() {
         every {
             cantusService.getImageMetadata(
-                "no_skatteetaten_aurora", "clinger", "0.4.0"
+                "no_skatteetaten_aurora", "clinger", "0"
             )
         } returns
             ImageMetadata(
                 "docker.registry/no_skatteetaten_aurora/clinger",
-                "0.4.0",
+                "0",
                 "sha:1234567"
             )
     }
@@ -79,9 +79,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
                 "azureAppFqdn": "saksmappa.amutv.skead.no",
                 "groups": [],
                 "jwtToStsConverter": {
-                  "discoveryUrl": "http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys",
-                  "enabled": true,
-                  "version": "0.4.0"
+                  "enabled": true
                 }
               }
         }""",
