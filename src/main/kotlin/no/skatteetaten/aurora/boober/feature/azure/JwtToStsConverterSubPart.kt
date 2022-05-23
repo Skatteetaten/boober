@@ -22,6 +22,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.model.PortNumbers
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.utils.addIf
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
@@ -41,7 +42,7 @@ class JwtToStsConverterSubPart {
         private const val root = "azure/jwtToStsConverter"
         const val enabled = "$root/enabled"
         const val version = "$root/version"
-        const val discoveryUrl = "$root/discoveryUrl"
+        const val jwksUrl = "$root/jwksUrl"
         const val ivGroupsRequired = "$root/ivGroupsRequired"
         const val ldapUserVaultName = "$root/ldapUserVaultName"
         const val ldapUrl = "$root/ldapUrl"
@@ -160,7 +161,9 @@ class JwtToStsConverterSubPart {
                 createEnvRef(name = "POD_NAME", apiVersion = "v1", fieldPath = "metadata.name")
             )
         ).addIfNotNull(
-            createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.discoveryUrl))
+            createEnvOrNull("CLINGER_DISCOVERY_URL", adc.getOrNull<String>(ConfigPath.jwksUrl))
+        ).addIfNotNull(
+            createEnvOrNull("CLINGER_JWKS_URL", adc.getOrNull<String>(ConfigPath.jwksUrl))
         ).addIfNotNull(
             createEnvOrNull("CLINGER_IV_GROUPS_REQUIRED", adc.getOrNull<String>(ConfigPath.ivGroupsRequired))
         ).addIf(
@@ -206,6 +209,26 @@ class JwtToStsConverterSubPart {
             .build()
     }
 
+    fun validate(
+        adc: AuroraDeploymentSpec
+    ): List<Exception> {
+        val errors = mutableListOf<Exception>()
+        if (adc.isIvGroupsEnabled &&
+            (
+                adc.getOrNull<String>(ConfigPath.ldapUserVaultName) == null ||
+                    adc.getOrNull<String>(ConfigPath.ldapUrl) == null
+                )
+        ) {
+            errors.add(
+                AuroraDeploymentSpecValidationException(
+                    "You need to specify ${ConfigPath.ldapUrl} and ${ConfigPath.ldapUserVaultName} when you set ${ConfigPath.ivGroupsRequired}"
+                )
+            )
+        }
+
+        return errors
+    }
+
     fun handlers(sidecarVersion: String, defaultLdapUrl: String, defaultAzureJwks: String): Set<AuroraConfigFieldHandler> =
         setOf(
             AuroraConfigFieldHandler(
@@ -218,11 +241,10 @@ class JwtToStsConverterSubPart {
                 defaultValue = sidecarVersion
             ),
             AuroraConfigFieldHandler(
-                ConfigPath.discoveryUrl,
+                ConfigPath.jwksUrl,
                 defaultValue = defaultAzureJwks,
                 validator = { it.validUrl(required = false) }
             ),
-
             AuroraConfigFieldHandler(
                 ConfigPath.ivGroupsRequired,
                 defaultValue = false,
