@@ -355,6 +355,36 @@
       ]
     }
   },
+  "databaseDefaults": {
+    "generate": {
+      "source": "utv/about-alternate.json",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": true
+        },
+        {
+          "name": "utv/about-alternate.json",
+          "value": false
+        }
+      ]
+    },
+    "ignoreMissingSchema": {
+      "source": "utv/about-alternate.json",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        },
+        {
+          "name": "utv/about-alternate.json",
+          "value": true
+        }
+      ]
+    }
+  },
   "database": {
     "complex": {
       "enabled": {
@@ -368,6 +398,16 @@
           {
             "name": "complex.json",
             "value": true
+          }
+        ]
+      },
+      "ignoreMissingSchema": {
+        "source": "complex.json",
+        "value": false,
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": false
           }
         ]
       },
@@ -391,6 +431,32 @@
           "value": "123-456"
         }
       ]
+    },
+    "missingdb": {
+      "enabled": {
+        "source": "complex.json",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          },
+          {
+            "name": "complex.json",
+            "value": true
+          }
+        ]
+      },
+      "generate": {
+        "source": "complex.json",
+        "value": false,
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": false
+          }
+        ]
+      }
     }
   },
   "management": {
