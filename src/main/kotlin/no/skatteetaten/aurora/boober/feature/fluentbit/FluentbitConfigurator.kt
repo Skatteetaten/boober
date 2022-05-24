@@ -5,9 +5,11 @@ class FluentbitConfigurator {
 
         /**
          * Fluentbit parser config.
-         * - timeParser is used for extracting the timestamp from the log and assigning it to the key <time> of the record
+         * - timeParser and evalXmlTimeParser are used for extracting the timestamp from the log and assigning it to the key <time> of the record.
          * - multiline-log4j is a MULTILINE_PARSER that groups multiline logs into a single event.
-         *   It uses the timestamp to recognize the first line of a log line and continues until it meets another timestamp
+         *   It uses the timestamp to recognize the first line of a log line and continues until it meets another timestamp.
+         * - multiline-eval-xml is a multiline parser that groups XML code in <EvaluationEvent> tags into a single event.
+         *   It uses the "<EvaluationEvent" string to recognize the first line of an event.
          */
         fun parserConf(): String = """
             |[PARSER]
@@ -156,6 +158,7 @@ class FluentbitConfigurator {
             |   multiline.parser multiline-log4j
         """.trimMargin()
 
+        // Parser filters to assign the evalXmlTimeParser to application tag records
         private val evalXmlTimeParserFilter = """
             |[FILTER]
             |   Name parser
