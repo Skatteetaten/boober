@@ -23,6 +23,7 @@ utv/python.json | groupId: "org.test"
                 | databaseDefaults:
         default |   flavor: "ORACLE_MANAGED"
         default |   generate: true
+        default |   ignoreMissingSchema: false
 utv/python.json |   tryReuse: true
         default |   name: "@name@"
 utv/python.json | database: true

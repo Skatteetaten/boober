@@ -60,6 +60,7 @@ class DatabaseFeature(
 ) : DatabaseFeatureTemplate(cluster) {
 
     private fun SchemaProvisionRequest.isAppRequestWithoutGenerate() = this is SchemaForAppRequest && !this.generate
+    private fun SchemaProvisionRequest.isAppRequestWithoutIgnoreMissingSchema() = this is SchemaForAppRequest && !this.ignoreMissingSchema
 
     override fun validate(
         adc: AuroraDeploymentSpec,
@@ -72,7 +73,8 @@ class DatabaseFeature(
             return emptyList()
         }
 
-        return databases.filter { it is SchemaIdRequest || it.isAppRequestWithoutGenerate() }
+        return databases
+            .filter { it is SchemaIdRequest || (it.isAppRequestWithoutGenerate() && it.isAppRequestWithoutIgnoreMissingSchema()) }
             .mapNotNull { request ->
                 try {
                     val schema = databaseSchemaProvisioner.findSchema(request)
@@ -156,6 +158,9 @@ class DatabaseFeature(
         this.associateWith {
             databaseSchemaProvisioner.provisionSchema(it)
         }
+            .filter { it.value != null }
+            .map { it.key to it.value!! }
+            .toMap()
 
     private fun Map<SchemaProvisionRequest, DbhSchema>.createDbhSecrets(adc: AuroraDeploymentSpec) =
         this.map { (request, dbhSchema) ->

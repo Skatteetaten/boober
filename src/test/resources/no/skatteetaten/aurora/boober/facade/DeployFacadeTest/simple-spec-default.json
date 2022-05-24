@@ -220,6 +220,16 @@
         }
       ]
     },
+    "ignoreMissingSchema": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
     "tryReuse": {
       "source": "simple.json",
       "value": true,
