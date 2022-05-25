@@ -19,7 +19,7 @@ import no.skatteetaten.aurora.boober.utils.isValidDns
 
 val AuroraDeploymentSpec.azureAppFqdn: String?
     get() {
-        return this.getOrNull(AuroraAzureAppSubPart.ConfigPath.azureAppFqdn)
+        return this.replacer.replace(this.getOrNull<String>(AuroraAzureAppSubPart.ConfigPath.azureAppFqdn))
     }
 
 val AuroraDeploymentSpec.isAzureAppFqdnEnabled: Boolean
@@ -118,14 +118,23 @@ class AuroraAzureAppSubPart {
             )
         }
 
+        adc.azureAppFqdn?.isValidDns() ?.let { valid: Boolean ->
+            if (!valid) {
+                errors.add(
+                    AuroraDeploymentSpecValidationException(
+                        "azure.azureFqdn must be a valid dns address"
+                    )
+                )
+            }
+        }
+
         return errors
     }
 
     fun handlers(): Set<AuroraConfigFieldHandler> =
         setOf(
             AuroraConfigFieldHandler(
-                ConfigPath.azureAppFqdn,
-                validator = { it.isValidDns(required = false) }
+                ConfigPath.azureAppFqdn
             ),
             AuroraConfigFieldHandler(
                 ConfigPath.groups,

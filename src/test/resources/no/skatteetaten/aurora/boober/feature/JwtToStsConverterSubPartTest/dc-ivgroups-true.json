@@ -45,6 +45,12 @@
                 "name": "CLINGER_PROXY_SERVER_PORT",
                 "value" : "8100"
               }, {
+                "name": "CLINGER_AURORAAZUREAPP_NAME",
+                "value" : "simple"
+              }, {
+                "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
+                "value" : "false"
+              }, {
                 "name":"POD_NAMESPACE",
                 "valueFrom":{
                   "fieldRef":{
@@ -67,11 +73,29 @@
                 "name": "CLINGER_JWKS_URL",
                 "value" : "https://endpoint"
               }, {
-                "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
-                "value" : "false"
-              }, {
                 "name": "CLINGER_IV_GROUPS_REQUIRED",
-                "value" : "false"
+                "value" : "true"
+              }, {
+                "name":"CLINGER_LDAP_USERNAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key":"azure.ldap.username",
+                    "name":"simple-foo-vault",
+                    "optional":false
+                  }
+                }
+              }, {
+                "name":"CLINGER_LDAP_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef":{
+                    "key":"azure.ldap.password",
+                    "name":"simple-foo-vault",
+                    "optional":false
+                  }
+                }
+              }, {
+                "name":"CLINGER_LDAP_ADDRESS",
+                "value":"ldap://default"
               }
             ],
             "image": "docker.registry/no_skatteetaten_aurora/clinger@sha:1234567",

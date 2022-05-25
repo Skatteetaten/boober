@@ -1453,11 +1453,21 @@
       },
       "version": {
         "source": "default",
-        "value": "0.4.0",
+        "value": "0",
         "sources": [
           {
             "name": "default",
-            "value": "0.4.0"
+            "value": "0"
+          }
+        ]
+      },
+      "jwksUrl": {
+        "source": "default",
+        "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
+        "sources": [
+          {
+            "name": "default",
+            "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
           }
         ]
       },
@@ -1468,6 +1478,26 @@
           {
             "name": "default",
             "value": false
+          }
+        ]
+      },
+      "ldapUserVaultName": {
+        "source": "default",
+        "value": "",
+        "sources": [
+          {
+            "name": "default",
+            "value": ""
+          }
+        ]
+      },
+      "ldapUrl": {
+        "source": "default",
+        "value": "",
+        "sources": [
+          {
+            "name": "default",
+            "value": ""
           }
         ]
       }

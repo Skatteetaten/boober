@@ -15,7 +15,7 @@ import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
 class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
     override val features: List<Feature>
         get() = listOf(
-            AzureFeature(cantusService, "0.4.0")
+            AzureFeature(cantusService, "0", "ldap://default", "http://jwks")
         )
 
     private val cantusService: CantusService = mockk()
@@ -24,12 +24,12 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
     fun setupMock() {
         every {
             cantusService.getImageMetadata(
-                "no_skatteetaten_aurora", "clinger", "0.4.0"
+                "no_skatteetaten_aurora", "clinger", "0"
             )
         } returns
             ImageMetadata(
                 "docker.registry/no_skatteetaten_aurora/clinger",
-                "0.4.0",
+                "0",
                 "sha:1234567"
             )
     }
@@ -295,9 +295,9 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 "azureAppFqdn": "saksmappa.amutv.skead.no",
                 "groups": [],
                 "jwtToStsConverter": {
-                  "discoveryUrl": "http://login-microsoftonline-com.app2ext.intern-preprod.skead.no/common/discovery/keys",
+                  "jwksUrl": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
                   "enabled": true,
-                  "version": "0.4.0"
+                  "version": "0"
                 },
                 "apim": {
                   "enabled"  : true,
