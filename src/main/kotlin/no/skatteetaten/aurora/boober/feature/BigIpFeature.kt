@@ -105,12 +105,14 @@ class BigIpFeature(
                 val hasApiPaths = !adc.getDelimitedStringOrArrayAsSetOrNull("bigip/$it/apiPaths").isNullOrEmpty()
                 val missingExternalHost = adc.getOrNull<String>("bigip/$it/externalHost").isNullOrEmpty()
                 val isEnabled = adc.isBigIPHostEnabled(it)
+                // check if enabled to prevent breaking existing configuration where enabled=false
                 isEnabled && hasApiPaths && missingExternalHost
             }
         } else {
             val hasApiPaths = !adc.getDelimitedStringOrArrayAsSetOrNull("bigip/apiPaths").isNullOrEmpty()
             val missingExternalHost = adc.getOrNull<String>("bigip/externalHost").isNullOrEmpty()
             val isEnabled = adc.isLegacyFeatureEnabled()
+            // check if enabled to prevent breaking existing configuration where enabled=false
             isEnabled && hasApiPaths && missingExternalHost
         }
 
