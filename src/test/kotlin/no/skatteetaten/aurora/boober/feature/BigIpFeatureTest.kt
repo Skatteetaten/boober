@@ -140,6 +140,45 @@ class BigIpFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should not fail validation or generate resource when enabled is false and apiPaths is set with missing externalHost`() {
+        assertThat(
+            generateResources(
+                """{
+                  "bigip" : {
+                    "simple": {
+                      "enabled": false,
+                      "service" : "simple",
+                      "asmPolicy": "something",
+                      "oauthScopes": "test",
+                      "apiPaths": "/api/simple/,/web/simple/",
+                      "routeAnnotations" : {
+                        "haproxy.router.openshift.io|timeout" : "30s"
+                      }
+                    }
+                  }
+                }"""
+            )
+        ).isEmpty()
+
+        assertThat(
+            generateResources(
+                """{
+                  "bigip" : {
+                    "enabled": false,
+                    "service" : "simple",
+                    "asmPolicy": "something",
+                    "oauthScopes": "test",
+                    "apiPaths": "/api/simple/,/web/simple/",
+                    "routeAnnotations" : {
+                      "haproxy.router.openshift.io|timeout" : "30s"
+                    }
+                  }
+                }"""
+            )
+        ).isEmpty()
+    }
+
+    @Test
     fun `test render spec for bigip`() {
 
         val spec = createAuroraDeploymentSpecForFeature(
