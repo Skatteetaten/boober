@@ -53,6 +53,22 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @Test
+    fun `if AuroraAzureApp is configured with placeholders nothing goes wrong`() {
+        val (_, auroraAzureApp) = generateResources(
+            """{
+             "azure" : {
+                "azureAppFqdn": "saksmappa-@env@.amutv.skead.no",
+                "groups": [] 
+              }
+           }""",
+            createEmptyDeploymentConfig(), createdResources = 1
+        )
+
+        assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-app-with-env.json")
+    }
+
+    @Test
     fun `AuroraAzureApp can have clinger enabled`() {
         val (_, auroraAzureApp) = generateResources(
             """{
