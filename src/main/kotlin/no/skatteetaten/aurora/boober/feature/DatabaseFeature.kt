@@ -23,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisio
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -158,9 +159,7 @@ class DatabaseFeature(
         this.associateWith {
             databaseSchemaProvisioner.provisionSchema(it)
         }
-            .filter { it.value != null }
-            .map { it.key to it.value!! }
-            .toMap()
+            .filterNullValues()
 
     private fun Map<SchemaProvisionRequest, DbhSchema>.createDbhSecrets(adc: AuroraDeploymentSpec) =
         this.map { (request, dbhSchema) ->
