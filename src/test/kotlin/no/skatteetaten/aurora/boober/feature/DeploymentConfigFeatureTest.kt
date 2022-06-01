@@ -43,6 +43,19 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should allow other tags for releaseTo`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                "groupId": "no.skatteetaten.aurora",
+                "version" : "1",
+                "releaseTo": "PROD"
+               }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
     fun `should not allow semantic version for releaseTo`() {
         assertThat {
             createAuroraConfigFieldHandlers(
