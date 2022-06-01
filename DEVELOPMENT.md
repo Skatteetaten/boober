@@ -15,6 +15,29 @@ The interface provides two functions for generating resources: `generate` and `g
 A feature will normally only need to implement the `generate` function which will be executed in parallel.
 The `generateSequentially` function is intended for resources where parallel generation may result in duplicate resources (for example shared databases [DatabaseFeature](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/DatabaseFeature.kt)). 
 
+#### Handlers
+The handlers function returns a set of [AuroraConfigFieldHandler](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraConfigFieldHandler.kt)
+which provides handling of a given pointer with default value and validation.
+- Pre-defined validation logic can be found in [jsonNodeUtils.kt](./src/main/kotlin/no/skatteetaten/aurora/boober/utils/jsonNodeUtils.kt).
+- Validation severity can be set with the validationSeverity parameter (default value is [ErrorType](./src/main/kotlin/no/skatteetaten/aurora/boober/model/errors.kt).`ILLEGAL`).
+- `ErrorType.WARNING` can be used when the validation should warn about configuration but allow deploying.
+
+#### AuroraDeploymentSpec
+[AuroraDeploymentSpec](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraDeploymentSpec.kt) is a class passed to `validate`, `generate` and `generateSequentially`.
+The class contains the fields for a given deployment and helper functions for extracting fields for validation and generation purposes.
+It is recommended to look at how existing features makes use of the class.
+
+#### Utilities
+Utility functionality is located in [no.skatteetaten.aurora.boober.utils](./src/main/kotlin/no/skatteetaten/aurora/boober/utils)
+and it can be beneficial to check if the existing utility functions provides the desired functionality.
+These files may be relevant when working with features:
+- [jsonNodeUtils.kt](./src/main/kotlin/no/skatteetaten/aurora/boober/utils/jsonNodeUtils.kt)
+- [StringUtils.kt](./src/main/kotlin/no/skatteetaten/aurora/boober/utils/StringUtils.kt)
+- [UrlParser.kt](./src/main/kotlin/no/skatteetaten/aurora/boober/utils/UrlParser.kt)
+
+Other features may also have the desired functionality defined locally. In such cases it is encouraged to
+move the functionality to `no.skatteetaten.aurora.boober.utils` for reuse.
+
 ### Deployment
 The handlers are used by [DeployFacade](./src/main/kotlin/no/skatteetaten/aurora/boober/facade/DeployFacade.kt)`.executeDeploy` 
 and take the following arguments:
