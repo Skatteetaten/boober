@@ -19,7 +19,7 @@ The `generateSequentially` function is intended for resources where parallel gen
 The handlers function returns a set of [AuroraConfigFieldHandler](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraConfigFieldHandler.kt)
 which provides handling of a given pointer with default value and validation.
 - Pre-defined validation logic can be found in [jsonNodeUtils.kt](./src/main/kotlin/no/skatteetaten/aurora/boober/utils/jsonNodeUtils.kt).
-- Validation severity can be set with the validationSeverity parameter (default value is [ErrorType](./src/main/kotlin/no/skatteetaten/aurora/boober/model/errors.kt).`ILLEGAL`).
+- Validation severity can be set with the validationSeverity parameter (default value is [ErrorType.ILLEGAL](./src/main/kotlin/no/skatteetaten/aurora/boober/model/errors.kt)).
 - `ErrorType.WARNING` can be used when the validation should warn about configuration but allow deploying.
 
 #### AuroraDeploymentSpec
@@ -63,8 +63,8 @@ Two strategies are used to generate the resources sequential generation utilizin
 ## Testing
 Tests should be created or updated when developing new features or modifying existing features.
 There are two kinds of testing that are relevant when working with features:
-- unit tests for the feature located in `src/test/kotlin/no/skatteetaten/aurora/boober/feature`
-- snapshot verification for deployment located in `src/test/kotlin/no/skatteetaten/aurora/boober/facade/DeployFacadeTest.kt`
+- unit tests for the feature located in [`src/test/kotlin/no/skatteetaten/aurora/boober/feature`](./src/test/kotlin/no/skatteetaten/aurora/boober/feature)
+- snapshot verification for deployment located in [`src/test/kotlin/no/skatteetaten/aurora/boober/facade/DeployFacadeTest.kt`](./src/test/kotlin/no/skatteetaten/aurora/boober/feature)
 
 ### Unit tests
 To make it easier to implement unit tests the abstract test classes `AbstractFeatureTest` and `AbstractMultiFeatureTest`
@@ -76,21 +76,21 @@ The abstract classes provide helper functions to generate deployment contexts an
 The helper functions that are most used are `createAuroraDeploymentContext` and `generateResources`.
 
 `createAuroraDeploymentContext` will execute the validation logic for the tested feature, and can be used to test the validation for various cases.
-A collection of assertions, to assist in testing validation logic, are defined in the utils file `src/test/kotlin/no/skatteetaten/aurora/boober/utils/asserts.kt`.
+A collection of assertions, to assist in testing validation logic, are defined in the utils file [`src/test/kotlin/no/skatteetaten/aurora/boober/utils/asserts.kt`](./src/test/kotlin/no/skatteetaten/aurora/boober/utils/asserts.kt).
 
 `generateResources` will execute the `generate` and `generateSequentially` logic for the tested feature.
 Depending on the generation logic it may be necessary to mock function calls.
 
 ### Snapshot test
-The parameterized test `deploy application` in [DeployFacadeTest](src/test/kotlin/no/skatteetaten/aurora/boober/facade/DeployFacadeTest.kt)
+The parameterized test `deploy application` in [DeployFacadeTest](./src/test/kotlin/no/skatteetaten/aurora/boober/facade/DeployFacadeTest.kt)
 is used to generate deployment specs and comparing them with snapshots. When adding or modifying features it may be necessary to update the
 Aurora configuration files and snapshots.
 
 The `deploy application` test runs the Aurora configuration through the controller layer down to the feature implementation.
 This can be useful to debug and test behavior, without needing to run a local Boober instance against an actual environment.
 
-As updating snapshot files can be a time-consuming job the class [ResourceLoader](src/test/kotlin/no/skatteetaten/aurora/boober/utils/ResourceLoader.kt)
+As updating snapshot files can be a time-consuming job the class [ResourceLoader](./src/test/kotlin/no/skatteetaten/aurora/boober/utils/ResourceLoader.kt)
 provide the boolean property `shouldOverwriteResources` which will, when set to true, overwrite the snapshot files.
 
-Aurora configuration files are located in [`src/test/resources/samples/config`](src/test/resources/samples/config)
-Snapshot files are located in [`src/test/resources/samples/result/utv`](src/test/resources/samples/result/utv)
+- Aurora configuration files are located in [`src/test/resources/samples/config`](./src/test/resources/samples/config)
+- Snapshot files are located in [`src/test/resources/samples/result/utv`](./src/test/resources/samples/result/utv)
