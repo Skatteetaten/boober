@@ -23,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisio
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -60,6 +61,7 @@ class DatabaseFeature(
 ) : DatabaseFeatureTemplate(cluster) {
 
     private fun SchemaProvisionRequest.isAppRequestWithoutGenerate() = this is SchemaForAppRequest && !this.generate
+    private fun SchemaProvisionRequest.isAppRequestWithoutIgnoreMissingSchema() = this is SchemaForAppRequest && !this.ignoreMissingSchema
 
     override fun validate(
         adc: AuroraDeploymentSpec,
@@ -72,7 +74,8 @@ class DatabaseFeature(
             return emptyList()
         }
 
-        return databases.filter { it is SchemaIdRequest || it.isAppRequestWithoutGenerate() }
+        return databases
+            .filter { it is SchemaIdRequest || (it.isAppRequestWithoutGenerate() && it.isAppRequestWithoutIgnoreMissingSchema()) }
             .mapNotNull { request ->
                 try {
                     val schema = databaseSchemaProvisioner.findSchema(request)
@@ -156,6 +159,7 @@ class DatabaseFeature(
         this.associateWith {
             databaseSchemaProvisioner.provisionSchema(it)
         }
+            .filterNullValues()
 
     private fun Map<SchemaProvisionRequest, DbhSchema>.createDbhSecrets(adc: AuroraDeploymentSpec) =
         this.map { (request, dbhSchema) ->

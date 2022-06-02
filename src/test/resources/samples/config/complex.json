@@ -100,9 +100,14 @@
   "database": {
     "complex": {
       "enabled": true,
-      "tryReuse": true
+      "tryReuse": true,
+      "ignoreMissingSchema": false
     },
-    "foo": "123-456"
+    "foo": "123-456",
+    "missingdb": {
+      "enabled": true,
+      "generate": false
+    }
   },
   "certificate": {
     "commonName": "komplex"

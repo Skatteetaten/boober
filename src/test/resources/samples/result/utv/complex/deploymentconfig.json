@@ -138,6 +138,14 @@
                 "value": "/u01/secrets/app/foo-db/db.properties"
               },
               {
+                "name": "MISSINGDB_DB",
+                "value": "/u01/secrets/app/missingdb-db/info"
+              },
+              {
+                "name": "MISSINGDB_DB_PROPERTIES",
+                "value": "/u01/secrets/app/missingdb-db/db.properties"
+              },
+              {
                 "name": "DB",
                 "value": "/u01/secrets/app/complex-db/info"
               },
@@ -360,6 +368,10 @@
                 "name": "komplex-foo-db"
               },
               {
+                "mountPath": "/u01/secrets/app/missingdb-db",
+                "name": "komplex-missingdb-db"
+              },
+              {
                 "mountPath": "/u01/secrets/app/aurora-token",
                 "name": "aurora-token-mount"
               },
@@ -480,6 +492,12 @@
             "name": "komplex-foo-db",
             "secret": {
               "secretName": "komplex-foo-db"
+            }
+          },
+          {
+            "name": "komplex-missingdb-db",
+            "secret": {
+              "secretName": "komplex-missingdb-db"
             }
           },
           {

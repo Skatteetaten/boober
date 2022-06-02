@@ -2,5 +2,9 @@
   "cluster": "utv",
   "env": {
     "ttl": "1d"
+  },
+  "databaseDefaults": {
+    "generate": false,
+    "ignoreMissingSchema": true
   }
 }

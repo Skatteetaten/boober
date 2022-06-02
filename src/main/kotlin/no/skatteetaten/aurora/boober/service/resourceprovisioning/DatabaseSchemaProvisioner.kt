@@ -49,6 +49,7 @@ data class SchemaForAppRequest(
     val environment: String,
     val application: String,
     val generate: Boolean,
+    val ignoreMissingSchema: Boolean,
     val user: User,
     override val details: SchemaRequestDetails,
     override val tryReuse: Boolean
@@ -114,7 +115,7 @@ class DatabaseSchemaProvisioner(
     val mapper: ObjectMapper
 ) {
 
-    fun provisionSchema(request: SchemaProvisionRequest): DbhSchema {
+    fun provisionSchema(request: SchemaProvisionRequest): DbhSchema? {
         val schema = findSchema(request) ?: findCooldownSchemaIfTryReuseEnabled(request)?.activate()
 
         if (schema != null) return schema
@@ -122,6 +123,7 @@ class DatabaseSchemaProvisioner(
         return when (request) {
             is SchemaForAppRequest -> {
                 if (request.generate) createSchema(request)
+                else if (request.ignoreMissingSchema) null
                 else throw ProvisioningException("Could not find schema with ${request.labelsAsString} generate disabled.")
             }
             is SchemaIdRequest -> throw ProvisioningException("Expected dbh response to contain schema info.")
