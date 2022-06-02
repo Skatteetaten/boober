@@ -41,7 +41,7 @@ const val parserMountPath = "/fluent-bit/parser"
 const val parsersFileName = "parsers.conf"
 
 private const val FEATURE_FIELD_NAME = "logging"
-private const val ALLOWED_FILE_PATTERN_REGEX = "^[A-Za-z-*]+\\.[A-Za-z]+\$"
+private const val ALLOWED_FILE_PATTERN_REGEX = "^[A-Za-z-_*]+\\.[A-Za-z]+\$"
 
 /*
 Fluentbit sidecar feature provisions fluentd as sidecar with fluent bit configuration based on aurora config.
@@ -153,7 +153,7 @@ class FluentbitSidecarFeature(
                         validator = {
                             it.allowedPattern(
                                 ALLOWED_FILE_PATTERN_REGEX,
-                                "Is not properly formatted. You need to have exactly one period(.) and conform to the following regex $ALLOWED_FILE_PATTERN_REGEX"
+                                "Log file pattern is not properly formatted. You need to have exactly one period (.) and conform to the following regex: $ALLOWED_FILE_PATTERN_REGEX"
                             )
                         }
                     ),
