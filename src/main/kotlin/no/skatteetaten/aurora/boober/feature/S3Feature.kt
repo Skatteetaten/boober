@@ -30,7 +30,7 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.S3Provisioning
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.createEnvVarRefs
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
-import no.skatteetaten.aurora.boober.utils.pattern
+import no.skatteetaten.aurora.boober.utils.allowedPattern
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 
 private val logger = KotlinLogging.logger {}
@@ -391,7 +391,7 @@ abstract class S3FeatureTemplate : Feature {
 
     private fun objectAreaPatternValidation(it: JsonNode?, allowEmpty: Boolean = false): Exception? {
         val allowEmptyRegex = if (allowEmpty) "^$|" else ""
-        return it.pattern(
+        return it.allowedPattern(
             pattern = "$allowEmptyRegex[a-z0-9-.]+",
             message = "s3 objectArea can only contain lower case characters, numbers, hyphen(-) or period(.), specified value was: ${it?.toPrettyString()}",
             required = false
@@ -399,7 +399,7 @@ abstract class S3FeatureTemplate : Feature {
     }
 
     private fun tenantPatternValidation(it: JsonNode?): Exception? {
-        return it?.pattern(
+        return it?.allowedPattern(
             pattern = "([a-z]+)-([a-zA-Z0-9-]+)",
             message = "s3 tenant must be on the form affiliation-cluster, specified value was: ${it.toPrettyString()}"
         )

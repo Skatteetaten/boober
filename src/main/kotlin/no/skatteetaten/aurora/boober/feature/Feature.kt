@@ -16,7 +16,7 @@ import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.notBlank
 import no.skatteetaten.aurora.boober.utils.oneOf
-import no.skatteetaten.aurora.boober.utils.pattern
+import no.skatteetaten.aurora.boober.utils.allowedPattern
 
 class FeatureKeyMissingException(
     key: String,
@@ -194,7 +194,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
             ),
             AuroraConfigFieldHandler(
                 "affiliation", validator = {
-                    it.pattern(
+                    it.allowedPattern(
                         "^[a-z]{1,10}$",
                         "Affiliation can only contain letters and must be no longer than 10 characters"
                     )
@@ -209,7 +209,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
             // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
             AuroraConfigFieldHandler(
                 "envName",
-                validator = { it.pattern(envNamePattern, envNameMessage) },
+                validator = { it.allowedPattern(envNamePattern, envNameMessage) },
                 defaultSource = "folderName",
                 defaultValue = defaultEnvName,
                 allowedFilesTypes = setOf(ENV)
@@ -219,7 +219,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
                 defaultValue = defaultAppName,
                 defaultSource = "fileName",
                 validator = {
-                    it.pattern(
+                    it.allowedPattern(
                         "^[a-z][-a-z0-9]{0,38}[a-z0-9]$",
                         "Name must be alphanumeric and no more than 40 characters",
                         false
@@ -229,7 +229,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
             ),
             AuroraConfigFieldHandler(
                 "env/name",
-                validator = { it.pattern(envNamePattern, envNameMessage, false) },
+                validator = { it.allowedPattern(envNamePattern, envNameMessage, false) },
                 allowedFilesTypes = setOf(ENV)
             ),
             AuroraConfigFieldHandler(

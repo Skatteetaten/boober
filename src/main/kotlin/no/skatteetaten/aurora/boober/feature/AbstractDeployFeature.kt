@@ -62,7 +62,7 @@ import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.length
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 import no.skatteetaten.aurora.boober.utils.oneOf
-import no.skatteetaten.aurora.boober.utils.pattern
+import no.skatteetaten.aurora.boober.utils.allowedPattern
 import no.skatteetaten.aurora.boober.utils.removeExtension
 
 val AuroraDeploymentSpec.envName get(): String = this.getOrNull("env/name") ?: this["envName"]
@@ -162,7 +162,7 @@ val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
         AuroraConfigFieldHandler(
             "version",
             validator = {
-                it.pattern(
+                it.allowedPattern(
                     pattern = "^[\\w][\\w.-]{0,127}$",
                     message = "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
                     required = this.type.versionAndGroupRequired

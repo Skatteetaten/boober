@@ -18,6 +18,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.Feature
 import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.secretEnvName
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
@@ -60,23 +61,27 @@ class JwtToStsConverterSubPart {
 
         val container = createClingerProxyContainer(adc, imageMetadata)
         resources.forEach {
-            if (it.resource.kind == "DeploymentConfig") {
-                parent.modifyResource(it, "Added clinger sidecar container")
-                val dc: DeploymentConfig = it.resource as DeploymentConfig
-                val podSpec = dc.spec.template.spec
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Deployment") {
-                parent.modifyResource(it, "Added clinger sidecar container")
-                val dc: Deployment = it.resource as Deployment
-                val podSpec = dc.spec.template.spec
-                podSpec.containers = podSpec.containers.addIfNotNull(container)
-            } else if (it.resource.kind == "Service") {
-                val service: Service = it.resource as Service
-                service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
-                    port.targetPort = IntOrString(PortNumbers.CLINGER_PROXY_SERVER_PORT)
+            when (it.resource.kind) {
+                "DeploymentConfig" -> {
+                    parent.modifyResource(it, "Added clinger sidecar container")
+                    val dc: DeploymentConfig = it.resource as DeploymentConfig
+                    val podSpec = dc.spec.template.spec
+                    podSpec.containers = podSpec.containers.addIfNotNull(container)
                 }
+                "Deployment" -> {
+                    parent.modifyResource(it, "Added clinger sidecar container")
+                    val dc: Deployment = it.resource as Deployment
+                    val podSpec = dc.spec.template.spec
+                    podSpec.containers = podSpec.containers.addIfNotNull(container)
+                }
+                "Service" -> {
+                    val service: Service = it.resource as Service
+                    service.spec.ports.filter { p -> p.name == "http" }.forEach { port ->
+                        port.targetPort = IntOrString(PortNumbers.CLINGER_PROXY_SERVER_PORT)
+                    }
 
-                parent.modifyResource(it, "Changed targetPort to point to clinger")
+                    parent.modifyResource(it, "Changed targetPort to point to clinger")
+                }
             }
         }
     }
@@ -177,7 +182,7 @@ class JwtToStsConverterSubPart {
     }
 
     private fun secretName(adc: AuroraDeploymentSpec): String =
-        "${adc.name}-${adc.get<String>(ConfigPath.ldapUserVaultName)}-vault"
+        adc.secretEnvName(adc[ConfigPath.ldapUserVaultName])
 
     private fun createEnvOrNull(name: String, value: String?): EnvVar? {
         return if (value == null) {

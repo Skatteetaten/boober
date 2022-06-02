@@ -214,11 +214,23 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }
 
         dbhMock {
-            rule {
+            rule({ method == "GET" && (path.contains("123-456") || path.contains("complex")) }) {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
                     .setResponseCode(200)
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+
+            rule({ method == "POST" }) {
+                MockResponse()
+                    .setBody(loadBufferResource("dbhResponse.json"))
+                    .setResponseCode(200)
+                    .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+            }
+
+            rule({ method == "GET" }) {
+                MockResponse()
+                    .setResponseCode(404)
             }
         }
 

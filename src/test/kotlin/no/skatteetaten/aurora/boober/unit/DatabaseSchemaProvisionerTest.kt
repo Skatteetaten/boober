@@ -50,7 +50,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.id).isEqualTo(cooldownSchemaId)
+            assertThat(it?.id).isEqualTo(cooldownSchemaId)
         }
     }
 
@@ -74,7 +74,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.id).isEqualTo(cooldownId)
+            assertThat(it?.id).isEqualTo(cooldownId)
         }
     }
 
@@ -87,7 +87,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.id).isEqualTo(activeSchemaId)
+            assertThat(it?.id).isEqualTo(activeSchemaId)
         }
     }
 
@@ -100,7 +100,7 @@ class DatabaseSchemaProvisionerTest {
         assertThat {
             provisioner.provisionSchema(request)
         }.isSuccess().given {
-            assertThat(it.id).isEqualTo(activeSchemaId)
+            assertThat(it?.id).isEqualTo(activeSchemaId)
         }
     }
 
@@ -225,6 +225,7 @@ class DatabaseSchemaProvisionerTest {
         environment = "env",
         application = "app",
         generate = generate,
+        ignoreMissingSchema = false,
         user = User("username", "token"),
         details = SchemaRequestDetails("schemaname", DatabaseEngine.POSTGRES, "paas", DatabaseInstance("")),
         tryReuse = tryReuse

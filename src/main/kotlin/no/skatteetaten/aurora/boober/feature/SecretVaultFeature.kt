@@ -30,6 +30,12 @@ import org.springframework.stereotype.Service
 private const val SECRETS_CONTEXT_KEY = "secrets"
 private val FeatureContext.secrets: List<AuroraSecret> get() = this.getContextKey(SECRETS_CONTEXT_KEY)
 
+// also used in AzureFeature
+fun AuroraDeploymentSpec.secretEnvName(secretVaultName: String): String = secretVaultName
+    .ensureStartWith(this.name, "-")
+    .ensureEndsWith("vault", "-")
+    .lowercase().replace("_", "-")
+
 @Service
 class SecretVaultFeature(
     val vaultProvider: VaultProvider
@@ -244,10 +250,7 @@ class SecretVaultFeature(
                 }
             }?.let {
                 VaultSecretEnvResult(
-                    secret.secretVaultName
-                        .ensureStartWith(adc.name, "-")
-                        .ensureEndsWith("vault", "-")
-                        .lowercase().replace("_", "-"),
+                    adc.secretEnvName(secret.secretVaultName),
                     it.toMap()
                 )
             }
