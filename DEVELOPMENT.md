@@ -15,17 +15,31 @@ The interface provides two functions for generating resources: `generate` and `g
 A feature will normally only need to implement the `generate` function which will be executed in parallel.
 The `generateSequentially` function is intended for resources where parallel generation may result in duplicate resources (for example shared databases [DatabaseFeature](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/DatabaseFeature.kt)). 
 
+The functions that can be implemented, in running order, are:
+
+| #   | function                          | return value                                                                         | desc                                                                                          |
+|-----|-----------------------------------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
+| 1   | `enable`                          | `bool`                                                                               | indicates if feature should run                                                               |
+| 2   | `handlers`                        | `Set<AuroraConfigFieldHandler>`                                                      | create handlers for configuration fields                                                      |
+| 3   | `createContext`                   | [FeatureContext](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/Feature.kt) | create context for a given feature, context is sent to `validate`, `generate`, `modify` steps |
+| 4   | `validate`                        | `List<Exception>`                                                                    | performs validation for a given feature                                                       |
+| 5   | `generate`/`generateSequentially` | `Set<AuroraResource>`                                                                | generates AuroraResources for a given feature                                                 |
+| 6   | `modify`                          | `void`                                                                               | modify generated resources, performed after all features has completed the generate step      |
+
 #### Handlers
 The handlers function returns a set of [AuroraConfigFieldHandler](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraConfigFieldHandler.kt)
-which provides handling of a given pointer with default value and validation.
+which provides handling of a given AuroraConfig field pointer with default value and validation.
 - Pre-defined validation logic can be found in [jsonNodeUtils.kt](./src/main/kotlin/no/skatteetaten/aurora/boober/utils/jsonNodeUtils.kt).
 - Validation severity can be set with the validationSeverity parameter (default value is [ErrorType.ILLEGAL](./src/main/kotlin/no/skatteetaten/aurora/boober/model/errors.kt)).
 - `ErrorType.WARNING` can be used when the validation should warn about configuration but allow deploying.
 
 #### AuroraDeploymentSpec
-[AuroraDeploymentSpec](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraDeploymentSpec.kt) is a class passed to `validate`, `generate` and `generateSequentially`.
+[AuroraDeploymentSpec](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraDeploymentSpec.kt) is a class passed to the functions `handlers`, `validate`, `generate` and `generateSequentially`.
 The class contains the fields for a given deployment and helper functions for extracting fields for validation and generation purposes.
 It is recommended to look at how existing features makes use of the class.
+
+- `handlers` will receive a single header spec
+- the remaining functions will receive a header spec plus a spec for each handler defined
 
 #### Utilities
 Utility functionality is located in [no.skatteetaten.aurora.boober.utils](./src/main/kotlin/no/skatteetaten/aurora/boober/utils)
@@ -65,6 +79,9 @@ Tests should be created or updated when developing new features or modifying exi
 There are two kinds of testing that are relevant when working with features:
 - unit tests for the feature located in [`src/test/kotlin/no/skatteetaten/aurora/boober/feature`](./src/test/kotlin/no/skatteetaten/aurora/boober/feature)
 - snapshot verification for deployment located in [`src/test/kotlin/no/skatteetaten/aurora/boober/facade/DeployFacadeTest.kt`](./src/test/kotlin/no/skatteetaten/aurora/boober/feature)
+
+Snapshot verification use sample AuroraConfig located in [`src/test/resources/samples/config`](./src/test/resources/samples/config).
+Configuration for new/modified features can be added to the sample configuration.
 
 ### Unit tests
 To make it easier to implement unit tests the abstract test classes `AbstractFeatureTest` and `AbstractMultiFeatureTest`
