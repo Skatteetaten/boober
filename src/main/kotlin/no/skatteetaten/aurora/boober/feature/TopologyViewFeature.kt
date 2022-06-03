@@ -39,7 +39,7 @@ class TopologyViewFeature : Feature {
                         dc.metadata.annotations = mutableMapOf()
                     }
                     dc.metadata.annotations["app.openshift.io/connects-to"] = connectsTo.map {
-                        """{"kind": "DeploymentConfig", "name": "$it"}"""
+                        """{"apiVersion":"apps.openshift.io/v1","kind":"DeploymentConfig","name":"$it"}"""
                     }.toString()
                 }
             }
