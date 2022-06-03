@@ -53,7 +53,7 @@ and take the following arguments:
 1. checkoutAuroraConfig - fetch configuration files from Git and create context commands with specified overrides applied.
 2. validateAuroraConfig - loops over context commands and create validated deployment contexts [AuroraDeploymentContext](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraDeploymentContext.kt)`.validate` will execute the feature`s validation logic.
 Deployment will stop here if validation for any feature fails.
-3. createNamespaces - creates namespace if it does not exist, if it exists then all resources in the namespace is fetched.
+3. createNamespaces - creates namespace if it does not exist. If it exists, then all resources in the namespace are fetched.
 4. generateModifyResources - generates resources and create a `AuroraDeployCommand` for the resources.
 Two strategies are used to generate the resources sequential generation utilizing the `generateSequentially` function and parallel generation utilizing the `generate` function.
 5. deployToOpenShift - executes the deployment commands created in the previous step
