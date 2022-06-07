@@ -32,6 +32,10 @@ which provides handling of a given AuroraConfig field pointer with default value
 - Pre-defined validation logic can be found in [jsonNodeUtils.kt](./src/main/kotlin/no/skatteetaten/aurora/boober/utils/jsonNodeUtils.kt).
 - Validation severity can be set with the validationSeverity parameter (default value is [ErrorType.ILLEGAL](./src/main/kotlin/no/skatteetaten/aurora/boober/model/errors.kt)).
 - `ErrorType.WARNING` can be used when the validation should warn about configuration but allow deploying.
+- `allowedFileTypes` can be used to limit where configuration keys can be placed, by passing a set of [`AuroraConfigFileType`](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraConfigFile.kt).
+For example, if a property should only be available in a base-file or app-file then a set containing `AuroraConfigFileType.BASE` and `AuroraConfigFileType.App` should be passed.
+  - By default `allowedFileTypes` is null, and will permit placing the configuration property in any file.
+  - If `allowedFileTypes` is empty then the configuration property will be invalid in any file.
 
 #### AuroraDeploymentSpec
 [AuroraDeploymentSpec](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraDeploymentSpec.kt) is a class passed to the functions `handlers`, `validate`, `generate` and `generateSequentially`.
