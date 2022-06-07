@@ -2,6 +2,9 @@
   "apiVersion": "apps.openshift.io/v1",
   "kind": "DeploymentConfig",
   "metadata": {
+    "annotations": {
+      "app.openshift.io/connects-to": "[{\"apiVersion\":\"apps.openshift.io/v1\",\"kind\":\"DeploymentConfig\",\"name\":\"test-app1\"}, {\"apiVersion\":\"apps.openshift.io/v1\",\"kind\":\"DeploymentConfig\",\"name\":\"test-app2\"}]"
+    },
     "labels": {
       "operationScope": "aos-4016",
       "app": "komplex",
@@ -12,6 +15,8 @@
       "name": "komplex",
       "deployTag": "1",
       "paused": "true",
+      "app.kubernetes.io/part-of": "test-group",
+      "app.openshift.io/runtime": "spring-boot",
       "booberDeployId": "deploy1"
     },
     "name": "komplex",
