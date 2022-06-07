@@ -124,7 +124,7 @@
               },
               {
                 "name": "AURORA_KLIENTID",
-                "value": "easy/${APP_VERSION}"
+                "value": "aurora-easy/${APP_VERSION}"
               },
               {
                 "name": "ROUTE_NAME",

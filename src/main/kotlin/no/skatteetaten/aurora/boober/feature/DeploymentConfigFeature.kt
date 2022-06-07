@@ -178,7 +178,7 @@ class DeploymentConfigFeature() : Feature {
 
         val headerEnv = if (adc.type == TemplateType.deploy) {
             mapOf(
-                "AURORA_KLIENTID" to createAuroraKlientId(adc)
+                "AURORA_KLIENTID" to "\${APP_OWNER}-\${APP_NAME}{APP_VERSION}"
             )
         } else null
 
@@ -189,9 +189,11 @@ class DeploymentConfigFeature() : Feature {
             )
         } else null
 
+        val appOwner: String = adc.getOrNull("segment") ?: adc.affiliation
         return mapOf(
             "OPENSHIFT_CLUSTER" to adc["cluster"],
             "APP_NAME" to adc.name,
+            "APP_OWNER" to appOwner,
             "SPLUNK_INDEX" to adc.splunkIndex,
         ).addIfNotNull(debugEnv).addIfNotNull(headerEnv).filterNullValues()
     }
@@ -203,10 +205,5 @@ class DeploymentConfigFeature() : Feature {
         } else null
 
         return mapOf("deployTag" to adc.version).addIfNotNull(pauseLabel).normalizeLabels()
-    }
-
-    private fun createAuroraKlientId(adc: AuroraDeploymentSpec): String {
-        // APP_VERSION is available for all images created by Architect
-        return "${adc.name}/\${APP_VERSION}"
     }
 }
