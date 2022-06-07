@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
+import no.skatteetaten.aurora.boober.model.AuroraConfigFileType
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
@@ -11,12 +12,18 @@ import org.springframework.stereotype.Service
 class TopologyViewFeature : Feature {
 
     val topology = "topologyView"
+    val allowedFileTypes = setOf(
+        AuroraConfigFileType.BASE,
+        AuroraConfigFileType.BASE_OVERRIDE,
+        AuroraConfigFileType.APP,
+        AuroraConfigFileType.APP_OVERRIDE
+    )
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-            AuroraConfigFieldHandler("$topology/group"),
-            AuroraConfigFieldHandler("$topology/runtime"),
-            AuroraConfigFieldHandler("$topology/connectsTo")
+            AuroraConfigFieldHandler(name = "$topology/group", allowedFilesTypes = allowedFileTypes),
+            AuroraConfigFieldHandler(name = "$topology/runtime", allowedFilesTypes = allowedFileTypes),
+            AuroraConfigFieldHandler(name = "$topology/connectsTo", allowedFilesTypes = allowedFileTypes)
         )
     }
 
