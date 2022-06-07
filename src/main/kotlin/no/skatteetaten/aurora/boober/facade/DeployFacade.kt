@@ -3,6 +3,7 @@ package no.skatteetaten.aurora.boober.facade
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
+import io.fabric8.kubernetes.api.model.HasMetadata
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.namespace
@@ -40,6 +41,21 @@ class DeployFacade(
     val notificationService: NotificationService,
     @Value("\${openshift.cluster}") val cluster: String
 ) {
+
+    fun generateResources(
+        ref: AuroraConfigRef,
+        applicationDeploymentRefs: List<ApplicationDeploymentRef>,
+        overrides: List<AuroraConfigFile> = listOf(),
+    ): List<HasMetadata> {
+
+        val commands = createContextCommands(ref, applicationDeploymentRefs, overrides)
+        val validContexts = createAuroraDeploymentContexts(commands)
+        val deployCommands = validContexts.createDeployCommand(false)
+
+        return deployCommands.flatMap { cmd ->
+            cmd.resources.map { it.resource } + cmd.headerResources.map { it.resource }
+        }
+    }
 
     fun executeDeploy(
         ref: AuroraConfigRef,
@@ -110,7 +126,12 @@ class DeployFacade(
         return deployLogService.markRelease(deployResultsAfterNotifications).also {
             watch.stop()
             watch.taskInfo.forEach {
-                logger.info("deployMs={} deployAction={} applications={}", it.timeMillis, it.taskName, applicationDeploymentRefs.size)
+                logger.info(
+                    "deployMs={} deployAction={} applications={}",
+                    it.timeMillis,
+                    it.taskName,
+                    applicationDeploymentRefs.size
+                )
             }
         }
     }
