@@ -6,25 +6,23 @@ Handlers for Aurora features are defined in `no.skatteetaten.aurora.boober.featu
 Features must extend the interface [Feature](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/Feature.kt).
 The interface include documentation for the functions that needs to be implemented.
 
+A feature-file takes a part of the AuroraConfig and transforms it into a [`AuroraResource`](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraResource.kt).
+The AuroraResource file represents the Kubernetes resource that will be applied to OpenShift.
+
 The implemented functions are used in [AuroraDeploymentContext](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraDeploymentContext.kt)
 used by [AuroraDeploymentContextService](./src/main/kotlin/no/skatteetaten/aurora/boober/service/AuroraDeploymentContextService.kt)
 which in turn is used by [DeployFacade](./src/main/kotlin/no/skatteetaten/aurora/boober/facade/DeployFacade.kt). 
 
-
-The interface provides two functions for generating resources: `generate` and `generateSequentially`.
-A feature will normally only need to implement the `generate` function which will be executed in parallel.
-The `generateSequentially` function is intended for resources where parallel generation may result in duplicate resources (for example shared databases [DatabaseFeature](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/DatabaseFeature.kt)). 
-
 The functions that can be implemented, in running order, are:
 
-| #   | function                          | return value                                                                         | desc                                                                                          |
-|-----|-----------------------------------|--------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| 1   | `enable`                          | `bool`                                                                               | indicates if feature should run                                                               |
-| 2   | `handlers`                        | `Set<AuroraConfigFieldHandler>`                                                      | create handlers for configuration fields                                                      |
-| 3   | `createContext`                   | [FeatureContext](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/Feature.kt) | create context for a given feature, context is sent to `validate`, `generate`, `modify` steps |
-| 4   | `validate`                        | `List<Exception>`                                                                    | performs validation for a given feature                                                       |
-| 5   | `generate`/`generateSequentially` | `Set<AuroraResource>`                                                                | generates AuroraResources for a given feature                                                 |
-| 6   | `modify`                          | `void`                                                                               | modify generated resources, performed after all features has completed the generate step      |
+| #   | function                          | return value                                                                         | desc                                                                                                                                              |
+|-----|-----------------------------------|--------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| 1   | `enable`                          | `bool`                                                                               | indicates if feature should run                                                                                                                   |
+| 2   | `handlers`                        | `Set<AuroraConfigFieldHandler>`                                                      | create handlers for configuration fields                                                                                                          |
+| 3   | `createContext`                   | [FeatureContext](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/Feature.kt) | create context for a given feature, context is sent to `validate`, `generate`, `modify` steps (should only be used for time-consuming operations) |
+| 4   | `validate`                        | `List<Exception>`                                                                    | performs validation for a given feature                                                                                                           |
+| 5   | `generate`/`generateSequentially` | `Set<AuroraResource>`                                                                | generates AuroraResources for a given feature                                                                                                     |
+| 6   | `modify`                          | `void`                                                                               | modify generated resources, performed after all features has completed the generate step                                                          |
 
 #### Handlers
 The handlers function returns a set of [AuroraConfigFieldHandler](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraConfigFieldHandler.kt)
@@ -36,6 +34,17 @@ which provides handling of a given AuroraConfig field pointer with default value
 For example, if a property should only be available in a base-file or app-file then a set containing `AuroraConfigFileType.BASE` and `AuroraConfigFileType.App` should be passed.
   - By default `allowedFileTypes` is null, and will permit placing the configuration property in any file.
   - If `allowedFileTypes` is empty then the configuration property will be invalid in any file.
+
+#### Generation logic
+The interface provides two functions for generating resources: `generate` and `generateSequentially`.
+A feature should normally only implement the `generate` function which will be executed in parallel, if `generateSequentially` is implemented then `generate` should be omitted.
+The `generateSequentially` function is intended for resources where parallel generation may result in duplicate resources (for example shared databases [DatabaseFeature](./src/main/kotlin/no/skatteetaten/aurora/boober/feature/DatabaseFeature.kt)).
+
+
+The behavior of the generation logic may vary based on requirements.
+- some features may create the resource and AuroraResource
+- some features may create the AuroraResource and let other tooling create the resource
+- some features may create some of the necessary resources (such as secrets) and AuroraResource, and let other tooling create remaining resources.
 
 #### AuroraDeploymentSpec
 [AuroraDeploymentSpec](./src/main/kotlin/no/skatteetaten/aurora/boober/model/AuroraDeploymentSpec.kt) is a class passed to the functions `handlers`, `validate`, `generate` and `generateSequentially`.
