@@ -88,9 +88,13 @@ class ToxiproxySidecarFeatureNoDbTest : AbstractMultiFeatureTest() {
         assertThat {
             generateResources(
                 """{
-                "toxiproxy": {"database": true},
-                "database": true
-            }"""
+                    "toxiproxy": {
+                        "proxies": {
+                            "dbProxy": {"database": true}
+                        }
+                    },
+                    "database": true
+                }"""
             )
         }.singleApplicationError("Databases are not supported in this cluster")
     }
