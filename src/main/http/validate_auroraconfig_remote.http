@@ -1,4 +1,4 @@
-PUT {{apiUrl}}/v1/auroraconfig/paas/validate?mergeWithRemoteConfig=true
+PUT {{apiUrl}}/v1/auroraconfig/aup/validate?mergeWithRemoteConfig=true&reference=m96405
 Authorization:Bearer {{token}}
 
 ###

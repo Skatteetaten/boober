@@ -25,7 +25,8 @@ class BigIpFeature(
     enum class Errors(val message: String) {
         MissingLegacyService("bigip/service is required if other bigip flags are set. bigip/service is deprecated and you should move that configuration to bigip/<name>/service."),
         MissingMultipleService("bigip/<name>/service is required if any other bigip flags are set"),
-        BothLegacyAndMultipleConfigIsSet("specifying both bigip/service and bigip/<name>/service is not allowed. bigip/service is deprecated and you should move that configuration to bigip/<name>/service.")
+        BothLegacyAndMultipleConfigIsSet("specifying both bigip/service and bigip/<name>/service is not allowed. bigip/service is deprecated and you should move that configuration to bigip/<name>/service."),
+        MissingExternalHostWhenApiPathsIsSet("bigip externalHost property is required when bigip apiPaths property is set.")
     }
 
     val bigIpLegacyConfigKeys: List<String> = listOf(
@@ -97,6 +98,26 @@ class BigIpFeature(
 
         if (isMissingMultipleServiceConfig) {
             return listOf(AuroraDeploymentSpecValidationException(Errors.MissingMultipleService.message))
+        }
+
+        val isMissingExternalHostWhenApiPathsIsSet = if (isMultipleConfig) {
+            hosts.any {
+                val hasApiPaths = !adc.getDelimitedStringOrArrayAsSetOrNull("bigip/$it/apiPaths").isNullOrEmpty()
+                val missingExternalHost = adc.getOrNull<String>("bigip/$it/externalHost").isNullOrEmpty()
+                val isEnabled = adc.isBigIPHostEnabled(it)
+                // check if enabled to prevent breaking existing configuration where enabled=false
+                isEnabled && hasApiPaths && missingExternalHost
+            }
+        } else {
+            val hasApiPaths = !adc.getDelimitedStringOrArrayAsSetOrNull("bigip/apiPaths").isNullOrEmpty()
+            val missingExternalHost = adc.getOrNull<String>("bigip/externalHost").isNullOrEmpty()
+            val isEnabled = adc.isLegacyFeatureEnabled()
+            // check if enabled to prevent breaking existing configuration where enabled=false
+            isEnabled && hasApiPaths && missingExternalHost
+        }
+
+        if (isMissingExternalHostWhenApiPathsIsSet) {
+            return listOf(AuroraDeploymentSpecValidationException(Errors.MissingExternalHostWhenApiPathsIsSet.message))
         }
 
         return emptyList()

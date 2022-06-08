@@ -30,6 +30,58 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `should not allowed latest for releaseTo`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                "groupId": "no.skatteetaten.aurora",
+                "version" : "1",
+                "releaseTo": "latest"
+               }"""
+            )
+        }.singleApplicationError("Disallowed")
+    }
+
+    @Test
+    fun `should allow other tags for releaseTo`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                "groupId": "no.skatteetaten.aurora",
+                "version" : "1",
+                "releaseTo": "PROD"
+               }"""
+            )
+        }.isSuccess()
+    }
+
+    @Test
+    fun `should not allow semantic version for releaseTo`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                "groupId": "no.skatteetaten.aurora",
+                "version" : "1",
+                "releaseTo": "1.2.3"
+               }"""
+            )
+        }.singleApplicationError("Disallowed")
+    }
+
+    @Test
+    fun `should not allow numbered version for releaseTo`() {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{ 
+                "groupId": "no.skatteetaten.aurora",
+                "version" : "1",
+                "releaseTo": "123"
+               }"""
+            )
+        }.singleApplicationError("Disallowed")
+    }
+
+    @Test
     fun `should allow literal boolean value for pause flag`() {
         assertThat {
             createAuroraConfigFieldHandlers(

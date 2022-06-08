@@ -23,6 +23,7 @@ utv/python.json | groupId: "org.test"
                 | databaseDefaults:
         default |   flavor: "ORACLE_MANAGED"
         default |   generate: true
+        default |   ignoreMissingSchema: false
 utv/python.json |   tryReuse: true
         default |   name: "@name@"
 utv/python.json | database: true
@@ -70,8 +71,11 @@ utv/python.json | sts: true
                 | azure:
                 |   jwtToStsConverter:
         default |     enabled: false
-        default |     version: "0.4.0"
+        default |     version: "0"
+        default |     jwksUrl: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
         default |     ivGroupsRequired: false
+        default |     ldapUserVaultName: ""
+        default |     ldapUrl: ""
         default |   managedRoute: false
                 |   apim:
         default |     enabled: false

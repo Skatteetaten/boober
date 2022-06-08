@@ -6,7 +6,6 @@ import com.fkorotkov.kubernetes.secret
 import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Volume
 import io.fabric8.kubernetes.api.model.VolumeMount
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -24,13 +23,12 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisio
 import no.skatteetaten.aurora.boober.utils.ConditionalOnPropertyMissingOrEmpty
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
+import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import kotlin.reflect.KClass
-
-private val logger = KotlinLogging.logger { }
 
 private const val DATABASE_CONTEXT_KEY = "databases"
 
@@ -63,6 +61,7 @@ class DatabaseFeature(
 ) : DatabaseFeatureTemplate(cluster) {
 
     private fun SchemaProvisionRequest.isAppRequestWithoutGenerate() = this is SchemaForAppRequest && !this.generate
+    private fun SchemaProvisionRequest.isAppRequestWithoutIgnoreMissingSchema() = this is SchemaForAppRequest && !this.ignoreMissingSchema
 
     override fun validate(
         adc: AuroraDeploymentSpec,
@@ -75,7 +74,8 @@ class DatabaseFeature(
             return emptyList()
         }
 
-        return databases.filter { it is SchemaIdRequest || it.isAppRequestWithoutGenerate() }
+        return databases
+            .filter { it is SchemaIdRequest || (it.isAppRequestWithoutGenerate() && it.isAppRequestWithoutIgnoreMissingSchema()) }
             .mapNotNull { request ->
                 try {
                     val schema = databaseSchemaProvisioner.findSchema(request)
@@ -98,7 +98,7 @@ class DatabaseFeature(
             }
     }
 
-    override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
+    override fun generateSequentially(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
         val databases = context.databases
 
         val schemaRequests = databases.createSchemaRequests(adc)
@@ -159,6 +159,7 @@ class DatabaseFeature(
         this.associateWith {
             databaseSchemaProvisioner.provisionSchema(it)
         }
+            .filterNullValues()
 
     private fun Map<SchemaProvisionRequest, DbhSchema>.createDbhSecrets(adc: AuroraDeploymentSpec) =
         this.map { (request, dbhSchema) ->

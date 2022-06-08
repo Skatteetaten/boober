@@ -175,8 +175,8 @@
               },
               {
                 "created": "2018-11-09T07:40:11Z",
-                "dockerImageReference": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_demo/whoami@sha256:ced02f3cdeb1e2726431f3381eceaa64b0b4301e650af409dba766c908cf6606",
-                "image": "sha256:ced02f3cdeb1e2726431f3381eceaa64b0b4301e650af409dba766c908cf6606",
+                "dockerImageReference": "docker-registry.aurora.sits.no:5000/no_skatteetaten_aurora_demo/whoami@sha256:ced02f3cdeb1e2726431f3381eceaa64b01e650af409dba766c908cf6606",
+                "image": "sha256:ced02f3cdeb1e2726431f3381eceaa64b01e650af409dba766c908cf6606",
                 "generation": 17
               },
               {

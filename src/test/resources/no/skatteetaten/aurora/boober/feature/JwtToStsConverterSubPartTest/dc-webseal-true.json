@@ -45,10 +45,32 @@
                 "name": "CLINGER_PROXY_SERVER_PORT",
                 "value" : "8100"
               }, {
+                "name": "CLINGER_AURORAAZUREAPP_NAME",
+                "value" : "simple"
+              }, {
                 "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
                 "value" : "true"
               }, {
+                "name":"POD_NAMESPACE",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.namespace"
+                  }
+                }
+              }, {
+                "name":"POD_NAME",
+                "valueFrom":{
+                  "fieldRef":{
+                    "apiVersion":"v1",
+                    "fieldPath":"metadata.name"
+                  }
+                }
+              }, {
                 "name": "CLINGER_DISCOVERY_URL",
+                "value" : "https://endpoint"
+              }, {
+                "name": "CLINGER_JWKS_URL",
                 "value" : "https://endpoint"
               }, {
                 "name": "CLINGER_IV_GROUPS_REQUIRED",
@@ -64,7 +86,7 @@
               "initialDelaySeconds": 10,
               "timeoutSeconds": 2
             },
-            "name": "simple-clinger-mix",
+            "name": "simple-clinger-sidecar",
             "ports": [
               {
                 "containerPort": 8100,

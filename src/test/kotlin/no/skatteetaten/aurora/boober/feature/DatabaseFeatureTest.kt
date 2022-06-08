@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.contains
+import assertk.assertions.hasSize
 import assertk.assertions.isEmpty
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
@@ -17,7 +18,6 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.openshift.api.model.DeploymentConfig
 import io.mockk.every
 import io.mockk.mockk
-import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.facade.json
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
@@ -37,8 +37,7 @@ import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
-
-private val logger = KotlinLogging.logger { }
+import okhttp3.mockwebserver.MockResponse
 
 class DatabaseFeatureTest : AbstractFeatureTest() {
     val provisioner = DatabaseSchemaProvisioner(
@@ -370,6 +369,99 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
         assertThat(dcResource).auroraDatabaseMounted(listOf(fooDatabase))
         assertThat(adResource).auroraDatabaseIdsAdded(listOf(fooDatabase))
+    }
+
+    @Test
+    fun `when ignoreMissingSchema is true do not fail validation or generate resource when generate is false and schema is not found`() {
+        httpMockServer(5000) {
+            rule({ method == "GET" }) {
+                MockResponse()
+                    .setResponseCode(404)
+            }
+        }
+
+        val res = generateResources(
+            """{
+              "databaseDefaults": {
+                "generate": false,
+                "tryReuse": true,
+                "ignoreMissingSchema": true
+              },
+              "database": {
+                "foo": {
+                  "enabled": true
+                },
+                "bar": {
+                  "enabled": true
+                }
+              }
+            }"""
+        )
+
+        assertThat(res).isEmpty()
+    }
+
+    @Test
+    fun `when ignoreMissingSchema is true and generate is false then it should generate resource if schema is found`() {
+        httpMockServer(5000) {
+            rule({ method == "GET" && path.contains("foo") }) {
+                json(DbApiEnvelope("ok", listOf(schema)))
+            }
+            rule({ method == "GET" }) {
+                MockResponse()
+                    .setResponseCode(404)
+            }
+        }
+
+        val res = generateResources(
+            """{
+              "databaseDefaults": {
+                "generate": false,
+                "tryReuse": true,
+                "ignoreMissingSchema": true
+              },
+              "database": {
+                "foo": {
+                  "enabled": true
+                },
+                "bar": {
+                  "enabled": true
+                }
+              }
+            }"""
+        )
+
+        assertThat(res).hasSize(1)
+    }
+
+    @Test
+    fun `fail when generate is false and schema is missing when overriding ignoreMissingSchema`() {
+        httpMockServer(5000) {
+            rule({ method == "GET" }) {
+                MockResponse()
+                    .setResponseCode(404)
+            }
+        }
+
+        assertThat {
+            generateResources(
+                """{
+              "databaseDefaults": {
+                "generate": false,
+                "ignoreMissingSchema": true
+              },
+              "database": {
+                "foo": {
+                  "enabled": true
+                },
+                "bar": {
+                  "enabled": true,
+                  "ignoreMissingSchema": false
+                }
+              }
+            }"""
+            )
+        }.singleApplicationError("Could not find schema with name=bar")
     }
 
     fun Assert<AuroraResource>.auroraDatabaseIdsAdded(

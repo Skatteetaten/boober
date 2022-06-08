@@ -25,7 +25,9 @@ import no.skatteetaten.aurora.boober.service.CantusService
 @Service
 class AzureFeature(
     cantusService: CantusService,
-    @Value("\${clinger.sidecar.default.version:0.4.0}") val sidecarVersion: String
+    @Value("\${clinger.sidecar.default.version:0}") val sidecarVersion: String,
+    @Value("\${clinger.sidecar.default.ldapurl}") val defaultLdapUrl: String,
+    @Value("\${clinger.sidecar.default.jwks}") val defaultAzureJwks: String
 ) : AbstractResolveTagFeature(cantusService) {
     private val jwtToStsConverter = JwtToStsConverterSubPart()
     private val auroraAzureApp = AuroraAzureAppSubPart()
@@ -40,7 +42,7 @@ class AzureFeature(
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return jwtToStsConverter.handlers(sidecarVersion) +
+        return jwtToStsConverter.handlers(sidecarVersion, defaultLdapUrl, defaultAzureJwks) +
             auroraAzureApp.handlers() +
             auroraApim.handlers(cmd.applicationFiles)
     }
@@ -68,7 +70,7 @@ class AzureFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        jwtToStsConverter.modify(adc, resources, context, this)
+        jwtToStsConverter.modify(adc, resources, context.imageMetadata, this)
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -80,6 +82,6 @@ class AzureFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        return auroraAzureApp.validate(adc) + auroraApim.validate(adc)
+        return auroraAzureApp.validate(adc) + auroraApim.validate(adc) + jwtToStsConverter.validate(adc)
     }
 }

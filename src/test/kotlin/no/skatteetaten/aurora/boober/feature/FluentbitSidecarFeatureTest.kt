@@ -305,7 +305,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              } 
            }"""
             )
-        }.singleApplicationErrorResult("Is not properly formatted. You need to have exactly one period")
+        }.singleApplicationErrorResult("Log file pattern is not properly formatted. You need to have exactly one period")
     }
 
     @Test

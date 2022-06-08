@@ -7,6 +7,7 @@ import io.fabric8.openshift.api.model.Route
 import no.skatteetaten.aurora.boober.model.openshift.BigIp
 import no.skatteetaten.aurora.boober.model.openshift.BigIpSpec
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
 import org.junit.jupiter.api.Test
 
@@ -94,6 +95,87 @@ class BigIpFeatureTest : AbstractFeatureTest() {
 
         val bigIpSpec: BigIpSpec = (bigIpResource.resource as BigIp).spec
         assertThat(routeResource.resource.metadata.name).isEqualTo(bigIpSpec.routeName)
+    }
+
+    @Test
+    fun `should fail validation when apiPaths is set but externalHost is not set (multiple services)`() {
+        assertThat {
+            generateResources(
+                """{
+                  "bigip" : {
+                    "simple": {
+                      "enabled": true,
+                      "service" : "simple",
+                      "asmPolicy": "something",
+                      "oauthScopes": "test",
+                      "apiPaths": "/api/simple/,/web/simple/",
+                      "routeAnnotations" : {
+                        "haproxy.router.openshift.io|timeout" : "30s"
+                      }
+                    }
+                  }
+                }"""
+            )
+        }.singleApplicationError(BigIpFeature.Errors.MissingExternalHostWhenApiPathsIsSet.message)
+    }
+
+    @Test
+    fun `should fail validation when apiPaths is set but externalHost is not set (legacy)`() {
+        assertThat {
+            generateResources(
+                """{
+                  "bigip" : {
+                    "enabled": true,
+                    "service" : "simple",
+                    "asmPolicy": "something",
+                    "oauthScopes": "test",
+                    "apiPaths": "/api/simple/,/web/simple/",
+                    "routeAnnotations" : {
+                      "haproxy.router.openshift.io|timeout" : "30s"
+                    }
+                  }
+                }"""
+            )
+        }.singleApplicationError(BigIpFeature.Errors.MissingExternalHostWhenApiPathsIsSet.message)
+    }
+
+    @Test
+    fun `should not fail validation or generate resource when enabled is false and apiPaths is set with missing externalHost`() {
+        assertThat(
+            generateResources(
+                """{
+                  "bigip" : {
+                    "simple": {
+                      "enabled": false,
+                      "service" : "simple",
+                      "asmPolicy": "something",
+                      "oauthScopes": "test",
+                      "apiPaths": "/api/simple/,/web/simple/",
+                      "routeAnnotations" : {
+                        "haproxy.router.openshift.io|timeout" : "30s"
+                      }
+                    }
+                  }
+                }"""
+            )
+        ).isEmpty()
+
+        assertThat(
+            generateResources(
+                """{
+                  "bigip" : {
+                    "enabled": false,
+                    "service" : "simple",
+                    "asmPolicy": "something",
+                    "oauthScopes": "test",
+                    "apiPaths": "/api/simple/,/web/simple/",
+                    "routeAnnotations" : {
+                      "haproxy.router.openshift.io|timeout" : "30s"
+                    }
+                  }
+                }"""
+            )
+        ).isEmpty()
     }
 
     @Test

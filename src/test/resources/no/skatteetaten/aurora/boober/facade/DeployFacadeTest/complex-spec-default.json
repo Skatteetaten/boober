@@ -419,11 +419,29 @@
       ]
     },
     "generate": {
-      "source": "default",
+      "source": "utv/about-alternate.json",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": true
+        },
+        {
+          "name": "utv/about-alternate.json",
+          "value": false
+        }
+      ]
+    },
+    "ignoreMissingSchema": {
+      "source": "utv/about-alternate.json",
       "value": true,
       "sources": [
         {
           "name": "default",
+          "value": false
+        },
+        {
+          "name": "utv/about-alternate.json",
           "value": true
         }
       ]
@@ -465,6 +483,16 @@
           }
         ]
       },
+      "ignoreMissingSchema": {
+        "source": "complex.json",
+        "value": false,
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": false
+          }
+        ]
+      },
       "tryReuse": {
         "source": "complex.json",
         "value": true,
@@ -485,6 +513,32 @@
           "value": "123-456"
         }
       ]
+    },
+    "missingdb": {
+      "enabled": {
+        "source": "complex.json",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          },
+          {
+            "name": "complex.json",
+            "value": true
+          }
+        ]
+      },
+      "generate": {
+        "source": "complex.json",
+        "value": false,
+        "sources": [
+          {
+            "name": "complex.json",
+            "value": false
+          }
+        ]
+      }
     }
   },
   "management": {
@@ -1453,11 +1507,21 @@
       },
       "version": {
         "source": "default",
-        "value": "0.4.0",
+        "value": "0",
         "sources": [
           {
             "name": "default",
-            "value": "0.4.0"
+            "value": "0"
+          }
+        ]
+      },
+      "jwksUrl": {
+        "source": "default",
+        "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
+        "sources": [
+          {
+            "name": "default",
+            "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
           }
         ]
       },
@@ -1468,6 +1532,26 @@
           {
             "name": "default",
             "value": false
+          }
+        ]
+      },
+      "ldapUserVaultName": {
+        "source": "default",
+        "value": "",
+        "sources": [
+          {
+            "name": "default",
+            "value": ""
+          }
+        ]
+      },
+      "ldapUrl": {
+        "source": "default",
+        "value": "",
+        "sources": [
+          {
+            "name": "default",
+            "value": ""
           }
         ]
       }

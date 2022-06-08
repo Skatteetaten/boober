@@ -50,14 +50,19 @@ utv/about-alternate.json |   ttl: "1d"
             complex.json |   THIS.VALUE: "BAZ"
                          | databaseDefaults:
                  default |   flavor: "ORACLE_MANAGED"
-                 default |   generate: true
+utv/about-alternate.json |   generate: false
+utv/about-alternate.json |   ignoreMissingSchema: true
                  default |   tryReuse: false
                  default |   name: "@name@"
                          | database:
                          |   complex:
             complex.json |     enabled: true
+            complex.json |     ignoreMissingSchema: false
             complex.json |     tryReuse: true
             complex.json |   foo: "123-456"
+                         |   missingdb:
+            complex.json |     enabled: true
+            complex.json |     generate: false
                          | management:
             complex.json |   path: "/foobar"
             complex.json |   port: "8081"
@@ -164,8 +169,11 @@ utv/about-alternate.json |   ttl: "1d"
                          | azure:
                          |   jwtToStsConverter:
                  default |     enabled: false
-                 default |     version: "0.4.0"
+                 default |     version: "0"
+                 default |     jwksUrl: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
                  default |     ivGroupsRequired: false
+                 default |     ldapUserVaultName: ""
+                 default |     ldapUrl: ""
                  default |   managedRoute: false
                          |   apim:
                  default |     enabled: false

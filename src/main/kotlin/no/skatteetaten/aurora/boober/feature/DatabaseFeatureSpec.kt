@@ -32,6 +32,7 @@ data class Database(
     val id: String? = null,
     val flavor: DatabaseFlavor,
     val generate: Boolean,
+    val ignoreMissingSchema: Boolean,
     val tryReuse: Boolean,
     val instance: DatabaseInstance,
     val applicationLabel: String? = null
@@ -101,6 +102,11 @@ internal fun findDbDefaultHandlers(applicationFiles: List<AuroraConfigFile>): Li
             defaultValue = true
         ),
         AuroraConfigFieldHandler(
+            "$databaseDefaultsKey/ignoreMissingSchema",
+            defaultValue = false,
+            validator = { it.boolean() }
+        ),
+        AuroraConfigFieldHandler(
             "$databaseDefaultsKey/tryReuse",
             defaultValue = false,
             validator = { it.boolean() }
@@ -126,6 +132,7 @@ internal fun findDatabases(adc: AuroraDeploymentSpec): List<Database> {
         name = adc["$databaseDefaultsKey/name"],
         flavor = defaultFlavor,
         generate = adc["$databaseDefaultsKey/generate"],
+        ignoreMissingSchema = adc["$databaseDefaultsKey/ignoreMissingSchema"],
         instance = defaultInstance.copy(labels = defaultInstance.labels + mapOf("affiliation" to adc.affiliation)),
         tryReuse = adc["$databaseDefaultsKey/tryReuse"]
     )
@@ -154,7 +161,7 @@ internal fun List<Database>.createSchemaRequests(
         SchemaIdRequest(
             id = it.id,
             details = details,
-            tryReuse = it.tryReuse
+            tryReuse = it.tryReuse,
         )
     } else {
         SchemaForAppRequest(
@@ -162,6 +169,7 @@ internal fun List<Database>.createSchemaRequests(
             application = it.applicationLabel ?: adc.name,
             details = details,
             generate = it.generate,
+            ignoreMissingSchema = it.ignoreMissingSchema,
             tryReuse = it.tryReuse,
             user = userDetailsProvider.getAuthenticatedUser()
         )
@@ -254,6 +262,7 @@ private fun createExpandedDbHandlers(
     val mainHandlers = listOf(
         AuroraConfigFieldHandler("$db/enabled", defaultValue = true, validator = { it.boolean() }),
         AuroraConfigFieldHandler("$db/generate", validator = { it.boolean() }),
+        AuroraConfigFieldHandler("$db/ignoreMissingSchema", validator = { it.boolean() }),
         AuroraConfigFieldHandler("$db/name"),
         AuroraConfigFieldHandler("$db/applicationLabel"),
         AuroraConfigFieldHandler("$db/id"),
@@ -319,6 +328,7 @@ private fun findDatabase(
             id = if (value == "auto" || value.isBlank()) null else value,
             flavor = flavor,
             generate = adc.getOrNull("$key/generate") ?: defaultDb.generate,
+            ignoreMissingSchema = adc.getOrNull("$key/ignoreMissingSchema") ?: defaultDb.ignoreMissingSchema,
             instance = DatabaseInstance(
                 name = instanceName,
                 fallback = instanceFallback,
