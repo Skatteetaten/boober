@@ -1,5 +1,5 @@
 
-##Aurora features
+## Aurora features
 Handlers for Aurora features are defined in `no.skatteetaten.aurora.boober.feature`.
 
 ### Features
