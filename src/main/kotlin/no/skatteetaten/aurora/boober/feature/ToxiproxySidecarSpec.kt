@@ -11,20 +11,21 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.utils.UrlParser
 import no.skatteetaten.aurora.boober.utils.toMap
+import no.skatteetaten.aurora.boober.utils.whenTrue
 
 private const val FEATURE_NAME = "toxiproxy"
 
 private const val FIRST_PORT_NUMBER = 18000 // The first Toxiproxy port will be set to this number
 
+private const val MAIN_PROXY_NAME = "app"
+
 internal object ToxiproxyField {
-    const val database = "$FEATURE_NAME/database"
-    const val endpointsFromConfig = "$FEATURE_NAME/endpointsFromConfig"
-    const val serverAndPortFromConfig = "$FEATURE_NAME/serverAndPortFromConfig"
     const val version = "$FEATURE_NAME/version"
+    const val proxies = "$FEATURE_NAME/proxies"
 }
 
 data class ToxiproxyConfig(
-    val name: String = "app",
+    val name: String = MAIN_PROXY_NAME,
     val listen: String = "0.0.0.0:" + PortNumbers.TOXIPROXY_HTTP_PORT,
     val upstream: String = "0.0.0.0:" + PortNumbers.INTERNAL_HTTP_PORT,
     val enabled: Boolean = true
@@ -38,116 +39,225 @@ private data class ToxiproxyEndpoint(
 
 private data class ToxiproxyServerAndPortVars(
     val proxyname: String,
-    val serverVar: String,
-    val portVar: String,
+    val serverVar: String?,
+    val portVar: String?,
     val enabled: Boolean
 )
+
+private data class ToxiproxyDatabase(
+    val proxyName: String,
+    val databaseName: String,
+    val enabled: Boolean
+)
+
+private data class ToxiproxyProxy(
+    val proxyName: String,
+    val enabled: Boolean,
+    val initialEnabledState: Boolean,
+    val urlVariable: String?,
+    val serverVariable: String?,
+    val portVariable: String?,
+    val database: Boolean,
+    val databaseName: String?
+) {
+    fun isEndpointProxy() = urlVariable != null &&
+        urlVariable.isNotEmpty() &&
+        listOf(serverVariable, portVariable, databaseName).all { it.isNullOrBlank() } &&
+        !database
+
+    fun isServerAndPortProxy() = listOf(serverVariable, portVariable).any { it != null && it.isNotBlank() } &&
+        listOf(urlVariable, databaseName).all { it.isNullOrBlank() } &&
+        !database
+
+    fun isNamedDatabaseProxy() = databaseName != null &&
+        databaseName.isNotEmpty() &&
+        listOf(urlVariable, serverVariable, portVariable).all { it.isNullOrBlank() } &&
+        !database
+
+    fun isDefaultDatabaseProxy() = database &&
+        listOf(urlVariable, serverVariable, portVariable, databaseName).all { it.isNullOrBlank() }
+
+    fun toToxiproxyEndpoint() =
+        if (isEndpointProxy()) ToxiproxyEndpoint(proxyName, urlVariable!!, initialEnabledState)
+        else null
+
+    fun toToxiproxyServerAndPortVars() =
+        if (isServerAndPortProxy()) ToxiproxyServerAndPortVars(proxyName, serverVariable, portVariable, initialEnabledState)
+        else null
+
+    fun toToxiproxyDatabase(defaultName: String?) =
+        if (isNamedDatabaseProxy()) ToxiproxyDatabase(proxyName, databaseName!!, initialEnabledState)
+        else if (defaultName != null && defaultName.isNotBlank() && isDefaultDatabaseProxy())
+            ToxiproxyDatabase(proxyName, defaultName, initialEnabledState)
+        else null
+
+    fun toToxiproxyDatabase() = toToxiproxyDatabase(null)
+
+    fun invalidCombinationError(): AuroraDeploymentSpecValidationException? {
+        val validConfigMessage = "A valid configuration must contain a value for exactly one of the properties " +
+            "urlVariable, database, or databaseName, or both the properties serverVariable and portVariable."
+        return if (hasNoReference()) {
+            AuroraDeploymentSpecValidationException(
+                "Neither of the fields urlVariable, serverVariable, portVariable, database or databaseName are set " +
+                    "for the Toxiproxy proxy named $proxyName. $validConfigMessage"
+            )
+        } else if (isNotValidProxy()) {
+            AuroraDeploymentSpecValidationException(
+                "The combination of fields specified for the Toxiproxy proxy named $proxyName is not valid. " +
+                    validConfigMessage
+            )
+        } else null
+    }
+
+    private fun hasNoReference() = !database &&
+        listOf(urlVariable, serverVariable, portVariable, databaseName).all { it.isNullOrBlank() }
+
+    private fun isNotValidProxy() = listOf(
+        isEndpointProxy(),
+        isServerAndPortProxy(),
+        isNamedDatabaseProxy(),
+        isDefaultDatabaseProxy()
+    ).all { !it }
+}
 
 internal val AuroraDeploymentSpec.toxiproxyVersion: String?
     get() = featureEnabled(FEATURE_NAME) { this[ToxiproxyField.version] }
 
-internal fun AuroraDeploymentSpec.validateToxiproxy(): List<AuroraDeploymentSpecValidationException> {
-    return listOf(
+internal fun AuroraDeploymentSpec.validateToxiproxy(): List<AuroraDeploymentSpecValidationException> =
+    listOf(
+        invalidCombinationOfToxiproxyFieldsErrors(),
         missingOrInvalidEndpointVariableErrors(),
         missingServerAndPortVariableErrors(),
-        missingDbErrors(),
-        proxynameDuplicateErrors()
+        missingNamedDbErrors(),
+        invalidDbConfigErrors(),
+        proxyNameError(),
+        duplicateUrlVariableErrors(),
+        duplicateServerAndPortVariableErrors(),
+        duplicateDatabaseNameErrors()
     ).flatten()
-}
 
-// Validate that for every endpoint in toxiproxy/endpointsFromConfig, there is a corresponding environment variable
-internal fun AuroraDeploymentSpec.missingOrInvalidEndpointVariableErrors() =
+private fun AuroraDeploymentSpec.invalidCombinationOfToxiproxyFieldsErrors() =
+    extractEnabledToxiproxyProxies().mapNotNull { it.invalidCombinationError() }
+
+// Validate that the variables given in toxiproxy/proxies/<proxy name>/urlVariable exist
+private fun AuroraDeploymentSpec.missingOrInvalidEndpointVariableErrors() =
     getToxiproxyEndpointEnvVars().mapNotNull { varName ->
-        val envVar = this.getOrNull<String>("config/$varName")
+        val envVar = getOrNull<String>("config/$varName")
         if (envVar == null) {
-            AuroraDeploymentSpecValidationException(
-                "Found Toxiproxy config for endpoint named $varName, " +
-                    "but there is no such environment variable."
-            )
+            "Found Toxiproxy config for endpoint named $varName, but there is no such environment variable."
         } else if (!UrlParser(envVar).isValid()) {
-            AuroraDeploymentSpecValidationException(
-                "The format of the URL \"$envVar\" given by the config variable $varName is not supported."
-            )
+            "The format of the URL \"$envVar\" given by the config variable $varName is not supported."
         } else null
-    }
+    }.map(::AuroraDeploymentSpecValidationException)
 
-// Validate that the environment variables given in toxiproxy/serverAndPortFromConfig exist
-internal fun AuroraDeploymentSpec.missingServerAndPortVariableErrors(): List<AuroraDeploymentSpecValidationException> {
-    return this.extractToxiproxyServersAndPorts().flatMap { serverAdnPortsVars ->
-        val portVar = serverAdnPortsVars.portVar
-        val serverVar = serverAdnPortsVars.serverVar
+// Validate that the variables given in toxiproxy/proxies/<proxy name>/serverVariable
+// and toxiproxy/proxies/<proxy name>/portVariable exist
+private fun AuroraDeploymentSpec.missingServerAndPortVariableErrors() =
+    extractToxiproxyServersAndPorts().flatMap { serverAndPortsVars ->
+
+        val (proxyName, serverVar, portVar) = serverAndPortsVars
         val serverAndPort = listOf("server" to serverVar, "port" to portVar)
 
         serverAndPort.mapNotNull { (name, value) ->
-            val isServerOrPortMissingFromConfig = this.getSubKeyValues("config").none { it == value }
-
-            if (isServerOrPortMissingFromConfig) {
-                AuroraDeploymentSpecValidationException(
-                    "Found Toxiproxy config for a $name variable named $value, " +
-                        "but there is no such environment variable."
-                )
-            } else null
-        }
-    }
-}
-
-// Validate that for every database in toxiproxy/database, there is a corresponding database in the spec
-internal fun AuroraDeploymentSpec.missingDbErrors(): List<AuroraDeploymentSpecValidationException> {
-    val toxiproxyDbNames = this.getSubKeyValues("$FEATURE_NAME/database")
-        .filter {
-            if (this.isSimplifiedConfig(ToxiproxyField.database)) {
-                this[ToxiproxyField.database]
-            } else if (this.isSimplifiedConfig("${ToxiproxyField.database}/$it")) {
-                this["${ToxiproxyField.database}/$it"]
-            } else {
-                this["${ToxiproxyField.database}/$it/enabled"]
+            if (value.isNullOrBlank()) {
+                return@mapNotNull "The $name variable is missing for the Toxiproxy proxy named $proxyName."
             }
-        }
-
-    return toxiproxyDbNames.mapNotNull { toxiproxyDbName ->
-        val dbNames = getSubKeyValues("database")
-
-        if (!dbNames.contains(toxiproxyDbName)) {
-            AuroraDeploymentSpecValidationException(
-                "Found Toxiproxy config for database named $toxiproxyDbName, " +
-                    "but there is no such database configured."
-            )
-        } else null
+            val isServerOrPortMissingFromConfig = this.getSubKeyValues("config").none { it == value }
+            if (isServerOrPortMissingFromConfig) {
+                "Found Toxiproxy config for a $name variable named $value, " +
+                    "but there is no such environment variable."
+            } else null
+        }.map(::AuroraDeploymentSpecValidationException)
     }
-}
 
-// Validate that there are no proxyname duplicates
-internal fun AuroraDeploymentSpec.proxynameDuplicateErrors() = getToxiproxyNames()
-    .groupingBy { it }
-    .eachCount()
-    .filter { it.value > 1 }
-    .map {
-        AuroraDeploymentSpecValidationException(
-            "Found ${it.value} Toxiproxy configs with the proxy name \"${it.key}\". " +
-                "Proxy names have to be unique."
+// Validate that the "database" and "databaseName" properties are used correctly
+private fun AuroraDeploymentSpec.invalidDbConfigErrors(): List<AuroraDeploymentSpecValidationException> {
+    val errors = mutableListOf<String>()
+    if (isSimplifiedAndEnabled("database") && extractToxiproxyNamedDatabases().isNotEmpty()) {
+        errors.add(
+            "Found named database(s) in the Toxiproxy config, although the database config is simplified. " +
+                "Did you mean to use the property \"database\" instead of \"databaseName\"?"
         )
     }
+    val numberOfDefaultDbConfigs = extractEnabledToxiproxyProxies().count { it.isDefaultDatabaseProxy() }
+    if (numberOfDefaultDbConfigs > 1) {
+        errors.add("The \"database\" property may only be used once in the Toxiproxy config.")
+    }
+    if (numberOfDefaultDbConfigs > 0 && !isSimplifiedConfig("database")) {
+        errors.add(
+            "It is not possible to set up a Toxiproxy proxy with the \"database\" property when the database " +
+                "config is not simplified. Did you mean to use \"databaseName\"?"
+        )
+    }
+    if (numberOfDefaultDbConfigs > 0 && isSimplifiedAndDisabled("database")) {
+        errors.add("It is not possible to set up a Toxiproxy proxy for a disabled database.")
+    }
+    return errors.map(::AuroraDeploymentSpecValidationException)
+}
 
-internal fun AuroraDeploymentSpec.endpointsFromConfig(initialPort: Int) =
-    this.extractToxiproxyEndpoints()
-        .mapIndexedNotNull { i, (proxyname, varname, enabled) ->
-            val url: String? = this.getOrNull("config/$varname")
-
-            url?.let {
-                val uri = URI(url)
-                val upstreamPort = if (uri.port == -1) {
-                    if (uri.scheme == "https") PortNumbers.HTTPS_PORT else PortNumbers.HTTP_PORT
-                } else uri.port
-                ToxiproxyConfig(
-                    name = proxyname,
-                    listen = "0.0.0.0:${initialPort + i}",
-                    upstream = uri.host + ":" + upstreamPort,
-                    enabled = enabled
-                )
+// Validate that for every database in toxiproxy/proxies/<proxy name>/databaseName,
+// there is a corresponding database in the spec
+private fun AuroraDeploymentSpec.missingNamedDbErrors() =
+    if (!isSimplifiedAndEnabled("database"))
+        extractToxiproxyNamedDatabases()
+            .map { it.databaseName }
+            .mapNotNull {
+                val dbNames = getSubKeyValues("database")
+                if (!dbNames.contains(it)) {
+                    AuroraDeploymentSpecValidationException(
+                        "Found Toxiproxy config for database named $it, " +
+                            "but there is no such database configured."
+                    )
+                } else null
             }
-        }
+    else emptyList()
 
-internal fun AuroraDeploymentSpec.serversAndPortsFromConfig(initialPort: Int): List<ToxiproxyConfig> {
+// Validate that the proxyname used for incoming calls is not duplicated
+private fun AuroraDeploymentSpec.proxyNameError() = extractEnabledToxiproxyProxies()
+    .any { it.proxyName == MAIN_PROXY_NAME }
+    .whenTrue { listOf(AuroraDeploymentSpecValidationException("The name \"$MAIN_PROXY_NAME\" is reserved for the proxy for incoming calls.")) }
+    ?: emptyList()
+
+// Validate that all urlVariable values are unique
+private fun AuroraDeploymentSpec.duplicateUrlVariableErrors() = extractToxiproxyEndpoints()
+    .groupingBy { it.varName }
+    .eachCount()
+    .filter { it.value > 1 }
+    .map { AuroraDeploymentSpecValidationException("The url variable \"${it.key}\" is referred to by several proxies.") }
+
+// Validate that all serverVariable and portVariable combinations are unique
+private fun AuroraDeploymentSpec.duplicateServerAndPortVariableErrors() = extractToxiproxyServersAndPorts()
+    .groupingBy { Pair(it.serverVar, it.portVar) }
+    .eachCount()
+    .filter { it.value > 1 }
+    .map { "The server and port variables \"${it.key.first}\" and \"${it.key.second}\" are referred to by several proxies." }
+    .map(::AuroraDeploymentSpecValidationException)
+
+// Validate that all databaseName values are unique
+private fun AuroraDeploymentSpec.duplicateDatabaseNameErrors() = extractToxiproxyDatabases()
+    .groupingBy { it.databaseName }
+    .eachCount()
+    .filter { it.value > 1 }
+    .map { AuroraDeploymentSpecValidationException("The database name \"${it.key}\" is referred to by several proxies.") }
+
+private fun AuroraDeploymentSpec.endpointsFromConfig(initialPort: Int) =
+    extractToxiproxyEndpoints().mapIndexedNotNull { i, (proxyname, varname, enabled) ->
+        val url: String? = getOrNull("config/$varname")
+        url?.let {
+            val uri = URI(url)
+            val upstreamPort = if (uri.port == -1) {
+                if (uri.scheme == "https") PortNumbers.HTTPS_PORT else PortNumbers.HTTP_PORT
+            } else uri.port
+            ToxiproxyConfig(
+                name = proxyname,
+                listen = "0.0.0.0:${initialPort + i}",
+                upstream = uri.host + ":" + upstreamPort,
+                enabled = enabled
+            )
+        }
+    }
+
+private fun AuroraDeploymentSpec.serversAndPortsFromConfig(initialPort: Int): List<ToxiproxyConfig> {
     return extractToxiproxyServersAndPorts()
         .mapIndexed { i, (proxyname, serverVar, portVar, enabled) ->
             val upstreamServer: String? = this.getOrNull("config/$serverVar")
@@ -162,45 +272,36 @@ internal fun AuroraDeploymentSpec.serversAndPortsFromConfig(initialPort: Int): L
         }
 }
 
-internal fun AuroraDeploymentSpec.databasesFromSecrets(
+private typealias SecretNameToPortMap = Map<String, Int>
+
+private fun AuroraDeploymentSpec.databasesFromSecrets(
     initialPort: Int,
     databaseSchemaProvisioner: DatabaseSchemaProvisioner,
     userDetailsProvider: UserDetailsProvider
-): Pair<List<ToxiproxyConfig>, Map<String, Int>> {
-    val schemas = findDatabases(this)
-        .filter {
-            val databaseEnabledField = when {
-                isSimplifiedConfig(ToxiproxyField.database) -> ToxiproxyField.database
-                isSimplifiedConfig("${ToxiproxyField.database}/${it.name}") -> "${ToxiproxyField.database}/${it.name}"
-                else -> "${ToxiproxyField.database}/${it.name}/enabled"
-            }
-            this[databaseEnabledField]
-        }
+): Pair<List<ToxiproxyConfig>, SecretNameToPortMap> {
+
+    val toxiproxyDatabases: Map<String, ToxiproxyDatabase> = extractToxiproxyDatabases().associateBy { it.databaseName }
+
+    return findDatabases(this)
+        .filter { db -> toxiproxyDatabases.containsKey(db.name) }
         .createSchemaRequests(userDetailsProvider, this)
         .mapNotNull { request ->
             val schema = databaseSchemaProvisioner.findSchema(request)
-
-            if (schema != null) {
-                request to schema
-            } else null
+            if (schema != null) request to schema else null
         }
-
-    return schemas.mapIndexed { i, (request, schema) ->
-        val dbName = request.details.schemaName
-        val proxyname =
-            this.getOrNull<String>("${ToxiproxyField.database}/$dbName/proxyname") ?: "database_${schema.id}"
-
-        val port = initialPort + i
-        val toxiproxyConfig = ToxiproxyConfig(
-            name = proxyname,
-            listen = "0.0.0.0:$port",
-            upstream = schema.databaseInstance.host + ":" + schema.databaseInstance.port,
-            enabled = this.getOrNull("${ToxiproxyField.database}/$dbName/initialEnabledState") ?: true
-        )
-
-        val secretNameToPortMap = mapOf(request.getSecretName(prefix = name) to port)
-        Pair(toxiproxyConfig, secretNameToPortMap)
-    }
+        .mapIndexed { i, (request, schema) ->
+            val dbName = request.details.schemaName
+            val toxiproxyDatabase = toxiproxyDatabases[dbName]!!
+            val port = initialPort + i
+            val toxiproxyConfig = ToxiproxyConfig(
+                name = toxiproxyDatabase.proxyName,
+                listen = "0.0.0.0:$port",
+                upstream = schema.databaseInstance.host + ":" + schema.databaseInstance.port,
+                enabled = toxiproxyDatabase.enabled
+            )
+            val secretNameToPortMap = mapOf(request.getSecretName(prefix = name) to port)
+            Pair(toxiproxyConfig, secretNameToPortMap)
+        }
         .unzip()
         .run { Pair(first, second.toMap()) }
 }
@@ -255,59 +356,32 @@ internal fun List<Container>.overrideEnvVarsWithProxies(adc: AuroraDeploymentSpe
 internal fun List<ToxiproxyConfig>.getNextPortNumber(numberIfEmpty: Int) =
     maxOfOrNull { it.listen.substringAfter(':').toInt() }.let { if (it == null) numberIfEmpty else it + 1 }
 
+private fun AuroraDeploymentSpec.extractEnabledToxiproxyProxies() = getSubKeyValues(ToxiproxyField.proxies).map {
+    ToxiproxyProxy(
+        proxyName = it,
+        enabled = get("${ToxiproxyField.proxies}/$it/enabled"),
+        initialEnabledState = get("${ToxiproxyField.proxies}/$it/initialEnabledState"),
+        urlVariable = getOrNull("${ToxiproxyField.proxies}/$it/urlVariable"),
+        serverVariable = getOrNull("${ToxiproxyField.proxies}/$it/serverVariable"),
+        portVariable = getOrNull("${ToxiproxyField.proxies}/$it/portVariable"),
+        database = get("${ToxiproxyField.proxies}/$it/database"),
+        databaseName = getOrNull("${ToxiproxyField.proxies}/$it/databaseName")
+    )
+}.filter { it.enabled }
+
 // Return a list of proxynames and corresponding environment variable names
-// If proxyname is not set, it defaults to "endpoint_<variable name>"
-private fun AuroraDeploymentSpec.extractToxiproxyEndpoints(): List<ToxiproxyEndpoint> {
-    val toxiproxyEndpointConfigNames = getSubKeyValues(ToxiproxyField.endpointsFromConfig)
+private fun AuroraDeploymentSpec.extractToxiproxyEndpoints() =
+    extractEnabledToxiproxyProxies().mapNotNull { it.toToxiproxyEndpoint() }
 
-    return toxiproxyEndpointConfigNames.filter { name ->
-        if (this.isSimplifiedConfig("${ToxiproxyField.endpointsFromConfig}/$name")) {
-            this["${ToxiproxyField.endpointsFromConfig}/$name"]
-        } else {
-            this["${ToxiproxyField.endpointsFromConfig}/$name/enabled"]
-        }
-    }.map { configField ->
-        val proxyName =
-            this.getOrNull("${ToxiproxyField.endpointsFromConfig}/$configField/proxyname") ?: "endpoint_$configField"
+private fun AuroraDeploymentSpec.extractToxiproxyServersAndPorts() =
+    extractEnabledToxiproxyProxies().mapNotNull { it.toToxiproxyServerAndPortVars() }
 
-        ToxiproxyEndpoint(
-            proxyName = proxyName,
-            varName = configField,
-            enabled = this["${ToxiproxyField.endpointsFromConfig}/$configField/initialEnabledState"]
-        )
-    }
-}
+private fun AuroraDeploymentSpec.extractToxiproxyDatabases() =
+    extractEnabledToxiproxyProxies().mapNotNull { it.toToxiproxyDatabase(this["$databaseDefaultsKey/name"]) }
 
-private fun AuroraDeploymentSpec.extractToxiproxyServersAndPorts(): List<ToxiproxyServerAndPortVars> {
-    val serverAndPortNames = this.getSubKeyValues(ToxiproxyField.serverAndPortFromConfig)
-
-    return serverAndPortNames.map { name ->
-        ToxiproxyServerAndPortVars(
-            proxyname = name,
-            serverVar = this["${ToxiproxyField.serverAndPortFromConfig}/$name/serverVariable"],
-            portVar = this["${ToxiproxyField.serverAndPortFromConfig}/$name/portVariable"],
-            enabled = this["${ToxiproxyField.serverAndPortFromConfig}/$name/initialEnabledState"]
-        )
-    }
-}
-
-private fun AuroraDeploymentSpec.getToxiproxyNames(): List<String> {
-    return getToxiproxyEndpointOrDbNames(ToxiproxyField.database) +
-        getToxiproxyEndpointOrDbNames(ToxiproxyField.endpointsFromConfig) +
-        getToxiproxyServerAndPortNames()
-}
-
-private fun AuroraDeploymentSpec.getToxiproxyServerAndPortNames(): List<String> =
-    this.findSubKeys(ToxiproxyField.serverAndPortFromConfig).toList()
-
-// Find all proxy names of a given url source (endpoints or database)
-private fun AuroraDeploymentSpec.getToxiproxyEndpointOrDbNames(fieldName: String): List<String> {
-    val envVars = this.getSubKeyValues(fieldName)
-    val defaultPrefix = if (fieldName == ToxiproxyField.database) "database" else "endpoint"
-    return envVars.map {
-        this.getOrNull("$fieldName/$it/proxyname") ?: "${defaultPrefix}_$it"
-    }
-}
+private fun AuroraDeploymentSpec.extractToxiproxyNamedDatabases() = extractEnabledToxiproxyProxies()
+    .filter { it.isNamedDatabaseProxy() }
+    .mapNotNull { it.toToxiproxyDatabase() }
 
 private fun List<ToxiproxyConfig>.findPortByProxyName(proxyName: String) =
     find { it.name == proxyName }?.listen?.substringAfter(':')
@@ -318,5 +392,5 @@ private fun String.convertToProxyUrl(port: Int): String =
         .withModifiedPort(port)
         .makeString()
 
-internal fun AuroraDeploymentSpec.getToxiproxyEndpointEnvVars(): Set<String> =
-    this.findSubKeys(ToxiproxyField.endpointsFromConfig)
+private fun AuroraDeploymentSpec.getToxiproxyEndpointEnvVars(): List<String> =
+    extractToxiproxyEndpoints().map { it.varName }
