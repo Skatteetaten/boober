@@ -4,6 +4,7 @@ import java.net.URI
 import java.nio.charset.Charset
 import java.util.Base64
 import io.fabric8.kubernetes.api.model.Container
+import no.skatteetaten.aurora.boober.feature.toxiproxy.toxiproxyConfigs
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException

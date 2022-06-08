@@ -80,24 +80,18 @@ private fun AuroraDeploymentSpec.invalidDbConfigErrors(): List<AuroraDeploymentS
 // Validate that for every database in toxiproxy/proxies/<proxy name>/databaseName,
 // there is a corresponding database in the spec
 private fun AuroraDeploymentSpec.missingNamedDbErrors() =
-    if (!isSimplifiedAndEnabled("database"))
-        extractToxiproxyNamedDatabases()
-            .map { it.databaseName }
-            .mapNotNull {
-                val dbNames = getSubKeyValues("database")
-                if (!dbNames.contains(it)) {
-                    AuroraDeploymentSpecValidationException(
-                        "Found Toxiproxy config for database named $it, " +
-                            "but there is no such database configured."
-                    )
-                } else null
-            }
-    else emptyList()
+    if (isSimplifiedAndEnabled("database")) emptyList()
+    else extractToxiproxyNamedDatabases()
+        .map { it.databaseName }
+        .filterNot(getSubKeyValues("database")::contains)
+        .map { "Found Toxiproxy config for database named $it, but there is no such database configured." }
+        .map(::AuroraDeploymentSpecValidationException)
 
 // Validate that the proxyname used for incoming calls is not duplicated
 private fun AuroraDeploymentSpec.proxyNameError() = extractEnabledToxiproxyProxies()
     .any { it.proxyName == MAIN_PROXY_NAME }
-    .whenTrue { listOf(AuroraDeploymentSpecValidationException("The name \"$MAIN_PROXY_NAME\" is reserved for the proxy for incoming calls.")) }
+    .whenTrue { "The name \"$MAIN_PROXY_NAME\" is reserved for the proxy for incoming calls." }
+    ?.let { listOf(AuroraDeploymentSpecValidationException(it)) }
     ?: emptyList()
 
 // Validate that all urlVariable values are unique

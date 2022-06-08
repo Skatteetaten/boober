@@ -1,4 +1,4 @@
-package no.skatteetaten.aurora.boober.feature
+package no.skatteetaten.aurora.boober.feature.toxiproxy
 
 import org.springframework.beans.factory.annotation.Value
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -24,6 +24,20 @@ import io.fabric8.kubernetes.api.model.Secret
 import io.fabric8.kubernetes.api.model.Service
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
+import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
+import no.skatteetaten.aurora.boober.feature.FeatureContext
+import no.skatteetaten.aurora.boober.feature.ToxiproxyConfig
+import no.skatteetaten.aurora.boober.feature.ToxiproxyField
+import no.skatteetaten.aurora.boober.feature.allToxiproxyConfigsAndSecretNameToPortMap
+import no.skatteetaten.aurora.boober.feature.convertEncryptedJdbcUrlToEncryptedProxyUrl
+import no.skatteetaten.aurora.boober.feature.dbHandlers
+import no.skatteetaten.aurora.boober.feature.getContextKey
+import no.skatteetaten.aurora.boober.feature.isJob
+import no.skatteetaten.aurora.boober.feature.name
+import no.skatteetaten.aurora.boober.feature.namespace
+import no.skatteetaten.aurora.boober.feature.overrideEnvVarsWithProxies
+import no.skatteetaten.aurora.boober.feature.toxiproxyVersion
+import no.skatteetaten.aurora.boober.feature.validateToxiproxy
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand

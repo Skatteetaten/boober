@@ -14,6 +14,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.facade.json
+import no.skatteetaten.aurora.boober.feature.toxiproxy.ToxiproxySidecarFeature
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
