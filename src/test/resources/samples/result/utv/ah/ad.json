@@ -7,9 +7,12 @@
       "app": "ah",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "ah",
+      "app.kubernetes.io/name": "paas.utv",
+      "app.kubernetes.io/instance": "ah",
+      "app.kubernetes.io/component": "backend",
       "id": "1234567890",
       "applicationId": "81e9586fcc0718312784c585bb94421ee89075ee",
       "booberDeployId": "deploy1"
@@ -33,7 +36,7 @@
     ],
     "deployTag": "1.3.4",
     "command": {
-      "overrideFiles": {},
+      "overrideFiles": { },
       "applicationDeploymentRef": {
         "environment": "utv",
         "application": "ah"

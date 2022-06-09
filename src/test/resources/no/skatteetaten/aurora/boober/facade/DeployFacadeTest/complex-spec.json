@@ -949,8 +949,8 @@
       }
     ]
   },
-  "topologyView": {
-    "group": {
+  "topology": {
+    "partOf": {
       "source": "complex.json",
       "value": "test-group",
       "sources": [

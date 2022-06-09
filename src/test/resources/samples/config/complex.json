@@ -84,8 +84,8 @@
       "severity": "warning"
     }
   },
-  "topologyView": {
-    "group": "test-group",
+  "topology": {
+    "partOf": "test-group",
     "runtime": "spring-boot",
     "connectsTo": [
       "test-app1",

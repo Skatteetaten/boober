@@ -29,7 +29,10 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
             "updatedAt" to "0",
             "lastUpdatedYear" to "1970",
             "affiliation" to "paas",
-            "name" to "simple"
+            "name" to "simple",
+            "app.kubernetes.io/name" to "paas.utv",
+            "app.kubernetes.io/instance" to "simple",
+            "app.kubernetes.io/component" to "backend"
         )
         resources.forEach {
             assertThat(it).auroraResourceModifiedByThisFeatureWithComment("Added commonLabels to metadata")

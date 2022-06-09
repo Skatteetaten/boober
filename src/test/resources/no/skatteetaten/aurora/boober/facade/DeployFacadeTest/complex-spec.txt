@@ -112,8 +112,8 @@ utv/about-alternate.json |   ignoreMissingSchema: true
             complex.json |     keys: ["BAR","FOO"]
             complex.json |     keyMappings: {"BAR":"BAZ"}
             complex.json | sts: true
-                         | topologyView:
-            complex.json |   group: "test-group"
+                         | topology:
+            complex.json |   partOf: "test-group"
             complex.json |   runtime: "spring-boot"
             complex.json |   connectsTo: ["test-app1","test-app2"]
                          | webseal:

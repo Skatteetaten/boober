@@ -7,9 +7,12 @@
       "app": "job",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "job",
+      "app.kubernetes.io/name": "paas.utv",
+      "app.kubernetes.io/instance": "job",
+      "app.kubernetes.io/component": "backend",
       "booberDeployId": "deploy1"
     },
     "name": "job",
@@ -34,9 +37,12 @@
           "app": "job",
           "updatedBy": "hero",
           "updatedAt": "0",
-          "lastUpdatedYear" : "1970",
+          "lastUpdatedYear": "1970",
           "affiliation": "paas",
-          "name": "job"
+          "name": "job",
+          "app.kubernetes.io/name": "paas.utv",
+          "app.kubernetes.io/instance": "job",
+          "app.kubernetes.io/component": "backend"
         }
       },
       "spec": {
@@ -91,8 +97,8 @@
                 "imagePullPolicy": "Always",
                 "name": "job",
                 "resources": {
-                  "limits": {},
-                  "requests": {}
+                  "limits": { },
+                  "requests": { }
                 }
               }
             ],

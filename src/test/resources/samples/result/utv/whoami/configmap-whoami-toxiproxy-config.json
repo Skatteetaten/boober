@@ -10,6 +10,9 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "whoami",
+      "app.kubernetes.io/name": "paas.utv",
+      "app.kubernetes.io/instance": "whoami",
+      "app.kubernetes.io/component": "backend",
       "booberDeployId": "deploy1"
     },
     "name": "whoami-toxiproxy-config",

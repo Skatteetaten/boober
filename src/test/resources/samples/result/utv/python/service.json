@@ -13,9 +13,12 @@
       "app": "python",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "python",
+      "app.kubernetes.io/name": "paas.utv",
+      "app.kubernetes.io/instance": "python",
+      "app.kubernetes.io/component": "backend",
       "booberDeployId": "deploy1"
     },
     "name": "python",
