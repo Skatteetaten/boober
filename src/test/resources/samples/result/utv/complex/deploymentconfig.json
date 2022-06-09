@@ -3,7 +3,7 @@
   "kind": "DeploymentConfig",
   "metadata": {
     "annotations": {
-      "app.openshift.io/connects-to": "[test-app1, test-app2]"
+      "app.openshift.io/connects-to": "[\"test-app1\", \"test-app2\"]"
     },
     "labels": {
       "operationScope": "aos-4016",

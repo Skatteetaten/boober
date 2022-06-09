@@ -41,7 +41,7 @@ class TopologyFeature : Feature {
                         auroraResource.resource.metadata.annotations = mutableMapOf()
                     }
                     auroraResource.resource.metadata.annotations["app.openshift.io/connects-to"] = connectsTo.map {
-                        it
+                        "\"$it\""
                     }.toString()
                 }
             }
