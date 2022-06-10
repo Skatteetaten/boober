@@ -162,7 +162,6 @@ utv/about-alternate.json |   ignoreMissingSchema: true
             complex.json |     keys: ["BAR","FOO"]
             complex.json |     keyMappings: {"BAR":"BAZ"}
             complex.json | sts: true
-                 default | toxiproxy: false
                          | webseal:
             complex.json |   host: "test"
             complex.json |   roles: "admin,dev,@name@"
@@ -180,3 +179,4 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          | logging:
             complex.json |   index: "test-index"
                  default |   bufferSize: 20
+                 default | toxiproxy: false

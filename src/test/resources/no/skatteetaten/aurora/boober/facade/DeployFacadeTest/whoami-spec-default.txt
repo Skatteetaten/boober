@@ -70,7 +70,6 @@ utv/about.json | cluster: "utv"
        default |   objectArea: ""
        default |   tenant: "paas-utv"
        default | sts: false
-   whoami.json | toxiproxy: true
        default | webseal: false
                | azure:
                |   jwtToStsConverter:
@@ -85,3 +84,4 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
                | logging:
        default |   bufferSize: 20
+   whoami.json | toxiproxy: true

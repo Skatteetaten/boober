@@ -1461,16 +1461,6 @@
       }
     ]
   },
-  "toxiproxy": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
   "webseal": {
     "host": {
       "source": "complex.json",
@@ -1600,5 +1590,15 @@
         }
       ]
     }
+  },
+  "toxiproxy": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   }
 }
