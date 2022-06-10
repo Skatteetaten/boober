@@ -30,8 +30,7 @@ class CommonLabelFeatureTest : AbstractFeatureTest() {
             "lastUpdatedYear" to "1970",
             "affiliation" to "paas",
             "name" to "simple",
-            "app.kubernetes.io/name" to "paas.utv",
-            "app.kubernetes.io/instance" to "simple",
+            "app.kubernetes.io/name" to "simple",
             "app.kubernetes.io/component" to "backend"
         )
         resources.forEach {

@@ -14,8 +14,7 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "web",
-      "app.kubernetes.io/name": "paas.utv",
-      "app.kubernetes.io/instance": "web",
+      "app.kubernetes.io/name": "web",
       "app.kubernetes.io/component": "frontend",
       "type": "webseal",
       "booberDeployId": "deploy1"

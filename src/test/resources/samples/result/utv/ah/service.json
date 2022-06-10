@@ -15,8 +15,7 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "ah",
-      "app.kubernetes.io/name": "paas.utv",
-      "app.kubernetes.io/instance": "ah",
+      "app.kubernetes.io/name": "ah",
       "app.kubernetes.io/component": "backend",
       "booberDeployId": "deploy1"
     },

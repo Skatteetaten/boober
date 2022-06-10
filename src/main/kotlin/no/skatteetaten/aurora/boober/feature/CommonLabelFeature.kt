@@ -28,8 +28,7 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
             "lastUpdatedYear" to now.atZone(ZoneId.systemDefault()).year.toString(),
             "affiliation" to adc.affiliation,
             "name" to adc.name,
-            "app.kubernetes.io/name" to "${adc.affiliation}.${adc.envName}",
-            "app.kubernetes.io/instance" to adc.name,
+            "app.kubernetes.io/name" to adc.name,
             "app.kubernetes.io/component" to adc.component
         )
 
