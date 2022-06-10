@@ -124,3 +124,17 @@ provide the boolean property `shouldOverwriteResources` which will, when set to 
 
 - Aurora configuration files are located in [`src/test/resources/samples/config`](./src/test/resources/samples/config)
 - Snapshot files are located in [`src/test/resources/samples/result/utv`](./src/test/resources/samples/result/utv)
+
+### Spring cloud contract
+
+[Spring Cloud Contract](https://cloud.spring.io/spring-cloud-contract/) helps implement [Consumer Driven Contracts](https://martinfowler.com/articles/consumerDrivenContracts.html).
+
+Boober is setup to generate Spock tests from the contracts. There is a convention to follow when adding new tests.
+
+- Create a package in `src/test/resources/contracts` that contains the name of the controller. If the controller is called `ClientConfigControllerV1` the package should be named `clientconfig`.
+- Create a contract inside this folder. If you need a json-response body, this can be added as a separate json-file inside the responses folder. In the clientconfig example these files are put into `src/test/resources/contract/clientconfig/responses`.
+- In the folder `src/test/kotlin` and the package `no.skatteetaten.aurora.boober.contracts` create a kotlin class called [name]Base.
+  In the example it will be `ClientconfigBase`. This is picked up by [spring cloud contract automatically](https://docs.spring.io/spring-cloud-contract/docs/3.1.x/reference/html/maven-project.html#maven-different-base) and added as a base class to the generated test.
+- In the Base-class add the required setup code, such as creating mock services. It should also extend `AbstractContractBase`, which provides a few helpful helper methods available to get the content of the response-json files and setting up the mock controller.
+- Run `./gradlew generateContractTests` to generate the Spock tests from the contracts. The tests will be automatically generated and run with the normal `./gradlew build` command.
+- When building the project a `stubs.jar` file is generated, for Boober this will be called something like: `boober-SNAPSHOT-stubs.jar`. This can be uploaded to the repository along with other artifacts and then used by the clients that communicates with the Boober API when testing.
