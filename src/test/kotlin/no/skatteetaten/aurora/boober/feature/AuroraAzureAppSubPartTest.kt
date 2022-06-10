@@ -244,7 +244,6 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app.json")
         assertThat(alternativeRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
-            // WIP Possibly a differently formatted file:
             .auroraResourceMatchesFile("webseal-replacement-route.json")
     }
 
@@ -264,7 +263,6 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app.json")
         assertThat(alternativeRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
-            // WIP Possibly a differently formatted file:
             .auroraResourceMatchesFile("aurora-azure-route-timeout.json")
     }
 }
