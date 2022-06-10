@@ -694,7 +694,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "toxiproxy": {
                         "version": "2.1.3",
                         "proxies": {
-                            "proxyWithNamedDb": {"database": true}
+                            "proxyWithDefaultDb": {"database": true}
                         }
                     },
                     "database": {"dbName": true}

@@ -90,11 +90,9 @@ fun <T> List<T>.addIfNotNull(value: T?): List<T> {
     } ?: this
 }
 
-fun <T> List<T>.prependIfNotNull(value: T?): List<T> {
-    return value?.let {
-        listOf(it) + this
-    } ?: this
-}
+fun <T> List<T>.prepend(value: T): List<T> = listOf(value) + this
+
+fun <T> List<T>.prependIfNotNull(value: T?): List<T> = value?.let(::prepend) ?: this
 
 fun <T> List<T>.addIfNotNull(value: List<T>?): List<T> {
     return value?.let {

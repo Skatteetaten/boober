@@ -26,18 +26,11 @@ import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
-import no.skatteetaten.aurora.boober.feature.ToxiproxyConfig
-import no.skatteetaten.aurora.boober.feature.ToxiproxyField
-import no.skatteetaten.aurora.boober.feature.allToxiproxyConfigsAndSecretNameToPortMap
-import no.skatteetaten.aurora.boober.feature.convertEncryptedJdbcUrlToEncryptedProxyUrl
 import no.skatteetaten.aurora.boober.feature.dbHandlers
 import no.skatteetaten.aurora.boober.feature.getContextKey
 import no.skatteetaten.aurora.boober.feature.isJob
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
-import no.skatteetaten.aurora.boober.feature.overrideEnvVarsWithProxies
-import no.skatteetaten.aurora.boober.feature.toxiproxyVersion
-import no.skatteetaten.aurora.boober.feature.validateToxiproxy
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
@@ -57,15 +50,10 @@ import no.skatteetaten.aurora.boober.utils.prependIfNotNull
 
 private const val TOXIPROXY_CONFIGS_CONTEXT_KEY = "toxiproxyConfigs"
 
-val FeatureContext.toxiproxyConfigs: List<ToxiproxyConfig>
+internal val FeatureContext.toxiproxyConfigsAndSecrets: ToxiproxyConfigsAndSecrets
     get() = getContextKey(TOXIPROXY_CONFIGS_CONTEXT_KEY)
 
-private const val SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY = "secretNameToPortMap"
-
 private const val FEATURE_NAME = "toxiproxy"
-
-private val FeatureContext.secretNameToPortMap: Map<String, Int>
-    get() = getContextKey(SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY)
 
 @org.springframework.stereotype.Service
 class ToxiproxySidecarFeature(
@@ -86,23 +74,16 @@ class ToxiproxySidecarFeature(
         cmd: AuroraContextCommand,
         validationContext: Boolean
     ): Map<String, Any> {
-        val toxiProxyTag = spec.toxiproxyVersion
+        val toxiproxyTag = spec.toxiproxyVersion
 
-        if (validationContext || toxiProxyTag == null) {
+        if (validationContext || toxiproxyTag == null) {
             return emptyMap()
         }
 
-        val (toxiproxyConfigs, secretNameToPortMap) = spec.allToxiproxyConfigsAndSecretNameToPortMap(
-            databaseSchemaProvisioner,
-            userDetailsProvider
-        )
+        val configsAndSecrets = spec.allToxiproxyConfigsAndSecrets(databaseSchemaProvisioner, userDetailsProvider)
 
-        return createImageMetadataContext(
-            repo = "shopify", name = "toxiproxy", tag = toxiProxyTag
-        ) + mapOf(
-            TOXIPROXY_CONFIGS_CONTEXT_KEY to toxiproxyConfigs,
-            SECRET_NAME_TO_PORT_MAP_CONTEXT_KEY to secretNameToPortMap
-        )
+        return createImageMetadataContext(repo = "shopify", name = "toxiproxy", tag = toxiproxyTag) +
+            mapOf(TOXIPROXY_CONFIGS_CONTEXT_KEY to configsAndSecrets)
     }
 
     override fun handlers(
@@ -129,7 +110,7 @@ class ToxiproxySidecarFeature(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         context: FeatureContext
-    ): List<Exception> = adc.validateToxiproxy()
+    ): List<Exception> = adc.extractEnabledToxiproxyProxies().validate(adc)
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 
@@ -140,7 +121,7 @@ class ToxiproxySidecarFeature(
                 name = "${adc.name}-toxiproxy-config"
                 namespace = adc.namespace
             }
-            data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(context.toxiproxyConfigs))
+            data = mapOf("config.json" to jacksonObjectMapper().writeValueAsString(context.toxiproxyConfigsAndSecrets.getConfigs()))
         }
 
         return setOf(generateResource(configMap))
@@ -191,7 +172,7 @@ class ToxiproxySidecarFeature(
                 }
                 "Secret" -> {
                     val secret: Secret = it.resource as Secret
-                    context.secretNameToPortMap[secret.metadata.name]?.let { toxiproxyPort ->
+                    context.toxiproxyConfigsAndSecrets.getPortBySecretName(secret.metadata.name)?.let { toxiproxyPort ->
                         secret.data.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort)
                         modifyResource(it, "Changed JDBC URL to point to Toxiproxy")
                     }
