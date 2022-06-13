@@ -7,7 +7,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import org.springframework.stereotype.Service
 
-private const val FEATURE_NAME: String = "topology"
+private const val FEATURE_FIELD: String = "topology"
 
 @Service
 class TopologyFeature : Feature {
@@ -20,16 +20,16 @@ class TopologyFeature : Feature {
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
         return setOf(
-            AuroraConfigFieldHandler(name = "$FEATURE_NAME/partOf", allowedFilesTypes = allowedFileTypes),
-            AuroraConfigFieldHandler(name = "$FEATURE_NAME/runtime", allowedFilesTypes = allowedFileTypes),
-            AuroraConfigFieldHandler(name = "$FEATURE_NAME/connectsTo", allowedFilesTypes = allowedFileTypes)
+            AuroraConfigFieldHandler(name = "$FEATURE_FIELD/partOf", allowedFilesTypes = allowedFileTypes),
+            AuroraConfigFieldHandler(name = "$FEATURE_FIELD/runtime", allowedFilesTypes = allowedFileTypes),
+            AuroraConfigFieldHandler(name = "$FEATURE_FIELD/connectsTo", allowedFilesTypes = allowedFileTypes)
         )
     }
 
     override fun modify(adc: AuroraDeploymentSpec, resources: Set<AuroraResource>, context: FeatureContext) {
-        val group: String? = adc.getOrNull("$FEATURE_NAME/partOf")
-        val runtime: String? = adc.getOrNull("$FEATURE_NAME/runtime")
-        val connectsTo: List<String> = adc.getDelimitedStringOrArrayAsSet("$FEATURE_NAME/connectsTo")
+        val group: String? = adc.getOrNull("$FEATURE_FIELD/partOf")
+        val runtime: String? = adc.getOrNull("$FEATURE_FIELD/runtime")
+        val connectsTo: List<String> = adc.getDelimitedStringOrArrayAsSet("$FEATURE_FIELD/connectsTo")
             .filter { it.isNotBlank() }
 
         resources
