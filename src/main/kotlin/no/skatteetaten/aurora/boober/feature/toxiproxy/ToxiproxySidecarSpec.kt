@@ -110,9 +110,7 @@ internal fun AuroraDeploymentSpec.extractAllToxiproxyProxySpecs(): List<Toxiprox
 internal typealias ToxiproxyProxies = List<ToxiproxyProxy>
 
 internal fun AuroraDeploymentSpec.extractEnabledToxiproxyProxies(): ToxiproxyProxies =
-    extractAllToxiproxyProxySpecs()
-        .filter { it.enabled }
-        .mapNotNull { it.toToxiproxyProxy(this["$databaseDefaultsKey/name"]) }
+    extractAllToxiproxyProxySpecs().mapNotNull { it.toToxiproxyProxyIfEnabled(this["$databaseDefaultsKey/name"]) }
 
 internal fun ToxiproxyProxies.endpointProxies() = filterIsInstance<EndpointToxiproxyProxy>()
 

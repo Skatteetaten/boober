@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature.toxiproxy
 
 import no.skatteetaten.aurora.boober.feature.createSchemaRequests
+import no.skatteetaten.aurora.boober.feature.databaseDefaultsKey
 import no.skatteetaten.aurora.boober.feature.findDatabases
 import no.skatteetaten.aurora.boober.feature.getSecretName
 import no.skatteetaten.aurora.boober.feature.name
@@ -15,6 +16,8 @@ import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import no.skatteetaten.aurora.boober.utils.whenTrue
 import java.net.URI
 
+// This class is meant to exactly reflect the information given in the spec, in order to simplify further processing.
+// It contains functions for validating the given properties and converting to the correct type of the ToxiproxyProxy class.
 internal data class ToxiproxyProxySpec(
     val proxyName: String,
     val enabled: Boolean,
@@ -25,6 +28,20 @@ internal data class ToxiproxyProxySpec(
     val database: Boolean,
     val databaseName: String?
 ) {
+
+    fun toToxiproxyProxyIfEnabled(defaultDbName: String?) = enabled.whenTrue {
+        when {
+            isEndpointProxy() -> toEndpointToxiproxyProxy()
+            isServerAndPortProxy() -> toServerAndPortToxiproxyProxy()
+            isDatabaseProxy() -> toDatabaseToxiproxyProxy(defaultDbName)
+            else -> null
+        }
+    }
+
+    fun validate(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> =
+        invalidCombinationError()?.let(::listOf)
+            ?: toToxiproxyProxyIfEnabled(ads["$databaseDefaultsKey/name"])?.validate(ads)
+            ?: emptyList()
 
     private fun isEndpointProxy() = urlVariable != null &&
         urlVariable.isNotEmpty() &&
@@ -48,15 +65,9 @@ internal data class ToxiproxyProxySpec(
     private fun toEndpointToxiproxyProxy() =
         isEndpointProxy().whenTrue { EndpointToxiproxyProxy(urlVariable!!, proxyName, initialEnabledState) }
 
-    private fun toServerAndPortToxiproxyProxy() =
-        if (isServerAndPortProxy())
-            ServerAndPortToxiproxyProxy(
-                serverVariable,
-                portVariable,
-                proxyName,
-                initialEnabledState
-            )
-        else null
+    private fun toServerAndPortToxiproxyProxy() = isServerAndPortProxy().whenTrue {
+        ServerAndPortToxiproxyProxy(serverVariable, portVariable, proxyName, initialEnabledState)
+    }
 
     private fun toDatabaseToxiproxyProxy(defaultName: String?) =
         if (isNamedDatabaseProxy()) DatabaseToxiproxyProxy(databaseName!!, proxyName, initialEnabledState, false)
@@ -64,14 +75,7 @@ internal data class ToxiproxyProxySpec(
             DatabaseToxiproxyProxy(defaultName, proxyName, initialEnabledState, true)
         else null
 
-    fun toToxiproxyProxy(defaultDbName: String?) = when {
-        isEndpointProxy() -> toEndpointToxiproxyProxy()
-        isServerAndPortProxy() -> toServerAndPortToxiproxyProxy()
-        isDatabaseProxy() -> toDatabaseToxiproxyProxy(defaultDbName)
-        else -> null
-    }
-
-    fun invalidCombinationError() = when {
+    private fun invalidCombinationError() = when {
         hasNoReference() ->
             "Neither of the fields urlVariable, serverVariable, portVariable, database or " +
                 "databaseName are set for the Toxiproxy proxy named $proxyName."
@@ -99,19 +103,14 @@ internal data class ToxiproxyProxySpec(
 
 internal typealias UpstreamUrlAndSecretName = Pair<String, String?>
 
+// Parent class for all ToxiproxyProxies
 internal abstract class ToxiproxyProxy {
 
     abstract val proxyName: String
     abstract val initialEnabledState: Boolean
 
-    abstract fun upstreamUrlAndSecretName(
-        ads: AuroraDeploymentSpec,
-        userDetailsProvider: UserDetailsProvider,
-        databaseSchemaProvisioner: DatabaseSchemaProvisioner?
-    ): UpstreamUrlAndSecretName?
-
-    abstract fun validateVariables(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException>
-
+    // Generate information that will be stored in the feature context.
+    // That is, the Toxiproxy config for the container's config map, the port it will listen to, and, if needed, the secret name.
     fun generateConfig(
         ads: AuroraDeploymentSpec,
         port: Int,
@@ -132,11 +131,23 @@ internal abstract class ToxiproxyProxy {
             )
         }
 
-    fun validateProxyName(): AuroraDeploymentSpecValidationException? = (proxyName == MAIN_PROXY_NAME).whenTrue {
+    // Run both validation functions and return a list of exceptions.
+    fun validate(ads: AuroraDeploymentSpec) = validateVariables(ads).addIfNotNull(validateProxyName())
+
+    // Generate the upstream URL and, if the target is a database, find the secret name.
+    abstract fun upstreamUrlAndSecretName(
+        ads: AuroraDeploymentSpec,
+        userDetailsProvider: UserDetailsProvider,
+        databaseSchemaProvisioner: DatabaseSchemaProvisioner?
+    ): UpstreamUrlAndSecretName?
+
+    // Validate that the given variables or database names exist in the spec and that the URLs given in those variables are valid.
+    abstract fun validateVariables(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException>
+
+    // Return an exception if the proxy name is "app".
+    private fun validateProxyName(): AuroraDeploymentSpecValidationException? = (proxyName == MAIN_PROXY_NAME).whenTrue {
         AuroraDeploymentSpecValidationException("The name \"$MAIN_PROXY_NAME\" is reserved for the proxy for incoming calls.")
     }
-
-    fun validate(ads: AuroraDeploymentSpec) = validateVariables(ads).addIfNotNull(validateProxyName())
 }
 
 internal class EndpointToxiproxyProxy(
@@ -214,7 +225,7 @@ internal class DatabaseToxiproxyProxy(
     val databaseName: String,
     override val proxyName: String,
     override val initialEnabledState: Boolean,
-    val isDefault: Boolean
+    val isDefault: Boolean // True if the database config in the AuroraDeploymentSpec is simplified
 ) : ToxiproxyProxy() {
 
     override fun upstreamUrlAndSecretName(
@@ -239,12 +250,12 @@ internal class DatabaseToxiproxyProxy(
         return UpstreamUrlAndSecretName(upstreamUrl, secretName)
     }
 
-    override fun validateVariables(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> {
-
-        if (isDefault || ads.isSimplifiedAndEnabled("database")) return emptyList()
-
-        return if (ads.getSubKeyValues("database").contains(databaseName)) emptyList()
-        else listOf(
+    override fun validateVariables(ads: AuroraDeploymentSpec) = if (
+        isDefault ||
+        ads.isSimplifiedAndEnabled("database") ||
+        ads.getSubKeyValues("database").contains(databaseName)
+    ) emptyList() else {
+        listOf(
             AuroraDeploymentSpecValidationException(
                 "Found Toxiproxy config for database named $databaseName, but there is no such database configured."
             )

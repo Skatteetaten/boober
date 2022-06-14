@@ -4,6 +4,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -653,8 +654,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             "database, or databaseName, or both the properties serverVariable and portVariable."
 
         assertThat(errorMessagesNamedDatabase).hasSize(2)
-        assertThat(errorMessagesNamedDatabase[0]).isEqualTo(expectedErrorMessage1)
-        assertThat(errorMessagesNamedDatabase[1]).isEqualTo(expectedErrorMessage2)
+        assertThat(errorMessagesNamedDatabase).contains(expectedErrorMessage1)
+        assertThat(errorMessagesNamedDatabase).contains(expectedErrorMessage2)
 
         val errorMessageDefaultDatabase = assertThrows<MultiApplicationValidationException> {
             generateResources(
@@ -816,36 +817,44 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     @Test
     fun `Should fail with an error message when there are server and port variable duplicates`() {
 
-        val errorMessage = assertThrows<MultiApplicationValidationException> {
+        val errorMessages = assertThrows<MultiApplicationValidationException> {
             generateResources(
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
                         "proxies": {
                             "proxy1": {
-                                "serverVariable": "SERVER",
-                                "portVariable": "PORT"
+                                "serverVariable": "SERVER1",
+                                "portVariable": "PORT1"
                             },
                             "proxy2": {
-                                "serverVariable": "SERVER",
-                                "portVariable": "PORT"
+                                "serverVariable": "SERVER1",
+                                "portVariable": "PORT2"
+                            },
+                            "proxy3": {
+                                "serverVariable": "SERVER2",
+                                "portVariable": "PORT1"
                             }
                         }
                     },
                     "config": {
-                        "SERVER": "test1.test",
-                        "PORT": 123
+                        "SERVER1": "test1.test",
+                        "PORT1": 123,
+                        "SERVER2": "test2.test",
+                        "PORT2": 456
                     }
                 }""",
                 createEmptyService(),
                 createEmptyDeploymentConfig()
             )
-        }.errors.first().errors.first().message
+        }.errors.first().errors.map { it.message }
 
-        val expectedErrorMessage =
-            "The server and port variables \"SERVER\" and \"PORT\" are referred to by several proxies."
+        val expectedErrorMessage1 = "The server variable \"SERVER1\" is referred to by several proxies."
+        val expectedErrorMessage2 = "The port variable \"PORT1\" is referred to by several proxies."
 
-        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+        assertThat(errorMessages).hasSize(2)
+        assertThat(errorMessages).contains(expectedErrorMessage1)
+        assertThat(errorMessages).contains(expectedErrorMessage2)
     }
 
     @Test

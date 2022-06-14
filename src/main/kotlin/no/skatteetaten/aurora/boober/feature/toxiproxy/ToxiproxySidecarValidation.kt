@@ -4,19 +4,11 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 
 internal fun ToxiproxyProxies.validate(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> =
-    listOf(
-        ads.invalidCombinationOfToxiproxyFieldsErrors(),
-        individualToxiproxyProxyErrors(ads),
-        invalidDbConfigErrors(ads),
-        duplicateUrlVariableErrors(),
-        duplicateServerAndPortVariableErrors(),
-        duplicateDatabaseNameErrors()
-    ).flatten()
+    ads.individualToxiproxyProxyErrors() + invalidDbConfigErrors(ads) + duplicationErrors()
 
-private fun AuroraDeploymentSpec.invalidCombinationOfToxiproxyFieldsErrors() =
-    extractAllToxiproxyProxySpecs().mapNotNull { it.invalidCombinationError() }
-
-private fun ToxiproxyProxies.individualToxiproxyProxyErrors(ads: AuroraDeploymentSpec) = flatMap { it.validate(ads) }
+// Run each proxy's individual validation function
+private fun AuroraDeploymentSpec.individualToxiproxyProxyErrors() =
+    extractAllToxiproxyProxySpecs().flatMap { it.validate(this) }
 
 // Validate that the "database" and "databaseName" properties are used correctly
 private fun ToxiproxyProxies.invalidDbConfigErrors(
@@ -45,24 +37,20 @@ private fun ToxiproxyProxies.invalidDbConfigErrors(
     return errors.map(::AuroraDeploymentSpecValidationException)
 }
 
-// Validate that all urlVariable values are unique
-private fun ToxiproxyProxies.duplicateUrlVariableErrors() = endpointProxies()
-    .groupingBy { it.urlVariable }
-    .eachCount()
-    .filter { it.value > 1 }
-    .map { AuroraDeploymentSpecValidationException("The url variable \"${it.key}\" is referred to by several proxies.") }
+// Validate that the variable to proxy mapping is bijective
+private fun ToxiproxyProxies.duplicationErrors() = listOf(
+    endpointProxies().duplicationErrors("url variable") { it.urlVariable },
+    serverAndPortProxies().duplicationErrors("server variable") { it.serverVariable },
+    serverAndPortProxies().duplicationErrors("port variable") { it.portVariable },
+    databaseProxies().duplicationErrors("database name") { it.databaseName }
+).flatten()
 
-// Validate that all serverVariable and portVariable combinations are unique
-private fun ToxiproxyProxies.duplicateServerAndPortVariableErrors() = serverAndPortProxies()
-    .groupingBy { Pair(it.serverVariable, it.portVariable) }
-    .eachCount()
-    .filter { it.value > 1 }
-    .map { "The server and port variables \"${it.key.first}\" and \"${it.key.second}\" are referred to by several proxies." }
-    .map(::AuroraDeploymentSpecValidationException)
-
-// Validate that all databaseName values are unique
-private fun ToxiproxyProxies.duplicateDatabaseNameErrors() = databaseProxies()
-    .groupingBy { it.databaseName }
-    .eachCount()
-    .filter { it.value > 1 }
-    .map { AuroraDeploymentSpecValidationException("The database name \"${it.key}\" is referred to by several proxies.") }
+private fun <T : ToxiproxyProxy> List<T>.duplicationErrors(
+    nameOfThingThatShouldBeUnique: String,
+    thingThatShouldBeUnique: (T) -> String?
+): List<AuroraDeploymentSpecValidationException> =
+    groupingBy(thingThatShouldBeUnique)
+        .eachCount()
+        .filter { it.key != null && it.value > 1 }
+        .map { "The $nameOfThingThatShouldBeUnique \"${it.key}\" is referred to by several proxies." }
+        .map(::AuroraDeploymentSpecValidationException)
