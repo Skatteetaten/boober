@@ -208,7 +208,7 @@ class FluentbitConfigurator {
             |   Parser jsonTimeParser
             |   Preserve_Key On
             |   Reserve_Data On
-        """.trimIndent()
+        """.trimMargin()
 
         // Fluentbit filter for adding splunk fields for application, cluster, environment, host and nodetype to the record
         private fun getModifyFilter(application: String, cluster: String, version: String) = """
