@@ -29,6 +29,7 @@ const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
 const val SPLUNK_CONNECT_INDEX_TAG = "splunk.com/index"
 
 const val logApplication: String = "application"
+const val logApplicationJson: String = "application_json"
 const val logAuditText: String = "audit_text"
 const val logAuditJson: String = "audit_json"
 const val logSlow: String = "slow"
@@ -133,7 +134,7 @@ class FluentbitSidecarFeature(
 
     fun getLoggerHandlers(): Set<AuroraConfigFieldHandler> {
         val logNames =
-            setOf(logApplication, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
+            setOf(logApplication, logApplicationJson, logAuditText, logAuditJson, logSlow, logGC, logSensitive, logStacktrace, logAccess)
 
         return logNames.map {
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/loggers/$it")

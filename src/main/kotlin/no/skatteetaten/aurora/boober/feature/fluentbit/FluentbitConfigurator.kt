@@ -41,6 +41,12 @@ class FluentbitConfigurator {
             |   flush_timeout 1000
             |   rule          "start_state" "/<EvaluationEvent.*/"       "cont"
             |   rule          "cont"        "/^(?!<EvaluationEvent).*$/" "cont"
+            |   
+            |[PARSER]
+            |   Name          jsonTimeParser
+            |   Format        json
+            |   Time_Key      time
+            |   Time_Format   %Y-%m-%dT%H:%M:%S.%L%z
         """.trimMargin()
 
         /**
@@ -80,6 +86,7 @@ class FluentbitConfigurator {
                 multilineLog4jFilter,
                 evalXmlTimeParserFilter,
                 multilineEvalXmlFilter,
+                jsonTimeParserFilter,
                 getModifyFilter(application, cluster, version),
                 applicationSplunkOutputs,
                 fluentbitSplunkOutput
@@ -191,6 +198,17 @@ class FluentbitConfigurator {
             |   multiline.key_content event
             |   multiline.parser multiline-eval-xml
         """.trimMargin()
+
+        // Parser filters to assign the jsonTimeParser to application tag records
+        private val jsonTimeParserFilter = """
+            |[FILTER]
+            |   Name parser
+            |   Match *-_json
+            |   Key_Name event
+            |   Parser jsonTimeParser
+            |   Preserve_Key On
+            |   Reserve_Data On
+        """.trimIndent()
 
         // Fluentbit filter for adding splunk fields for application, cluster, environment, host and nodetype to the record
         private fun getModifyFilter(application: String, cluster: String, version: String) = """

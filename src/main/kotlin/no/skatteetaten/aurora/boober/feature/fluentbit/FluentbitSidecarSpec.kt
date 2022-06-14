@@ -136,6 +136,9 @@ private fun AuroraDeploymentSpec.getLoggingIndexNames(
     if (!loggers.containsKey(logApplication)) {
         loggers[logApplication] = defaultIndex
     }
+    if (!loggers.containsKey(logApplicationJson)) {
+        loggers[logApplicationJson] = defaultIndex
+    }
 
     if (!loggers.containsKey(logAccess)) {
         loggers[logAccess] = defaultIndex
@@ -154,6 +157,7 @@ val supportedFluentbitSourcetypes = listOf("_json", "access_combined", "gc_log",
 
 fun logTypeToSourcetype(logType: String): String =
     when (logType) {
+        logApplicationJson -> "_json"
         logAuditJson -> "_json"
         logAccess -> "access_combined"
         logGC -> "gc_log"
@@ -163,6 +167,7 @@ fun logTypeToSourcetype(logType: String): String =
 fun logTypeToFilePattern(logType: String): String =
     when (logType) {
         logApplication -> "*.log"
+        logApplicationJson -> "*.log.json"
         logAuditText -> "*.audit.text"
         logAuditJson -> "*.audit.json"
         logAccess -> "*.access"
