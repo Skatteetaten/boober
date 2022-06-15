@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.utils.UrlParser
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.noneAreSet
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import no.skatteetaten.aurora.boober.utils.whenTrue
 import java.net.URI
@@ -43,22 +44,17 @@ internal data class ToxiproxyProxySpec(
             ?: toToxiproxyProxyIfEnabled()?.validate(ads)
             ?: emptyList()
 
-    private fun isEndpointProxy() = urlVariable != null &&
-        urlVariable.isNotEmpty() &&
-        listOf(serverVariable, portVariable, databaseName).all { it.isNullOrBlank() } &&
-        !database
+    private fun isEndpointProxy() = !urlVariable.isNullOrBlank() &&
+        noneAreSet(serverVariable, portVariable, databaseName, database)
 
-    private fun isServerAndPortProxy() = listOf(serverVariable, portVariable).any { it != null && it.isNotBlank() } &&
-        listOf(urlVariable, databaseName).all { it.isNullOrBlank() } &&
-        !database
+    private fun isServerAndPortProxy() = listOf(serverVariable, portVariable).any { !it.isNullOrBlank() } &&
+        noneAreSet(urlVariable, databaseName, database)
 
-    private fun isNamedDatabaseProxy() = databaseName != null &&
-        databaseName.isNotEmpty() &&
-        listOf(urlVariable, serverVariable, portVariable).all { it.isNullOrBlank() } &&
-        !database
+    private fun isNamedDatabaseProxy() = !databaseName.isNullOrBlank() &&
+        noneAreSet(urlVariable, serverVariable, portVariable, database)
 
     private fun isDefaultDatabaseProxy() = database &&
-        listOf(urlVariable, serverVariable, portVariable, databaseName).all { it.isNullOrBlank() }
+        noneAreSet(urlVariable, serverVariable, portVariable, databaseName)
 
     private fun isDatabaseProxy() = isDefaultDatabaseProxy() || isNamedDatabaseProxy()
 
@@ -87,15 +83,9 @@ internal data class ToxiproxyProxySpec(
         )
     }
 
-    private fun hasNoReference() = !database &&
-        listOf(urlVariable, serverVariable, portVariable, databaseName).all { it.isNullOrBlank() }
+    private fun hasNoReference() = noneAreSet(urlVariable, serverVariable, portVariable, databaseName, database)
 
-    private fun isNotValidProxy() = listOf(
-        isEndpointProxy(),
-        isServerAndPortProxy(),
-        isNamedDatabaseProxy(),
-        isDefaultDatabaseProxy()
-    ).all { !it }
+    private fun isNotValidProxy() = noneAreSet(isEndpointProxy(), isServerAndPortProxy(), isDatabaseProxy())
 }
 
 internal typealias UpstreamUrlAndSecretName = Pair<String, String?>

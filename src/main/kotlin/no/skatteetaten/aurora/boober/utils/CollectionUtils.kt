@@ -194,3 +194,11 @@ inline fun <reified T : HasMetadata> Collection<AuroraResource>.findResourcesByT
 fun <T : Any> Collection<AuroraResource>.findResourceByType(kclass: KClass<T>): List<T> =
     filter { it.resource::class == kclass }
         .map { it.resource as T }
+
+fun noneAreSet(vararg things: Any?) = things.all {
+    when (it) {
+        is String -> it.isBlank()
+        is Boolean -> !it
+        else -> it == null
+    }
+}
