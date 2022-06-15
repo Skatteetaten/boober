@@ -244,7 +244,25 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app.json")
         assertThat(alternativeRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
-            // WIP Possibly a differently formatted file:
             .auroraResourceMatchesFile("webseal-replacement-route.json")
+    }
+
+    @Test
+    fun `AuroraAzureApp with managedRoute and clusterTimeout is valid`() {
+        val (_, auroraAzureApp, alternativeRoute) = generateResources(
+            """{
+              "azure": {
+                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "clusterTimeout": "50s",
+                "managedRoute": true,
+                "groups": []
+              }
+            }""",
+            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 2
+        )
+        assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-app.json")
+        assertThat(alternativeRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-route-timeout.json")
     }
 }

@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature.azure
 
 import com.fkorotkov.kubernetes.newObjectMeta
 import no.skatteetaten.aurora.boober.feature.ConfiguredRoute
+import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.clusterTimeout
 import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.managedRoute
 import no.skatteetaten.aurora.boober.feature.isWebsealEnabled
 import no.skatteetaten.aurora.boober.feature.name
@@ -14,6 +15,7 @@ import no.skatteetaten.aurora.boober.model.openshift.AzureAppSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.boolean
+import no.skatteetaten.aurora.boober.utils.durationString
 import no.skatteetaten.aurora.boober.utils.isListOrEmpty
 import no.skatteetaten.aurora.boober.utils.isValidDns
 
@@ -45,6 +47,7 @@ class AuroraAzureAppSubPart {
         const val azureAppFqdn = "$root/azureAppFqdn"
         const val groups = "$root/groups"
         const val managedRoute = "$root/managedRoute"
+        const val clusterTimeout = "$root/clusterTimeout"
     }
 
     fun generate(adc: AuroraDeploymentSpec, azureFeature: AzureFeature): Set<AuroraResource> {
@@ -72,7 +75,7 @@ class AuroraAzureAppSubPart {
     /**
      * Create a replacement for the webseal route as part
      * of migrating away from webseal
-     * @return New webseal route or null if not applicable
+     * @return New azure route or null if not applicable
      */
     private fun createManagedRouteIfApplicable(
         adc: AuroraDeploymentSpec,
@@ -81,10 +84,15 @@ class AuroraAzureAppSubPart {
         if (!adc.isAzureRouteManaged) {
             return null
         }
+        val configuredTimeout = adc.getOrNull<String>(clusterTimeout)?.let { timeout ->
+            timeout.toIntOrNull()?.let { n -> "${n}s" } ?: timeout
+        }
+        val annotations = configuredTimeout?.let { mapOf("haproxy.router.openshift.io/timeout" to it) } ?: emptyMap()
+
         val configuredRoute = ConfiguredRoute(
             objectName = "${adc.name}-managed",
             host = adc.getOrNull<String>(ConfigPath.azureAppFqdn)!!,
-            annotations = emptyMap(),
+            annotations = annotations,
             fullyQualifiedHost = true,
             labels = mapOf(
                 "type" to "webseal",
@@ -144,6 +152,10 @@ class AuroraAzureAppSubPart {
                 managedRoute,
                 defaultValue = false,
                 validator = { it.boolean() }
+            ),
+            AuroraConfigFieldHandler(
+                clusterTimeout,
+                validator = { it.durationString() }
             ),
             AuroraConfigFieldHandler(
                 "webseal",
