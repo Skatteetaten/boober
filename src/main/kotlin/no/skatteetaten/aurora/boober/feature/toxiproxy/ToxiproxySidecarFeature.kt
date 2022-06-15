@@ -110,7 +110,7 @@ class ToxiproxySidecarFeature(
         adc: AuroraDeploymentSpec,
         fullValidation: Boolean,
         context: FeatureContext
-    ): List<Exception> = adc.extractEnabledToxiproxyProxies().validate(adc)
+    ): List<Exception> = adc.validateToxiproxy()
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
 

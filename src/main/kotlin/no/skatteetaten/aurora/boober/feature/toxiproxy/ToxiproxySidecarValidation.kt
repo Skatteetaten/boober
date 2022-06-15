@@ -3,8 +3,9 @@ package no.skatteetaten.aurora.boober.feature.toxiproxy
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.service.AuroraDeploymentSpecValidationException
 
-internal fun ToxiproxyProxies.validate(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> =
-    ads.individualToxiproxyProxyErrors() + invalidDbConfigErrors(ads) + duplicationErrors()
+internal fun AuroraDeploymentSpec.validateToxiproxy(): List<AuroraDeploymentSpecValidationException> =
+    individualToxiproxyProxyErrors() +
+        extractEnabledToxiproxyProxies().let { it.invalidDbConfigErrors(this) + it.duplicationErrors() }
 
 // Run each proxy's individual validation function
 private fun AuroraDeploymentSpec.individualToxiproxyProxyErrors() =
