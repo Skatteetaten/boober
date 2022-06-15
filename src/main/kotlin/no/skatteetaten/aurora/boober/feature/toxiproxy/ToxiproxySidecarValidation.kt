@@ -21,7 +21,7 @@ private fun ToxiproxyProxies.invalidDbConfigErrors(
                 "Did you mean to use the property \"database\" instead of \"databaseName\"?"
         )
     }
-    val numberOfDefaultDbConfigs = databaseProxies().count { it.isDefault }
+    val numberOfDefaultDbConfigs = databaseProxies().count { it.isDefault() }
     if (numberOfDefaultDbConfigs > 1) {
         errors.add("The \"database\" property may only be used once in the Toxiproxy config.")
     }

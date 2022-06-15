@@ -29,18 +29,18 @@ internal data class ToxiproxyProxySpec(
     val databaseName: String?
 ) {
 
-    fun toToxiproxyProxyIfEnabled(defaultDbName: String?) = enabled.whenTrue {
+    fun toToxiproxyProxyIfEnabled() = enabled.whenTrue {
         when {
             isEndpointProxy() -> toEndpointToxiproxyProxy()
             isServerAndPortProxy() -> toServerAndPortToxiproxyProxy()
-            isDatabaseProxy() -> toDatabaseToxiproxyProxy(defaultDbName)
+            isDatabaseProxy() -> toDatabaseToxiproxyProxy()
             else -> null
         }
     }
 
     fun validate(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> =
         invalidCombinationError()?.let(::listOf)
-            ?: toToxiproxyProxyIfEnabled(ads["$databaseDefaultsKey/name"])?.validate(ads)
+            ?: toToxiproxyProxyIfEnabled()?.validate(ads)
             ?: emptyList()
 
     private fun isEndpointProxy() = urlVariable != null &&
@@ -69,11 +69,8 @@ internal data class ToxiproxyProxySpec(
         ServerAndPortToxiproxyProxy(serverVariable, portVariable, proxyName, initialEnabledState)
     }
 
-    private fun toDatabaseToxiproxyProxy(defaultName: String?) =
-        if (isNamedDatabaseProxy()) DatabaseToxiproxyProxy(databaseName!!, proxyName, initialEnabledState, false)
-        else if (defaultName != null && defaultName.isNotBlank() && isDefaultDatabaseProxy())
-            DatabaseToxiproxyProxy(defaultName, proxyName, initialEnabledState, true)
-        else null
+    private fun toDatabaseToxiproxyProxy() =
+        isDatabaseProxy().whenTrue { DatabaseToxiproxyProxy(databaseName, proxyName, initialEnabledState) }
 
     private fun invalidCombinationError() = when {
         hasNoReference() ->
@@ -222,11 +219,12 @@ internal class ServerAndPortToxiproxyProxy(
 }
 
 internal class DatabaseToxiproxyProxy(
-    val databaseName: String,
+    val databaseName: String?, // Null signifies that the database config in the AuroraDeploymentSpec is simplified
     override val proxyName: String,
-    override val initialEnabledState: Boolean,
-    val isDefault: Boolean // True if the database config in the AuroraDeploymentSpec is simplified
+    override val initialEnabledState: Boolean
 ) : ToxiproxyProxy() {
+
+    fun isDefault() = databaseName == null
 
     override fun upstreamUrlAndSecretName(
         ads: AuroraDeploymentSpec,
@@ -236,8 +234,10 @@ internal class DatabaseToxiproxyProxy(
 
         if (databaseSchemaProvisioner == null) return null
 
+        val givenOrDefaultName = databaseName ?: ads["$databaseDefaultsKey/name"]
+
         val request = findDatabases(ads)
-            .filter { it.name == databaseName }
+            .filter { it.name == givenOrDefaultName }
             .createSchemaRequests(userDetailsProvider, ads)
             .takeIfNotEmpty()
             ?.first()
@@ -251,7 +251,7 @@ internal class DatabaseToxiproxyProxy(
     }
 
     override fun validateVariables(ads: AuroraDeploymentSpec) = if (
-        isDefault ||
+        databaseName == null ||
         ads.isSimplifiedAndEnabled("database") ||
         ads.getSubKeyValues("database").contains(databaseName)
     ) emptyList() else {

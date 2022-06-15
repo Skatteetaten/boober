@@ -4,7 +4,6 @@ import java.nio.charset.Charset
 import java.util.Base64
 import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.feature.FeatureContext
-import no.skatteetaten.aurora.boober.feature.databaseDefaultsKey
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
@@ -110,7 +109,7 @@ internal fun AuroraDeploymentSpec.extractAllToxiproxyProxySpecs(): List<Toxiprox
 internal typealias ToxiproxyProxies = List<ToxiproxyProxy>
 
 internal fun AuroraDeploymentSpec.extractEnabledToxiproxyProxies(): ToxiproxyProxies =
-    extractAllToxiproxyProxySpecs().mapNotNull { it.toToxiproxyProxyIfEnabled(this["$databaseDefaultsKey/name"]) }
+    extractAllToxiproxyProxySpecs().mapNotNull { it.toToxiproxyProxyIfEnabled() }
 
 internal fun ToxiproxyProxies.endpointProxies() = filterIsInstance<EndpointToxiproxyProxy>()
 
@@ -118,7 +117,7 @@ internal fun ToxiproxyProxies.serverAndPortProxies() = filterIsInstance<ServerAn
 
 internal fun ToxiproxyProxies.databaseProxies() = filterIsInstance<DatabaseToxiproxyProxy>()
 
-internal fun ToxiproxyProxies.namedDatabaseProxies() = databaseProxies().filterNot { it.isDefault }
+internal fun ToxiproxyProxies.namedDatabaseProxies() = databaseProxies().filterNot { it.isDefault() }
 
 private fun String.convertToProxyUrl(port: Int): String =
     UrlParser(this)
