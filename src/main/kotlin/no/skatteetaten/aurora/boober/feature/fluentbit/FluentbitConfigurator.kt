@@ -45,7 +45,7 @@ class FluentbitConfigurator {
             |[PARSER]
             |   Name          jsonTimeParser
             |   Format        json
-            |   Time_Key      time
+            |   Time_Key      timestamp
             |   Time_Format   %Y-%m-%dT%H:%M:%S.%L%z
         """.trimMargin()
 
