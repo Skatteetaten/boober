@@ -6,6 +6,8 @@ schemaVersion from a git repo (AuroraConfig) and transforms it into Openshift Ob
 
 The component is named after the Boober Fraggle (http://muppet.wikia.com/wiki/Boober_Fraggle). 
 
+## Developing Boober
+See [DEVELOPMENT.md](./DEVELOPMENT.md)
 
 ## How to run locally
 
@@ -69,12 +71,12 @@ AuroraConfig is versioned with a schemaVersion. All files in a single AuroraConf
 
 The following file types are in an AuroraConfig
 
-filename           | name          | description  
--------------------|---------------|:-----------------------------------------------------------------
-about.json         | global        | Global configuration for all applications in an affiliation
-utv/about.json     | environment   | Environment configuration that is shared by all applications in an openshift project
-reference.json     | application   | Configuration shared by all instances of an application in all projects
-utv/reference.json | override      | Configuration specific to one application in one openshift project
+| filename           | name        | description                                                                          |
+|--------------------|-------------|:-------------------------------------------------------------------------------------|
+| about.json         | global      | Global configuration for all applications in an affiliation                          |
+| utv/about.json     | environment | Environment configuration that is shared by all applications in an openshift project |
+| reference.json     | application | Configuration shared by all instances of an application in all projects              |
+| utv/reference.json | override    | Configuration specific to one application in one openshift project                   |
 
 AuroraConfig is at the moment only documented internally but will be available externally soon.
 
@@ -107,23 +109,6 @@ We do this because we want the truth of the state to be in AuroraConfig not in t
 object and want it back to desired state they only need to run the deploy process in Boober.
 
 Immutable fields on objects are retained.
-
-
-## Developing Boober
-
-### Spring cloud contract
-
-[Spring Cloud Contract](https://cloud.spring.io/spring-cloud-contract/) helps implement [Consumer Driven Contracts](https://martinfowler.com/articles/consumerDrivenContracts.html).
-
-Boober is setup to generate Spock tests from the contracts. There is a convention to follow when adding new tests.
-
-- Create a package in `src/test/resources/contracts` that contains the name of the controller. If the controller is called `ClientConfigControllerV1` the package should be named `clientconfig`.
-- Create a contract inside this folder. If you need a json-response body, this can be added as a separate json-file inside the responses folder. In the clientconfig example these files are put into `src/test/resources/contract/clientconfig/responses`.
-- In the folder `src/test/groovy` and the package `no.skatteetaten.aurora.boober.contracts` create a groovy class called [name]Base.
-In the example it will be `ClientconfigBase`. This is picked up by [spring cloud contract automatically](http://cloud.spring.io/spring-cloud-static/spring-cloud-contract/2.0.0.M8/single/spring-cloud-contract.html#maven-different-base) and added as a base class to the generated test.
-- In the Base-class add the required setup code, such as creating mock services. It should also extend `AbstractContractBase`, which provides a few helpful helper methods available to get the content of the response-json files and setting up the mock controller.
-- Run `./gradlew generateContractTests` to generate the Spock tests from the contracts. The tests will be automatically generated and run with the normal `./gradlew build` command.
-- When building the project a `stubs.jar` file is generated, for Boober this will be called something like: `boober-SNAPSHOT-stubs.jar`. This can be uploaded to the repository along with other artifacts and then used by the clients that communicates with the Boober API when testing.
 
 ## Updates
 
