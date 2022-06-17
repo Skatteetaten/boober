@@ -83,10 +83,10 @@ internal fun List<Container>.overrideEnvVarsWithProxies(
 
         when (proxy) {
             is EndpointToxiproxyProxy ->
-                container.transformEnvVarValueIfExists(proxy.urlVariable) { it.convertToProxyUrl(port!!) }
+                container.transformEnvVarValueIfExists(proxy.urlVariableKey) { it.convertToProxyUrl(port!!) }
             is ServerAndPortToxiproxyProxy -> {
-                container.setEnvVarValueIfExists(proxy.serverVariable!!, "localhost")
-                container.setEnvVarValueIfExists(proxy.portVariable!!, port!!.toString())
+                container.setEnvVarValueIfExists(proxy.serverVariableKey!!, "localhost")
+                container.setEnvVarValueIfExists(proxy.portVariableKey!!, port!!.toString())
             }
         }
     }
@@ -98,9 +98,9 @@ internal fun AuroraDeploymentSpec.extractAllToxiproxyProxySpecs(): List<Toxiprox
             proxyName = it,
             enabled = get("${ToxiproxyField.proxies}/$it/enabled"),
             initialEnabledState = get("${ToxiproxyField.proxies}/$it/initialEnabledState"),
-            urlVariable = getOrNull("${ToxiproxyField.proxies}/$it/urlVariable"),
-            serverVariable = getOrNull("${ToxiproxyField.proxies}/$it/serverVariable"),
-            portVariable = getOrNull("${ToxiproxyField.proxies}/$it/portVariable"),
+            urlVariableKey = getOrNull("${ToxiproxyField.proxies}/$it/urlVariableKey"),
+            serverVariableKey = getOrNull("${ToxiproxyField.proxies}/$it/serverVariableKey"),
+            portVariableKey = getOrNull("${ToxiproxyField.proxies}/$it/portVariableKey"),
             database = get("${ToxiproxyField.proxies}/$it/database"),
             databaseName = getOrNull("${ToxiproxyField.proxies}/$it/databaseName")
         )

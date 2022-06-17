@@ -23,9 +23,9 @@ internal data class ToxiproxyProxySpec(
     val proxyName: String,
     val enabled: Boolean,
     val initialEnabledState: Boolean,
-    val urlVariable: String?,
-    val serverVariable: String?,
-    val portVariable: String?,
+    val urlVariableKey: String?,
+    val serverVariableKey: String?,
+    val portVariableKey: String?,
     val database: Boolean,
     val databaseName: String?
 ) {
@@ -44,25 +44,25 @@ internal data class ToxiproxyProxySpec(
             ?: toToxiproxyProxyIfEnabled()?.validate(ads)
             ?: emptyList()
 
-    private fun isEndpointProxy() = !urlVariable.isNullOrBlank() &&
-        noneAreSet(serverVariable, portVariable, databaseName, database)
+    private fun isEndpointProxy() = !urlVariableKey.isNullOrBlank() &&
+        noneAreSet(serverVariableKey, portVariableKey, databaseName, database)
 
-    private fun isServerAndPortProxy() = listOf(serverVariable, portVariable).any { !it.isNullOrBlank() } &&
-        noneAreSet(urlVariable, databaseName, database)
+    private fun isServerAndPortProxy() = listOf(serverVariableKey, portVariableKey).any { !it.isNullOrBlank() } &&
+        noneAreSet(urlVariableKey, databaseName, database)
 
     private fun isNamedDatabaseProxy() = !databaseName.isNullOrBlank() &&
-        noneAreSet(urlVariable, serverVariable, portVariable, database)
+        noneAreSet(urlVariableKey, serverVariableKey, portVariableKey, database)
 
     private fun isDefaultDatabaseProxy() = database &&
-        noneAreSet(urlVariable, serverVariable, portVariable, databaseName)
+        noneAreSet(urlVariableKey, serverVariableKey, portVariableKey, databaseName)
 
     private fun isDatabaseProxy() = isDefaultDatabaseProxy() || isNamedDatabaseProxy()
 
     private fun toEndpointToxiproxyProxy() =
-        isEndpointProxy().whenTrue { EndpointToxiproxyProxy(urlVariable!!, proxyName, initialEnabledState) }
+        isEndpointProxy().whenTrue { EndpointToxiproxyProxy(urlVariableKey!!, proxyName, initialEnabledState) }
 
     private fun toServerAndPortToxiproxyProxy() = isServerAndPortProxy().whenTrue {
-        ServerAndPortToxiproxyProxy(serverVariable, portVariable, proxyName, initialEnabledState)
+        ServerAndPortToxiproxyProxy(serverVariableKey, portVariableKey, proxyName, initialEnabledState)
     }
 
     private fun toDatabaseToxiproxyProxy() =
@@ -70,7 +70,7 @@ internal data class ToxiproxyProxySpec(
 
     private fun invalidCombinationError() = when {
         hasNoReference() ->
-            "Neither of the fields urlVariable, serverVariable, portVariable, database or " +
+            "Neither of the fields urlVariableKey, serverVariableKey, portVariableKey, database or " +
                 "databaseName are set for the Toxiproxy proxy named $proxyName."
         isNotValidProxy() ->
             "The combination of fields specified for the Toxiproxy proxy named $proxyName is not valid."
@@ -78,12 +78,12 @@ internal data class ToxiproxyProxySpec(
     }?.let { exceptionMessage ->
         AuroraDeploymentSpecValidationException(
             exceptionMessage +
-                " A valid configuration must contain a value for exactly one of the properties urlVariable," +
-                " database, or databaseName, or both the properties serverVariable and portVariable."
+                " A valid configuration must contain a value for exactly one of the properties urlVariableKey," +
+                " database, or databaseName, or both the properties serverVariableKey and portVariableKey."
         )
     }
 
-    private fun hasNoReference() = noneAreSet(urlVariable, serverVariable, portVariable, databaseName, database)
+    private fun hasNoReference() = noneAreSet(urlVariableKey, serverVariableKey, portVariableKey, databaseName, database)
 
     private fun isNotValidProxy() = noneAreSet(isEndpointProxy(), isServerAndPortProxy(), isDatabaseProxy())
 }
@@ -138,7 +138,7 @@ internal abstract class ToxiproxyProxy {
 }
 
 internal class EndpointToxiproxyProxy(
-    val urlVariable: String,
+    val urlVariableKey: String,
     override val proxyName: String,
     override val initialEnabledState: Boolean
 ) : ToxiproxyProxy() {
@@ -148,7 +148,7 @@ internal class EndpointToxiproxyProxy(
         userDetailsProvider: UserDetailsProvider,
         databaseSchemaProvisioner: DatabaseSchemaProvisioner?
     ) = ads
-        .getOrNull<String>("config/$urlVariable")
+        .getOrNull<String>("config/$urlVariableKey")
         ?.let(::URI)
         ?.let { uri ->
             val upstreamPort = if (uri.port == -1) {
@@ -160,12 +160,12 @@ internal class EndpointToxiproxyProxy(
 
     override fun validateVariables(ads: AuroraDeploymentSpec): List<AuroraDeploymentSpecValidationException> {
 
-        val envVar = ads.getOrNull<String>("config/$urlVariable")
+        val envVar = ads.getOrNull<String>("config/$urlVariableKey")
 
         val message = if (envVar == null) {
-            "Found Toxiproxy config for endpoint named $urlVariable, but there is no such environment variable."
+            "Found Toxiproxy config for endpoint named $urlVariableKey, but there is no such environment variable."
         } else if (!UrlParser(envVar).isValid()) {
-            "The format of the URL \"$envVar\" given by the config variable $urlVariable is not supported."
+            "The format of the URL \"$envVar\" given by the config variable $urlVariableKey is not supported."
         } else return emptyList()
 
         return listOf(AuroraDeploymentSpecValidationException(message))
@@ -173,8 +173,8 @@ internal class EndpointToxiproxyProxy(
 }
 
 internal class ServerAndPortToxiproxyProxy(
-    val serverVariable: String?,
-    val portVariable: String?,
+    val serverVariableKey: String?,
+    val portVariableKey: String?,
     override val proxyName: String,
     override val initialEnabledState: Boolean
 ) : ToxiproxyProxy() {
@@ -185,8 +185,8 @@ internal class ServerAndPortToxiproxyProxy(
         databaseSchemaProvisioner: DatabaseSchemaProvisioner?
     ): UpstreamUrlAndSecretName? {
 
-        val upstreamServer: String? = ads.getOrNull("config/$serverVariable")
-        val upstreamPort: String? = ads.getOrNull("config/$portVariable")
+        val upstreamServer: String? = ads.getOrNull("config/$serverVariableKey")
+        val upstreamPort: String? = ads.getOrNull("config/$portVariableKey")
 
         return if (upstreamServer != null && upstreamPort != null)
             UpstreamUrlAndSecretName("$upstreamServer:$upstreamPort", null)
@@ -194,7 +194,7 @@ internal class ServerAndPortToxiproxyProxy(
     }
 
     override fun validateVariables(ads: AuroraDeploymentSpec) =
-        listOf("server" to serverVariable, "port" to portVariable)
+        listOf("server" to serverVariableKey, "port" to portVariableKey)
             .mapNotNull { (name, value) ->
                 if (value.isNullOrBlank()) {
                     return@mapNotNull "The $name variable is missing for the Toxiproxy proxy named $proxyName."

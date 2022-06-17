@@ -130,33 +130,33 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "proxies": {
                         "test1": {
                             "enabled": true,
-                            "urlVariable": "TEST"
+                            "urlVariableKey": "TEST"
                         },
                         "test3": {
                             "enabled": false,
-                            "urlVariable": "DISABLED_TEST"
+                            "urlVariableKey": "DISABLED_TEST"
                         },
                         "test5": {
                             "enabled": true,
-                            "urlVariable": "HTTPS_URL"
+                            "urlVariableKey": "HTTPS_URL"
                         },
                         "test6": {
                             "enabled": true,
-                            "urlVariable": "URL_WITH_PORT"
+                            "urlVariableKey": "URL_WITH_PORT"
                         },
                         "test7": {
                             "enabled": true,
-                            "urlVariable": "URL_WITH_PATH"
+                            "urlVariableKey": "URL_WITH_PATH"
                         },
                         "test8": {
                             "enabled": true,
                             "initialEnabledState": true,
-                            "urlVariable": "INITIALLY_ENABLED"
+                            "urlVariableKey": "INITIALLY_ENABLED"
                         },
                         "test9": {
                             "enabled": true,
                             "initialEnabledState": false,
-                            "urlVariable": "INITIALLY_DISABLED"
+                            "urlVariableKey": "INITIALLY_DISABLED"
                         }
                     }
                 },
@@ -204,17 +204,17 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "version": "2.1.3",
                     "proxies": {
                         "proxyName1": {
-                            "serverVariable": "SERVER_1",
-                            "portVariable": "PORT_1"
+                            "serverVariableKey": "SERVER_1",
+                            "portVariableKey": "PORT_1"
                         },
                         "proxyName2": {
-                            "serverVariable": "SERVER_2",
-                            "portVariable": "PORT_2",
+                            "serverVariableKey": "SERVER_2",
+                            "portVariableKey": "PORT_2",
                             "initialEnabledState": true
                         },
                         "proxyName3": {
-                            "serverVariable": "SERVER_3",
-                            "portVariable": "PORT_3",
+                            "serverVariableKey": "SERVER_3",
+                            "portVariableKey": "PORT_3",
                             "initialEnabledState": false
                         }
                     }
@@ -262,7 +262,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "toxiproxy": {
                         "version": "2.1.3",
                         "proxies": {
-                            "test": {"urlVariable": "NOT_EXISTING_VAR", "enabled": true}
+                            "test": {"urlVariableKey": "NOT_EXISTING_VAR", "enabled": true}
                         }
                     }
                 }""",
@@ -286,7 +286,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "toxiproxy": {
                         "version": "2.1.3",
                         "proxies": {
-                            "test": {"urlVariable": "SOME_VAR", "enabled": true}
+                            "test": {"urlVariableKey": "SOME_VAR", "enabled": true}
                         }
                     },
                     "config": {"SOME_VAR": "invalid_url"}
@@ -312,8 +312,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "version": "2.1.3",
                         "proxies": {
                             "proxyName": {
-                                "serverVariable": "INEXISTENT_SERVER_VAR",
-                                "portVariable": "EXISTENT_PORT_VAR"
+                                "serverVariableKey": "INEXISTENT_SERVER_VAR",
+                                "portVariableKey": "EXISTENT_PORT_VAR"
                             }
                         }
                     },
@@ -340,8 +340,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "version": "2.1.3",
                         "proxies": {
                             "proxyName": {
-                                "serverVariable": "EXISTENT_SERVER_VAR",
-                                "portVariable": "INEXISTENT_PORT_VAR"
+                                "serverVariableKey": "EXISTENT_SERVER_VAR",
+                                "portVariableKey": "INEXISTENT_PORT_VAR"
                             }
                         }
                     },
@@ -601,10 +601,10 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             )
         }.errors.first().errors.first().message
 
-        val expectedErrorMessage = "Neither of the fields urlVariable, serverVariable, portVariable, database or " +
-            "databaseName are set for the Toxiproxy proxy named badProxy. A valid configuration must contain a value " +
-            "for exactly one of the properties urlVariable, database, or databaseName, or both the properties " +
-            "serverVariable and portVariable."
+        val expectedErrorMessage = "Neither of the fields urlVariableKey, serverVariableKey, portVariableKey, " +
+            "database or databaseName are set for the Toxiproxy proxy named badProxy. A valid configuration must " +
+            "contain a value for exactly one of the properties urlVariableKey, database, or databaseName, or both the " +
+            "properties serverVariableKey and portVariableKey."
 
         assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }
@@ -621,12 +621,12 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "version": "2.1.3",
                         "proxies": {
                             "badProxy1": {
-                                "urlVariable": "URL_VARIABLE",
-                                "serverVariable": "SERVER_VARIABLE",
-                                "portVariable": "PORT_VARIABLE"
+                                "urlVariableKey": "URL_VARIABLE",
+                                "serverVariableKey": "SERVER_VARIABLE",
+                                "portVariableKey": "PORT_VARIABLE"
                             },
                             "badProxy2": {
-                                "urlVariable": "URL_VARIABLE",
+                                "urlVariableKey": "URL_VARIABLE",
                                 "databaseName": "dbName"
                             }
                         }
@@ -646,12 +646,12 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         }.errors.first().errors.map { it.message }
 
         val expectedErrorMessage1 = "The combination of fields specified for the Toxiproxy proxy named badProxy1 is " +
-            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariable, " +
-            "database, or databaseName, or both the properties serverVariable and portVariable."
+            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariableKey, " +
+            "database, or databaseName, or both the properties serverVariableKey and portVariableKey."
 
         val expectedErrorMessage2 = "The combination of fields specified for the Toxiproxy proxy named badProxy2 is " +
-            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariable, " +
-            "database, or databaseName, or both the properties serverVariable and portVariable."
+            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariableKey, " +
+            "database, or databaseName, or both the properties serverVariableKey and portVariableKey."
 
         assertThat(errorMessagesNamedDatabase).hasSize(2)
         assertThat(errorMessagesNamedDatabase).contains(expectedErrorMessage1)
@@ -664,7 +664,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "version": "2.1.3",
                         "proxies": {
                             "badProxy3": {
-                                "urlVariable": "URL_VARIABLE",
+                                "urlVariableKey": "URL_VARIABLE",
                                 "database": true
                             }
                         }
@@ -678,8 +678,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         }.errors.first().errors.first().message
 
         val expectedErrorMessage3 = "The combination of fields specified for the Toxiproxy proxy named badProxy3 is " +
-            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariable, " +
-            "database, or databaseName, or both the properties serverVariable and portVariable."
+            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariableKey, " +
+            "database, or databaseName, or both the properties serverVariableKey and portVariableKey."
 
         assertThat(errorMessageDefaultDatabase).isEqualTo(expectedErrorMessage3)
     }
@@ -774,7 +774,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "toxiproxy": {
                         "version": "2.1.3",
                         "proxies": {
-                            "app": {"urlVariable": "TEST"}
+                            "app": {"urlVariableKey": "TEST"}
                         }
                     },
                     "config": {"TEST": "http://test1.test"}
@@ -798,8 +798,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                     "toxiproxy": {
                         "version": "2.1.3",
                         "proxies": {
-                            "proxy1": {"urlVariable": "TEST"},
-                            "proxy2": {"urlVariable": "TEST"}
+                            "proxy1": {"urlVariableKey": "TEST"},
+                            "proxy2": {"urlVariableKey": "TEST"}
                         }
                     },
                     "config": {"TEST": "http://test1.test"}
@@ -824,16 +824,16 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                         "version": "2.1.3",
                         "proxies": {
                             "proxy1": {
-                                "serverVariable": "SERVER1",
-                                "portVariable": "PORT1"
+                                "serverVariableKey": "SERVER1",
+                                "portVariableKey": "PORT1"
                             },
                             "proxy2": {
-                                "serverVariable": "SERVER1",
-                                "portVariable": "PORT2"
+                                "serverVariableKey": "SERVER1",
+                                "portVariableKey": "PORT2"
                             },
                             "proxy3": {
-                                "serverVariable": "SERVER2",
-                                "portVariable": "PORT1"
+                                "serverVariableKey": "SERVER2",
+                                "portVariableKey": "PORT1"
                             }
                         }
                     },

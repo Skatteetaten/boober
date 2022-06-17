@@ -194,9 +194,9 @@ class ToxiproxySidecarFeature(
                 defaultValue = true,
                 validator = { it.boolean() }
             ),
-            AuroraConfigFieldHandler(name = "$fieldNameWithKeys/urlVariable"),
-            AuroraConfigFieldHandler(name = "$fieldNameWithKeys/serverVariable"),
-            AuroraConfigFieldHandler(name = "$fieldNameWithKeys/portVariable"),
+            AuroraConfigFieldHandler(name = "$fieldNameWithKeys/urlVariableKey"),
+            AuroraConfigFieldHandler(name = "$fieldNameWithKeys/serverVariableKey"),
+            AuroraConfigFieldHandler(name = "$fieldNameWithKeys/portVariableKey"),
             AuroraConfigFieldHandler(name = "$fieldNameWithKeys/databaseName"),
             AuroraConfigFieldHandler(
                 name = "$fieldNameWithKeys/database",

@@ -40,9 +40,9 @@ private fun ToxiproxyProxies.invalidDbConfigErrors(
 
 // Validate that the variable to proxy mapping is bijective
 private fun ToxiproxyProxies.duplicationErrors() = listOf(
-    endpointProxies().duplicationErrors("url variable") { it.urlVariable },
-    serverAndPortProxies().duplicationErrors("server variable") { it.serverVariable },
-    serverAndPortProxies().duplicationErrors("port variable") { it.portVariable },
+    endpointProxies().duplicationErrors("url variable") { it.urlVariableKey },
+    serverAndPortProxies().duplicationErrors("server variable") { it.serverVariableKey },
+    serverAndPortProxies().duplicationErrors("port variable") { it.portVariableKey },
     databaseProxies().duplicationErrors("database name") { it.databaseName }
 ).flatten()
 
