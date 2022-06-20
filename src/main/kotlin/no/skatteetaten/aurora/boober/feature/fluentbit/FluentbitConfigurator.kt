@@ -61,16 +61,25 @@ class FluentbitConfigurator {
             retryLimit: Int?
         ): String {
             val logInputList = getLoggInputList(allConfiguredLoggers, bufferSize)
-            val applicationSplunkOutputs = allConfiguredLoggers.joinToString("\n\n") {
-                it.run {
-                    generateSplunkOutput(
-                        matcherTag = "$name-$sourceType",
-                        index = index,
-                        sourceType = sourceType,
-                        retryLimit = retryLimit
-                    )
+            val applicationSplunkOutputs = allConfiguredLoggers
+                .flatMap {
+                    if (it.sourceType == logApplicationSourceType) listOf(
+                        it.copy(sourceType = "log4j"),
+                        it.copy(sourceType = "_json")
+                    ) else {
+                        listOf(it)
+                    }
                 }
-            }
+                .joinToString("\n\n") {
+                    it.run {
+                        generateSplunkOutput(
+                            matcherTag = "$name-$sourceType",
+                            index = index,
+                            sourceType = sourceType,
+                            retryLimit = retryLimit
+                        )
+                    }
+                }
 
             val fluentbitIndex = allConfiguredLoggers.find { it.name == logApplication }?.index
                 ?: throw IllegalArgumentException("Application logger has not been provided")
@@ -82,11 +91,12 @@ class FluentbitConfigurator {
                 fluentbitService,
                 logInputList,
                 fluentbitLogInputAndFilter,
+                applicationLogRewriteTag,
                 timeParserFilter,
+                jsonTimeParserFilter,
                 multilineLog4jFilter,
                 evalXmlTimeParserFilter,
                 multilineEvalXmlFilter,
-                jsonTimeParserFilter,
                 getModifyFilter(application, cluster, version),
                 applicationSplunkOutputs,
                 fluentbitSplunkOutput
@@ -144,6 +154,20 @@ class FluentbitConfigurator {
             |   Name             stdout
             |   Match            fluentbit
         """.trimMargin()
+
+        // rewrites tag to application-_json or application-log4j and emit new event for events with tag application-application_log.
+        // when tag has been rewritten the event tagged application-application_log is dropped.
+        private val applicationLogRewriteTag = """
+            |[FILTER]
+            |   Name rewrite_tag
+            |   Match application-application_log
+            |   Rule $ event ^{.*}${'$'} application-_json false
+            |   
+            |[FILTER]
+            |   Name rewrite_tag
+            |   Match application-application_log
+            |   Rule $ event .* application-log4j false
+        """.trimMargin().replace("$ event", "\$event")
 
         // Parser filter to assign it to application tag records
         private val timeParserFilter = """
