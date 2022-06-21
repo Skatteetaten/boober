@@ -91,10 +91,10 @@ class FluentbitConfigurator {
                 fluentbitService,
                 logInputList,
                 fluentbitLogInputAndFilter,
+                multilineLog4jFilter,
                 applicationLogRewriteTag,
                 timeParserFilter,
                 jsonTimeParserFilter,
-                multilineLog4jFilter,
                 evalXmlTimeParserFilter,
                 multilineEvalXmlFilter,
                 getModifyFilter(application, cluster, version),
@@ -184,7 +184,7 @@ class FluentbitConfigurator {
         private val multilineLog4jFilter = """
             |[FILTER]
             |   name multiline
-            |   match *-log4j
+            |   match application-application_log
             |   multiline.key_content event
             |   multiline.parser multiline-log4j
         """.trimMargin()
