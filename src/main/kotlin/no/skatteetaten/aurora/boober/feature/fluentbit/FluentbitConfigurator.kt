@@ -161,13 +161,13 @@ class FluentbitConfigurator {
             |[FILTER]
             |   Name rewrite_tag
             |   Match application-application_log
-            |   Rule $ event ^{.*}${'$'} application-_json false
+            |   Rule ${"\$event"} ^{.*}${'$'} application-_json false
             |   
             |[FILTER]
             |   Name rewrite_tag
             |   Match application-application_log
-            |   Rule $ event .* application-log4j false
-        """.trimMargin().replace("$ event", "\$event")
+            |   Rule ${"\$event"} .* application-log4j false
+        """.trimMargin()
 
         // Parser filter to assign it to application tag records
         private val timeParserFilter = """
