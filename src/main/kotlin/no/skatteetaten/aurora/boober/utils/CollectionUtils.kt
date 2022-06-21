@@ -195,10 +195,10 @@ fun <T : Any> Collection<AuroraResource>.findResourceByType(kclass: KClass<T>): 
     filter { it.resource::class == kclass }
         .map { it.resource as T }
 
-fun noneAreSet(vararg things: Any?) = things.all {
+fun countSetValues(vararg things: Any?) = things.count {
     when (it) {
-        is String -> it.isBlank()
-        is Boolean -> !it
-        else -> it == null
+        is String -> it.isNotBlank()
+        is Boolean -> it
+        else -> it != null
     }
 }

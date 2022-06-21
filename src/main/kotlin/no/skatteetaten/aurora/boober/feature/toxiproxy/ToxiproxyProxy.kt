@@ -12,7 +12,7 @@ import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.utils.UrlParser
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
-import no.skatteetaten.aurora.boober.utils.noneAreSet
+import no.skatteetaten.aurora.boober.utils.countSetValues
 import no.skatteetaten.aurora.boober.utils.takeIfNotEmpty
 import no.skatteetaten.aurora.boober.utils.whenTrue
 import java.net.URI
@@ -44,37 +44,31 @@ internal data class ToxiproxyProxySpec(
             ?: toToxiproxyProxyIfEnabled()?.validate(ads)
             ?: emptyList()
 
-    private fun isEndpointProxy() = !urlVariableKey.isNullOrBlank() &&
-        noneAreSet(serverVariableKey, portVariableKey, databaseName, database)
+    private fun isEndpointProxy() = hasValidCombination() && !urlVariableKey.isNullOrBlank()
 
-    private fun isServerAndPortProxy() = listOf(serverVariableKey, portVariableKey).any { !it.isNullOrBlank() } &&
-        noneAreSet(urlVariableKey, databaseName, database)
+    private fun isServerAndPortProxy() = hasValidCombination() && hasServerOrPortVariableKey()
 
-    private fun isNamedDatabaseProxy() = !databaseName.isNullOrBlank() &&
-        noneAreSet(urlVariableKey, serverVariableKey, portVariableKey, database)
+    private fun isNamedDatabaseProxy() = hasValidCombination() && !databaseName.isNullOrBlank()
 
-    private fun isDefaultDatabaseProxy() = database &&
-        noneAreSet(urlVariableKey, serverVariableKey, portVariableKey, databaseName)
+    private fun isDefaultDatabaseProxy() = hasValidCombination() && database
 
     private fun isDatabaseProxy() = isDefaultDatabaseProxy() || isNamedDatabaseProxy()
 
-    private fun toEndpointToxiproxyProxy() =
-        isEndpointProxy().whenTrue { EndpointToxiproxyProxy(urlVariableKey!!, proxyName, initialEnabledState) }
+    private fun toEndpointToxiproxyProxy() = EndpointToxiproxyProxy(urlVariableKey!!, proxyName, initialEnabledState)
 
-    private fun toServerAndPortToxiproxyProxy() = isServerAndPortProxy().whenTrue {
+    private fun toServerAndPortToxiproxyProxy() =
         ServerAndPortToxiproxyProxy(serverVariableKey, portVariableKey, proxyName, initialEnabledState)
-    }
 
-    private fun toDatabaseToxiproxyProxy() =
-        isDatabaseProxy().whenTrue { DatabaseToxiproxyProxy(databaseName, proxyName, initialEnabledState) }
+    private fun toDatabaseToxiproxyProxy() = DatabaseToxiproxyProxy(databaseName, proxyName, initialEnabledState)
 
-    private fun invalidCombinationError() = when {
-        hasNoReference() ->
+    private fun hasValidCombination() = numberOfGivenValues() == 1
+
+    private fun invalidCombinationError() = when (numberOfGivenValues()) {
+        0 ->
             "Neither of the fields urlVariableKey, serverVariableKey, portVariableKey, database or " +
                 "databaseName are set for the Toxiproxy proxy named $proxyName."
-        isNotValidProxy() ->
-            "The combination of fields specified for the Toxiproxy proxy named $proxyName is not valid."
-        else -> null
+        1 -> null
+        else -> "The combination of fields specified for the Toxiproxy proxy named $proxyName is not valid."
     }?.let { exceptionMessage ->
         AuroraDeploymentSpecValidationException(
             exceptionMessage +
@@ -83,9 +77,10 @@ internal data class ToxiproxyProxySpec(
         )
     }
 
-    private fun hasNoReference() = noneAreSet(urlVariableKey, serverVariableKey, portVariableKey, databaseName, database)
+    private fun numberOfGivenValues() =
+        countSetValues(urlVariableKey, hasServerOrPortVariableKey(), database, databaseName)
 
-    private fun isNotValidProxy() = noneAreSet(isEndpointProxy(), isServerAndPortProxy(), isDatabaseProxy())
+    private fun hasServerOrPortVariableKey() = countSetValues(serverVariableKey, portVariableKey) > 0
 }
 
 internal typealias UpstreamUrlAndSecretName = Pair<String, String?>

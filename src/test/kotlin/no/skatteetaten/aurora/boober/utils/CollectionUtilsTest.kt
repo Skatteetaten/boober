@@ -1,20 +1,16 @@
 package no.skatteetaten.aurora.boober.utils
 
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import org.junit.jupiter.api.Test
 
 internal class CollectionUtilsTest {
 
     @Test
-    fun `noneAreSet should return true when all inputs are either null, false or blank`() =
-        assertTrue(noneAreSet("", " ", null, false))
-
-    @Test
-    fun `noneAreSet should return false when at least one boolean is true`() =
-        assertFalse(noneAreSet(null, null, true, null))
-
-    @Test
-    fun `noneAreSet should return false when at least one string has some content`() =
-        assertFalse(noneAreSet(null, "a", null, null))
+    fun `countSetValues should return the number of values that are not null, false or blank`() {
+        assertThat(countSetValues("", " ", null, false)).isEqualTo(0)
+        assertThat(countSetValues("", "a", " ", null, false)).isEqualTo(1)
+        assertThat(countSetValues("", "a", " ", null, true, false)).isEqualTo(2)
+        assertThat(countSetValues("a", true)).isEqualTo(2)
+    }
 }
