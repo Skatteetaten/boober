@@ -155,8 +155,7 @@ class FluentbitConfigurator {
             |   Match            fluentbit
         """.trimMargin()
 
-        // rewrites tag to application-_json or application-log4j and emit new event for events with tag application-application_log.
-        // when tag has been rewritten the event tagged application-application_log is dropped.
+        // rewrite tag to application-_json if event matches single line json structure (start open bracket end closed bracket)
         private val applicationLogRewriteTag = """
             |[FILTER]
             |   Name rewrite_tag
