@@ -63,8 +63,8 @@ class FluentbitConfigurator {
             val logInputList = getLoggInputList(allConfiguredLoggers, bufferSize)
             val applicationSplunkOutputs = allConfiguredLoggers
                 .flatMap {
-                    if (it.sourceType == logApplicationSourceType) listOf(
-                        it.copy(sourceType = "log4j"),
+                    if (it.name == logApplication && it.sourceType == "log4j") listOf(
+                        it,
                         it.copy(sourceType = "_json")
                     ) else {
                         listOf(it)
@@ -91,10 +91,10 @@ class FluentbitConfigurator {
                 fluentbitService,
                 logInputList,
                 fluentbitLogInputAndFilter,
-                multilineLog4jFilter,
                 applicationLogRewriteTag,
-                timeParserFilter,
                 jsonTimeParserFilter,
+                timeParserFilter,
+                multilineLog4jFilter,
                 evalXmlTimeParserFilter,
                 multilineEvalXmlFilter,
                 getModifyFilter(application, cluster, version),
@@ -160,13 +160,8 @@ class FluentbitConfigurator {
         private val applicationLogRewriteTag = """
             |[FILTER]
             |   Name rewrite_tag
-            |   Match application-application_log
+            |   Match *-log4j
             |   Rule ${"\$event"} ^{.*}${'$'} application-_json false
-            |   
-            |[FILTER]
-            |   Name rewrite_tag
-            |   Match application-application_log
-            |   Rule ${"\$event"} .* application-log4j false
         """.trimMargin()
 
         // Parser filter to assign it to application tag records
@@ -184,7 +179,7 @@ class FluentbitConfigurator {
         private val multilineLog4jFilter = """
             |[FILTER]
             |   name multiline
-            |   match application-application_log
+            |   match *-log4j
             |   multiline.key_content event
             |   multiline.parser multiline-log4j
         """.trimMargin()
@@ -268,7 +263,7 @@ class FluentbitConfigurator {
             return """
                 |[OUTPUT]
                 |   Name                       splunk
-                |   Match                      $matcherTag 
+                |   Match                      $matcherTag
                 |   Host                       $ {SPLUNK_HOST}
                 |   Port                       $ {SPLUNK_PORT}
                 |   Splunk_token               $ {HEC_TOKEN}

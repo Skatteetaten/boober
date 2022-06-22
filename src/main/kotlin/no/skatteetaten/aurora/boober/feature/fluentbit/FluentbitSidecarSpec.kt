@@ -157,7 +157,6 @@ fun logTypeToSourcetype(logType: String): String =
         logAuditJson -> "_json"
         logAccess -> "access_combined"
         logGC -> "gc_log"
-        logApplication -> logApplicationSourceType
         else -> "log4j"
     }
 

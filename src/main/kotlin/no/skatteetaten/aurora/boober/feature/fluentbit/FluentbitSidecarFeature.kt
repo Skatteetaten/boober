@@ -29,7 +29,6 @@ const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
 const val SPLUNK_CONNECT_INDEX_TAG = "splunk.com/index"
 
 const val logApplication: String = "application"
-const val logApplicationSourceType: String = "application_log"
 const val logAuditText: String = "audit_text"
 const val logAuditJson: String = "audit_json"
 const val logSlow: String = "slow"
