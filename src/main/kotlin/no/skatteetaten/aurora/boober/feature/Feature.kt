@@ -152,6 +152,12 @@ enum class DeploymentState {
 
 val AuroraDeploymentSpec.applicationPlatform: ApplicationPlatform get() = this["applicationPlatform"]
 
+val AuroraDeploymentSpec.component: String get() = if (this.applicationPlatform == ApplicationPlatform.web) {
+    "frontend"
+} else {
+    "backend"
+}
+
 class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName: String) {
 
     val handlers: Set<AuroraConfigFieldHandler>

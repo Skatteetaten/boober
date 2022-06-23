@@ -10,6 +10,8 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "job",
+      "app.kubernetes.io/name": "job",
+      "app.kubernetes.io/component": "backend",
       "id": "1234567890",
       "applicationId": "e878cf1e9639c005deb1b3b9ff8e3aadddf94a0c",
       "booberDeployId": "deploy1"

@@ -7,9 +7,11 @@
       "app": "python",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "python",
+      "app.kubernetes.io/name": "python",
+      "app.kubernetes.io/component": "backend",
       "id": "1234567890",
       "applicationId": "6c5d4d2a69e72c1b258d92884268777d59f38183",
       "booberDeployId": "deploy1"
@@ -34,7 +36,7 @@
     "managementPath": ":8081/actuator",
     "deployTag": "1",
     "command": {
-      "overrideFiles": {},
+      "overrideFiles": { },
       "applicationDeploymentRef": {
         "environment": "utv",
         "application": "python"

@@ -13,9 +13,11 @@
       "app": "easy",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "easy",
+      "app.kubernetes.io/name": "easy",
+      "app.kubernetes.io/component": "backend",
       "booberDeployId": "deploy1"
     },
     "name": "easy",
