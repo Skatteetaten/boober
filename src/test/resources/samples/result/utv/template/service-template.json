@@ -15,6 +15,8 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "template",
+      "app.kubernetes.io/name": "template",
+      "app.kubernetes.io/component": "backend",
       "booberDeployId": "deploy1"
     },
     "name": "template",

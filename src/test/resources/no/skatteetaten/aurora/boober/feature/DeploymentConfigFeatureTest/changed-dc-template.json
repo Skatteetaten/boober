@@ -3,7 +3,8 @@
   "kind": "DeploymentConfig",
   "metadata": {
     "labels": {
-      "deployTag": "1"
+      "deployTag": "1",
+      "app.kubernetes.io/version": "1"
     },
     "name": "simple",
     "namespace": "paas-utv"
@@ -29,7 +30,8 @@
           "boober.skatteetaten.no/deployTag": "1"
         },
         "labels": {
-          "deployTag": "1"
+          "deployTag": "1",
+          "app.kubernetes.io/version": "1"
         }
       },
       "spec": {

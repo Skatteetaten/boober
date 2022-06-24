@@ -27,7 +27,9 @@ class CommonLabelFeature(val userDetailsProvider: UserDetailsProvider) : Feature
             "updatedAt" to now.epochSecond.toString(),
             "lastUpdatedYear" to now.atZone(ZoneId.systemDefault()).year.toString(),
             "affiliation" to adc.affiliation,
-            "name" to adc.name
+            "name" to adc.name,
+            "app.kubernetes.io/name" to adc.name,
+            "app.kubernetes.io/component" to adc.component
         )
 
         return labels.normalizeLabels()

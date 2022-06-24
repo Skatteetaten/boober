@@ -7,9 +7,11 @@
       "app": "easy",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "easy",
+      "app.kubernetes.io/name": "easy",
+      "app.kubernetes.io/component": "backend",
       "id": "1234567890",
       "applicationId": "665c8f8518c18e8fc6b28a458496ce19bf9e7645",
       "booberDeployId": "deploy1"
@@ -34,7 +36,7 @@
     "managementPath": ":8081/actuator",
     "deployTag": "1",
     "command": {
-      "overrideFiles": {},
+      "overrideFiles": { },
       "applicationDeploymentRef": {
         "environment": "utv",
         "application": "easy"

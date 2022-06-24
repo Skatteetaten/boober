@@ -4,6 +4,7 @@
   "metadata": {
     "labels": {
       "deployTag": "1",
+      "app.kubernetes.io/version": "1",
       "paused": "true"
     },
     "name": "simple",
@@ -31,6 +32,7 @@
         },
         "labels": {
           "deployTag": "1",
+          "app.kubernetes.io/version": "1",
           "paused": "true"
         }
       },

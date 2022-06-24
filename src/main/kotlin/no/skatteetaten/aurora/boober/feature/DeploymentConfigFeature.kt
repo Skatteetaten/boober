@@ -213,7 +213,10 @@ class DeploymentConfigFeature() : Feature {
             "paused" to "true"
         } else null
 
-        return mapOf("deployTag" to adc.version).addIfNotNull(pauseLabel).normalizeLabels()
+        return mapOf(
+            "deployTag" to adc.version,
+            "app.kubernetes.io/version" to adc.version
+        ).addIfNotNull(pauseLabel).normalizeLabels()
     }
 
     private fun createAuroraKlientId(adc: AuroraDeploymentSpec): String {

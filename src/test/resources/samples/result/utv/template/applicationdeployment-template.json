@@ -10,6 +10,8 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "template",
+      "app.kubernetes.io/name": "template",
+      "app.kubernetes.io/component": "backend",
       "id": "1234567890",
       "applicationId": "e71182e7453ea6592bec2c17c7293b37134606aa",
       "booberDeployId": "deploy1"

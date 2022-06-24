@@ -1,38 +1,42 @@
 {
-  "apiVersion" : "skatteetaten.no/v1",
-  "kind" : "StorageGridObjectArea",
-  "metadata" : {
-    "labels" : {
-      "operationScope" : "aos-4016",
-      "app" : "easy",
-      "updatedBy" : "hero",
-      "updatedAt" : "0",
-      "lastUpdatedYear" : "1970",
-      "affiliation" : "paas",
-      "name" : "easy",
-      "booberDeployId" : "deploy1"
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "StorageGridObjectArea",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "easy",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "easy",
+      "app.kubernetes.io/name": "easy",
+      "app.kubernetes.io/component": "backend",
+      "booberDeployId": "deploy1"
     },
-    "name" : "easy-default",
-    "namespace" : "paas-utv",
-    "ownerReferences" : [ {
-      "apiVersion" : "skatteetaten.no/v1",
-      "kind" : "ApplicationDeployment",
-      "name" : "easy",
-      "uid" : "123-123"
-    } ],
-    "resourceVersion" : "1489394588"
+    "name": "easy-default",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "easy",
+        "uid": "123-123"
+      }
+    ],
+    "resourceVersion": "1489394588"
   },
-  "spec" : {
-    "bucketPostfix" : "mybucket",
-    "applicationDeploymentId" : "1234567890",
-    "objectArea" : "default",
-    "tryReuseCredentials" : false
+  "spec": {
+    "bucketPostfix": "mybucket",
+    "applicationDeploymentId": "1234567890",
+    "objectArea": "default",
+    "tryReuseCredentials": false
   },
-  "status" : {
-    "result" : {
-      "message" : "nothing here",
-      "reason" : "SGOAProvisioned",
-      "success" : true
+  "status": {
+    "result": {
+      "message": "nothing here",
+      "reason": "SGOAProvisioned",
+      "success": true
     }
   }
 }
