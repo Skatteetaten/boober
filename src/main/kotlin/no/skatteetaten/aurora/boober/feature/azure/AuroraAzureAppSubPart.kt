@@ -95,7 +95,7 @@ class AuroraAzureAppSubPart {
             annotations = annotations,
             fullyQualifiedHost = true,
             labels = mapOf(
-                "type" to "webseal",
+                "type" to "appfab",
                 "azureManaged" to "true"
             )
         )

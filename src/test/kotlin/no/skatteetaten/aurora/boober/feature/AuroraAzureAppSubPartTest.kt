@@ -41,7 +41,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         val (_, auroraAzureApp) = generateResources(
             """{
              "azure" : {
-                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "groups": [] 
               }
            }""",
@@ -57,7 +57,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         val (_, auroraAzureApp) = generateResources(
             """{
              "azure" : {
-                "azureAppFqdn": "saksmappa-@env@.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo-@env@.amutv.skead.no",
                 "groups": [] 
               }
            }""",
@@ -73,7 +73,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         val (_, auroraAzureApp) = generateResources(
             """{
              "azure" : {
-                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "groups": [],
                 "jwtToStsConverter": {
                     "enabled": true
@@ -92,7 +92,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         val (_, auroraAzureApp) = generateResources(
             """{
               "azure": {
-                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "groups": [],
                 "jwtToStsConverter": {
                   "enabled": true
@@ -140,7 +140,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
             """{
              "webseal": true,
              "azure" : {
-                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "groups": ["APP_dev", "APP_DRIFT"],
                 "jwtToStsConverter": {
                     "enabled": false
@@ -166,11 +166,11 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         val (_, websealRoute, auroraAzureApp) = generateResources(
             """{
               "webseal": {
-                "host": "saksmappa",
+                "host": "tjeneste-foo",
                 "roles": "APP_dev,APP_drift"
               },
               "azure": {
-                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "managedRoute": false,
                 "groups": [
                   "APP_dev",
@@ -193,7 +193,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
                 """{
                   "webseal": true,
                   "azure": {
-                    "azureAppFqdn": "saksmappa.amutv.skead.no",
+                    "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                     "managedRoute": true,
                     "groups": [
                       "APP_dev",
@@ -212,11 +212,11 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
             generateResources(
                 """{
                   "webseal": {
-                    "host": "saksmappa",
+                    "host": "tjeneste-foo",
                     "roles": "APP_dev,APP_drift"
                   },
                   "azure": {
-                    "azureAppFqdn": "saksmappa.amutv.skead.no",
+                    "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                     "managedRoute": true,
                     "groups": [
                       "APP_dev",
@@ -234,7 +234,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         val (_, auroraAzureApp, alternativeRoute) = generateResources(
             """{
               "azure": {
-                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "managedRoute": true,
                 "groups": []
               }
@@ -252,7 +252,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         val (_, auroraAzureApp, alternativeRoute) = generateResources(
             """{
               "azure": {
-                "azureAppFqdn": "saksmappa.amutv.skead.no",
+                "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "clusterTimeout": "50s",
                 "managedRoute": true,
                 "groups": []

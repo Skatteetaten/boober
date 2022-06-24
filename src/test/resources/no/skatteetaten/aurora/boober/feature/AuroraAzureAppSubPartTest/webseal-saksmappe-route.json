@@ -13,7 +13,7 @@
     "namespace": "paas-utv"
   },
   "spec": {
-    "host": "saksmappa.test.skead.no",
+    "host": "tjeneste-foo.test.skead.no",
     "port": {
       "targetPort": "http"
     },

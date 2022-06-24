@@ -6,14 +6,14 @@
       "haproxy.router.openshift.io/timeout":"50s"
     },
     "labels": {
-      "type": "webseal",
+      "type": "appfab",
       "azureManaged": "true"
     },
     "name": "simple-managed",
     "namespace": "paas-utv"
   },
   "spec": {
-    "host": "saksmappa.amutv.skead.no",
+    "host": "tjeneste-foo.amutv.skead.no",
     "port": {
       "targetPort": "http"
     },

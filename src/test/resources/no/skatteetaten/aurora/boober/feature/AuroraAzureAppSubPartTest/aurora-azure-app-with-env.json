@@ -6,7 +6,7 @@
     "namespace": "paas-utv"
   },
   "spec": {
-    "azureAppFqdn": "saksmappa-utv.amutv.skead.no",
+    "azureAppFqdn": "tjeneste-foo-utv.amutv.skead.no",
     "appName": "simple",
     "groups": [],
     "noProxy": true
