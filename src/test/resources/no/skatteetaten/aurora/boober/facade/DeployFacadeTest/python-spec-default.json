@@ -725,16 +725,6 @@
       }
     ]
   },
-  "toxiproxy": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
-  },
   "webseal": {
     "source": "default",
     "value": false,
@@ -842,5 +832,15 @@
         }
       ]
     }
+  },
+  "toxiproxy": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   }
 }

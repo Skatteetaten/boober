@@ -166,7 +166,6 @@ utv/about-alternate.json |   ignoreMissingSchema: true
             complex.json |   partOf: "test-group"
             complex.json |   runtime: "spring-boot"
             complex.json |   connectsTo: ["test-app1","test-app2"]
-                 default | toxiproxy: false
                          | webseal:
             complex.json |   host: "test"
             complex.json |   roles: "admin,dev,@name@"
@@ -184,3 +183,4 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          | logging:
             complex.json |   index: "test-index"
                  default |   bufferSize: 20
+                 default | toxiproxy: false

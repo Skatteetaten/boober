@@ -10,6 +10,7 @@ import io.fabric8.kubernetes.api.model.Service
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
+import no.skatteetaten.aurora.boober.feature.toxiproxy.ToxiproxySidecarFeature
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
@@ -88,9 +89,13 @@ class ToxiproxySidecarFeatureNoDbTest : AbstractMultiFeatureTest() {
         assertThat {
             generateResources(
                 """{
-                "toxiproxy": {"database": true},
-                "database": true
-            }"""
+                    "toxiproxy": {
+                        "proxies": {
+                            "dbProxy": {"database": true}
+                        }
+                    },
+                    "database": true
+                }"""
             )
         }.singleApplicationError("Databases are not supported in this cluster")
     }

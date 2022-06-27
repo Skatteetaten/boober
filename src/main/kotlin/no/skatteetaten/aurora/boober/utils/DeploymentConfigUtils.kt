@@ -45,3 +45,11 @@ val Deployment.allNonSideCarContainers: List<Container>
 val DeploymentConfig.allNonSideCarContainers: List<Container>
     get() =
         this.spec.template.spec.containers.filter { !it.name.endsWith("sidecar") }
+
+fun Container.getEnvVar(varName: String) = env.find { it.name == varName }
+
+fun Container.setEnvVarValueIfExists(varName: String, newValue: String) =
+    getEnvVar(varName)?.apply { value = newValue }
+
+fun Container.transformEnvVarValueIfExists(varName: String, transform: (String) -> String) =
+    getEnvVar(varName)?.apply { value = transform(value) }

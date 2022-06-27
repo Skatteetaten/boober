@@ -199,6 +199,18 @@
       }
     ]
   },
+  "webseal": {
+    "strict": {
+      "source": "web.json",
+      "value": false,
+      "sources": [
+        {
+          "name": "web.json",
+          "value": false
+        }
+      ]
+    }
+  },
   "toxiproxy": {
     "source": "web.json",
     "value": true,
@@ -212,17 +224,5 @@
         "value": true
       }
     ]
-  },
-  "webseal": {
-    "strict": {
-      "source": "web.json",
-      "value": false,
-      "sources": [
-        {
-          "name": "web.json",
-          "value": false
-        }
-      ]
-    }
   }
 }

@@ -4,6 +4,8 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.hasSize
 import assertk.assertions.isEqualTo
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.fabric8.kubernetes.api.model.IntOrString
@@ -13,6 +15,7 @@ import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.facade.json
+import no.skatteetaten.aurora.boober.feature.toxiproxy.ToxiproxySidecarFeature
 import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
@@ -48,6 +51,23 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     private val cantusService: CantusService = mockk()
 
     private val userDetailsProvider: UserDetailsProvider = mockk()
+
+    private fun dbMock() = httpMockServer(5000) {
+        rule {
+            json(
+                DbApiEnvelope(
+                    "ok",
+                    listOf(
+                        createDbhSchema(
+                            UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060"),
+                            "jdbc:oracle:thin:@host:1234/dbname",
+                            DatabaseSchemaInstance(1234, "host")
+                        )
+                    )
+                )
+            )
+        }
+    }
 
     @BeforeEach
     fun setupMock() {
@@ -107,23 +127,42 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             """{
                 "toxiproxy": {
                     "version": "2.1.3",
-                    "endpointsFromConfig": {
-                        "TEST_WITH_PROXYNAME": {"proxyname": "test1", "enabled": true},
-                        "TEST_WITHOUT_PROXYNAME": true,
-                        "DISABLED_TEST_WITH_PROXYNAME": {"proxyname": "test3", "enabled": false},
-                        "DISABLED_TEST_WITHOUT_PROXYNAME": false,
-                        "HTTPS_URL": {"proxyname": "test5", "enabled": true},
-                        "URL_WITH_PORT": {"proxyname": "test6", "enabled": true},
-                        "URL_WITH_PATH": {"proxyname": "test7", "enabled": true},
-                        "INITIALLY_ENABLED": {"proxyname": "test8", "enabled": true, "initialEnabledState": true},
-                        "INITIALLY_DISABLED": {"proxyname": "test9", "enabled": true, "initialEnabledState": false}
+                    "proxies": {
+                        "test1": {
+                            "enabled": true,
+                            "urlVariableKey": "TEST"
+                        },
+                        "test3": {
+                            "enabled": false,
+                            "urlVariableKey": "DISABLED_TEST"
+                        },
+                        "test5": {
+                            "enabled": true,
+                            "urlVariableKey": "HTTPS_URL"
+                        },
+                        "test6": {
+                            "enabled": true,
+                            "urlVariableKey": "URL_WITH_PORT"
+                        },
+                        "test7": {
+                            "enabled": true,
+                            "urlVariableKey": "URL_WITH_PATH"
+                        },
+                        "test8": {
+                            "enabled": true,
+                            "initialEnabledState": true,
+                            "urlVariableKey": "INITIALLY_ENABLED"
+                        },
+                        "test9": {
+                            "enabled": true,
+                            "initialEnabledState": false,
+                            "urlVariableKey": "INITIALLY_DISABLED"
+                        }
                     }
                 },
                 "config": {
-                    "TEST_WITH_PROXYNAME": "http://test1.test",
-                    "TEST_WITHOUT_PROXYNAME": "http://test2.test",
-                    "DISABLED_TEST_WITH_PROXYNAME": "http://test3.test",
-                    "DISABLED_TEST_WITHOUT_PROXYNAME": "http://test4.test",
+                    "TEST": "http://test1.test",
+                    "DISABLED_TEST": "http://test3.test",
                     "HTTPS_URL": "https://test5.test",
                     "URL_WITH_PORT": "http://test6.test:1234",
                     "URL_WITH_PATH": "http://test7.test/path",
@@ -163,19 +202,19 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
             """{
                 "toxiproxy": {
                     "version": "2.1.3",
-                    "serverAndPortFromConfig": {
+                    "proxies": {
                         "proxyName1": {
-                            "serverVariable": "SERVER_1",
-                            "portVariable": "PORT_1"
+                            "serverVariableKey": "SERVER_1",
+                            "portVariableKey": "PORT_1"
                         },
                         "proxyName2": {
-                            "serverVariable": "SERVER_2",
-                            "portVariable": "PORT_2",
+                            "serverVariableKey": "SERVER_2",
+                            "portVariableKey": "PORT_2",
                             "initialEnabledState": true
                         },
                         "proxyName3": {
-                            "serverVariable": "SERVER_3",
-                            "portVariable": "PORT_3",
+                            "serverVariableKey": "SERVER_3",
+                            "portVariableKey": "PORT_3",
                             "initialEnabledState": false
                         }
                     }
@@ -222,8 +261,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "endpointsFromConfig": {
-                            "NOT_EXISTING_VAR": {"proxyname": "test", "enabled": true}
+                        "proxies": {
+                            "test": {"urlVariableKey": "NOT_EXISTING_VAR", "enabled": true}
                         }
                     }
                 }""",
@@ -246,8 +285,8 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "endpointsFromConfig": {
-                            "SOME_VAR": {"proxyname": "test", "enabled": true}
+                        "proxies": {
+                            "test": {"urlVariableKey": "SOME_VAR", "enabled": true}
                         }
                     },
                     "config": {"SOME_VAR": "invalid_url"}
@@ -271,10 +310,10 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "serverAndPortFromConfig": {
+                        "proxies": {
                             "proxyName": {
-                                "serverVariable": "INEXISTENT_SERVER_VAR",
-                                "portVariable": "EXISTENT_PORT_VAR"
+                                "serverVariableKey": "INEXISTENT_SERVER_VAR",
+                                "portVariableKey": "EXISTENT_PORT_VAR"
                             }
                         }
                     },
@@ -299,10 +338,10 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "serverAndPortFromConfig": {
+                        "proxies": {
                             "proxyName": {
-                                "serverVariable": "EXISTENT_SERVER_VAR",
-                                "portVariable": "INEXISTENT_PORT_VAR"
+                                "serverVariableKey": "EXISTENT_SERVER_VAR",
+                                "portVariableKey": "INEXISTENT_PORT_VAR"
                             }
                         }
                     },
@@ -321,76 +360,19 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `Should fail with an error message when there are proxyname duplicates`() {
-
-        httpMockServer(5000) {
-            rule {
-                json(
-                    DbApiEnvelope("ok", listOf(createDbhSchema()))
-                )
-            }
-        }
-
-        val errorMessage = assertThrows<MultiApplicationValidationException> {
-            generateResources(
-                """{
-                    "toxiproxy": {
-                        "version": "2.1.3",
-                        "endpointsFromConfig": {
-                            "TEST_WITH_PROXYNAME": {"proxyname": "duplicate", "enabled": true},
-                            "TEST_WITH_SAME_PROXYNAME": {"proxyname": "duplicate", "enabled": true}
-                        },
-                        "serverAndPortFromConfig": {
-                            "duplicate": {
-                                "serverVariable": "SAME_PROXYNAME_SERVER",
-                                "portVariable": "SAME_PROXYNAME_PORT"
-                            }
-                        },
-                        "database": {"db": {"proxyname": "duplicate", "enabled": true}}
-                    },
-                    "database": {"db": {"enabled": true}},
-                    "config": {
-                        "TEST_WITH_PROXYNAME": "http://test1.test",
-                        "TEST_WITH_SAME_PROXYNAME": "http://test2.test",
-                        "SAME_PROXYNAME_SERVER": "testserver.test",
-                        "SAME_PROXYNAME_PORT": 123
-                    }
-                }""",
-                createEmptyService(),
-                createEmptyDeploymentConfig()
-            )
-        }.errors.first().errors.first().message
-
-        val expectedErrorMessage =
-            "Found 4 Toxiproxy configs with the proxy name \"duplicate\". Proxy names have to be unique."
-
-        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
-    }
-
-    @Test
     fun `Should map database secret to Toxiproxy`() {
 
-        httpMockServer(5000) {
-            rule {
-                json(
-                    DbApiEnvelope(
-                        "ok",
-                        listOf(
-                            createDbhSchema(
-                                UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060"),
-                                "jdbc:oracle:thin:@host:1234/dbname",
-                                DatabaseSchemaInstance(1234, "host")
-                            )
-                        )
-                    )
-                )
-            }
-        }
+        dbMock()
 
         val (serviceResource, dcResource, secretResource, configResource) = generateResources(
             """{
-                "toxiproxy": {"database": true},
-                "database": true
+                "toxiproxy": {
+                    "proxies": {
+                        "dbProxy": {"database": true}
+                    }
+                },
+                "database": true,
+                "databaseDefaults": {"name": "simple"}
             }""",
             mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
             createdResources = 2
@@ -427,96 +409,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `Should map multiple database secrets to Toxiproxy`() {
-
-        httpMockServer(5000) {
-            rule {
-                when {
-                    path.contains("name%3Ddb1") ->
-                        json(
-                            DbApiEnvelope(
-                                "ok",
-                                listOf(
-                                    createDbhSchema(
-                                        UUID.fromString("db651af4-5fec-4875-bdef-0651b9b72691"),
-                                        "jdbc:oracle:thin:@host:1234/db1",
-                                        DatabaseSchemaInstance(1234, "host")
-                                    )
-                                )
-                            )
-                        )
-                    path.contains("name%3Ddb2") ->
-                        json(
-                            DbApiEnvelope(
-                                "ok",
-                                listOf(
-                                    createDbhSchema(
-                                        UUID.fromString("5b5c2057-c8de-45e8-b41a-e897cf3800c9"),
-                                        "jdbc:oracle:thin:@host:1234/db2",
-                                        DatabaseSchemaInstance(1234, "host")
-                                    )
-                                )
-                            )
-                        )
-                    else -> null
-                }
-            }
-        }
-
-        val (serviceResource, dcResource, secretResource1, secretResource2, configResource) = generateResources(
-            """{
-                "toxiproxy": {"database": true},
-                "database": {
-                    "db1": {"enabled": true},
-                    "db2": {"enabled": true}
-                }
-            }""",
-            mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
-            createdResources = 3
-        )
-
-        assertThat(serviceResource)
-            .auroraResourceModifiedByFeatureWithComment(
-                feature = ToxiproxySidecarFeature::class.java,
-                comment = "Changed targetPort to point to toxiproxy",
-            )
-
-        assertThat(dcResource)
-            .auroraResourceModifiedByFeatureWithComment(
-                feature = ToxiproxySidecarFeature::class.java,
-                comment = "Added toxiproxy volume and sidecar container",
-            )
-
-        assertThat(secretResource1)
-            .auroraResourceModifiedByFeatureWithComment(
-                feature = ToxiproxySidecarFeature::class.java,
-                comment = "Changed JDBC URL to point to Toxiproxy",
-            )
-
-        assertThat(secretResource2)
-            .auroraResourceModifiedByFeatureWithComment(
-                feature = ToxiproxySidecarFeature::class.java,
-                comment = "Changed JDBC URL to point to Toxiproxy",
-            )
-
-        val jdbcUrl1 = Base64
-            .decodeBase64((secretResource1.resource as Secret).data["jdbcurl"])
-            .toString(Charset.defaultCharset())
-
-        val jdbcUrl2 = Base64
-            .decodeBase64((secretResource2.resource as Secret).data["jdbcurl"])
-            .toString(Charset.defaultCharset())
-
-        assertThat(jdbcUrl1).isEqualTo("jdbc:oracle:thin:@localhost:18000/db1")
-        assertThat(jdbcUrl2).isEqualTo("jdbc:oracle:thin:@localhost:18001/db2")
-
-        assertThat(configResource)
-            .auroraResourceCreatedByThisFeature()
-            .auroraResourceMatchesFile("configWithMultipleDatabasesMapping.json")
-    }
-
-    @Test
-    fun `Should map database secrets to named Toxiproxies`() {
+    fun `Should map database secrets to Toxiproxy proxies`() {
 
         httpMockServer(5000) {
             rule {
@@ -555,14 +448,14 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         val (serviceResource, dcResource, secretResource1, secretResource2, configResource) = generateResources(
             """{
                 "toxiproxy": {
-                    "database": {
-                        "db1": {
+                    "proxies": {
+                        "proxy1": {
                             "enabled": true,
-                            "proxyname": "proxy1"
+                            "databaseName": "db1"
                         },
-                        "db2": {
+                        "proxy2": {
                             "enabled": true,
-                            "proxyname": "proxy2"
+                            "databaseName": "db2"
                         }
                     }
                 },
@@ -623,7 +516,9 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 """{
                     "toxiproxy": {
                         "version": "2.1.3",
-                        "database": {"db1": true}
+                        "proxies": {
+                            "proxy1": {"databaseName": "db1"}
+                        }
                     }
                 }""",
                 createEmptyService(),
@@ -638,28 +533,20 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `Should not add Toxiproxy for database when database is false`() {
+    fun `Should not add Toxiproxy for default database when the enabled field for the database is false`() {
 
-        httpMockServer(5000) {
-            rule {
-                json(
-                    DbApiEnvelope(
-                        "ok",
-                        listOf(
-                            createDbhSchema(
-                                UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060"),
-                                "jdbc:oracle:thin:@host:1234/dbname",
-                                DatabaseSchemaInstance(1234, "host")
-                            )
-                        )
-                    )
-                )
-            }
-        }
+        dbMock()
 
         val (_, dcResource, _, configResource) = generateResources(
             """{
-                "toxiproxy": {"database": false},
+                "toxiproxy": {
+                    "proxies": {
+                        "dbProxy": {
+                            "database": true,
+                            "enabled": false
+                        }
+                    }
+                },
                 "database": true
             }""",
             mutableSetOf(createEmptyService(), createEmptyDeploymentConfig()),
@@ -670,30 +557,18 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `Should not add Toxiproxy for database when the enabled field for the database is false`() {
+    fun `Should not add Toxiproxy for named database when the enabled field for the database is false`() {
 
-        httpMockServer(5000) {
-            rule {
-                json(
-                    DbApiEnvelope(
-                        "ok",
-                        listOf(
-                            createDbhSchema(
-                                UUID.fromString("36eeeab0-d510-4115-9696-f50a503ee060"),
-                                "jdbc:oracle:thin:@host:1234/dbname",
-                                DatabaseSchemaInstance(1234, "host")
-                            )
-                        )
-                    )
-                )
-            }
-        }
+        dbMock()
 
         val (_, dcResource, _, configResource) = generateResources(
             """{
                 "toxiproxy": {
-                    "database": {
-                        "customdbname": {"enabled": false}
+                    "proxies": {
+                        "customproxyname": {
+                            "enabled": false,
+                            "databaseName": "customdbname"
+                        }
                     }
                 },
                 "database": {"customdbname": true}
@@ -703,5 +578,309 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         )
         assertThat(dcResource).auroraResourceMatchesFile("dcWithCustomDatabaseMapping.json")
         assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
+    }
+
+    @Test
+    fun `Should fail with an error message when there is not enough information for a proxy`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "badProxy": {
+                                "enabled": true,
+                                "initialEnabledState": true
+                            }
+                        }
+                    }
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "Neither of the fields urlVariableKey, serverVariableKey, portVariableKey, " +
+            "database or databaseName are set for the Toxiproxy proxy named badProxy. A valid configuration must " +
+            "contain a value for exactly one of the properties urlVariableKey, database, or databaseName, or both the " +
+            "properties serverVariableKey and portVariableKey."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with error messages when there are proxies with invalid property combinations`() {
+
+        dbMock()
+
+        val errorMessagesNamedDatabase = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "badProxy1": {
+                                "urlVariableKey": "URL_VARIABLE",
+                                "serverVariableKey": "SERVER_VARIABLE",
+                                "portVariableKey": "PORT_VARIABLE"
+                            },
+                            "badProxy2": {
+                                "urlVariableKey": "URL_VARIABLE",
+                                "databaseName": "dbName"
+                            }
+                        }
+                    },
+                    "config": {
+                        "URL_VARIABLE": "http://test1.test",
+                        "SERVER_VARIABLE": "test2.test",
+                        "PORT_VARIABLE": 123
+                    },
+                    "database": {
+                        "dbName": true
+                    }
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.map { it.message }
+
+        val expectedErrorMessage1 = "The combination of fields specified for the Toxiproxy proxy named badProxy1 is " +
+            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariableKey, " +
+            "database, or databaseName, or both the properties serverVariableKey and portVariableKey."
+
+        val expectedErrorMessage2 = "The combination of fields specified for the Toxiproxy proxy named badProxy2 is " +
+            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariableKey, " +
+            "database, or databaseName, or both the properties serverVariableKey and portVariableKey."
+
+        assertThat(errorMessagesNamedDatabase).hasSize(2)
+        assertThat(errorMessagesNamedDatabase).contains(expectedErrorMessage1)
+        assertThat(errorMessagesNamedDatabase).contains(expectedErrorMessage2)
+
+        val errorMessageDefaultDatabase = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "badProxy3": {
+                                "urlVariableKey": "URL_VARIABLE",
+                                "database": true
+                            }
+                        }
+                    },
+                    "config": {"URL_VARIABLE": "http://test1.test"},
+                    "database": true
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage3 = "The combination of fields specified for the Toxiproxy proxy named badProxy3 is " +
+            "not valid. A valid configuration must contain a value for exactly one of the properties urlVariableKey, " +
+            "database, or databaseName, or both the properties serverVariableKey and portVariableKey."
+
+        assertThat(errorMessageDefaultDatabase).isEqualTo(expectedErrorMessage3)
+    }
+
+    @Test
+    fun `Should fail with an error message when a proxy with the database field is enabled while the database config is not simplified`() {
+
+        dbMock()
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "proxyWithDefaultDb": {"database": true}
+                        }
+                    },
+                    "database": {"dbName": true}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "It is not possible to set up a Toxiproxy proxy with the \"database\" property " +
+            "when the database config is not simplified. Did you mean to use \"databaseName\"?"
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when a proxy with the databaseName field is enabled while the database config is simplified`() {
+
+        dbMock()
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "proxyWithDefaultDb": {"databaseName": "dbName"}
+                        }
+                    },
+                    "database": true
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "Found named database(s) in the Toxiproxy config, although the database config is " +
+            "simplified. Did you mean to use the property \"database\" instead of \"databaseName\"?"
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when there are several proxies with the database property`() {
+
+        dbMock()
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "proxy1": {"database": true},
+                            "proxy2": {"database": true}
+                        }
+                    },
+                    "database": true
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "The \"database\" property may only be used once in the Toxiproxy config."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when the main proxy name is used`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "app": {"urlVariableKey": "TEST"}
+                        }
+                    },
+                    "config": {"TEST": "http://test1.test"}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "The name \"app\" is reserved for the proxy for incoming calls."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when there are url variable duplicates`() {
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "proxy1": {"urlVariableKey": "TEST"},
+                            "proxy2": {"urlVariableKey": "TEST"}
+                        }
+                    },
+                    "config": {"TEST": "http://test1.test"}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "The url variable \"TEST\" is referred to by several proxies."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
+    }
+
+    @Test
+    fun `Should fail with an error message when there are server and port variable duplicates`() {
+
+        val errorMessages = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "proxy1": {
+                                "serverVariableKey": "SERVER1",
+                                "portVariableKey": "PORT1"
+                            },
+                            "proxy2": {
+                                "serverVariableKey": "SERVER1",
+                                "portVariableKey": "PORT2"
+                            },
+                            "proxy3": {
+                                "serverVariableKey": "SERVER2",
+                                "portVariableKey": "PORT1"
+                            }
+                        }
+                    },
+                    "config": {
+                        "SERVER1": "test1.test",
+                        "PORT1": 123,
+                        "SERVER2": "test2.test",
+                        "PORT2": 456
+                    }
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.map { it.message }
+
+        val expectedErrorMessage1 = "The server variable \"SERVER1\" is referred to by several proxies."
+        val expectedErrorMessage2 = "The port variable \"PORT1\" is referred to by several proxies."
+
+        assertThat(errorMessages).hasSize(2)
+        assertThat(errorMessages).contains(expectedErrorMessage1)
+        assertThat(errorMessages).contains(expectedErrorMessage2)
+    }
+
+    @Test
+    fun `Should fail with an error message when there are database name duplicates`() {
+
+        dbMock()
+
+        val errorMessage = assertThrows<MultiApplicationValidationException> {
+            generateResources(
+                """{
+                    "toxiproxy": {
+                        "version": "2.1.3",
+                        "proxies": {
+                            "proxy1": {"databaseName": "test"},
+                            "proxy2": {"databaseName": "test"}
+                        }
+                    },
+                    "database": {"test": true}
+                }""",
+                createEmptyService(),
+                createEmptyDeploymentConfig()
+            )
+        }.errors.first().errors.first().message
+
+        val expectedErrorMessage = "The database name \"test\" is referred to by several proxies."
+
+        assertThat(errorMessage).isEqualTo(expectedErrorMessage)
     }
 }

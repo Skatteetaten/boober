@@ -605,40 +605,6 @@
       }
     ]
   },
-  "toxiproxy": {
-    "database": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    },
-    "source": "web.json",
-    "value": true,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      },
-      {
-        "name": "web.json",
-        "value": true
-      }
-    ],
-    "version": {
-      "source": "default",
-      "value": "2.1.3",
-      "sources": [
-        {
-          "name": "default",
-          "value": "2.1.3"
-        }
-      ]
-    }
-  },
   "deployStrategy": {
     "type": {
       "source": "default",
@@ -857,6 +823,30 @@
         {
           "name": "default",
           "value": 20
+        }
+      ]
+    }
+  },
+  "toxiproxy": {
+    "source": "web.json",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      },
+      {
+        "name": "web.json",
+        "value": true
+      }
+    ],
+    "version": {
+      "source": "default",
+      "value": "2.1.3",
+      "sources": [
+        {
+          "name": "default",
+          "value": "2.1.3"
         }
       ]
     }
