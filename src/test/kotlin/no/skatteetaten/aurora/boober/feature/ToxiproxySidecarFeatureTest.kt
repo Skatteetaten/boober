@@ -26,12 +26,11 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchema
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbApiEnvelope
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DbhRestTemplateWrapper
 import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
+import no.skatteetaten.aurora.boober.utils.assertThatBase64Decoded
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.HttpMock
 import no.skatteetaten.aurora.mockmvc.extensions.mockwebserver.httpMockServer
-import org.apache.commons.codec.binary.Base64
 import org.junit.jupiter.api.assertThrows
 import org.springframework.boot.web.client.RestTemplateBuilder
-import java.nio.charset.Charset
 import java.util.UUID
 
 class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
@@ -397,11 +396,12 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 comment = "Changed JDBC URL to point to Toxiproxy",
             )
 
-        val jdbcUrl = Base64
-            .decodeBase64((secretResource.resource as Secret).data["jdbcurl"])
-            .toString(Charset.defaultCharset())
+        val secretData = (secretResource.resource as Secret).data
 
-        assertThat(jdbcUrl).isEqualTo("jdbc:oracle:thin:@localhost:18000/dbname")
+        assertThatBase64Decoded(secretData["jdbcurl"]).isEqualTo("jdbc:oracle:thin:@localhost:18000/dbname")
+
+        assertThatBase64Decoded(secretData["db.properties"])
+            .contains("jdbc.url=jdbc\\:oracle\\:thin\\:@localhost\\:18000/dbname")
 
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()
@@ -492,16 +492,17 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                 comment = "Changed JDBC URL to point to Toxiproxy",
             )
 
-        val jdbcUrl1 = Base64
-            .decodeBase64((secretResource1.resource as Secret).data["jdbcurl"])
-            .toString(Charset.defaultCharset())
+        val secretData1 = (secretResource1.resource as Secret).data
+        val secretData2 = (secretResource2.resource as Secret).data
 
-        val jdbcUrl2 = Base64
-            .decodeBase64((secretResource2.resource as Secret).data["jdbcurl"])
-            .toString(Charset.defaultCharset())
+        assertThatBase64Decoded(secretData1["jdbcurl"]).isEqualTo("jdbc:oracle:thin:@localhost:18000/db1")
+        assertThatBase64Decoded(secretData2["jdbcurl"]).isEqualTo("jdbc:oracle:thin:@localhost:18001/db2")
 
-        assertThat(jdbcUrl1).isEqualTo("jdbc:oracle:thin:@localhost:18000/db1")
-        assertThat(jdbcUrl2).isEqualTo("jdbc:oracle:thin:@localhost:18001/db2")
+        assertThatBase64Decoded(secretData1["db.properties"])
+            .contains("jdbc.url=jdbc\\:oracle\\:thin\\:@localhost\\:18000/db1")
+
+        assertThatBase64Decoded(secretData2["db.properties"])
+            .contains("jdbc.url=jdbc\\:oracle\\:thin\\:@localhost\\:18001/db2")
 
         assertThat(configResource)
             .auroraResourceCreatedByThisFeature()

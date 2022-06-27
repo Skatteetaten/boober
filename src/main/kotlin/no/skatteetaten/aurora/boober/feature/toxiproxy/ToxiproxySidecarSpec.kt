@@ -1,7 +1,5 @@
 package no.skatteetaten.aurora.boober.feature.toxiproxy
 
-import java.nio.charset.Charset
-import java.util.Base64
 import io.fabric8.kubernetes.api.model.Container
 import no.skatteetaten.aurora.boober.feature.FeatureContext
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
@@ -9,6 +7,7 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.utils.UrlParser
+import no.skatteetaten.aurora.boober.utils.editEncodedValue
 import no.skatteetaten.aurora.boober.utils.prepend
 import no.skatteetaten.aurora.boober.utils.setEnvVarValueIfExists
 import no.skatteetaten.aurora.boober.utils.transformEnvVarValueIfExists
@@ -64,12 +63,18 @@ internal fun ToxiproxyConfigsAndSecrets.getPortByProxyName(proxyName: String) =
     find { it.toxiproxyConfig.name == proxyName }?.port
 
 internal fun MutableMap<String, String>.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort: Int) {
-    this["jdbcurl"] = this["jdbcurl"]
-        .let(Base64.getDecoder()::decode)
-        .toString(Charset.defaultCharset())
-        .convertToProxyUrl(toxiproxyPort)
-        .toByteArray()
-        .let(Base64.getEncoder()::encodeToString)
+    editEncodedValue("db.properties") {
+        val jdbcUrlRegex = Regex("(?<=^jdbc\\.url=).+", RegexOption.MULTILINE)
+        jdbcUrlRegex
+            .find(it)
+            ?.value
+            ?.replace("\\:", ":")
+            ?.convertToProxyUrl(toxiproxyPort)
+            ?.replace(":", "\\\\:")
+            ?.let { toxiproxyUrl -> it.replace(jdbcUrlRegex, toxiproxyUrl) }
+            ?: it
+    }
+    editEncodedValue("jdbcurl") { it.convertToProxyUrl(toxiproxyPort) }
 }
 
 internal fun List<Container>.overrideEnvVarsWithProxies(
