@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.feature.RouteFeature
 import no.skatteetaten.aurora.boober.feature.StsFeature
 import no.skatteetaten.aurora.boober.feature.WebsealFeature
 import no.skatteetaten.aurora.boober.feature.affiliation
+import no.skatteetaten.aurora.boober.feature.azure.AzureFeature
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
@@ -278,6 +279,26 @@ class AuroraDeploymentContextService(
             "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning."
         } else null
 
+        val azureManagedRoute = features.filter { (feature, spec) ->
+            feature is AzureFeature && feature.isActive(spec)
+        }.isNotEmpty()
+
+        val websealAndAzureWarning = if (webSeal && azureManagedRoute) {
+            logWarning("websealAndRoute")
+            "Both Webseal-route and Azure-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning."
+        } else null
+
+        val azureDeprecations = features.map { (feature, spec) ->
+            if (feature is AzureFeature && feature.isActive(spec)) {
+                feature.getDeprecations(spec)
+            } else {
+                null
+            }
+        }.filterNotNull()
+        val azureDeprecationWarning = if (azureDeprecations.isNotEmpty()) {
+            azureDeprecations.flatten().joinToString(separator = "\n")
+        } else null
+
         val sts = features.filter { (feature, spec) ->
             feature is StsFeature && feature.willCreateResource(spec)
         }.isNotEmpty()
@@ -299,6 +320,8 @@ class AuroraDeploymentContextService(
             "The property 'connection' on alerts is deprecated. Please use the connections property"
         } else null
 
-        return listOfNotNull(websealWarning, stsWarning, alertsWarning).addIfNotNull(configKeysWithSpecialCharacters)
+        return listOfNotNull(
+            websealWarning, stsWarning, alertsWarning, websealAndAzureWarning, azureDeprecationWarning
+        ).addIfNotNull(configKeysWithSpecialCharacters)
     }
 }

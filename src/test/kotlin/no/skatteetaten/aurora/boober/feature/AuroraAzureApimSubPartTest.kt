@@ -288,8 +288,8 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `3 elements configured, azureapp, clinger sidecar and azureapim`() {
-        val (_, _, auroraApim) = generateResources(
+    fun `4 elements configured, azureapp, clinger sidecar, managed route and azureapim`() {
+        val (_, _, _, auroraApim) = generateResources(
             """{
               "azure": {
                 "azureAppFqdn": "saksmappa.amutv.skead.no",
@@ -313,7 +313,7 @@ class AuroraAzureApimSubPartTest : AbstractMultiFeatureTest() {
                 }
               }
         }""",
-            createEmptyDeploymentConfig(), createdResources = 2
+            createEmptyDeploymentConfig(), createdResources = 3
         )
 
         assertThat(auroraApim).auroraResourceCreatedByTarget(AzureFeature::class.java)

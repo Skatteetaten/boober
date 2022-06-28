@@ -392,6 +392,108 @@
           {
             "env": [
               {
+                "name": "CLINGER_PROXY_SERVER_PORT",
+                "value": "8100"
+              },
+              {
+                "name": "CLINGER_MANAGEMENT_SERVER_PORT",
+                "value": "8101"
+              },
+              {
+                "name": "CLINGER_PROXY_BACKEND_HOST",
+                "value": "0.0.0.0"
+              },
+              {
+                "name": "CLINGER_PROXY_BACKEND_PORT",
+                "value": "8080"
+              },
+              {
+                "name": "CLINGER_PROXY_SERVER_PORT",
+                "value": "8100"
+              },
+              {
+                "name": "CLINGER_AURORAAZUREAPP_NAME",
+                "value": "komplex"
+              },
+              {
+                "name": "CLINGER_WEBSEAL_TRAFFIC_ACCEPTED",
+                "value": "true"
+              },
+              {
+                "name": "POD_NAMESPACE",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.namespace"
+                  }
+                }
+              },
+              {
+                "name": "POD_NAME",
+                "valueFrom": {
+                  "fieldRef": {
+                    "apiVersion": "v1",
+                    "fieldPath": "metadata.name"
+                  }
+                }
+              },
+              {
+                "name": "CLINGER_DISCOVERY_URL",
+                "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
+              },
+              {
+                "name": "CLINGER_JWKS_URL",
+                "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
+              },
+              {
+                "name": "CLINGER_IV_GROUPS_REQUIRED",
+                "value": "false"
+              }
+            ],
+            "image": "docker.registry:5000/no_skatteetaten_aurora/clinger:0",
+            "livenessProbe": {
+              "httpGet": {
+                "path": "/liveness",
+                "port": 8101
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 2
+            },
+            "name": "komplex-clinger-sidecar",
+            "ports": [
+              {
+                "containerPort": 8100,
+                "name": "http",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 8101,
+                "name": "management",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "httpGet": {
+                "path": "/ready",
+                "port": 8101
+              },
+              "initialDelaySeconds": 10,
+              "timeoutSeconds": 2
+            },
+            "resources": {
+              "limits": {
+                "memory": "256Mi",
+                "cpu": "1"
+              },
+              "requests": {
+                "memory": "128Mi",
+                "cpu": "25m"
+              }
+            }
+          },
+          {
+            "env": [
+              {
                 "name": "POD_NAME",
                 "valueFrom": {
                   "fieldRef": {

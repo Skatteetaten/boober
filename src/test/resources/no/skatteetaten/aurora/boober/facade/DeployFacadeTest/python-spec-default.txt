@@ -76,7 +76,6 @@ utv/python.json | sts: true
         default |     ivGroupsRequired: false
         default |     ldapUserVaultName: ""
         default |     ldapUrl: ""
-        default |   managedRoute: false
                 |   apim:
         default |     enabled: false
                 | logging:

@@ -38,39 +38,43 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
 
     @Test
     fun `if minimal AuroraAzureApp is configured nothing goes wrong`() {
-        val (_, auroraAzureApp) = generateResources(
+        val (_, auroraAzureApp, managedRoute) = generateResources(
             """{
              "azure" : {
                 "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "groups": [] 
               }
            }""",
-            createEmptyDeploymentConfig(), createdResources = 1
+            createEmptyDeploymentConfig(), createdResources = 2
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app.json")
+        assertThat(managedRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-managed-route.json")
     }
 
     @Test
     fun `if AuroraAzureApp is configured with placeholders nothing goes wrong`() {
-        val (_, auroraAzureApp) = generateResources(
+        val (_, auroraAzureApp, managedRoute) = generateResources(
             """{
              "azure" : {
                 "azureAppFqdn": "tjeneste-foo-@env@.amutv.skead.no",
                 "groups": [] 
               }
            }""",
-            createEmptyDeploymentConfig(), createdResources = 1
+            createEmptyDeploymentConfig(), createdResources = 2
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app-with-env.json")
+        assertThat(managedRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-managed-route-with-env.json")
     }
 
     @Test
     fun `AuroraAzureApp can have clinger enabled`() {
-        val (_, auroraAzureApp) = generateResources(
+        val (_, auroraAzureApp, managedRoute) = generateResources(
             """{
              "azure" : {
                 "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
@@ -80,16 +84,18 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
                 }
               }
            }""",
-            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 1
+            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 2
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app-with-clinger.json")
+        assertThat(managedRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-managed-route.json")
     }
 
     @Test
     fun `2 elements configured, azureapp and clinger sidecar`() {
-        val (_, auroraAzureApp) = generateResources(
+        val (_, auroraAzureApp, managedRoute) = generateResources(
             """{
               "azure": {
                 "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
@@ -99,11 +105,13 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
                 }
               }
         }""",
-            createEmptyDeploymentConfig(), createdResources = 1
+            createEmptyDeploymentConfig(), createdResources = 2
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app-with-clinger.json")
+        assertThat(managedRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-managed-route.json")
     }
 
     @Test
@@ -136,7 +144,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
 
     @Test
     fun `AuroraAzureApp without clinger, but with webseal is OK`() {
-        val (_, websealRoute, auroraAzureApp) = generateResources(
+        val (_, websealRoute, auroraAzureApp, managedRoute) = generateResources(
             """{
              "webseal": true,
              "azure" : {
@@ -147,13 +155,15 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
                 }
               }
            }""",
-            createEmptyDeploymentConfig(), createdResources = 2
+            createEmptyDeploymentConfig(), createdResources = 3
         )
 
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app-with-webseal.json")
         assertThat(websealRoute).auroraResourceCreatedByTarget(WebsealFeature::class.java)
             .auroraResourceMatchesFile("webseal-route.json")
+        assertThat(managedRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-managed-route.json")
 
         // Trying to document that assert fails:
         Assertions.assertThrows(AssertionFailedError::class.java) {
@@ -162,8 +172,8 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `AuroraAzureApp with webseal but without managedRoute is OK`() {
-        val (_, websealRoute, auroraAzureApp) = generateResources(
+    fun `AuroraAzureApp with webseal is OK`() {
+        val (_, websealRoute, auroraAzureApp, managedRoute) = generateResources(
             """{
               "webseal": {
                 "host": "tjeneste-foo",
@@ -171,62 +181,20 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
               },
               "azure": {
                 "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
-                "managedRoute": false,
                 "groups": [
                   "APP_dev",
                   "APP_DRIFT"
                 ]
               }
             }""",
-            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 2
+            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 3
         )
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app-with-webseal.json")
         assertThat(websealRoute).auroraResourceCreatedByTarget(WebsealFeature::class.java)
             .auroraResourceMatchesFile("webseal-saksmappe-route.json")
-    }
-
-    @Test
-    fun `AuroraAzureApp with both managedRoute and webseal shall fail`() {
-        Assertions.assertThrows(MultiApplicationValidationException::class.java) {
-            generateResources(
-                """{
-                  "webseal": true,
-                  "azure": {
-                    "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
-                    "managedRoute": true,
-                    "groups": [
-                      "APP_dev",
-                      "APP_DRIFT"
-                    ]
-                  }
-                }""",
-                mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 2
-            )
-        }
-    }
-
-    @Test
-    fun `AuroraAzureApp with both managedRoute and webseal shall fail - part II`() {
-        Assertions.assertThrows(MultiApplicationValidationException::class.java) {
-            generateResources(
-                """{
-                  "webseal": {
-                    "host": "tjeneste-foo",
-                    "roles": "APP_dev,APP_drift"
-                  },
-                  "azure": {
-                    "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
-                    "managedRoute": true,
-                    "groups": [
-                      "APP_dev",
-                      "APP_DRIFT"
-                    ]
-                  }
-                }""",
-                mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 2
-            )
-        }
+        assertThat(managedRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
+            .auroraResourceMatchesFile("aurora-azure-managed-route.json")
     }
 
     @Test
@@ -235,7 +203,6 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
             """{
               "azure": {
                 "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
-                "managedRoute": true,
                 "groups": []
               }
             }""",
@@ -244,7 +211,7 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         assertThat(auroraAzureApp).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-app.json")
         assertThat(alternativeRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
-            .auroraResourceMatchesFile("webseal-replacement-route.json")
+            .auroraResourceMatchesFile("aurora-azure-managed-route.json")
     }
 
     @Test
@@ -254,7 +221,6 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
               "azure": {
                 "azureAppFqdn": "tjeneste-foo.amutv.skead.no",
                 "clusterTimeout": "50s",
-                "managedRoute": true,
                 "groups": []
               }
             }""",

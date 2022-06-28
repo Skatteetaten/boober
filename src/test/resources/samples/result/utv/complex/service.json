@@ -13,7 +13,7 @@
       "app": "komplex",
       "updatedBy": "hero",
       "updatedAt": "0",
-      "lastUpdatedYear" : "1970",
+      "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "komplex",
       "booberDeployId": "deploy1"
@@ -35,7 +35,7 @@
         "name": "http",
         "port": 80,
         "protocol": "TCP",
-        "targetPort": 8080
+        "targetPort": 8100
       },
       {
         "name": "extra",

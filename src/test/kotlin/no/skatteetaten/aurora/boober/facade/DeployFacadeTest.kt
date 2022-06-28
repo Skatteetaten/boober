@@ -25,6 +25,7 @@ import assertk.assertions.messageContains
 import no.skatteetaten.aurora.boober.model.ApplicationDeploymentRef
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.service.HerkimerResponse
+import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
 import no.skatteetaten.aurora.boober.utils.ResourceLoader
 import no.skatteetaten.aurora.boober.utils.getResultFiles
 import no.skatteetaten.aurora.boober.utils.singleApplicationDeployError
@@ -310,7 +311,14 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
             }
         }
 
-        val result = facade.executeDeploy(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", app)))
+        val result = kotlin.runCatching {
+            facade.executeDeploy(auroraConfigRef, listOf(ApplicationDeploymentRef("utv", app)))
+        }.onFailure {
+            when (it) {
+                is MultiApplicationDeployValidationResultException -> println(it.toValidationErrors())
+            }
+            throw it
+        }.getOrThrow()
 
         assertThat(result.first().auroraDeploymentSpecInternal).auroraDeploymentSpecMatchesSpecFiles("$app-spec")
         assertThat(result).auroraDeployResultMatchesFiles()
@@ -332,7 +340,9 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                     "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
                     "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service",
                     "The property 'connection' on alerts is deprecated. Please use the connections property",
+                    "Both Webseal-route and Azure-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
                     "Config key=THIS.VALUE was normalized to THIS_VALUE",
+                    "Was unable to resolve dockerDigest for image=docker.registry:5000/no_skatteetaten_aurora/clinger:0. Using tag instead.",
                     "Was unable to resolve dockerDigest for image=docker.registry:5000/fluent/fluent-bit:1.6.10. Using tag instead."
                 )
             )
