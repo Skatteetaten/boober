@@ -100,9 +100,13 @@ class AuroraAzureAppSubPart {
     ): List<Exception> {
         val errors = mutableListOf<Exception>()
         if ((adc.azureAppFqdn == null || adc.azureAppGroups == null) &&
-            !(adc.azureAppFqdn == null && adc.azureAppGroups == null)) {
-            errors.add(AuroraDeploymentSpecValidationException(
-                "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"))
+            !(adc.azureAppFqdn == null && adc.azureAppGroups == null)
+        ) {
+            errors.add(
+                AuroraDeploymentSpecValidationException(
+                    "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"
+                )
+            )
         }
 
         adc.azureAppFqdn?.isValidDns() ?.let { valid: Boolean ->
