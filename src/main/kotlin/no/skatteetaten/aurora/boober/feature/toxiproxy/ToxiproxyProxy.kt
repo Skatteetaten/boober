@@ -1,7 +1,6 @@
 package no.skatteetaten.aurora.boober.feature.toxiproxy
 
 import no.skatteetaten.aurora.boober.feature.createSchemaRequests
-import no.skatteetaten.aurora.boober.feature.databaseDefaultsKey
 import no.skatteetaten.aurora.boober.feature.findDatabases
 import no.skatteetaten.aurora.boober.feature.getSecretName
 import no.skatteetaten.aurora.boober.feature.name
@@ -219,10 +218,8 @@ internal class DatabaseToxiproxyProxy(
 
         if (databaseSchemaProvisioner == null) return null
 
-        val givenOrDefaultName = databaseName ?: ads["$databaseDefaultsKey/name"]
-
         val request = findDatabases(ads)
-            .filter { it.name == givenOrDefaultName }
+            .filter { databaseName == null || it.name == databaseName }
             .createSchemaRequests(userDetailsProvider, ads)
             .takeIfNotEmpty()
             ?.first()

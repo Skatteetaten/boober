@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.utils
 
 import assertk.Assert
+import assertk.assertThat
 import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
@@ -14,6 +15,8 @@ import no.skatteetaten.aurora.boober.model.InvalidDeploymentContext
 import no.skatteetaten.aurora.boober.service.MultiApplicationDeployValidationResultException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationResultException
+import java.nio.charset.Charset
+import java.util.Base64
 
 fun Assert<Result<Pair<List<AuroraDeploymentContext>, List<InvalidDeploymentContext>>>>.singleApplicationErrorResult(
     expectedMessage: String
@@ -94,3 +97,6 @@ fun <T> Assert<Result<T>>.configErrors(messages: List<String>) {
             assertThat(errors).containsExactlyInAnyOrder(*messages.toTypedArray())
         }
 }
+
+internal fun assertThatBase64Decoded(str: String?) =
+    assertThat(Base64.getDecoder().decode(str).toString(Charset.defaultCharset()))

@@ -20,11 +20,11 @@ import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaIdReques
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaProvisionRequest
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.SchemaRequestDetails
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
+import no.skatteetaten.aurora.boober.utils.asString
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.oneOf
 import org.apache.commons.codec.binary.Base64
-import java.io.ByteArrayOutputStream
 import java.util.Properties
 
 data class Database(
@@ -223,9 +223,7 @@ internal object DbhSecretGenerator {
         put("jdbc.user", dbhSchema.username)
         put("jdbc.password", dbhSchema.password)
 
-        val bos = ByteArrayOutputStream()
-        store(bos, "")
-        bos.toString("UTF-8")
+        asString()
     }
 
     fun createDbhSecret(
