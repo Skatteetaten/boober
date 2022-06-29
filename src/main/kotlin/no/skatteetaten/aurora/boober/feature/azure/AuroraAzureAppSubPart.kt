@@ -29,12 +29,7 @@ val AuroraDeploymentSpec.isAzureAppFqdnEnabled: Boolean
     }
 
 val AuroraDeploymentSpec.azureAppGroups: List<String>?
-    get() {
-        //  Somewhat strange construction in order to avoid error with null as typeCast
-        val rawGroup = this.getOrNull<Any>(AuroraAzureAppSubPart.ConfigPath.groups) ?: return null
-        @Suppress("UNCHECKED_CAST")
-        return rawGroup as List<String>
-    }
+    get() = this.getOrNull<List<String>>(AuroraAzureAppSubPart.ConfigPath.groups)
 
 class AuroraAzureAppSubPart {
     object ConfigPath {
@@ -104,10 +99,10 @@ class AuroraAzureAppSubPart {
         adc: AuroraDeploymentSpec
     ): List<Exception> {
         val errors = mutableListOf<Exception>()
-        if (adc.azureAppFqdn == null || adc.azureAppGroups == null) {
-            if (!(adc.azureAppFqdn == null && adc.azureAppGroups == null)) {
-                errors.add(AuroraDeploymentSpecValidationException("You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"))
-            }
+        if ((adc.azureAppFqdn == null || adc.azureAppGroups == null) &&
+            !(adc.azureAppFqdn == null && adc.azureAppGroups == null)) {
+            errors.add(AuroraDeploymentSpecValidationException(
+                "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"))
         }
 
         adc.azureAppFqdn?.isValidDns() ?.let { valid: Boolean ->

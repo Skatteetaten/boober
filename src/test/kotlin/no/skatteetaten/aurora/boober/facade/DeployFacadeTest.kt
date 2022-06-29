@@ -1,5 +1,6 @@
 package no.skatteetaten.aurora.boober.facade
 
+import assertk.all
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -17,7 +18,7 @@ import com.fkorotkov.openshift.status
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.doesNotContain
-import assertk.assertions.isEqualTo
+import assertk.assertions.hasSize
 import assertk.assertions.isFailure
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
@@ -335,17 +336,16 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
                     .doesNotContain("Failed to send notification")
             }
 
-            assertThat(result.first().warnings).isEqualTo(
-                listOf(
-                    "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
-                    "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service",
-                    "The property 'connection' on alerts is deprecated. Please use the connections property",
-                    "Both Webseal-route and Azure-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
-                    "Config key=THIS.VALUE was normalized to THIS_VALUE",
-                    "Was unable to resolve dockerDigest for image=docker.registry:5000/no_skatteetaten_aurora/clinger:0. Using tag instead.",
-                    "Was unable to resolve dockerDigest for image=docker.registry:5000/fluent/fluent-bit:1.6.10. Using tag instead."
-                )
-            )
+            assertThat(result.first().warnings).all {
+                contains("Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.")
+                contains("Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service")
+                contains("The property 'connection' on alerts is deprecated. Please use the connections property")
+                contains("Both Webseal-route and Azure-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.")
+                contains("Config key=THIS.VALUE was normalized to THIS_VALUE")
+                contains("Was unable to resolve dockerDigest for image=docker.registry:5000/no_skatteetaten_aurora/clinger:0. Using tag instead.")
+                contains("Was unable to resolve dockerDigest for image=docker.registry:5000/fluent/fluent-bit:1.6.10. Using tag instead.")
+                hasSize(7)
+            }
         } else {
             assertThat(result.first().warnings.isEmpty())
         }
