@@ -1,0 +1,38 @@
+{
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "komplex",
+      "applikasjonsfabrikken": "true",
+      "azureManaged": "true",
+      "booberDeployId": "deploy1"
+    },
+    "name": "komplex-managed",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "host": "complex-utv.amutv.skead.no",
+    "port": {
+      "targetPort": "http"
+    },
+    "to": {
+      "kind": "Service",
+      "name": "komplex"
+    }
+  }
+}

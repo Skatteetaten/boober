@@ -1,0 +1,32 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "AuroraAzureApp",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "komplex",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "komplex",
+      "booberDeployId": "deploy1"
+    },
+    "name": "komplex",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "komplex",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "azureAppFqdn": "complex-utv.amutv.skead.no",
+    "appName": "komplex",
+    "groups": [ ],
+    "noProxy": false
+  }
+}
