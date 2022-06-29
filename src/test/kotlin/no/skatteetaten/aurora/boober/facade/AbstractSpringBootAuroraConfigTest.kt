@@ -107,7 +107,11 @@ abstract class AbstractSpringBootAuroraConfigTest : AbstractSpringBootTest() {
             assertThat(keys).contains(resultFileMappingKey)
 
             if (generatedObject.openshiftKind == "secret") {
-                val data = generatedObject["data"] as ObjectNode
+                val data = if (generatedObject["stringData"] != null) {
+                    generatedObject["stringData"] as ObjectNode
+                } else {
+                    generatedObject["data"] as ObjectNode
+                }
                 data.fields().forEach { (key, _) ->
                     data.put(key, "REMOVED_IN_TEST")
                 }

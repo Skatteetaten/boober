@@ -1,0 +1,228 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "pv",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "postgres",
+      "app.kubernetes.io/name": "pv",
+      "app.kubernetes.io/component": "backend",
+      "template": "aurora-postgres-ocp4-pv",
+      "deployTag": "13",
+      "app.kubernetes.io/version": "13",
+      "booberDeployId": "deploy1"
+    },
+    "name": "postgres",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "pv",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "replicas": 1,
+    "selector": {
+      "name": "postgres"
+    },
+    "strategy": {
+      "resources": { },
+      "type": "Recreate"
+    },
+    "template": {
+      "metadata": {
+        "annotations": {
+          "boober.skatteetaten.no/deployTag": "13"
+        },
+        "labels": {
+          "operationScope": "aos-4016",
+          "app": "pv",
+          "updatedBy": "hero",
+          "updatedAt": "0",
+          "lastUpdatedYear": "1970",
+          "affiliation": "paas",
+          "name": "postgres",
+          "app.kubernetes.io/name": "pv",
+          "app.kubernetes.io/component": "backend",
+          "deployTag": "13",
+          "app.kubernetes.io/version": "13",
+          "booberDeployId": "deploy1"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "POSTGRESQL_DATABASE",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "postgres_database",
+                    "name": "postgres-postgres"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRESQL_USER",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "postgres_username",
+                    "name": "postgres-postgres"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRESQL_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "postgres_password",
+                    "name": "postgres-postgres"
+                  }
+                }
+              },
+              {
+                "name": "POSTGRESQL_ADMIN_PASSWORD",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "postgres_admin_password",
+                    "name": "postgres-postgres"
+                  }
+                }
+              },
+              {
+                "name": "GIT_CONFIG_REPO",
+                "value": ""
+              },
+              {
+                "name": "CONFIG_DIR",
+                "value": ""
+              },
+              {
+                "name": "GIT_CONFIG_BRANCH",
+                "value": "master"
+              },
+              {
+                "name": "GIT_CONFIG_SECRET",
+                "value": "postgresinit.properties"
+              },
+              {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "pv"
+              }
+            ],
+            "image": "postgres",
+            "name": "postgres",
+            "ports": [
+              {
+                "containerPort": 5432
+              }
+            ],
+            "resources": {
+              "limits": {
+                "cpu": "0.1"
+              },
+              "requests": {
+                "cpu": "0.05",
+                "memory": "128Mi"
+              }
+            },
+            "volumeMounts": [
+              {
+                "mountPath": "/var/lib/pgsql/data",
+                "name": "postgres-data"
+              }
+            ]
+          },
+          {
+            "env": [
+              {
+                "name": "DATA_SOURCE_NAME",
+                "valueFrom": {
+                  "secretKeyRef": {
+                    "key": "postgres_postgres_uri",
+                    "name": "postgres-postgres"
+                  }
+                }
+              },
+              {
+                "name": "APPLICATION_DEPLOYMENT_ID",
+                "value": "1234567890"
+              },
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "pv"
+              }
+            ],
+            "image": "postgres-exporter",
+            "name": "postgres-exporter",
+            "ports": [
+              {
+                "containerPort": 9187
+              }
+            ],
+            "resources": {
+              "limits": { },
+              "requests": { }
+            }
+          }
+        ],
+        "volumes": [
+          {
+            "name": "postgres-data",
+            "persistentVolumeClaim": {
+              "claimName": "postgres"
+            }
+          }
+        ]
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "postgres"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "postgres:default"
+          }
+        },
+        "type": "ImageChange"
+      },
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "postgres-exporter"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "postgres-exporter:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "apiVersion": "image.openshift.io/v1",
+  "kind": "ImageStream",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "pv",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "postgres",
+      "app.kubernetes.io/name": "pv",
+      "app.kubernetes.io/component": "backend",
+      "template": "aurora-postgres-ocp4-pv",
+      "booberDeployId": "deploy1"
+    },
+    "name": "postgres",
+    "namespace": "paas-utv",
+    "ownerReferences": [
+      {
+        "apiVersion": "skatteetaten.no/v1",
+        "kind": "ApplicationDeployment",
+        "name": "pv",
+        "uid": "123-123"
+      }
+    ]
+  },
+  "spec": {
+    "dockerImageRepository": "localhost/aurora/aurora-postgres",
+    "tags": [
+      {
+        "from": {
+          "kind": "DockerImage",
+          "name": "localhost/aurora/aurora-postgres:13"
+        },
+        "importPolicy": {
+          "scheduled": true
+        },
+        "name": "default"
+      }
+    ]
+  }
+}

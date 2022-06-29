@@ -201,7 +201,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     }
 
     @ParameterizedTest
-    @CsvSource(value = ["complex", "whoami", "simple", "web", "ah", "job", "python", "template"])
+    @CsvSource(value = ["complex", "whoami", "simple", "web", "ah", "job", "python", "template", "pv"])
     fun `deploy application`(app: String) {
 
         skapMock {
@@ -297,9 +297,13 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }
 
         bitbucketMock {
-            rule {
-                val templateJson = ResourceLoader().loadResource("atomhopper.json", "samples/config/templates")
+            rule({ method == "GET" }) {
+                val requestedFile = this.requestUrl.pathSegments().last()
+                val templateJson = ResourceLoader().loadResource(requestedFile, "samples/config/templates")
                 MockResponse().setBody(templateJson).setResponseCode(200)
+            }
+            rule {
+                MockResponse().setResponseCode(200)
             }
         }
 
