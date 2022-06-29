@@ -7,9 +7,11 @@ import no.skatteetaten.aurora.boober.model.PortNumbers
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.resourceprovisioning.DatabaseSchemaProvisioner
 import no.skatteetaten.aurora.boober.utils.UrlParser
+import no.skatteetaten.aurora.boober.utils.asString
 import no.skatteetaten.aurora.boober.utils.editEncodedValue
 import no.skatteetaten.aurora.boober.utils.prepend
 import no.skatteetaten.aurora.boober.utils.setEnvVarValueIfExists
+import no.skatteetaten.aurora.boober.utils.toProperties
 import no.skatteetaten.aurora.boober.utils.transformEnvVarValueIfExists
 
 private const val FEATURE_NAME = "toxiproxy"
@@ -64,15 +66,10 @@ internal fun ToxiproxyConfigsAndSecrets.getPortByProxyName(proxyName: String) =
 
 internal fun MutableMap<String, String>.convertEncryptedJdbcUrlToEncryptedProxyUrl(toxiproxyPort: Int) {
     editEncodedValue("db.properties") {
-        val jdbcUrlRegex = Regex("(?<=^jdbc\\.url=).+", RegexOption.MULTILINE)
-        jdbcUrlRegex
-            .find(it)
-            ?.value
-            ?.replace("\\:", ":")
-            ?.convertToProxyUrl(toxiproxyPort)
-            ?.replace(":", "\\\\:")
-            ?.let { toxiproxyUrl -> it.replace(jdbcUrlRegex, toxiproxyUrl) }
-            ?: it
+        val props = it.toProperties()
+        val jdbcUrl = props["jdbc.url"].toString()
+        props.setProperty("jdbc.url", jdbcUrl.convertToProxyUrl(toxiproxyPort))
+        props.asString()
     }
     editEncodedValue("jdbcurl") { it.convertToProxyUrl(toxiproxyPort) }
 }

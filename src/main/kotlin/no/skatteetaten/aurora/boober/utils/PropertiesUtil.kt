@@ -55,3 +55,11 @@ fun Properties.toByteArray(): ByteArray = ByteArrayOutputStream()
 
 class PropertiesException(override val message: String, override val cause: Throwable) :
     RuntimeException(message, cause)
+
+internal fun String.toProperties() = Properties().also { it.load(this.reader()) }
+
+internal fun Properties.asString(): String {
+    val bos = ByteArrayOutputStream()
+    store(bos, "")
+    return bos.toString("UTF-8")
+}
