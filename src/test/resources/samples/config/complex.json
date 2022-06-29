@@ -84,6 +84,14 @@
       "severity": "warning"
     }
   },
+  "topology": {
+    "partOf": "test-group",
+    "runtime": "spring-boot",
+    "connectsTo": [
+      "test-app1",
+      "test-app2"
+    ]
+  },
   "liveness": true,
   "releaseTo": "komplex",
   "deployStrategy": {

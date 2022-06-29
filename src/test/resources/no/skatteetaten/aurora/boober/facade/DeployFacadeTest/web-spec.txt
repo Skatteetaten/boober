@@ -18,6 +18,6 @@ utv/about.json | cluster: "utv"
                | config:
       web.json |   foo2: "baz"
       web.json | route: true
-      web.json | toxiproxy: true
                | webseal:
       web.json |   strict: false
+      web.json | toxiproxy: true

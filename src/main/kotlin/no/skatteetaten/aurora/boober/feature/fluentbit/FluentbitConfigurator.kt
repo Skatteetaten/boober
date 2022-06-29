@@ -41,6 +41,12 @@ class FluentbitConfigurator {
             |   flush_timeout 1000
             |   rule          "start_state" "/<EvaluationEvent.*/"       "cont"
             |   rule          "cont"        "/^(?!<EvaluationEvent).*$/" "cont"
+            |   
+            |[PARSER]
+            |   Name          jsonTimeParser
+            |   Format        json
+            |   Time_Key      timestamp
+            |   Time_Format   %Y-%m-%dT%H:%M:%S.%L%z
         """.trimMargin()
 
         /**
@@ -55,16 +61,25 @@ class FluentbitConfigurator {
             retryLimit: Int?
         ): String {
             val logInputList = getLoggInputList(allConfiguredLoggers, bufferSize)
-            val applicationSplunkOutputs = allConfiguredLoggers.joinToString("\n\n") {
-                it.run {
-                    generateSplunkOutput(
-                        matcherTag = "$name-$sourceType",
-                        index = index,
-                        sourceType = sourceType,
-                        retryLimit = retryLimit
-                    )
+            val applicationSplunkOutputs = allConfiguredLoggers
+                .flatMap {
+                    if (it.name == logApplication && it.sourceType == "log4j") listOf(
+                        it,
+                        it.copy(sourceType = "_json")
+                    ) else {
+                        listOf(it)
+                    }
                 }
-            }
+                .joinToString("\n\n") {
+                    it.run {
+                        generateSplunkOutput(
+                            matcherTag = "$name-$sourceType",
+                            index = index,
+                            sourceType = sourceType,
+                            retryLimit = retryLimit
+                        )
+                    }
+                }
 
             val fluentbitIndex = allConfiguredLoggers.find { it.name == logApplication }?.index
                 ?: throw IllegalArgumentException("Application logger has not been provided")
@@ -76,6 +91,8 @@ class FluentbitConfigurator {
                 fluentbitService,
                 logInputList,
                 fluentbitLogInputAndFilter,
+                applicationLogRewriteTag,
+                jsonTimeParserFilter,
                 timeParserFilter,
                 multilineLog4jFilter,
                 evalXmlTimeParserFilter,
@@ -138,6 +155,14 @@ class FluentbitConfigurator {
             |   Match            fluentbit
         """.trimMargin()
 
+        // rewrite tag to application-_json if event matches single line json structure (start open bracket end closed bracket)
+        private val applicationLogRewriteTag = """
+            |[FILTER]
+            |   Name rewrite_tag
+            |   Match *-log4j
+            |   Rule ${"\$event"} ^{.*}${'$'} application-_json false
+        """.trimMargin()
+
         // Parser filter to assign it to application tag records
         private val timeParserFilter = """
             |[FILTER]
@@ -192,6 +217,17 @@ class FluentbitConfigurator {
             |   multiline.parser multiline-eval-xml
         """.trimMargin()
 
+        // Parser filters to assign the jsonTimeParser to application tag records
+        private val jsonTimeParserFilter = """
+            |[FILTER]
+            |   Name parser
+            |   Match *-_json
+            |   Key_Name event
+            |   Parser jsonTimeParser
+            |   Preserve_Key On
+            |   Reserve_Data On
+        """.trimMargin()
+
         // Fluentbit filter for adding splunk fields for application, cluster, environment, host and nodetype to the record
         private fun getModifyFilter(application: String, cluster: String, version: String) = """
             |[FILTER]
@@ -226,7 +262,7 @@ class FluentbitConfigurator {
             return """
                 |[OUTPUT]
                 |   Name                       splunk
-                |   Match                      $matcherTag 
+                |   Match                      $matcherTag
                 |   Host                       $ {SPLUNK_HOST}
                 |   Port                       $ {SPLUNK_PORT}
                 |   Splunk_token               $ {HEC_TOKEN}

@@ -1461,15 +1461,43 @@
       }
     ]
   },
-  "toxiproxy": {
-    "source": "default",
-    "value": false,
-    "sources": [
-      {
-        "name": "default",
-        "value": false
-      }
-    ]
+  "topology": {
+    "partOf": {
+      "source": "complex.json",
+      "value": "test-group",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "test-group"
+        }
+      ]
+    },
+    "runtime": {
+      "source": "complex.json",
+      "value": "spring-boot",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "spring-boot"
+        }
+      ]
+    },
+    "connectsTo": {
+      "source": "complex.json",
+      "value": [
+        "test-app1",
+        "test-app2"
+      ],
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": [
+            "test-app1",
+            "test-app2"
+          ]
+        }
+      ]
+    }
   },
   "webseal": {
     "host": {
@@ -1614,5 +1642,15 @@
         }
       ]
     }
+  },
+  "toxiproxy": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
   }
 }

@@ -14,7 +14,11 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "komplex",
+      "app.kubernetes.io/name": "komplex",
+      "app.kubernetes.io/component": "backend",
       "type": "webseal",
+      "app.kubernetes.io/part-of": "test-group",
+      "app.openshift.io/runtime": "spring-boot",
       "booberDeployId": "deploy1"
     },
     "name": "komplex-webseal",

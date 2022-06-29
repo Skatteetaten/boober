@@ -67,7 +67,6 @@ utv/about.json | cluster: "utv"
        default |   objectArea: ""
        default |   tenant: "paas-utv"
        default | sts: false
-      web.json | toxiproxy: true
                | deployStrategy:
        default |   type: "rolling"
        default |   timeout: 180
@@ -89,3 +88,4 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
                | logging:
        default |   bufferSize: 20
+      web.json | toxiproxy: true

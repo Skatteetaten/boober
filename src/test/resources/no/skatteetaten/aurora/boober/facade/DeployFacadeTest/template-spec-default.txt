@@ -56,7 +56,6 @@ utv/about.json | cluster: "utv"
  template.json |   FEED_NAME: "test"
  template.json |   DB_NAME: "test"
  template.json | template: "atomhopper"
-       default | toxiproxy: false
        default | webseal: false
                | azure:
                |   jwtToStsConverter:
@@ -70,3 +69,4 @@ utv/about.json | cluster: "utv"
        default |     enabled: false
                | logging:
        default |   bufferSize: 20
+       default | toxiproxy: false

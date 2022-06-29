@@ -10,9 +10,13 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "komplex",
+      "app.kubernetes.io/name": "komplex",
+      "app.kubernetes.io/component": "backend",
       "id": "1234567890",
       "removeAfter": "86400",
       "applicationId": "feddc97db98af8c60b495fb62231c98c65d7225b",
+      "app.kubernetes.io/part-of": "test-group",
+      "app.openshift.io/runtime": "spring-boot",
       "booberDeployId": "deploy1"
     },
     "name": "komplex",

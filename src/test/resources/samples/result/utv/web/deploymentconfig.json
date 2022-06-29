@@ -10,7 +10,10 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "web",
+      "app.kubernetes.io/name": "web",
+      "app.kubernetes.io/component": "frontend",
       "deployTag": "develop-SNAPSHOT",
+      "app.kubernetes.io/version": "develop-SNAPSHOT",
       "booberDeployId": "deploy1"
     },
     "name": "web",
@@ -52,7 +55,10 @@
           "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "web",
+          "app.kubernetes.io/name": "web",
+          "app.kubernetes.io/component": "frontend",
           "deployTag": "develop-SNAPSHOT",
+          "app.kubernetes.io/version": "develop-SNAPSHOT",
           "booberDeployId": "deploy1"
         }
       },

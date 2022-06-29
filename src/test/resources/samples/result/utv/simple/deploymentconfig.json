@@ -10,7 +10,10 @@
       "lastUpdatedYear": "1970",
       "affiliation": "paas",
       "name": "simple",
+      "app.kubernetes.io/name": "simple",
+      "app.kubernetes.io/component": "backend",
       "deployTag": "1",
+      "app.kubernetes.io/version": "1",
       "booberDeployId": "deploy1"
     },
     "name": "simple",
@@ -52,7 +55,10 @@
           "lastUpdatedYear": "1970",
           "affiliation": "paas",
           "name": "simple",
+          "app.kubernetes.io/name": "simple",
+          "app.kubernetes.io/component": "backend",
           "deployTag": "1",
+          "app.kubernetes.io/version": "1",
           "booberDeployId": "deploy1"
         }
       },
