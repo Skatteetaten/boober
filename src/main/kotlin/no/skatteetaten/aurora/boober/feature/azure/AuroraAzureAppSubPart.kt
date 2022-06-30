@@ -4,7 +4,6 @@ import com.fkorotkov.kubernetes.newObjectMeta
 import no.skatteetaten.aurora.boober.feature.ConfiguredRoute
 import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.clusterTimeout
 import no.skatteetaten.aurora.boober.feature.azure.AuroraAzureAppSubPart.ConfigPath.managedRoute
-import no.skatteetaten.aurora.boober.feature.isWebsealEnabled
 import no.skatteetaten.aurora.boober.feature.name
 import no.skatteetaten.aurora.boober.feature.namespace
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -30,16 +29,7 @@ val AuroraDeploymentSpec.isAzureAppFqdnEnabled: Boolean
     }
 
 val AuroraDeploymentSpec.azureAppGroups: List<String>?
-    get() {
-        //  Somewhat strange construction in order to avoid error with null as typeCast
-        val rawGroup = this.getOrNull<Any>(AuroraAzureAppSubPart.ConfigPath.groups) ?: return null
-        return rawGroup as List<String>
-    }
-
-val AuroraDeploymentSpec.isAzureRouteManaged: Boolean
-    get() {
-        return (this.getOrNull<Boolean?>(managedRoute) == true)
-    }
+    get() = this.getOrNull<List<String>>(AuroraAzureAppSubPart.ConfigPath.groups)
 
 class AuroraAzureAppSubPart {
     object ConfigPath {
@@ -68,22 +58,19 @@ class AuroraAzureAppSubPart {
                         )
                     )
                 )
-            ).addIfNotNull(createManagedRouteIfApplicable(adc, azureFeature))
+            ).addIfNotNull(createManagedRoute(adc, azureFeature))
         } ?: emptySet()
     }
 
     /**
-     * Create a replacement for the webseal route as part
-     * of migrating away from webseal
-     * @return New azure route or null if not applicable
+     * Create a replacement for the webseal route as part of migrating away from webseal
+     * @return New azure route in the default router shard
      */
-    private fun createManagedRouteIfApplicable(
+    @Suppress("UNCHECKED_CAST")
+    private fun createManagedRoute(
         adc: AuroraDeploymentSpec,
         azureFeature: AzureFeature
-    ): AuroraResource? {
-        if (!adc.isAzureRouteManaged) {
-            return null
-        }
+    ): AuroraResource {
         val configuredTimeout = adc.getOrNull<String>(clusterTimeout)?.let { timeout ->
             timeout.toIntOrNull()?.let { n -> "${n}s" } ?: timeout
         }
@@ -91,11 +78,11 @@ class AuroraAzureAppSubPart {
 
         val configuredRoute = ConfiguredRoute(
             objectName = "${adc.name}-managed",
-            host = adc.getOrNull<String>(ConfigPath.azureAppFqdn)!!,
+            host = adc[ConfigPath.azureAppFqdn],
             annotations = annotations,
             fullyQualifiedHost = true,
             labels = mapOf(
-                "type" to "webseal",
+                "applikasjonsfabrikken" to "true",
                 "azureManaged" to "true"
             )
         )
@@ -112,16 +99,12 @@ class AuroraAzureAppSubPart {
         adc: AuroraDeploymentSpec
     ): List<Exception> {
         val errors = mutableListOf<Exception>()
-        if (adc.azureAppFqdn == null || adc.azureAppGroups == null) {
-            if (!(adc.azureAppFqdn == null && adc.azureAppGroups == null)) {
-                errors.add(AuroraDeploymentSpecValidationException("You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"))
-            }
-        }
-
-        if (adc.isAzureRouteManaged && adc.isWebsealEnabled) {
+        if ((adc.azureAppFqdn == null || adc.azureAppGroups == null) &&
+            !(adc.azureAppFqdn == null && adc.azureAppGroups == null)
+        ) {
             errors.add(
                 AuroraDeploymentSpecValidationException(
-                    "You cannot have a managedRoute route and webseal enabled simultaneously"
+                    "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"
                 )
             )
         }
@@ -130,7 +113,7 @@ class AuroraAzureAppSubPart {
             if (!valid) {
                 errors.add(
                     AuroraDeploymentSpecValidationException(
-                        "azure.azureFqdn must be a valid dns address"
+                        "${ConfigPath.azureAppFqdn} must be a valid dns address"
                     )
                 )
             }
@@ -150,8 +133,7 @@ class AuroraAzureAppSubPart {
             ),
             AuroraConfigFieldHandler(
                 managedRoute,
-                defaultValue = false,
-                validator = { it.boolean() }
+                validator = { it.boolean(required = false) }
             ),
             AuroraConfigFieldHandler(
                 clusterTimeout,
@@ -164,4 +146,10 @@ class AuroraAzureAppSubPart {
                 canBeSimplifiedConfig = true
             )
         )
+
+    fun getDeprecations(adc: AuroraDeploymentSpec): List<String>? {
+        return adc.getOrNull<Boolean>(managedRoute)?.let {
+            listOf("$managedRoute is deprecated and should be removed from your configuration.")
+        }
+    }
 }

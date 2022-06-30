@@ -149,5 +149,12 @@
         "enabled": true
       }
     }
+  },
+  "azure": {
+    "azureAppFqdn": "complex-@env@.amutv.skead.no",
+    "groups": [],
+    "jwtToStsConverter": {
+      "enabled": true
+    }
   }
 }

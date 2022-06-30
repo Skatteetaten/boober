@@ -148,7 +148,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
 
     @Test
     fun `clinger is not confused by AzureAppConfig`() { // x
-        val (_, dcResource, azureApp) = generateResources(
+        val (_, dcResource, azureApp, _) = generateResources(
             """{
              "azure" : {
                 "azureAppFqdn": "saksmappa.amutv.skead.no",
@@ -159,7 +159,7 @@ class JwtToStsConverterSubPartTest : AbstractMultiFeatureTest() {
                 }
               }
            }""",
-            createdResources = 1, resources = mutableSetOf(createEmptyService(), createEmptyDeploymentConfig())
+            createdResources = 2, resources = mutableSetOf(createEmptyService(), createEmptyDeploymentConfig())
         )
 
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added clinger sidecar container")

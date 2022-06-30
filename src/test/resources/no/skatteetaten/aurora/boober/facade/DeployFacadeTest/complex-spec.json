@@ -1009,6 +1009,44 @@
       ]
     }
   },
+  "azure": {
+    "jwtToStsConverter": {
+      "enabled": {
+        "source": "complex.json",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          },
+          {
+            "name": "complex.json",
+            "value": true
+          }
+        ]
+      }
+    },
+    "azureAppFqdn": {
+      "source": "complex.json",
+      "value": "complex-@env@.amutv.skead.no",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "complex-@env@.amutv.skead.no"
+        }
+      ]
+    },
+    "groups": {
+      "source": "complex.json",
+      "value": [ ],
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": [ ]
+        }
+      ]
+    }
+  },
   "logging": {
     "index": {
       "source": "complex.json",

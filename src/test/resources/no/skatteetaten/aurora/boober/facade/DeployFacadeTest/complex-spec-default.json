@@ -1524,12 +1524,16 @@
   "azure": {
     "jwtToStsConverter": {
       "enabled": {
-        "source": "default",
-        "value": false,
+        "source": "complex.json",
+        "value": true,
         "sources": [
           {
             "name": "default",
             "value": false
+          },
+          {
+            "name": "complex.json",
+            "value": true
           }
         ]
       },
@@ -1584,13 +1588,23 @@
         ]
       }
     },
-    "managedRoute": {
-      "source": "default",
-      "value": false,
+    "azureAppFqdn": {
+      "source": "complex.json",
+      "value": "complex-@env@.amutv.skead.no",
       "sources": [
         {
-          "name": "default",
-          "value": false
+          "name": "complex.json",
+          "value": "complex-@env@.amutv.skead.no"
+        }
+      ]
+    },
+    "groups": {
+      "source": "complex.json",
+      "value": [ ],
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": [ ]
         }
       ]
     },

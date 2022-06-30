@@ -2,18 +2,15 @@
   "apiVersion": "route.openshift.io/v1",
   "kind": "Route",
   "metadata": {
-    "annotations": {
-      "marjory.sits.no/isOpen": "false",
-      "marjory.sits.no/route.roles": "APP_dev,APP_drift"
-    },
     "labels": {
-      "type": "webseal"
+      "applikasjonsfabrikken": "true",
+      "azureManaged": "true"
     },
-    "name": "simple-webseal",
+    "name": "simple-managed",
     "namespace": "paas-utv"
   },
   "spec": {
-    "host": "tjeneste-foo.test.skead.no",
+    "host": "tjeneste-foo.amutv.skead.no",
     "port": {
       "targetPort": "http"
     },

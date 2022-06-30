@@ -584,16 +584,6 @@
         ]
       }
     },
-    "managedRoute": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    },
     "apim": {
       "enabled": {
         "source": "default",

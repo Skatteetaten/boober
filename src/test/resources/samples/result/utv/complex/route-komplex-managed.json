@@ -1,13 +1,7 @@
 {
-  "apiVersion": "v1",
-  "kind": "Service",
+  "apiVersion": "route.openshift.io/v1",
+  "kind": "Route",
   "metadata": {
-    "annotations": {
-      "prometheus.io/scheme": "http",
-      "prometheus.io/scrape": "true",
-      "prometheus.io/path": "/prometheus",
-      "prometheus.io/port": "8082"
-    },
     "labels": {
       "operationScope": "aos-4016",
       "app": "komplex",
@@ -18,11 +12,13 @@
       "name": "komplex",
       "app.kubernetes.io/name": "komplex",
       "app.kubernetes.io/component": "backend",
+      "applikasjonsfabrikken": "true",
+      "azureManaged": "true",
       "app.kubernetes.io/part-of": "test-group",
       "app.openshift.io/runtime": "spring-boot",
       "booberDeployId": "deploy1"
     },
-    "name": "komplex",
+    "name": "komplex-managed",
     "namespace": "paas-utv",
     "ownerReferences": [
       {
@@ -34,24 +30,13 @@
     ]
   },
   "spec": {
-    "ports": [
-      {
-        "name": "http",
-        "port": 80,
-        "protocol": "TCP",
-        "targetPort": 8100
-      },
-      {
-        "name": "extra",
-        "port": 8082,
-        "protocol": "TCP",
-        "targetPort": 8082
-      }
-    ],
-    "selector": {
-      "name": "komplex"
+    "host": "complex-utv.amutv.skead.no",
+    "port": {
+      "targetPort": "http"
     },
-    "sessionAffinity": "None",
-    "type": "ClusterIP"
+    "to": {
+      "kind": "Service",
+      "name": "komplex"
+    }
   }
 }

@@ -84,4 +84,8 @@ class AzureFeature(
     ): List<Exception> {
         return auroraAzureApp.validate(adc) + auroraApim.validate(adc) + jwtToStsConverter.validate(adc)
     }
+
+    fun getDeprecations(adc: AuroraDeploymentSpec): List<String>? {
+        return auroraAzureApp.getDeprecations(adc)
+    }
 }

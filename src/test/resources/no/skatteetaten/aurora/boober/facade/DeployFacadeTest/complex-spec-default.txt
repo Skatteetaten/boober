@@ -171,13 +171,14 @@ utv/about-alternate.json |   ignoreMissingSchema: true
             complex.json |   roles: "admin,dev,@name@"
                          | azure:
                          |   jwtToStsConverter:
-                 default |     enabled: false
+            complex.json |     enabled: true
                  default |     version: "0"
                  default |     jwksUrl: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
                  default |     ivGroupsRequired: false
                  default |     ldapUserVaultName: ""
                  default |     ldapUrl: ""
-                 default |   managedRoute: false
+            complex.json |   azureAppFqdn: "complex-@env@.amutv.skead.no"
+            complex.json |   groups: []
                          |   apim:
                  default |     enabled: false
                          | logging:

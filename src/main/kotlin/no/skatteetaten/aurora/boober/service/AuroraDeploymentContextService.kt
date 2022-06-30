@@ -15,6 +15,7 @@ import no.skatteetaten.aurora.boober.feature.RouteFeature
 import no.skatteetaten.aurora.boober.feature.StsFeature
 import no.skatteetaten.aurora.boober.feature.WebsealFeature
 import no.skatteetaten.aurora.boober.feature.affiliation
+import no.skatteetaten.aurora.boober.feature.azure.AzureFeature
 import no.skatteetaten.aurora.boober.feature.cluster
 import no.skatteetaten.aurora.boober.feature.envName
 import no.skatteetaten.aurora.boober.feature.extractPlaceHolders
@@ -40,7 +41,7 @@ typealias UrlToApplicationDeploymentContextMultimap = Map<String, List<AuroraDep
 
 typealias UrlAndAuroraDeploymentContextList = List<Pair<String, AuroraDeploymentContext>>
 
-typealias AuroraDeploymentContextUrlMultimap = Map<AuroraDeploymentContext, List<String>>
+typealias FeatureToAdcMap = Map<Feature, AuroraDeploymentSpec>
 
 @Service
 class AuroraDeploymentContextService(
@@ -201,7 +202,7 @@ class AuroraDeploymentContextService(
             )
         }
 
-        val featureAdc: Map<Feature, AuroraDeploymentSpec> = featureHandlers.mapValues { (_, handlers) ->
+        val featureAdc: FeatureToAdcMap = featureHandlers.mapValues { (_, handlers) ->
             val paths = handlers.map { it.name } + listOf("applicationDeploymentId", "namespace")
             val fields = spec.fields.filterKeys {
                 paths.contains(it)
@@ -232,73 +233,108 @@ class AuroraDeploymentContextService(
 
     private fun findWarnings(
         cmd: AuroraContextCommand,
-        features: Map<Feature, AuroraDeploymentSpec>,
+        features: FeatureToAdcMap,
         context: Map<Feature, FeatureContext>,
         fullValidation: Boolean
     ): List<String> {
 
-        fun logWarning(warning: String) {
+        val logWarning = { warning: String ->
             val auroraConfigRef = cmd.auroraConfigRef
-            logger.debug("AuroraConfigWarning auroraConfig=${auroraConfigRef.name} auroraConfigGitReference=${auroraConfigRef.refName} deploymentReference=${cmd.applicationDeploymentRef} warning=$warning")
+            logger.debug(
+                "AuroraConfigWarning auroraConfig=${auroraConfigRef.name} " +
+                    "auroraConfigGitReference=${auroraConfigRef.refName} " +
+                    "deploymentReference=${cmd.applicationDeploymentRef} warning=$warning"
+            )
         }
 
-        val webSeal = features.filter { (feature, spec) ->
+        return features.findConfigKeyWithSpecialChar(context, fullValidation, logWarning) +
+            features.gatherDeprecationWarnings() +
+            features.websealWarnings(cmd, logWarning) +
+            features.stsWarnings(logWarning)
+    }
+
+    private fun FeatureToAdcMap.gatherDeprecationWarnings() = this.mapNotNull { (feature, spec) ->
+        if (feature is AzureFeature && feature.isActive(spec)) {
+            feature.getDeprecations(spec)
+        } else if (feature is AlertsFeature && feature.containsDeprecatedConnection(spec)) {
+            listOf("The property 'connection' on alerts is deprecated. Please use the connections property")
+        } else {
+            null
+        }
+    }.flatten()
+
+    private fun FeatureToAdcMap.websealWarnings(cmd: AuroraContextCommand, logWarning: (String) -> Unit): List<String> {
+
+        val webseal = this.any { (feature, spec) ->
             feature is WebsealFeature && feature.willCreateResource(spec) && feature.shouldWarnAboutFeature(spec)
-        }.isNotEmpty()
-
-        val configKeysWithSpecialCharacters = features.flatMap { (feature, spec) ->
-            val featureContext = context[feature]
-                ?: throw RuntimeException("Could not fetch context for feature=${feature::class.qualifiedName}")
-            when (feature) {
-                is ConfigFeature -> {
-                    feature.envVarsKeysWithSpecialCharacters(spec).map {
-                        logWarning("configKeyWithSpecialChar")
-                        it
-                    }
-                }
-                is AbstractResolveTagFeature -> {
-                    if (feature.isActive(spec) && fullValidation) {
-                        val warning = feature.dockerDigestExistsWarning(featureContext)
-                        logWarning("dockerDigestDoesNotExist:${feature::class.simpleName}")
-                        listOfNotNull(
-                            warning
-                        )
-                    } else emptyList()
-                }
-                else -> emptyList()
-            }
         }
 
-        val route = features.filter { (feature, spec) ->
+        val directRoute = this.any { (feature, spec) ->
             feature is RouteFeature && feature.willCreateResource(spec, cmd)
-        }.isNotEmpty()
+        }
 
-        val websealWarning = if (webSeal && route) {
-            logWarning("websealAndRoute")
-            "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning."
-        } else null
+        val azureRoute = this.any { (feature, spec) ->
+            feature is AzureFeature && feature.isActive(spec)
+        }
 
-        val sts = features.filter { (feature, spec) ->
-            feature is StsFeature && feature.willCreateResource(spec)
-        }.isNotEmpty()
+        return listOfNotNull(
+            if (webseal && directRoute) {
+                logWarning("websealAndRoute")
+                "Both Webseal-route and OpenShift-Route generated for application. " +
+                    "If your application relies on WebSeal security this can be harmful! " +
+                    "Set webseal/strict to false to remove this warning."
+            } else null,
+            if (webseal && azureRoute) {
+                logWarning("websealAndAzureRoute")
+                "Both Webseal-route and Azure-Route generated for application. " +
+                    "If your application relies on WebSeal security this can be harmful! " +
+                    "Set webseal/strict to false to remove this warning."
+            } else null
+        )
+    }
 
-        val certificate = features.filter { (feature, spec) ->
+    private fun FeatureToAdcMap.stsWarnings(logWarning: (String) -> Unit): List<String> {
+        val certificate = this.any { (feature, spec) ->
             feature is CertificateFeature && feature.willCreateResource(spec)
-        }.isNotEmpty()
+        }
 
-        val stsWarning = if (sts && certificate) {
-            logWarning("stsAndCertificate")
-            "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service"
-        } else null
+        val sts = this.any { (feature, spec) ->
+            feature is StsFeature && feature.willCreateResource(spec)
+        }
 
-        val alertsConnection = features.filter { (feature, spec) ->
-            feature is AlertsFeature && feature.containsDeprecatedConnection(spec)
-        }.isNotEmpty()
+        return listOfNotNull(
+            if (sts && certificate) {
+                logWarning("stsAndCertificate")
+                "Both sts and certificate feature has generated a cert. " +
+                    "Turn off certificate if you are using the new STS service"
+            } else null
+        )
+    }
 
-        val alertsWarning = if (alertsConnection) {
-            "The property 'connection' on alerts is deprecated. Please use the connections property"
-        } else null
-
-        return listOfNotNull(websealWarning, stsWarning, alertsWarning).addIfNotNull(configKeysWithSpecialCharacters)
+    private fun FeatureToAdcMap.findConfigKeyWithSpecialChar(
+        context: Map<Feature, FeatureContext>,
+        fullValidation: Boolean,
+        logWarning: (String) -> Unit,
+    ) = this.flatMap { (feature, spec) ->
+        val featureContext = context[feature]
+            ?: throw RuntimeException("Could not fetch context for feature=${feature::class.qualifiedName}")
+        when (feature) {
+            is ConfigFeature -> {
+                feature.envVarsKeysWithSpecialCharacters(spec).map {
+                    logWarning("configKeyWithSpecialChar")
+                    it
+                }
+            }
+            is AbstractResolveTagFeature -> {
+                if (feature.isActive(spec) && fullValidation) {
+                    val warning = feature.dockerDigestExistsWarning(featureContext)
+                    logWarning("dockerDigestDoesNotExist:${feature::class.simpleName}")
+                    listOfNotNull(
+                        warning
+                    )
+                } else emptyList()
+            }
+            else -> emptyList()
+        }
     }
 }

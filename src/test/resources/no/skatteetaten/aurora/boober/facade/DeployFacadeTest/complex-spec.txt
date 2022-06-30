@@ -119,5 +119,10 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          | webseal:
             complex.json |   host: "test"
             complex.json |   roles: "admin,dev,@name@"
+                         | azure:
+                         |   jwtToStsConverter:
+            complex.json |     enabled: true
+            complex.json |   azureAppFqdn: "complex-@env@.amutv.skead.no"
+            complex.json |   groups: []
                          | logging:
             complex.json |   index: "test-index"
