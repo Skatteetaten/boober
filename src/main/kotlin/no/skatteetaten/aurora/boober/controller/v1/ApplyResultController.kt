@@ -6,11 +6,13 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.controller.internal.Response
 import no.skatteetaten.aurora.boober.service.AuroraConfigRef
 import no.skatteetaten.aurora.boober.service.DeployHistoryEntry
 import no.skatteetaten.aurora.boober.service.DeployLogService
 
+private val logger = KotlinLogging.logger {}
 @RestController
 @RequestMapping("/v1/apply-result/{auroraConfigName}")
 class ApplyResultController(private val deployLogService: DeployLogService) {
@@ -19,6 +21,9 @@ class ApplyResultController(private val deployLogService: DeployLogService) {
     fun deployHistory(
         @PathVariable auroraConfigName: String
     ): Response {
+        val user = deployLogService.userDetailsProvider.getAuthenticatedUser()
+        logger.info("Retrieving deployHistory user=${user.username}")
+
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val applicationResults: List<DeployHistoryEntry> = deployLogService.deployHistory(ref)
         return Response(items = applicationResults)
@@ -30,6 +35,8 @@ class ApplyResultController(private val deployLogService: DeployLogService) {
         @PathVariable deployId: String
     ): ResponseEntity<Response> {
 
+        val user = deployLogService.userDetailsProvider.getAuthenticatedUser()
+        logger.info("Inspecting deploy deployId=$deployId user=${user.username}")
         val ref = AuroraConfigRef(auroraConfigName, getRefNameFromRequest())
         val deployResult = deployLogService.findDeployResultById(ref, deployId)
         return deployResult?.let {
