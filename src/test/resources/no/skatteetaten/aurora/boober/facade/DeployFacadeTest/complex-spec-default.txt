@@ -176,7 +176,7 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                  default |     jwksUrl: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
                  default |     ivGroupsRequired: false
                  default |     ldapUserVaultName: ""
-                 default |     ldapUrl: ""
+                 default |     ldapUrl: "http://localhost"
             complex.json |   azureAppFqdn: "complex-@env@.amutv.skead.no"
             complex.json |   groups: []
                          |   apim:
