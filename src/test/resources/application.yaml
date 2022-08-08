@@ -107,7 +107,7 @@ clinger:
     sidecar:
         default:
             jwks: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
-            ldapurl: ""
+            ldapurl: "http://localhost"
 
 auroraconfig:
     builder:

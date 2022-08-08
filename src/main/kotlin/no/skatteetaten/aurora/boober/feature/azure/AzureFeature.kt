@@ -23,7 +23,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
  *
  * @see no.skatteetaten.aurora.boober.feature.RouteFeature
  */
-@ConditionalOnProperty("\${clinger.sidecar.default.ldapurl}")
+@ConditionalOnProperty("clinger.sidecar.default.ldapurl")
 @Service
 class AzureFeature(
     cantusService: CantusService,

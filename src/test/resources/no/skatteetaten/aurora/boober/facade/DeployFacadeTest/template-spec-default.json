@@ -575,11 +575,11 @@
       },
       "ldapUrl": {
         "source": "default",
-        "value": "",
+        "value": "http://localhost",
         "sources": [
           {
             "name": "default",
-            "value": ""
+            "value": "http://localhost"
           }
         ]
       }

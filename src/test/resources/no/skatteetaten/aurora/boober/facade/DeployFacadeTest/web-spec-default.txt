@@ -83,7 +83,7 @@ utv/about.json | cluster: "utv"
        default |     jwksUrl: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
        default |     ivGroupsRequired: false
        default |     ldapUserVaultName: ""
-       default |     ldapUrl: ""
+       default |     ldapUrl: "http://localhost"
                |   apim:
        default |     enabled: false
                | logging:
