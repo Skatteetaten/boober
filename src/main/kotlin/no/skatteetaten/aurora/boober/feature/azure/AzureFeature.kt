@@ -1,6 +1,7 @@
 package no.skatteetaten.aurora.boober.feature.azure
 
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import no.skatteetaten.aurora.boober.feature.AbstractResolveTagFeature
 import no.skatteetaten.aurora.boober.feature.FeatureContext
@@ -22,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
  *
  * @see no.skatteetaten.aurora.boober.feature.RouteFeature
  */
+@ConditionalOnProperty("\${clinger.sidecar.default.ldapurl}")
 @Service
 class AzureFeature(
     cantusService: CantusService,
