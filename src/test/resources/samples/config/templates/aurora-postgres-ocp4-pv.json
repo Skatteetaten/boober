@@ -1,0 +1,392 @@
+{
+  "apiVersion": "v1",
+  "kind": "Template",
+  "metadata": {
+    "annotations": {
+      "description": "PostgreSQL (11, 12 and 13) relational database, based upon the official RHEL8 image, with persistent volume as storage.  ",
+      "iconClass": "icon-postgresql",
+      "tags": "database,postgresql"
+    },
+    "name": "aurora-postgres-ocp4-pv"
+  },
+  "objects": [
+    {
+      "kind": "PersistentVolumeClaim",
+      "apiVersion": "v1",
+      "metadata": {
+        "name": "${NAME}"
+      },
+      "spec": {
+        "accessModes": ["ReadWriteOnce"],
+        "resources": {
+          "requests": {
+            "storage": "${VOLUME_CAPACITY}"
+          }
+        },
+        "storageClassName": "${STORAGE_CLASS}",
+        "storageClassProvider": "kubernetes.io/vspere-volume"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Secret",
+      "metadata": {
+        "labels": {
+          "name": "${NAME}",
+          "template": "aurora-postgres-ocp4-pv"
+        },
+        "name": "postgres-${NAME}",
+        "annotations": {
+          "template.openshift.io/expose-username": "{.data['${NAME}_username']}",
+          "template.openshift.io/expose-password": "{.data['${NAME}_password']}",
+          "template.openshift.io/expose-admin-password": "{.data['${NAME}_admin_password']}",
+          "template.openshift.io/expose-database": "{.data['${NAME}_database']}",
+          "template.openshift.io/expose-jdbc_url": "{.data['${NAME}_jdbc_url']}",
+          "template.openshift.io/expose-postgres-uri": "{.data['${NAME}_postgres_uri']}"
+        }
+      },
+      "stringData": {
+        "${NAME}_username": "${POSTGRESQL_USER}",
+        "${NAME}_password": "${POSTGRESQL_PASSWORD}",
+        "${NAME}_admin_password": "${POSTGRESQL_ADMIN_PASSWORD}",
+        "${NAME}_database": "${NAME}",
+        "${NAME}_jdbc_url": "jdbc:postgresql://${NAME}/${NAME}?user=${POSTGRESQL_USER}&password=${POSTGRESQL_PASSWORD}",
+        "${NAME}_postgres_uri": "postgresql://${POSTGRESQL_USER}:${POSTGRESQL_PASSWORD}@localhost/${NAME}?connect_timeout=600&sslmode=disable",
+        "${NAME}_postgres_dsn": "user=${POSTGRESQL_USER} password=${POSTGRESQL_PASSWORD} host=localhost database=${NAME} sslmode=disable"
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Secret",
+      "metadata": {
+        "labels": {
+          "name": "${NAME}",
+          "template": "aurora-postgres-ocp4-pv"
+        },
+        "name": "postgres-${NAME}-spring",
+        "annotations": {
+          "template.openshift.io/expose-jdbc_url": "{.data['SPRING_DATASOURCE_URL']}",
+          "template.openshift.io/expose-username": "{.data['SPRING_DATASOURCE_USERNAME']}",
+          "template.openshift.io/expose-password": "{.data['SPRING_DATASOURCE_PASSWORD']}"
+        }
+      },
+      "stringData": {
+        "SPRING_DATASOURCE_URL": "jdbc:postgresql://${NAME}/${NAME}?user=${POSTGRESQL_USER}&password=${POSTGRESQL_PASSWORD}&ssl=true",
+        "SPRING_DATASOURCE_USERNAME": "${POSTGRESQL_USER}",
+        "SPRING_DATASOURCE_PASSWORD": "${POSTGRESQL_PASSWORD}",
+        "SPRING_FLYWAY_USERNAME": "${POSTGRESQL_USER}",
+        "SPRING_FLYWAY_PASSWORD": "${POSTGRESQL_PASSWORD}"
+      }
+    },
+    {
+      "kind": "ImageStream",
+      "apiVersion": "image.openshift.io/v1",
+      "metadata": {
+        "labels": {
+          "name": "${NAME}",
+          "template": "aurora-postgres-ocp4-pv"
+        },
+        "name": "${NAME}"
+      },
+      "spec": {
+        "dockerImageRepository": "localhost/aurora/aurora-postgres",
+        "tags": [
+          {
+            "from": {
+              "kind": "DockerImage",
+              "name": "localhost/aurora/aurora-postgres:${VERSION}"
+            },
+            "importPolicy": {
+              "scheduled": true
+            },
+            "name": "default"
+          }
+        ]
+      }
+    },
+    {
+      "kind": "ImageStream",
+      "apiVersion": "image.openshift.io/v1",
+      "metadata": {
+        "labels": {
+          "name": "${NAME}-exporter",
+          "template": "aurora-postgres-ocp4-pv"
+        },
+        "name": "${NAME}-exporter"
+      },
+      "spec": {
+        "dockerImageRepository": "localhost/aurora/aurora-postgres-exporter",
+        "tags": [
+          {
+            "from": {
+              "kind": "DockerImage",
+              "name": "localhost/aurora/aurora-postgres-exporter:${EXPORTER_VERSION}"
+            },
+            "importPolicy": {
+              "scheduled": true
+            },
+            "name": "default"
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "v1",
+      "kind": "Service",
+      "metadata": {
+        "labels": {
+          "name": "${NAME}",
+          "template": "aurora-postgres-ocp4-pv"
+        },
+        "annotations": {
+          "prometheus.io/path": "/metrics",
+          "prometheus.io/scheme": "http",
+          "prometheus.io/scrape": "true",
+          "prometheus.io/port": "9187"
+        },
+        "name": "${NAME}"
+      },
+      "spec": {
+        "ports": [
+          {
+            "name": "postgres",
+            "port": 5432,
+            "targetPort": 5432
+          },
+          {
+            "name": "http",
+            "port": 9187,
+            "targetPort": 9187
+          }
+        ],
+        "selector": {
+          "name": "${NAME}"
+        }
+      }
+    },
+    {
+      "kind": "DeploymentConfig",
+      "apiVersion": "apps.openshift.io/v1",
+      "metadata": {
+        "labels": {
+          "name": "${NAME}",
+          "template": "aurora-postgres-ocp4-pv"
+        },
+        "name": "${NAME}"
+      },
+      "spec": {
+        "strategy": {
+          "type": "Recreate",
+          "resources": {}
+        },
+        "triggers": [
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": ["${NAME}"],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${NAME}:default"
+              }
+            }
+          },
+          {
+            "type": "ImageChange",
+            "imageChangeParams": {
+              "automatic": true,
+              "containerNames": ["${NAME}-exporter"],
+              "from": {
+                "kind": "ImageStreamTag",
+                "name": "${NAME}-exporter:default"
+              }
+            }
+          }
+        ],
+        "replicas": 1,
+        "selector": {
+          "name": "${NAME}"
+        },
+        "template": {
+          "metadata": {
+            "labels": {
+              "name": "${NAME}"
+            }
+          },
+          "spec": {
+            "containers": [
+              {
+                "name": "${NAME}",
+                "env": [
+                  {
+                    "name": "POSTGRESQL_DATABASE",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "postgres-${NAME}",
+                        "key": "${NAME}_database"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_USER",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "postgres-${NAME}",
+                        "key": "${NAME}_username"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "postgres-${NAME}",
+                        "key": "${NAME}_password"
+                      }
+                    }
+                  },
+                  {
+                    "name": "POSTGRESQL_ADMIN_PASSWORD",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "postgres-${NAME}",
+                        "key": "${NAME}_admin_password"
+                      }
+                    }
+                  },
+                  {
+                    "name": "GIT_CONFIG_REPO",
+                    "value": "${GIT_CONFIG_REPO}"
+                  },
+                  {
+                    "name": "CONFIG_DIR",
+                    "value": "${CONFIG_DIR}"
+                  },
+                  {
+                    "name": "GIT_CONFIG_BRANCH",
+                    "value": "${GIT_CONFIG_BRANCH}"
+                  },
+                  {
+                    "name": "GIT_CONFIG_SECRET",
+                    "value": "${GIT_CONFIG_SECRET}"
+                  }
+                ],
+                "image": "${NAME}",
+                "ports": [
+                  {
+                    "containerPort": 5432
+                  }
+                ],
+                "resources": {
+                  "limits": {
+                    "cpu": "0.1"
+                  },
+                  "requests": {
+                    "cpu": "0.05",
+                    "memory": "128Mi"
+                  }
+                },
+                "volumeMounts": [
+                  {
+                    "mountPath": "/var/lib/pgsql/data",
+                    "name": "${NAME}-data"
+                  }
+                ]
+              },
+              {
+                "name": "${NAME}-exporter",
+                "env": [
+                  {
+                    "name": "DATA_SOURCE_NAME",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "name": "postgres-${NAME}",
+                        "key": "${NAME}_postgres_uri"
+                      }
+                    }
+                  }
+                ],
+                "image": "${NAME}-exporter",
+                "ports": [
+                  {
+                    "containerPort": 9187
+                  }
+                ]
+              }
+            ],
+            "volumes": [
+              {
+                "name": "${NAME}-data",
+                "persistentVolumeClaim": {
+                  "claimName": "${NAME}"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "parameters": [
+    {
+      "name": "NAME",
+      "description": "Unikt navn innenfor prosjektet på postgresql-tjenesten.  Brukes som referanse for tilkobling til instansen, samt som navn på PostgreSQL databasen.  NB: Må ikke være 'postgres' da dette er et reservert navn. Navn må være på form ^[a-zA-Z_][0-9a-zA-Z_]{1,31}$",
+      "required": true
+    },
+    {
+      "name": "POSTGRESQL_USER",
+      "description": "Brukernavn til postgres databasen.",
+      "value": "mockname"
+    },
+    {
+      "name": "POSTGRESQL_PASSWORD",
+      "description": "Passord til POSTGRES_USER.",
+      "value": "mockpw"
+    },
+    {
+      "name": "POSTGRESQL_ADMIN_PASSWORD",
+      "description": "Passord til admin.",
+      "value": "mockpw"
+    },
+    {
+      "name": "VERSION",
+      "decsription": "Version of Aurora postgres image, 13 as default. Can also use full version.",
+      "required": true,
+      "value": "13"
+    },
+    {
+      "name": "EXPORTER_VERSION",
+      "description": "Versjon av Aurora Postgres Exporter. ",
+      "value": "1.0.2"
+    },
+    {
+      "name": "GIT_CONFIG_REPO",
+      "description": "URL for Git Repo containing the Config Dir, in git clone syntax. "
+    },
+    {
+      "name": "CONFIG_DIR",
+      "description": "Directory for config files in Git repo. "
+    },
+    {
+      "name": "GIT_CONFIG_BRANCH",
+      "description": "Branch for config files in Git repo. ",
+      "value": "master"
+    },
+    {
+      "name": "GIT_CONFIG_SECRET",
+      "decsription": "Name of the secret containing the git USER and PASSWORD properties.",
+      "value": "postgresinit.properties"
+    },
+    {
+      "name": "VOLUME_CAPACITY",
+      "description": "Volume space available for data, e.g. 512Mi, 2Gi",
+      "value": "10Gi",
+      "required": true
+    },
+    {
+      "name": "STORAGE_CLASS",
+      "description": "The storage class. either 'thin' or 'thin2' (the default). Only systems using thin already should use this storage class. All others should use thin2.",
+      "value": "thin2"
+    }
+  ]
+}
