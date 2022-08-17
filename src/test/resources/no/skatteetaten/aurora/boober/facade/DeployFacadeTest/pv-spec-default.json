@@ -575,24 +575,14 @@
       },
       "ldapUrl": {
         "source": "default",
-        "value": "",
+        "value": "http://localhost",
         "sources": [
           {
             "name": "default",
-            "value": ""
+            "value": "http://localhost"
           }
         ]
       }
-    },
-    "managedRoute": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
     },
     "apim": {
       "enabled": {
