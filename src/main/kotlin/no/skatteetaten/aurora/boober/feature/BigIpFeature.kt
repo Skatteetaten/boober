@@ -152,7 +152,7 @@ class BigIpFeature(
         val route = ConfiguredRoute(
             objectName = routeName,
             host = routeHost,
-            annotations = adc.getRouteAnnotations("bigip/$host/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
+            annotations = adc.getSubKeysMap("bigip/$host/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 
         val bigIpName = if (isApplicationHost) host else "${adc.name}-$host"
@@ -195,7 +195,7 @@ class BigIpFeature(
         val auroraRoute = ConfiguredRoute(
             objectName = routeName,
             host = routeHost,
-            annotations = adc.getRouteAnnotations("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
+            annotations = adc.getSubKeysMap("bigip/routeAnnotations/").addIfNotNull("bigipRoute" to "true")
         )
 
         val bigIp = BigIp(

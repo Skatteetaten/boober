@@ -40,7 +40,7 @@ data class AuroraDeploymentSpec(
         }
     }
 
-    fun getRouteAnnotations(prefix: String): Map<String, String> {
+    fun getSubKeysMap(prefix: String): Map<String, String> {
         return fields.keys
             .filter { it.startsWith(prefix) }
             .associate {

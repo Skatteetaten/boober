@@ -12,6 +12,7 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
+import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
@@ -49,6 +50,14 @@ val AuroraDeploymentSpec.managementPath
         val port = this.get<Int>("$it/port").toString().ensureStartWith(":")
         "$port$path"
     }
+
+fun AuroraContextCommand.nodeSelectorHandlers(): Set<AuroraConfigFieldHandler> = this.applicationFiles
+    .findSubHandlers("nodeSelector")
+    .toSet()
+
+val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = getSubKeysMap("nodeSelector/")
+    .filter { it.key != "affiliation" }
+    .let { it.ifEmpty { null } }
 
 @Service
 class DeploymentConfigFeature() : Feature {
@@ -106,6 +115,7 @@ class DeploymentConfigFeature() : Feature {
         )
             .addIfNotNull(gavHandlers(header, cmd))
             .addIfNotNull(templateSpecificHeaders)
+            .addIfNotNull(cmd.nodeSelectorHandlers())
     }
 
     override fun modify(
@@ -140,6 +150,14 @@ class DeploymentConfigFeature() : Feature {
 
                 if (adc.pause) {
                     dc.spec.replicas = 0
+                }
+
+                adc.nodeSelector?.let { nodeSelector ->
+                    if (nodeSelector.isNotEmpty()) {
+                        val nodeSelectorMap = nodeSelector.toMutableMap()
+                        nodeSelectorMap["affiliation"] = adc.affiliation
+                        dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelectorMap) ?: nodeSelectorMap
+                    }
                 }
             } else if (it.resource.kind == "Deployment") {
                 val deployment: Deployment = it.resource as Deployment

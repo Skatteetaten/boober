@@ -175,7 +175,7 @@ class RouteFeature(
     private fun getDefaultRoute(
         adc: AuroraDeploymentSpec
     ): ConfiguredRoute {
-        val defaultAnnotations = adc.getRouteAnnotations("$ROUTE_DEFAULTS_FEATURE_FIELD/annotations/")
+        val defaultAnnotations = adc.getSubKeysMap("$ROUTE_DEFAULTS_FEATURE_FIELD/annotations/")
 
         val shouldGenerateAzureRoute = adc.isAzureConfigured()
         val isFullyQualifiedHost = adc.isMsDnsCnameEnabled() || adc.isAzureConfigured()
@@ -203,7 +203,7 @@ class RouteFeature(
 
         val secure = getTlsOrNull(adc, routeName)
 
-        val annotations = adc.getRouteAnnotations("$ROUTE_FEATURE_FIELD/$routeName/annotations/")
+        val annotations = adc.getSubKeysMap("$ROUTE_FEATURE_FIELD/$routeName/annotations/")
 
         val objectname = adc.replacer.replace(routeName).ensureStartWith(adc.name, "-")
 

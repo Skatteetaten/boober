@@ -80,6 +80,8 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
+                         | nodeSelector:
+            complex.json |   type: "test"
                          | deployStrategy:
             complex.json |   type: "recreate"
                  default |   timeout: 180

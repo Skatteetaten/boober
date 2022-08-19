@@ -619,6 +619,18 @@
       }
     }
   },
+  "nodeSelector": {
+    "type": {
+      "source": "complex.json",
+      "value": "test",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "test"
+        }
+      ]
+    }
+  },
   "deployStrategy": {
     "type": {
       "source": "complex.json",
