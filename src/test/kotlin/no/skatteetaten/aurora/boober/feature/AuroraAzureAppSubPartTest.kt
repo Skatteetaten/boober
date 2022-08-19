@@ -234,13 +234,23 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
 
     @Test
     fun `AuroraAzureApp should be turned off by false`() {
-        val (deployment) = generateResources(
+        val (_) = generateResources(
             """{
               "azure": false
               }
             }""",
             mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 0
         )
-        println(deployment)
+    }
+
+    @Test
+    fun `AuroraAzureApp should ignore just azure set to true`() {
+        val (_) = generateResources(
+            """{
+              "azure": true
+              }
+            }""",
+            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 0
+        )
     }
 }
