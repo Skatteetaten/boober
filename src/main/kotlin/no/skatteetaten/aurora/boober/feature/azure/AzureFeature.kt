@@ -42,7 +42,7 @@ class AzureFeature(
     }
 
     private fun isAzureSpecificallyDisabled(spec: AuroraDeploymentSpec): Boolean =
-        spec.getOrNull<String>("azure")?.let { it == "false" } == true
+        spec.getOrNull<Boolean>("azure") == false
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
