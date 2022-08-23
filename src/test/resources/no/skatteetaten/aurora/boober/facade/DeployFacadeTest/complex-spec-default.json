@@ -721,6 +721,16 @@
           "value": "test"
         }
       ]
+    },
+    "affiliation": {
+      "source": "default",
+      "value": "paas",
+      "sources": [
+        {
+          "name": "default",
+          "value": "paas"
+        }
+      ]
     }
   },
   "deployStrategy": {
