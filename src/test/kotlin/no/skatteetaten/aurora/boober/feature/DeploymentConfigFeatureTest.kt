@@ -2,9 +2,13 @@ package no.skatteetaten.aurora.boober.feature
 
 import org.junit.jupiter.api.Test
 import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.doesNotContain
 import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
+import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
@@ -251,5 +255,32 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
         assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations")
 
         assertThat(dcResource).auroraResourceMatchesFile("changed-dc-nodeselector.json")
+    }
+
+    @Test
+    fun `nodeSelectors must use static value for affiliation (from headerSpec) even if another value is provided in AuroraConfig`() {
+        val (dcResource) = generateResources(
+            app = """{
+                |    "groupId": "no.skatteetaten.aurora",
+                |    "version": "1",
+                |    "nodeSelector": {
+                |        "affiliation": "thisValueWillNotBeUsed",
+                |        "selector1": "test",
+                |        "selector2": "test"
+                |    }
+                |}""".trimMargin(),
+            resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
+            files = listOf(AuroraConfigFile("simple.json", """{ "pause": true }""", override = true)),
+            createdResources = 0
+        )
+
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations")
+
+        assertThat(dcResource).auroraResourceMatchesFile("changed-dc-nodeselector.json")
+        assertThat(dcResource.resource).isInstanceOf(DeploymentConfig::class)
+
+        val nodeSelectorsFromDC = (dcResource.resource as DeploymentConfig).spec.template.spec.nodeSelector
+        assertThat(nodeSelectorsFromDC).doesNotContain("affiliation", "thisValueWillNotBeUsed")
+        assertThat(nodeSelectorsFromDC).contains("affiliation", "paas")
     }
 }

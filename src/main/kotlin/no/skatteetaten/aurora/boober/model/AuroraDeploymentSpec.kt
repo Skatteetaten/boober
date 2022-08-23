@@ -187,12 +187,16 @@ data class AuroraDeploymentSpec(
             auroraConfigVersion: String,
             replacer: StringSubstitutor,
             namespace: String,
-            applicationDeploymentId: String
+            applicationDeploymentId: String,
+            affiliation: String
         ): AuroraDeploymentSpec {
-            val additionalFields = mapOf(
+            val additionalFields = mutableMapOf(
                 "namespace" to namespace,
-                "applicationDeploymentId" to applicationDeploymentId
+                "applicationDeploymentId" to applicationDeploymentId,
             )
+            handlers
+                .filter { it.name.contains("nodeSelector/") }
+                .map { additionalFields["nodeSelector/affiliation"] = affiliation }
 
             return createBaseSpec(
                 handlers = handlers,

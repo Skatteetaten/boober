@@ -2,6 +2,9 @@
                   static | configVersion: "master"
                   static | namespace: "paas-utv"
                   static | applicationDeploymentId: "1234567890"
+                         | nodeSelector:
+                  static |   affiliation: "paas"
+            complex.json |   type: "test"
                          | alerts:
                          |   alert:
             complex.json |     enabled: true
@@ -80,9 +83,6 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
-                         | nodeSelector:
-            complex.json |   type: "test"
-                 default |   affiliation: "paas"
                          | deployStrategy:
             complex.json |   type: "recreate"
                  default |   timeout: 180

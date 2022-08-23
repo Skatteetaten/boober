@@ -184,7 +184,8 @@ class AuroraDeploymentContextService(
             applicationDeploymentRef = deployCommand.applicationDeploymentRef,
             auroraConfigVersion = deployCommand.auroraConfig.ref,
             replacer = StringSubstitutor(headerSpec.extractPlaceHolders(), "@", "@"),
-            namespace = headerSpec.namespace
+            namespace = headerSpec.namespace,
+            affiliation = headerSpec.affiliation
         )
 
         val errors = AuroraDeploymentSpecConfigFieldValidator(

@@ -39,6 +39,28 @@
       }
     ]
   },
+  "nodeSelector": {
+    "affiliation": {
+      "source": "static",
+      "value": "paas",
+      "sources": [
+        {
+          "name": "static",
+          "value": "paas"
+        }
+      ]
+    },
+    "type": {
+      "source": "complex.json",
+      "value": "test",
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": "test"
+        }
+      ]
+    }
+  },
   "alerts": {
     "alert": {
       "enabled": {
@@ -709,28 +731,6 @@
           }
         ]
       }
-    }
-  },
-  "nodeSelector": {
-    "type": {
-      "source": "complex.json",
-      "value": "test",
-      "sources": [
-        {
-          "name": "complex.json",
-          "value": "test"
-        }
-      ]
-    },
-    "affiliation": {
-      "source": "default",
-      "value": "paas",
-      "sources": [
-        {
-          "name": "default",
-          "value": "paas"
-        }
-      ]
     }
   },
   "deployStrategy": {

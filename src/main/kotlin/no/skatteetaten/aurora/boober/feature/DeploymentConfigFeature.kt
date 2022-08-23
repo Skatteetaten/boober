@@ -20,7 +20,6 @@ import no.skatteetaten.aurora.boober.utils.disallowedPattern
 import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
-import no.skatteetaten.aurora.boober.utils.hasValue
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
 
 const val ANNOTATION_BOOBER_DEPLOYTAG = "boober.skatteetaten.no/deployTag"
@@ -52,24 +51,12 @@ val AuroraDeploymentSpec.managementPath
         "$port$path"
     }
 
-fun AuroraContextCommand.nodeSelectorHandlers(affiliation: String): Set<AuroraConfigFieldHandler> {
-    val subHandlers = this.applicationFiles.findSubHandlers("nodeSelector")
-    return if (subHandlers.isEmpty()) {
-        return emptySet()
-    } else {
-        subHandlers
-            .filter { it.name != "nodeSelector/affiliation" }
-            .addIfNotNull(
-                AuroraConfigFieldHandler(
-                    "nodeSelector/affiliation",
-                    defaultValue = affiliation,
-                    validator = { it.hasValue(affiliation, false) }
-                )
-            ).toSet()
-    }
-}
+fun AuroraContextCommand.nodeSelectorHandlers(): Set<AuroraConfigFieldHandler> = this.applicationFiles
+    .findSubHandlers("nodeSelector")
+    .toSet()
 
 val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = getSubKeysMap("nodeSelector/")
+    .filter { it.key != "affiliation" }
     .let { it.ifEmpty { null } }
 
 @Service
@@ -128,7 +115,7 @@ class DeploymentConfigFeature() : Feature {
         )
             .addIfNotNull(gavHandlers(header, cmd))
             .addIfNotNull(templateSpecificHeaders)
-            .addIfNotNull(cmd.nodeSelectorHandlers(header.affiliation))
+            .addIfNotNull(cmd.nodeSelectorHandlers())
     }
 
     override fun modify(
@@ -166,10 +153,9 @@ class DeploymentConfigFeature() : Feature {
                 }
 
                 adc.nodeSelector?.let { nodeSelector ->
-                    if (nodeSelector.isNotEmpty()) {
-                        val nodeSelectorMap = nodeSelector.toMutableMap()
-                        dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelectorMap) ?: nodeSelectorMap
-                    }
+                    val nodeSelectorMap = nodeSelector.toMutableMap()
+                    nodeSelectorMap["affiliation"] = adc.affiliation
+                    dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelectorMap) ?: nodeSelectorMap
                 }
             } else if (it.resource.kind == "Deployment") {
                 val deployment: Deployment = it.resource as Deployment
