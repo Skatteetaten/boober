@@ -56,7 +56,6 @@ fun AuroraContextCommand.nodeSelectorHandlers(): Set<AuroraConfigFieldHandler> =
     .toSet()
 
 val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = getSubKeysMap("nodeSelector/")
-    .filter { it.key != "affiliation" }
     .let { it.ifEmpty { null } }
 
 @Service
@@ -153,9 +152,7 @@ class DeploymentConfigFeature() : Feature {
                 }
 
                 adc.nodeSelector?.let { nodeSelector ->
-                    val nodeSelectorMap = nodeSelector.toMutableMap()
-                    nodeSelectorMap["affiliation"] = adc.affiliation
-                    dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelectorMap) ?: nodeSelectorMap
+                    dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelector) ?: nodeSelector
                 }
             } else if (it.resource.kind == "Deployment") {
                 val deployment: Deployment = it.resource as Deployment

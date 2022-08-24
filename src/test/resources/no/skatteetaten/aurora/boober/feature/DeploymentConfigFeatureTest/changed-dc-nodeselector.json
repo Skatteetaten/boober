@@ -69,8 +69,7 @@
         "dnsPolicy": "ClusterFirst",
         "nodeSelector": {
           "selector1": "test",
-          "selector2": "test",
-          "affiliation": "paas"
+          "selector2": "test"
         },
         "restartPolicy": "Always"
       }

@@ -292,21 +292,6 @@ fun JsonNode?.boolean(required: Boolean = false): Exception? {
     return null
 }
 
-fun JsonNode?.hasValue(value: String, required: Boolean = true): Exception? {
-    if (this == null || !this.isTextual) {
-        return if (required) {
-            IllegalArgumentException("Field is required")
-        } else {
-            null
-        }
-    }
-    return if (value != this.textValue()) {
-        return IllegalArgumentException("Must be [$value]")
-    } else {
-        null
-    }
-}
-
 fun JsonNode?.oneOf(candidates: List<String>, required: Boolean = true): Exception? {
     if (this == null || !this.isTextual) {
         return if (required) {
