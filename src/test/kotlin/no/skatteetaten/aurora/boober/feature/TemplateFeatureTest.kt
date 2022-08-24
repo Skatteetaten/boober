@@ -1,16 +1,17 @@
 package no.skatteetaten.aurora.boober.feature
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
+import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import assertk.assertThat
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEmpty
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
-import org.junit.jupiter.api.Test
-import assertk.assertions.isSuccess
 
 class TemplateFeatureTest : AbstractFeatureTest() {
 
@@ -23,28 +24,45 @@ class TemplateFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should allow template with prometheus handlers`() {
-        assertThat {
+        every { templateService.findTemplate("atomhopper") } returns jacksonObjectMapper().readTree(template)
+
+        val (validSimplePrometheus, invalidSimplePrometheus) =
             createAuroraDeploymentContext(
                 """{
                 "type" : "template",
+                "template" : "atomhopper",
+                "parameters" : {
+                  "FEED_NAME" : "simple", 
+                  "DB_NAME" : "simple", 
+                  "DOMAIN_NAME" : "simple"
+                 },
                 "prometheus": false,
                 "version": "0"
         }"""
             )
-        }.isSuccess()
 
-        assertThat {
-            createAuroraDeploymentContext(
-                """{
+        assertThat(validSimplePrometheus).isNotEmpty()
+        assertThat(invalidSimplePrometheus).isEmpty()
+
+        val (validComplexPrometheus, invalidComplexPrometheus) = createAuroraDeploymentContext(
+            """{
                 "type" : "template",
+                "template" : "atomhopper",
+                "parameters" : {
+                  "FEED_NAME" : "simple", 
+                  "DB_NAME" : "simple", 
+                  "DOMAIN_NAME" : "simple"
+                 },
                 "prometheus": {
                     "path": "none",
                     "port": "anything"
                 },
                 "version": "0"
-        }"""
-            )
-        }.isSuccess()
+            }"""
+        )
+
+        assertThat(validComplexPrometheus).isNotEmpty()
+        assertThat(invalidComplexPrometheus).isEmpty()
     }
 
     @Test
