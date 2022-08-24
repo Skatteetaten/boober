@@ -1,0 +1,48 @@
+{
+  "apiVersion": "skatteetaten.no/v1",
+  "kind": "ApplicationDeployment",
+  "metadata": {
+    "labels": {
+      "operationScope": "aos-4016",
+      "app": "pv",
+      "updatedBy": "hero",
+      "updatedAt": "0",
+      "lastUpdatedYear": "1970",
+      "affiliation": "paas",
+      "name": "pv",
+      "app.kubernetes.io/name": "pv",
+      "app.kubernetes.io/component": "backend",
+      "id": "1234567890",
+      "applicationId": "5bb890fbddab8c798456d7cff27a941e22a40779",
+      "booberDeployId": "deploy1"
+    },
+    "name": "pv",
+    "namespace": "paas-utv",
+    "uid": "123-123"
+  },
+  "spec": {
+    "applicationId": "5bb890fbddab8c798456d7cff27a941e22a40779",
+    "updatedAt": "1970-01-01T00:00:00Z",
+    "selector": {
+      "name": "pv"
+    },
+    "applicationDeploymentId": "1234567890",
+    "applicationName": "aurora-postgres-ocp4-pv",
+    "runnableType": "DeploymentConfig",
+    "applicationDeploymentName": "pv",
+    "databases": [ ],
+    "deployTag": "13",
+    "command": {
+      "overrideFiles": { },
+      "applicationDeploymentRef": {
+        "environment": "utv",
+        "application": "pv"
+      },
+      "auroraConfig": {
+        "name": "paas",
+        "refName": "master",
+        "resolvedRef": "123abb"
+      }
+    }
+  }
+}

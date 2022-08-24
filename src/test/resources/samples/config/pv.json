@@ -1,0 +1,11 @@
+{
+  "name": "pv",
+  "type": "template",
+  "template": "aurora-postgres-ocp4-pv",
+  "version": "13",
+  "parameters": {
+    "NAME": "postgres",
+    "POSTGRESQL_USER": "postgres",
+    "POSTGRESQL_PASSWORD": "postgres"
+  }
+}

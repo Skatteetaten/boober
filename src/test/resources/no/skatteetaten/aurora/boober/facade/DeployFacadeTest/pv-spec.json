@@ -1,0 +1,198 @@
+{
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/pv",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/pv"
+      }
+    ]
+  },
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
+  },
+  "namespace": {
+    "source": "static",
+    "value": "paas-utv",
+    "sources": [
+      {
+        "name": "static",
+        "value": "paas-utv"
+      }
+    ]
+  },
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
+  },
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
+  },
+  "type": {
+    "source": "pv.json",
+    "value": "template",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      },
+      {
+        "name": "pv.json",
+        "value": "template"
+      }
+    ]
+  },
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
+  },
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
+    }
+  },
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
+  },
+  "name": {
+    "source": "pv.json",
+    "value": "pv",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "pv"
+      },
+      {
+        "name": "pv.json",
+        "value": "pv"
+      }
+    ]
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "pv",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "pv"
+      }
+    ]
+  },
+  "version": {
+    "source": "pv.json",
+    "value": "13",
+    "sources": [
+      {
+        "name": "pv.json",
+        "value": "13"
+      }
+    ]
+  },
+  "parameters": {
+    "NAME": {
+      "source": "pv.json",
+      "value": "postgres",
+      "sources": [
+        {
+          "name": "pv.json",
+          "value": "postgres"
+        }
+      ]
+    },
+    "POSTGRESQL_USER": {
+      "source": "pv.json",
+      "value": "postgres",
+      "sources": [
+        {
+          "name": "pv.json",
+          "value": "postgres"
+        }
+      ]
+    },
+    "POSTGRESQL_PASSWORD": {
+      "source": "pv.json",
+      "value": "postgres",
+      "sources": [
+        {
+          "name": "pv.json",
+          "value": "postgres"
+        }
+      ]
+    }
+  },
+  "template": {
+    "source": "pv.json",
+    "value": "aurora-postgres-ocp4-pv",
+    "sources": [
+      {
+        "name": "pv.json",
+        "value": "aurora-postgres-ocp4-pv"
+      }
+    ]
+  }
+}

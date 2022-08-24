@@ -176,7 +176,8 @@ class ApplicationDeploymentFeature : Feature {
         resources.forEach {
             if (it.resource.metadata.namespace != null && it.resource.kind !in listOf(
                     "ApplicationDeployment",
-                    "RoleBinding"
+                    "RoleBinding",
+                    "PersistentVolumeClaim"
                 )
             ) {
                 modifyResource(it, "Set owner reference to ApplicationDeployment")

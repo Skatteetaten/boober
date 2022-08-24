@@ -1,0 +1,622 @@
+{
+  "applicationDeploymentRef": {
+    "source": "static",
+    "value": "utv/pv",
+    "sources": [
+      {
+        "name": "static",
+        "value": "utv/pv"
+      }
+    ]
+  },
+  "configVersion": {
+    "source": "static",
+    "value": "master",
+    "sources": [
+      {
+        "name": "static",
+        "value": "master"
+      }
+    ]
+  },
+  "namespace": {
+    "source": "static",
+    "value": "paas-utv",
+    "sources": [
+      {
+        "name": "static",
+        "value": "paas-utv"
+      }
+    ]
+  },
+  "applicationDeploymentId": {
+    "source": "static",
+    "value": "1234567890",
+    "sources": [
+      {
+        "name": "static",
+        "value": "1234567890"
+      }
+    ]
+  },
+  "alertsDefaults": {
+    "enabled": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
+    "delay": {
+      "source": "default",
+      "value": "1",
+      "sources": [
+        {
+          "name": "default",
+          "value": "1"
+        }
+      ]
+    }
+  },
+  "schemaVersion": {
+    "source": "about.json",
+    "value": "v1",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "v1"
+      }
+    ]
+  },
+  "type": {
+    "source": "pv.json",
+    "value": "template",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "deploy"
+      },
+      {
+        "name": "pv.json",
+        "value": "template"
+      }
+    ]
+  },
+  "deployState": {
+    "source": "default",
+    "value": "deploymentConfig",
+    "sources": [
+      {
+        "name": "default",
+        "value": "deploymentConfig"
+      }
+    ]
+  },
+  "applicationPlatform": {
+    "source": "default",
+    "value": "java",
+    "sources": [
+      {
+        "name": "default",
+        "value": "java"
+      }
+    ]
+  },
+  "affiliation": {
+    "source": "about.json",
+    "value": "paas",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "paas"
+      }
+    ]
+  },
+  "segment": {
+    "source": "about.json",
+    "value": "aurora",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "aurora"
+      }
+    ]
+  },
+  "cluster": {
+    "source": "utv/about.json",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "about.json",
+        "value": "utv"
+      },
+      {
+        "name": "utv/about.json",
+        "value": "utv"
+      }
+    ]
+  },
+  "permissions": {
+    "admin": {
+      "source": "about.json",
+      "value": "APP_PaaS_drift APP_PaaS_utv",
+      "sources": [
+        {
+          "name": "about.json",
+          "value": "APP_PaaS_drift APP_PaaS_utv"
+        }
+      ]
+    }
+  },
+  "envName": {
+    "source": "folderName",
+    "value": "utv",
+    "sources": [
+      {
+        "name": "folderName",
+        "value": "utv"
+      }
+    ]
+  },
+  "name": {
+    "source": "pv.json",
+    "value": "pv",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "pv"
+      },
+      {
+        "name": "pv.json",
+        "value": "pv"
+      }
+    ]
+  },
+  "env": {
+    "autoDeploy": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    }
+  },
+  "certificate": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "databaseDefaults": {
+    "flavor": {
+      "source": "default",
+      "value": "ORACLE_MANAGED",
+      "sources": [
+        {
+          "name": "default",
+          "value": "ORACLE_MANAGED"
+        }
+      ]
+    },
+    "generate": {
+      "source": "default",
+      "value": true,
+      "sources": [
+        {
+          "name": "default",
+          "value": true
+        }
+      ]
+    },
+    "ignoreMissingSchema": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
+    "tryReuse": {
+      "source": "default",
+      "value": false,
+      "sources": [
+        {
+          "name": "default",
+          "value": false
+        }
+      ]
+    },
+    "name": {
+      "source": "default",
+      "value": "@name@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@"
+        }
+      ]
+    }
+  },
+  "database": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "alarm": {
+    "source": "default",
+    "value": true,
+    "sources": [
+      {
+        "name": "default",
+        "value": true
+      }
+    ]
+  },
+  "pause": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "debug": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "artifactId": {
+    "source": "fileName",
+    "value": "pv",
+    "sources": [
+      {
+        "name": "fileName",
+        "value": "pv"
+      }
+    ]
+  },
+  "version": {
+    "source": "pv.json",
+    "value": "13",
+    "sources": [
+      {
+        "name": "pv.json",
+        "value": "13"
+      }
+    ]
+  },
+  "management": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "route": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "routeDefaults": {
+    "host": {
+      "source": "default",
+      "value": "@name@-@affiliation@-@env@",
+      "sources": [
+        {
+          "name": "default",
+          "value": "@name@-@affiliation@-@env@"
+        }
+      ]
+    },
+    "tls": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "insecurePolicy": {
+        "source": "default",
+        "value": "None",
+        "sources": [
+          {
+            "name": "default",
+            "value": "None"
+          }
+        ]
+      },
+      "termination": {
+        "source": "default",
+        "value": "edge",
+        "sources": [
+          {
+            "name": "default",
+            "value": "edge"
+          }
+        ]
+      }
+    },
+    "cname": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ttl": {
+        "source": "default",
+        "value": 300,
+        "sources": [
+          {
+            "name": "default",
+            "value": 300
+          }
+        ]
+      }
+    },
+    "azure": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "cnameTtl": {
+        "source": "default",
+        "value": 300,
+        "sources": [
+          {
+            "name": "default",
+            "value": 300
+          }
+        ]
+      }
+    }
+  },
+  "s3": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    },
+    "objectArea": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    },
+    "tenant": {
+      "source": "default",
+      "value": "paas-utv",
+      "sources": [
+        {
+          "name": "default",
+          "value": "paas-utv"
+        }
+      ]
+    }
+  },
+  "sts": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "parameters": {
+    "NAME": {
+      "source": "pv.json",
+      "value": "postgres",
+      "sources": [
+        {
+          "name": "pv.json",
+          "value": "postgres"
+        }
+      ]
+    },
+    "POSTGRESQL_USER": {
+      "source": "pv.json",
+      "value": "postgres",
+      "sources": [
+        {
+          "name": "pv.json",
+          "value": "postgres"
+        }
+      ]
+    },
+    "POSTGRESQL_PASSWORD": {
+      "source": "pv.json",
+      "value": "postgres",
+      "sources": [
+        {
+          "name": "pv.json",
+          "value": "postgres"
+        }
+      ]
+    }
+  },
+  "template": {
+    "source": "pv.json",
+    "value": "aurora-postgres-ocp4-pv",
+    "sources": [
+      {
+        "name": "pv.json",
+        "value": "aurora-postgres-ocp4-pv"
+      }
+    ]
+  },
+  "webseal": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
+  "azure": {
+    "jwtToStsConverter": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "version": {
+        "source": "default",
+        "value": "0",
+        "sources": [
+          {
+            "name": "default",
+            "value": "0"
+          }
+        ]
+      },
+      "jwksUrl": {
+        "source": "default",
+        "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
+        "sources": [
+          {
+            "name": "default",
+            "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
+          }
+        ]
+      },
+      "ivGroupsRequired": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      },
+      "ldapUserVaultName": {
+        "source": "default",
+        "value": "",
+        "sources": [
+          {
+            "name": "default",
+            "value": ""
+          }
+        ]
+      },
+      "ldapUrl": {
+        "source": "default",
+        "value": "http://localhost",
+        "sources": [
+          {
+            "name": "default",
+            "value": "http://localhost"
+          }
+        ]
+      }
+    },
+    "apim": {
+      "enabled": {
+        "source": "default",
+        "value": false,
+        "sources": [
+          {
+            "name": "default",
+            "value": false
+          }
+        ]
+      }
+    }
+  },
+  "logging": {
+    "bufferSize": {
+      "source": "default",
+      "value": 20,
+      "sources": [
+        {
+          "name": "default",
+          "value": 20
+        }
+      ]
+    }
+  },
+  "toxiproxy": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  }
+}
