@@ -99,6 +99,29 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
+    fun `Should add fluentbit sidecar if useFluentbitForTemplate is true`() {
+        val (dcResource, parserResource, configResource, secretResource) = generateResources(
+            """{
+             "type" : "template",
+             "logging": {
+                "index": "test-index"
+             },
+             "version": "0",
+             "useFluentbitForTemplate": true
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 3
+        )
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume, sidecar container and annotation")
+            .auroraResourceMatchesFile("dc.json")
+
+        assertThat(parserResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("parser.json")
+
+        assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
+
+        assertThat(secretResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("secret.json")
+    }
+
+    @Test
     fun `should add splunk connect annotations for cronjob and no sidecar`() {
         val (dcResource) = generateResources(
             """{
