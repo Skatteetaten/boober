@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -100,7 +101,7 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `Should add fluentbit sidecar if useFluentbitForTemplate is true`() {
-        val (dcResource, parserResource, configResource, secretResource) = generateResources(
+        val (dcResource, _, _, _) = generateResources(
             """{
              "type" : "template",
              "logging": {
@@ -111,14 +112,10 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
            }""",
             createEmptyDeploymentConfig(), emptyList(), 3
         )
-        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added fluentbit volume, sidecar container and annotation")
-            .auroraResourceMatchesFile("dc.json")
 
-        assertThat(parserResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("parser.json")
-
-        assertThat(configResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("config.json")
-
-        assertThat(secretResource).auroraResourceCreatedByThisFeature().auroraResourceMatchesFile("secret.json")
+        val dc = dcResource.resource as DeploymentConfig
+        val containerNames = dc.spec.template.spec.containers.map { it.name }
+        assertThat(containerNames).contains("simple-fluent-sidecar")
     }
 
     @Test
