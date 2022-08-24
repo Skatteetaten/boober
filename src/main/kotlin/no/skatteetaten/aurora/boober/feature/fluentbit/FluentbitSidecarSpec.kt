@@ -46,7 +46,8 @@ data class LoggingConfig(
     val excludePattern: String
 )
 
-fun AuroraDeploymentSpec.shouldCreateFluentbitContainer(): Boolean = this.type in fluentbitContainerSupportedTypes
+fun AuroraDeploymentSpec.shouldCreateFluentbitContainer(): Boolean =
+    this.type in fluentbitContainerSupportedTypes || this["useFluentbitForTemplate"]
 
 fun AuroraDeploymentSpec.validateFluentbit(): List<Exception> {
     val loggingField = this.getSubKeyValues(FEATURE_FIELD_NAME)
@@ -150,7 +151,8 @@ fun AuroraDeploymentSpec.isFluentbitDisabled(): Boolean {
     return isNotcustomConfig && loggingIndexNotSet
 }
 
-val supportedFluentbitSourcetypes = listOf("_json", "access_combined", "gc_log", "log4j", "evalevent_xml", "ats:eval:xml")
+val supportedFluentbitSourcetypes =
+    listOf("_json", "access_combined", "gc_log", "log4j", "evalevent_xml", "ats:eval:xml")
 
 fun logTypeToSourcetype(logType: String): String =
     when (logType) {
