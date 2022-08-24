@@ -91,7 +91,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }
 
         cantusMock {
-            rule({ path.endsWith("/manifest") }) {
+            rule({ path?.endsWith("/manifest") }) {
                 val cantusManifestResponseFile = "cantusManifestFailureResponse.json"
                 MockResponse()
                     .setBody(loadBufferResource(cantusManifestResponseFile))
@@ -108,7 +108,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         dbhMock {
             rule({
-                path.contains("application%3Dsimple")
+                path?.contains("application%3Dsimple")
             }) {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
@@ -216,7 +216,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }
 
         dbhMock {
-            rule({ method == "GET" && (path.contains("123-456") || path.contains("complex")) }) {
+            rule({ method == "GET" && (path!!.contains("123-456") || path!!.contains("complex")) }) {
                 MockResponse()
                     .setBody(loadBufferResource("dbhResponse.json"))
                     .setResponseCode(200)
@@ -237,7 +237,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
         }
 
         cantusMock {
-            rule({ path.endsWith("/manifest") }) {
+            rule({ path?.endsWith("/manifest") }) {
                 val cantusManifestResponseFile =
                     if (app == "whoami") "cantusManifestResponse.json" else "cantusManifestFailureResponse.json"
                 MockResponse()
@@ -255,7 +255,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         openShiftMock {
 
-            rule({ path.contains("storagegrid") }) {
+            rule({ path?.contains("storagegrid") }) {
                 MockResponse()
                     .setBody(createSgoaResponse(app))
                     .setResponseCode(200)
@@ -300,7 +300,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
 
         bitbucketMock {
             rule({ method == "GET" }) {
-                val requestedFile = this.requestUrl.pathSegments().last()
+                val requestedFile = this.requestUrl!!.pathSegments.last()
                 val templateJson = ResourceLoader().loadResource(requestedFile, "samples/config/templates")
                 MockResponse().setBody(templateJson).setResponseCode(200)
             }
@@ -462,7 +462,7 @@ class DeployFacadeTest : AbstractSpringBootAuroraConfigTest() {
     private fun mockHerkimerRequests() {
         val adId = "1234567890"
         applicationDeploymentGenerationMock(adId) {
-            rule({ path.contains("resource?claimedBy=$adId") }) {
+            rule({ path?.contains("resource?claimedBy=$adId") }) {
                 MockResponse()
                     .setBody(loadBufferResource("herkimerResponseBucketAdminSG.json"))
                     .setHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)

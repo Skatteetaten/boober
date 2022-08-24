@@ -305,19 +305,19 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
 
         httpMockServer(5000) {
             rule({
-                path.contains("/schema/") && method == "GET"
+                path!!.contains("/schema/") && method == "GET"
             }) {
                 json(DbApiEnvelope("ok", emptyList<Any>()))
             }
 
             rule({
-                path.contains("/restorableSchema/") && method == "GET" && path.contains(barSchema.databaseSchema.id)
+                path!!.contains("/restorableSchema/") && method == "GET" && path!!.contains(barSchema.databaseSchema.id)
             }) {
                 json(DbApiEnvelope("ok", listOf(barSchema)))
             }
 
             rule({
-                path.contains("/restorableSchema/") && method == "GET"
+                path!!.contains("/restorableSchema/") && method == "GET"
             }) {
                 json(DbApiEnvelope("ok", listOf(fooSchema)))
             }
@@ -404,7 +404,7 @@ class DatabaseFeatureTest : AbstractFeatureTest() {
     @Test
     fun `when ignoreMissingSchema is true and generate is false then it should generate resource if schema is found`() {
         httpMockServer(5000) {
-            rule({ method == "GET" && path.contains("foo") }) {
+            rule({ method == "GET" && path!!.contains("foo") }) {
                 json(DbApiEnvelope("ok", listOf(schema)))
             }
             rule({ method == "GET" }) {

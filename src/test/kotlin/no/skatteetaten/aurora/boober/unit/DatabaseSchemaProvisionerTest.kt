@@ -269,33 +269,33 @@ class DatabaseSchemaProvisionerTest {
         httpMockServer(5000) {
             if (failRequest != null) {
                 rule({
-                    method == failRequest.method && path.contains(failRequest.path)
+                    method == failRequest.method && path!!.contains(failRequest.path)
                 }) {
                     MockResponse().setResponseCode(500)
                 }
             }
 
             rule({
-                path.contains("restorableSchema/") && method == "GET"
+                path!!.contains("restorableSchema/") && method == "GET"
             }) {
                 json(DbApiEnvelope("ok", cooldownSchemaId?.let { listOf(createRestorableSchema(it)) } ?: emptyList()))
             }
 
             rule({
-                method == "PATCH" && path.contains("restorableSchema")
+                method == "PATCH" && path!!.contains("restorableSchema")
             }) {
                 json(DbApiEnvelope("ok", cooldownSchemaId?.let { listOf(createDbhSchema(it)) } ?: emptyList()))
             }
 
             rule({
-                method == "POST" && path.contains("schema/")
+                method == "POST" && path!!.contains("schema/")
             }) {
                 json(DbApiEnvelope("ok", listOf(createDbhSchema(UUID.randomUUID().toString()))))
             }
 
             rule({
                 method == "GET" &&
-                    (path.matches(Regex(""".+/schema/\?labels=.+&engine=\w+""")) || path.matches(Regex(""".+/schema/[\w\d]+""")))
+                    (path!!.matches(Regex(""".+/schema/\?labels=.+&engine=\w+""")) || path!!.matches(Regex(""".+/schema/[\w\d]+""")))
             }) {
                 json(DbApiEnvelope("ok", activeSchemaId?.let { listOf(createDbhSchema(it)) } ?: emptyList()))
             }
