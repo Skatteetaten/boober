@@ -161,6 +161,28 @@
         "restartPolicy": "Always",
         "serviceAccount": "",
         "serviceAccountName": "",
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "template"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "template"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          }
+        ],
         "volumes": [
           {
             "emptyDir": { },

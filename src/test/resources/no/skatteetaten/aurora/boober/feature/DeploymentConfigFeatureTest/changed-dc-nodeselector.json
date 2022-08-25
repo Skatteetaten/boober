@@ -71,7 +71,29 @@
           "selector1": "test",
           "selector2": "test"
         },
-        "restartPolicy": "Always"
+        "restartPolicy": "Always",
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "simple"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "simple"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          }
+        ]
       }
     },
     "triggers": [
