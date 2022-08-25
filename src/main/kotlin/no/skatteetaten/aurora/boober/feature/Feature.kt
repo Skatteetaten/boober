@@ -227,7 +227,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
                 validator = {
                     it.allowedPattern(
                         "^[a-z][-a-z0-9]{0,38}[a-z0-9]$",
-                        "Name must be alphanumeric and no more than 40 characters",
+                        "The first character of name must be a letter [a-z] and the last character must be alphanumeric. Total length needs to be no more than 40 characters. The rest of the characters can be alphanumeric or a hyphen.",
                         false
                     )
                 },
