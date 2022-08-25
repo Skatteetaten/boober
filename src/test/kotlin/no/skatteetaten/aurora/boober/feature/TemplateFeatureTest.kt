@@ -1,16 +1,17 @@
 package no.skatteetaten.aurora.boober.feature
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
+import org.junit.jupiter.api.Test
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import assertk.assertThat
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNotEmpty
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.service.AuroraTemplateService
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
-import org.junit.jupiter.api.Test
-import assertk.assertions.isSuccess
 
 class TemplateFeatureTest : AbstractFeatureTest() {
 
@@ -23,26 +24,45 @@ class TemplateFeatureTest : AbstractFeatureTest() {
 
     @Test
     fun `should allow template with prometheus handlers`() {
-        assertThat {
+        every { templateService.findTemplate("atomhopper") } returns jacksonObjectMapper().readTree(template)
+
+        val (validSimplePrometheus, invalidSimplePrometheus) =
             createAuroraDeploymentContext(
                 """{
                 "type" : "template",
-                "prometheus": false
+                "template" : "atomhopper",
+                "parameters" : {
+                  "FEED_NAME" : "simple", 
+                  "DB_NAME" : "simple", 
+                  "DOMAIN_NAME" : "simple"
+                 },
+                "prometheus": false,
+                "version": "0"
         }"""
             )
-        }.isSuccess()
 
-        assertThat {
-            createAuroraDeploymentContext(
-                """{
+        assertThat(validSimplePrometheus).isNotEmpty()
+        assertThat(invalidSimplePrometheus).isEmpty()
+
+        val (validComplexPrometheus, invalidComplexPrometheus) = createAuroraDeploymentContext(
+            """{
                 "type" : "template",
+                "template" : "atomhopper",
+                "parameters" : {
+                  "FEED_NAME" : "simple", 
+                  "DB_NAME" : "simple", 
+                  "DOMAIN_NAME" : "simple"
+                 },
                 "prometheus": {
                     "path": "none",
                     "port": "anything"
-                }
-        }"""
-            )
-        }.isSuccess()
+                },
+                "version": "0"
+            }"""
+        )
+
+        assertThat(validComplexPrometheus).isNotEmpty()
+        assertThat(invalidComplexPrometheus).isEmpty()
     }
 
     @Test
@@ -51,10 +71,31 @@ class TemplateFeatureTest : AbstractFeatureTest() {
         assertThat {
             createAuroraDeploymentContext(
                 """{ 
-            "type" : "template"
+            "type" : "template",
+            "version": "0"
             }"""
             )
         }.singleApplicationErrorResult("Template is required")
+    }
+
+    @Test
+    fun `should get error when version is missing`() {
+
+        every { templateService.findTemplate("atomhopper") } returns jacksonObjectMapper().readTree(template)
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+            "type" : "template", 
+            "template" : "atomhopper",
+            "parameters" : {
+              "FEED_NAME" : "simple", 
+              "DB_NAME" : "simple", 
+              "DOMAIN_NAME" : "simple"
+             }
+            }"""
+            )
+        }.singleApplicationErrorResult("Field is required")
     }
 
     @Test
@@ -66,7 +107,8 @@ class TemplateFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 """{ 
             "type" : "template",
-            "template" : "atomhopper"
+            "template" : "atomhopper",
+            "version": "0"
             }"""
             )
         }.singleApplicationErrorResult("Required template parameters [FEED_NAME, DB_NAME] not set")
@@ -81,7 +123,8 @@ class TemplateFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 """{ 
             "type" : "template",
-            "template" : "atomhopper"
+            "template" : "atomhopper",
+            "version": "0"
             }"""
             )
         }.singleApplicationErrorResult("Could not find template=atomhopper")
@@ -100,7 +143,8 @@ class TemplateFeatureTest : AbstractFeatureTest() {
               "FEED_NAME" : "simple", 
               "DB_NAME" : "simple", 
               "DOMAIN_NAME" : "simple"
-             }
+             },
+            "version": "0"
            }""",
             resource = createEmptyApplicationDeployment(),
             createdResources = 4
