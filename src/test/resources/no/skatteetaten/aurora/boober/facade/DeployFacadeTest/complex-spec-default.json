@@ -1621,6 +1621,16 @@
       }
     }
   },
+  "useFluentbitForTemplate": {
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
+      }
+    ]
+  },
   "logging": {
     "index": {
       "source": "complex.json",

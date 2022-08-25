@@ -181,6 +181,7 @@ utv/about-alternate.json |   ignoreMissingSchema: true
             complex.json |   groups: []
                          |   apim:
                  default |     enabled: false
+                 default | useFluentbitForTemplate: false
                          | logging:
             complex.json |   index: "test-index"
                  default |   bufferSize: 20
