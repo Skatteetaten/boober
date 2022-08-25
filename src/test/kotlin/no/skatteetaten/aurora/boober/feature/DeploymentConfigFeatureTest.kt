@@ -230,4 +230,26 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
 
         assertThat(dcResource).auroraResourceMatchesFile("changed-dc-template.json")
     }
+
+    @Test
+    fun `modify dc add nodeSelectors`() {
+
+        val (dcResource) = generateResources(
+            app = """{
+                "groupId": "no.skatteetaten.aurora",
+                "version" : "1",
+                "nodeSelector": {
+                    "selector1": "test",
+                    "selector2": "test"
+                }
+           }""",
+            resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
+            files = listOf(AuroraConfigFile("simple.json", """{ "pause" : true }""", override = true)),
+            createdResources = 0
+        )
+
+        assertThat(dcResource).auroraResourceModifiedByThisFeatureWithComment("Added labels, annotations")
+
+        assertThat(dcResource).auroraResourceMatchesFile("changed-dc-nodeselector.json")
+    }
 }

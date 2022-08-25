@@ -15,6 +15,9 @@
     "port": "8081",
     "path": "/foobar"
   },
+  "nodeSelector": {
+    "type": "test"
+  },
   "serviceAccount": "aurora-fraggle",
   "mounts": {
     "aurora-token": {

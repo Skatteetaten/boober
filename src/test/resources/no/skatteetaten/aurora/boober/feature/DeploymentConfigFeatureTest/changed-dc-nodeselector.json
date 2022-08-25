@@ -1,0 +1,93 @@
+{
+  "apiVersion": "apps.openshift.io/v1",
+  "kind": "DeploymentConfig",
+  "metadata": {
+    "labels": {
+      "deployTag": "1",
+      "app.kubernetes.io/version": "1",
+      "paused": "true"
+    },
+    "name": "simple",
+    "namespace": "paas-utv"
+  },
+  "spec": {
+    "replicas": 0,
+    "selector": {
+      "name": "simple"
+    },
+    "strategy": {
+      "rollingParams": {
+        "intervalSeconds": 1,
+        "maxSurge": "25%",
+        "maxUnavailable": 0,
+        "timeoutSeconds": 180,
+        "updatePeriodSeconds": 1
+      },
+      "type": "Rolling"
+    },
+    "template": {
+      "metadata": {
+        "annotations": {
+          "boober.skatteetaten.no/deployTag": "1"
+        },
+        "labels": {
+          "deployTag": "1",
+          "app.kubernetes.io/version": "1",
+          "paused": "true"
+        }
+      },
+      "spec": {
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "OPENSHIFT_CLUSTER",
+                "value": "utv"
+              },
+              {
+                "name": "APP_NAME",
+                "value": "simple"
+              },
+              {
+                "name": "AURORA_KLIENTID",
+                "value": "aurora/simple/${APP_VERSION}"
+              }
+            ],
+            "name": "simple",
+            "resources": {
+              "limits": {
+                "cpu": "2000m",
+                "memory": "512Mi"
+              },
+              "requests": {
+                "cpu": "10m",
+                "memory": "128Mi"
+              }
+            }
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "nodeSelector": {
+          "selector1": "test",
+          "selector2": "test"
+        },
+        "restartPolicy": "Always"
+      }
+    },
+    "triggers": [
+      {
+        "imageChangeParams": {
+          "automatic": true,
+          "containerNames": [
+            "simple"
+          ],
+          "from": {
+            "kind": "ImageStreamTag",
+            "name": "simple:default"
+          }
+        },
+        "type": "ImageChange"
+      }
+    ]
+  }
+}

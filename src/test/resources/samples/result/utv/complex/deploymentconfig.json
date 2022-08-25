@@ -582,6 +582,9 @@
           }
         ],
         "dnsPolicy": "ClusterFirst",
+        "nodeSelector": {
+          "type": "test"
+        },
         "restartPolicy": "Always",
         "serviceAccount": "aurora-fraggle",
         "volumes": [
