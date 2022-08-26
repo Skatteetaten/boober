@@ -139,7 +139,7 @@ abstract class AbstractSpringBootTest : ResourceLoader() {
 
         return herkimerMock {
             rule({
-                path.contains("applicationDeployment")
+                path!!.contains("applicationDeployment")
             }) {
                 json(HerkimerResponse(items = listOf(ad)))
             }

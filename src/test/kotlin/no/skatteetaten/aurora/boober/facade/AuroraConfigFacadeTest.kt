@@ -46,7 +46,7 @@ class AuroraConfigFacadeTest(
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
 
         applicationDeploymentGenerationMock {
-            rule({ path.contains("resource?claimedBy=$booberAdId") }) {
+            rule({ path?.contains("resource?claimedBy=$booberAdId") }) {
                 val folder = "$packageName/DeployFacadeTest"
                 MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", folder))
                     .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
@@ -439,7 +439,7 @@ class AuroraConfigFacadeTest(
         }
 
         cantusMock {
-            rule({ path.endsWith("/manifest") }) {
+            rule({ path?.endsWith("/manifest") }) {
                 val cantusManifestResponseFile = "cantusManifestResponse.json"
                 MockResponse()
                     .setBody(loadBufferResource(cantusManifestResponseFile, "$packageName/DeployFacadeTest"))
@@ -456,7 +456,7 @@ class AuroraConfigFacadeTest(
 
         bitbucketMock {
             rule {
-                mockJsonFromFile(this.requestUrl.pathSegments().last())
+                mockJsonFromFile(this.requestUrl!!.pathSegments.last())
             }
         }
 
