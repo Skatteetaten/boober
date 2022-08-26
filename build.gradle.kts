@@ -19,6 +19,7 @@ dependencies {
     implementation("org.bouncycastle:bcprov-jdk15on:1.70")
     implementation("com.github.ben-manes.caffeine:caffeine:3.1.1")
     implementation("org.apache.commons:commons-text:1.9")
+    implementation("commons-io:commons-io:2.11.0")
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.3")
 
