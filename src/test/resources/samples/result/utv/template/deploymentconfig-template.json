@@ -33,7 +33,16 @@
       "name": "template"
     },
     "strategy": {
-      "resources": { },
+      "resources": {
+        "limits": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        }
+      },
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
