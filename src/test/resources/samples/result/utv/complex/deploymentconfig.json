@@ -587,6 +587,28 @@
         },
         "restartPolicy": "Always",
         "serviceAccount": "aurora-fraggle",
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "komplex"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "komplex"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          }
+        ],
         "volumes": [
           {
             "emptyDir": { },

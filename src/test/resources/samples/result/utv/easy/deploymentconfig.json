@@ -284,6 +284,28 @@
         ],
         "dnsPolicy": "ClusterFirst",
         "restartPolicy": "Always",
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "easy"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "easy"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          }
+        ],
         "volumes": [
           {
             "emptyDir": { },
