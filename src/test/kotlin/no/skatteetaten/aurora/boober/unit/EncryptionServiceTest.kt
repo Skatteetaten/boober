@@ -7,10 +7,10 @@ import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.service.EncryptionService
 import org.junit.jupiter.api.Test
 import java.util.Base64
-import no.skatteetaten.aurora.boober.service.EncryptorWrapper
+import no.skatteetaten.aurora.boober.service.EncryptionWrapper
 
 class EncryptionServiceTest {
-    val encryptor = EncryptorWrapper(
+    val encryptor = EncryptionWrapper(
         "komogsyngensang"
     )
     val service = EncryptionService(encryptor, AuroraMetrics(Metrics.globalRegistry))

@@ -10,7 +10,7 @@ import no.skatteetaten.aurora.boober.TargetDomain
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.AuroraVaultServiceException
 import no.skatteetaten.aurora.boober.service.EncryptionService
-import no.skatteetaten.aurora.boober.service.EncryptorWrapper
+import no.skatteetaten.aurora.boober.service.EncryptionWrapper
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
@@ -169,18 +169,20 @@ class VaultService(
     }
 
     fun reencryptVaultCollection(vaultCollectionName: String, newKey: String) {
-
         val vaults = findAllVaultsInVaultCollection(vaultCollectionName)
+
         vaults.forEach { vault: EncryptedFileVault ->
-            val newEncryptorWrapper = EncryptorWrapper(encryptionService.encryptor.key)
-            val newEncryptionService =
-                EncryptionService(newEncryptorWrapper, encryptionService.metrics)
+            val newEncryptionService = EncryptionService(
+                EncryptionWrapper(newKey),
+                encryptionService.metrics
+            )
+
             val vaultCopy = EncryptedFileVault.createFromFolder(
                 vault.vaultFolder,
                 newEncryptionService::encrypt,
                 encryptionService::decrypt
             )
-            vaultCopy.secrets.forEach { t, u -> vaultCopy.updateFile(t, u) }
+            vaultCopy.secrets.forEach { (t, u) -> vaultCopy.updateFile(t, u) }
         }
     }
 
