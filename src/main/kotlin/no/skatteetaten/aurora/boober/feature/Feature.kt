@@ -134,7 +134,7 @@ enum class ApplicationPlatform(val baseImageName: String, val baseImageVersion: 
 }
 
 enum class TemplateType(
-    val versionAndGroupRequired: Boolean = true,
+    val isGroupIdRequired: Boolean = true,
     val auroraGeneratedDeployment: Boolean = true
 ) {
     cronjob(auroraGeneratedDeployment = false),

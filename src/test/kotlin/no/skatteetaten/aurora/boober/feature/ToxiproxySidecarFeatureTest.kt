@@ -414,7 +414,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
         httpMockServer(5000) {
             rule {
                 when {
-                    path.contains("name%3Ddb1") ->
+                    path!!.contains("name%3Ddb1") ->
                         json(
                             DbApiEnvelope(
                                 "ok",
@@ -427,7 +427,7 @@ class ToxiproxySidecarFeatureTest : AbstractMultiFeatureTest() {
                                 )
                             )
                         )
-                    path.contains("name%3Ddb2") ->
+                    path!!.contains("name%3Ddb2") ->
                         json(
                             DbApiEnvelope(
                                 "ok",

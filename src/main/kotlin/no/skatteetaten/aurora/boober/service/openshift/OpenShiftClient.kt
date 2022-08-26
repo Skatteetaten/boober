@@ -71,8 +71,9 @@ data class OpenShiftResponse(
 
     companion object {
         fun fromOpenShiftException(e: OpenShiftException, command: OpenshiftCommand): OpenShiftResponse {
-            val response = if (e.cause is HttpClientErrorException) {
-                val body = e.cause.responseBodyAsString
+            val cause = e.cause
+            val response = if (cause is HttpClientErrorException) {
+                val body = cause.responseBodyAsString
                 try {
                     jacksonObjectMapper().readValue<JsonNode>(body)
                 } catch (je: Exception) {
@@ -81,8 +82,8 @@ data class OpenShiftResponse(
             } else {
                 null
             }
-            val httpCode = if (e.cause is HttpClientErrorException) {
-                e.cause.statusCode.value()
+            val httpCode = if (cause is HttpClientErrorException) {
+                cause.statusCode.value()
             } else {
                 null
             }

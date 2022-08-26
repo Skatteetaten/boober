@@ -87,7 +87,8 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
              "type" : "template",
              "logging": {
                 "index": "test-index"
-             }
+             },
+             "version": "0"
            }""",
             createEmptyDeploymentConfig(), emptyList(), 0
         )

@@ -141,7 +141,8 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
     fun `template type should not have default resource requirements`() {
         val spec = createAuroraDeploymentSpecForFeature(
             """{
-           "type": "template"
+           "type": "template",
+           "version": "0"
         }"""
         )
 
