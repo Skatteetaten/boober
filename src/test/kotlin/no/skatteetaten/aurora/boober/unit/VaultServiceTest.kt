@@ -325,7 +325,7 @@ class VaultServiceTest {
     }
 
     @Test
-    fun `reencrypt should work`() {
+    fun `should be able to reencrypt a vaultcollection`() {
         val customCollectionName = "aup"
         recreateRepo(File(REMOTE_REPO_FOLDER, "$customCollectionName.git"))
 
