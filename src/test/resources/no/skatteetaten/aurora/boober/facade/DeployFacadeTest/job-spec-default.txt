@@ -63,6 +63,6 @@ utv/about.json | cluster: "utv"
       job.json |     keys: ["BAR","FOO"]
       job.json |     keyMappings: {"BAR":"BAZ"}
        default | sts: false
-       default | useFluentbitForTemplate: false
                | logging:
+       default |   enableForAdditionalTypes: false
        default |   bufferSize: 20

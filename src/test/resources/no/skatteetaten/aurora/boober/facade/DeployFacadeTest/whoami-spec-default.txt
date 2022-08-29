@@ -81,7 +81,7 @@ utv/about.json | cluster: "utv"
        default |     ldapUrl: "http://localhost"
                |   apim:
        default |     enabled: false
-       default | useFluentbitForTemplate: false
                | logging:
+       default |   enableForAdditionalTypes: false
        default |   bufferSize: 20
    whoami.json | toxiproxy: true
