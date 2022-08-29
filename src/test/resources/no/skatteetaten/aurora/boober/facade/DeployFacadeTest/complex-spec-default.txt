@@ -182,7 +182,6 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          |   apim:
                  default |     enabled: false
                          | logging:
-                 default |   enableForAdditionalTypes: false
             complex.json |   index: "test-index"
                  default |   bufferSize: 20
                  default | toxiproxy: false

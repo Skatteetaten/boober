@@ -78,6 +78,5 @@ utv/python.json | sts: true
                 |   apim:
         default |     enabled: false
                 | logging:
-        default |   enableForAdditionalTypes: false
         default |   bufferSize: 20
         default | toxiproxy: false

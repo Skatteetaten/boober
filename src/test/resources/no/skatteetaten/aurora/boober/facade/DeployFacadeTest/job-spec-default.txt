@@ -64,5 +64,4 @@ utv/about.json | cluster: "utv"
       job.json |     keyMappings: {"BAR":"BAZ"}
        default | sts: false
                | logging:
-       default |   enableForAdditionalTypes: false
        default |   bufferSize: 20

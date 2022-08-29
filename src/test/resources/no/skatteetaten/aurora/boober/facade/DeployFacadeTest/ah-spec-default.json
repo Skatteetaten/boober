@@ -610,16 +610,6 @@
     }
   },
   "logging": {
-    "enableForAdditionalTypes": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    },
     "bufferSize": {
       "source": "default",
       "value": 20,

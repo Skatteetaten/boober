@@ -1622,16 +1622,6 @@
     }
   },
   "logging": {
-    "enableForAdditionalTypes": {
-      "source": "default",
-      "value": false,
-      "sources": [
-        {
-          "name": "default",
-          "value": false
-        }
-      ]
-    },
     "index": {
       "source": "complex.json",
       "value": "test-index",

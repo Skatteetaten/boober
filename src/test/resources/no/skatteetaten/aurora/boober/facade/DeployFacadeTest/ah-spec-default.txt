@@ -70,6 +70,5 @@ utv/about.json | cluster: "utv"
                |   apim:
        default |     enabled: false
                | logging:
-       default |   enableForAdditionalTypes: false
        default |   bufferSize: 20
        default | toxiproxy: false

@@ -89,7 +89,6 @@ class FluentbitSidecarFeature(
         }
 
         return setOf(
-            AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/enableForAdditionalTypes", defaultValue = false),
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/index"),
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/bufferSize", defaultValue = 20)
         ) + loggers + customLogger + header.versionHandler + additionalTypesConfigHandlers
