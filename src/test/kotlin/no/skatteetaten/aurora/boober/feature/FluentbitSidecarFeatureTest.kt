@@ -100,25 +100,6 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
     }
 
     @Test
-    fun `Should add fluentbit sidecar if useFluentbitForTemplate is true`() {
-        val (dcResource, _, _, _) = generateResources(
-            """{
-             "type" : "template",
-             "logging": {
-                "index": "test-index"
-             },
-             "version": "0",
-             "useFluentbitForTemplate": true
-           }""",
-            createEmptyDeploymentConfig(), emptyList(), 3
-        )
-
-        val dc = dcResource.resource as DeploymentConfig
-        val containerNames = dc.spec.template.spec.containers.map { it.name }
-        assertThat(containerNames).contains("simple-fluent-sidecar")
-    }
-
-    @Test
     fun `should add splunk connect annotations for cronjob and no sidecar`() {
         val (dcResource) = generateResources(
             """{
@@ -361,6 +342,31 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
            }""",
             )
         }.singleApplicationErrorResult("Missing required field logging/index")
+    }
+
+    @ValueSource(strings = ["localTemplate", "template"])
+    @ParameterizedTest
+    fun `Should be able to activate fluentbit sidecar for localTemplate type when configured`(type: TemplateType) {
+        val (dcResource, parserResource, configResource, secretResource) = generateResources(
+            """{
+                
+            "type": "$type",
+            "version": "0",
+             "logging" : {
+                "index": "something",
+                "enableForAdditionalTypes": {
+                    "localTemplate": "true",
+                    "template": "true"
+                }
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 3
+        )
+        val dc = dcResource.resource as DeploymentConfig
+        val containers = dc.spec.template.spec.containers
+        assertThat(containers.size).isEqualTo(2)
+
+        assertThat(containers.last().name).isEqualTo("simple-fluent-sidecar")
     }
 
     @Test
