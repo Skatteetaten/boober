@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import assertk.assertThat
+import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
@@ -342,6 +343,31 @@ class FluentbitSidecarFeatureTest : AbstractFeatureTest() {
            }""",
             )
         }.singleApplicationErrorResult("Missing required field logging/index")
+    }
+
+    @ValueSource(strings = ["localTemplate", "template"])
+    @ParameterizedTest
+    fun `Should be able to activate fluentbit sidecar for localTemplate type when configured`(type: TemplateType) {
+        val (dcResource, parserResource, configResource, secretResource) = generateResources(
+            """{
+                
+            "type": "$type",
+            "version": "0",
+             "logging" : {
+                "index": "something",
+                "enableForAdditionalTypes": {
+                    "localTemplate": "true",
+                    "template": "true"
+                }
+             } 
+           }""",
+            createEmptyDeploymentConfig(), emptyList(), 3
+        )
+        val dc = dcResource.resource as DeploymentConfig
+        val containers = dc.spec.template.spec.containers
+        assertThat(containers.size).isEqualTo(2)
+
+        assertThat(containers.last().name).isEqualTo("simple-fluent-sidecar")
     }
 
     @Test
