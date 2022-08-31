@@ -12,8 +12,6 @@ import org.apache.http.conn.ssl.SSLConnectionSocketFactory
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.ssl.SSLContexts
-import org.encryptor4j.factory.AbsKeyFactory
-import org.encryptor4j.factory.KeyFactory
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -58,9 +56,6 @@ class Configuration {
     ): OpenShiftResourceClient {
         return OpenShiftResourceClient(serviceAccountTokenProvider, restTemplateWrapper)
     }
-
-    @Bean
-    fun keyFactory(): KeyFactory = object : AbsKeyFactory("AES", 128) {}
 
     @Bean
     @Primary

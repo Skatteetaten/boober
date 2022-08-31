@@ -1,5 +1,9 @@
 package no.skatteetaten.aurora.boober.unit
 
+import java.io.File
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import assertk.all
 import assertk.assertThat
 import assertk.assertions.containsAll
@@ -9,11 +13,13 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFailure
 import assertk.assertions.isFalse
 import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotEqualTo
 import assertk.assertions.isNotNull
 import assertk.assertions.isNull
 import assertk.assertions.isSuccess
 import assertk.assertions.isTrue
 import assertk.assertions.messageContains
+import io.micrometer.core.instrument.Metrics
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry
 import io.mockk.clearAllMocks
 import io.mockk.every
@@ -22,16 +28,13 @@ import io.mockk.slot
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.EncryptionWrapper
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
 import no.skatteetaten.aurora.boober.service.vault.VaultService
 import no.skatteetaten.aurora.boober.utils.recreateFolder
 import no.skatteetaten.aurora.boober.utils.recreateRepo
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Test
-import org.springframework.security.core.authority.SimpleGrantedAuthority
-import java.io.File
 
 class VaultServiceTest {
 
@@ -72,6 +75,10 @@ class VaultServiceTest {
         every {
             encryptionService.encrypt(capture(encrypt))
         } answers { String(encrypt.captured) }
+
+        every {
+            encryptionService.metrics
+        } returns AuroraMetrics(Metrics.globalRegistry)
     }
 
     @Test
@@ -315,5 +322,35 @@ class VaultServiceTest {
 
         assertThat(vaultKeys.size).isEqualTo(3)
         assertThat(vaultKeys).containsAll("key1", "key2", "key3")
+    }
+
+    @Test
+    fun `should be able to reencrypt a vaultcollection`() {
+        val customCollectionName = "aup"
+        recreateRepo(File(REMOTE_REPO_FOLDER, "$customCollectionName.git"))
+
+        val realEncryptionService =
+            EncryptionService(EncryptionWrapper("Somekye"), AuroraMetrics(Metrics.globalRegistry))
+
+        val vaultServiceWithEncryption =
+            VaultService(vaultService.gitService, realEncryptionService, userDetailsProvider)
+
+        val vault =
+            vaultServiceWithEncryption.createOrUpdateFileInVault(
+                vaultCollectionName = customCollectionName,
+                vaultName = "somevault",
+                fileName = "passwords.properties",
+                fileContents = "SERVICE_PASSWORD=FOO".toByteArray()
+            )
+
+        val oldEncryptedFileContent = vault.files.first().readText()
+
+        vaultServiceWithEncryption.reencryptVaultCollection(customCollectionName, "thisisanewkey")
+
+        val newVault = vaultServiceWithEncryption.findVault(customCollectionName, "somevault")
+
+        val newEncryptedFileContent = newVault.files.first().readText()
+
+        assertThat(oldEncryptedFileContent).isNotEqualTo(newEncryptedFileContent)
     }
 }

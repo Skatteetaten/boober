@@ -5,26 +5,27 @@ import assertk.assertions.isEqualTo
 import io.micrometer.core.instrument.Metrics
 import no.skatteetaten.aurora.AuroraMetrics
 import no.skatteetaten.aurora.boober.service.EncryptionService
-import org.encryptor4j.factory.AbsKeyFactory
-import org.encryptor4j.factory.KeyFactory
 import org.junit.jupiter.api.Test
 import java.util.Base64
+import no.skatteetaten.aurora.boober.service.EncryptionWrapper
 
 class EncryptionServiceTest {
-
-    val keyFactory: KeyFactory = object : AbsKeyFactory("AES", 128) {}
-
-    val service = EncryptionService(
-        "komogsyngensang",
-        keyFactory,
-        AuroraMetrics(Metrics.globalRegistry)
+    val encryptor = EncryptionWrapper(
+        "komogsyngensang"
     )
+    val service = EncryptionService(encryptor, AuroraMetrics(Metrics.globalRegistry))
 
     val message = "FOO=BAR".toByteArray()
 
     @Test
     fun `test encrypt and decrypt`() {
         val encrypted = service.encrypt(message)
+
+        assertThat(encrypted).isEqualTo(
+            "Boober:2\n" +
+                "OBd4no2FtIijAmEN8sgYgw=="
+        )
+
         val result = service.decrypt(encrypted)
         assertThat(result).isEqualTo(message)
     }

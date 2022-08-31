@@ -1,17 +1,12 @@
 package no.skatteetaten.aurora.boober.service
 
-import no.skatteetaten.aurora.AuroraMetrics
-import org.encryptor4j.Encryptor
-import org.encryptor4j.factory.KeyFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import java.security.Security
 import java.util.Base64
+import org.springframework.stereotype.Service
+import no.skatteetaten.aurora.AuroraMetrics
 
 @Service
 class EncryptionService(
-    @Value("\${boober.encrypt.key}") val key: String,
-    val keyFactory: KeyFactory,
+    val encryptor: EncryptionWrapper,
     val metrics: AuroraMetrics
 ) {
 
@@ -24,18 +19,6 @@ class EncryptionService(
     val version = VERSION2
 
     val LINE_SEPERATOR = "\n"
-
-    final val providerName: String
-
-    init {
-        val bouncyCastleProvider = org.bouncycastle.jce.provider.BouncyCastleProvider()
-        providerName = bouncyCastleProvider.name
-        Security.getProvider(providerName) ?: Security.addProvider(bouncyCastleProvider)
-    }
-
-    val encryptor = Encryptor(keyFactory.keyFromPassword(key.toCharArray())).apply {
-        setAlgorithmProvider(providerName)
-    }
 
     fun encrypt(message: ByteArray): String {
         return metrics.withMetrics("encrypt") {

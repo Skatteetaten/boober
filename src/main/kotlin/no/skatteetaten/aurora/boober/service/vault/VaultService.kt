@@ -1,18 +1,19 @@
 package no.skatteetaten.aurora.boober.service.vault
 
+import org.eclipse.jgit.api.Git
+import org.springframework.core.io.ByteArrayResource
+import org.springframework.core.io.support.PropertiesLoaderUtils
+import org.springframework.stereotype.Service
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.Domain.VAULT
 import no.skatteetaten.aurora.boober.TargetDomain
 import no.skatteetaten.aurora.boober.controller.security.User
 import no.skatteetaten.aurora.boober.service.AuroraVaultServiceException
 import no.skatteetaten.aurora.boober.service.EncryptionService
+import no.skatteetaten.aurora.boober.service.EncryptionWrapper
 import no.skatteetaten.aurora.boober.service.GitService
 import no.skatteetaten.aurora.boober.service.UnauthorizedAccessException
 import no.skatteetaten.aurora.boober.service.UserDetailsProvider
-import org.eclipse.jgit.api.Git
-import org.springframework.core.io.ByteArrayResource
-import org.springframework.core.io.support.PropertiesLoaderUtils
-import org.springframework.stereotype.Service
 
 private val logger = KotlinLogging.logger {}
 
@@ -168,17 +169,20 @@ class VaultService(
     }
 
     fun reencryptVaultCollection(vaultCollectionName: String, newKey: String) {
-
         val vaults = findAllVaultsInVaultCollection(vaultCollectionName)
+
         vaults.forEach { vault: EncryptedFileVault ->
-            val newEncryptionService =
-                EncryptionService(newKey, encryptionService.keyFactory, encryptionService.metrics)
+            val newEncryptionService = EncryptionService(
+                EncryptionWrapper(newKey),
+                encryptionService.metrics
+            )
+
             val vaultCopy = EncryptedFileVault.createFromFolder(
                 vault.vaultFolder,
                 newEncryptionService::encrypt,
                 encryptionService::decrypt
             )
-            vaultCopy.secrets.forEach { t, u -> vaultCopy.updateFile(t, u) }
+            vaultCopy.secrets.forEach { (t, u) -> vaultCopy.updateFile(t, u) }
         }
     }
 
