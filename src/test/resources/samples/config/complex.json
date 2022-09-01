@@ -15,9 +15,9 @@
     "port": "8081",
     "path": "/foobar"
   },
-  "nodeSelector": {
-    "node-role.kubernetes.io/largemem": true
-  },
+  "nodeSelector": [
+    "node-role.kubernetes.io/largemem=true"
+  ],
   "serviceAccount": "aurora-fraggle",
   "mounts": {
     "aurora-token": {

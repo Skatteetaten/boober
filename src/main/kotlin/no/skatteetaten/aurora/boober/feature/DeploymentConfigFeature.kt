@@ -15,13 +15,11 @@ import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
 import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
-import no.skatteetaten.aurora.boober.model.findSubHandlers
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.disallowedPattern
 import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
@@ -55,25 +53,20 @@ val AuroraDeploymentSpec.managementPath
         "$port$path"
     }
 
-fun AuroraContextCommand.nodeSelectorHandlers(): Set<AuroraConfigFieldHandler> {
-    val subHandlers = this.applicationFiles
-        .findSubHandlers("nodeSelector")
-        .toSet()
-    return if (subHandlers.isNotEmpty()) {
-        subHandlers.addIfNotNull(AuroraConfigFieldHandler("nodeSelector"))
-    } else {
-        emptySet()
+val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = this.getOrNull<List<String>>("nodeSelector")
+    ?.let { labelList ->
+        labelList.filter { it.isNotBlank() }
+            .associate { str ->
+                str.split("=", limit = 2).let { strList ->
+                    val label = strList[0].trim()
+                    if (strList.size > 1) {
+                        label to strList[1].trim()
+                    } else {
+                        label to ""
+                    }
+                }
+            }
     }
-}
-
-val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = this.getOrNull<Map<String, Any?>>("nodeSelector")
-    ?.map { k ->
-        k.value?.let {
-            v ->
-            k.key to convertValueToString(v)
-        } ?: run { k.key to "" }
-    }
-    ?.toMap()
 
 @Service
 class DeploymentConfigFeature() : Feature {
@@ -128,10 +121,10 @@ class DeploymentConfigFeature() : Feature {
             AuroraConfigFieldHandler("pause", defaultValue = false, validator = { it.boolean() }),
             AuroraConfigFieldHandler("splunkIndex"),
             AuroraConfigFieldHandler("debug", defaultValue = false, validator = { it.boolean() }),
+            AuroraConfigFieldHandler("nodeSelector")
         )
             .addIfNotNull(gavHandlers(header, cmd))
             .addIfNotNull(templateSpecificHeaders)
-            .addIfNotNull(cmd.nodeSelectorHandlers())
     }
 
     override fun modify(
