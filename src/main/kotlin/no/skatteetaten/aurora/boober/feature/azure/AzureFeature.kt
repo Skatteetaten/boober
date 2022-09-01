@@ -36,13 +36,17 @@ class AzureFeature(
     private val auroraAzureApp = AuroraAzureAppSubPart()
     private val auroraApim = AuroraAzureApimSubPart()
 
+    object ConfigPath {
+        const val azure = "azure"
+    }
+
     override fun isActive(spec: AuroraDeploymentSpec): Boolean {
         return !isAzureSpecificallyDisabled(spec) &&
             (spec.isJwtToStsConverterEnabled || spec.isAzureAppFqdnEnabled || spec.isApimEnabled)
     }
 
     private fun isAzureSpecificallyDisabled(spec: AuroraDeploymentSpec): Boolean =
-        spec.getOrNull<Boolean>("azure") == false
+        spec.isSimplifiedAndDisabled(ConfigPath.azure)
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
@@ -53,6 +57,7 @@ class AzureFeature(
             AuroraConfigFieldHandler(
                 "azure",
                 validator = { it.boolean(required = false) },
+                defaultValue = false,
                 canBeSimplifiedConfig = true
             ),
         ) +

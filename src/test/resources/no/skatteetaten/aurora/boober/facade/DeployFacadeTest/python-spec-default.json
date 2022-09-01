@@ -736,80 +736,14 @@
     ]
   },
   "azure": {
-    "jwtToStsConverter": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "version": {
-        "source": "default",
-        "value": "0",
-        "sources": [
-          {
-            "name": "default",
-            "value": "0"
-          }
-        ]
-      },
-      "jwksUrl": {
-        "source": "default",
-        "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys",
-        "sources": [
-          {
-            "name": "default",
-            "value": "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
-          }
-        ]
-      },
-      "ivGroupsRequired": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      },
-      "ldapUserVaultName": {
-        "source": "default",
-        "value": "",
-        "sources": [
-          {
-            "name": "default",
-            "value": ""
-          }
-        ]
-      },
-      "ldapUrl": {
-        "source": "default",
-        "value": "http://localhost",
-        "sources": [
-          {
-            "name": "default",
-            "value": "http://localhost"
-          }
-        ]
+    "source": "default",
+    "value": false,
+    "sources": [
+      {
+        "name": "default",
+        "value": false
       }
-    },
-    "apim": {
-      "enabled": {
-        "source": "default",
-        "value": false,
-        "sources": [
-          {
-            "name": "default",
-            "value": false
-          }
-        ]
-      }
-    }
+    ]
   },
   "logging": {
     "bufferSize": {
