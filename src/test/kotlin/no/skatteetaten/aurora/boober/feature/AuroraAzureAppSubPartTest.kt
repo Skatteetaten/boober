@@ -8,9 +8,12 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
+import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.opentest4j.AssertionFailedError
 
 class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
@@ -134,12 +137,27 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
             generateResources(
                 """{
              "azure" : {
-                "azureAppFqdn": "a.b.c.d" 
+                "azureAppFqdn": "valid.amutv.skead.no" 
               }
            }""",
                 createEmptyDeploymentConfig(), createdResources = 0
             )
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource("invalid", "invalid.notam.skead.no", "multiple.dots.amutv.skead.no", "invalid.skead.no")
+    fun `it is an error if azureAppFqdn is not a valid fqdn for azure`(fqdn: String) {
+        assertThat {
+            createAuroraConfigFieldHandlers(
+                """{
+             "azure" : {
+                "azureAppFqdn": "$fqdn",
+                "groups": ["APP_dev", "APP_DRIFT"]
+              }
+           }"""
+            )
+        }.singleApplicationError("must be a fully qualified domain name ")
     }
 
     @Test

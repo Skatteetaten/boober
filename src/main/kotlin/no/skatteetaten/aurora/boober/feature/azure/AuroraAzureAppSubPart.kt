@@ -39,6 +39,7 @@ class AuroraAzureAppSubPart {
         const val managedRoute = "$root/managedRoute"
         const val clusterTimeout = "$root/clusterTimeout"
     }
+    private val fqdnRegex = Regex("[^.]+\\.am[^.]*\\.skead\\.no")
 
     fun generate(adc: AuroraDeploymentSpec, azureFeature: AzureFeature): Set<AuroraResource> {
         return adc.azureAppFqdn?.let {
@@ -66,7 +67,6 @@ class AuroraAzureAppSubPart {
      * Create a replacement for the webseal route as part of migrating away from webseal
      * @return New azure route in the default router shard
      */
-    @Suppress("UNCHECKED_CAST")
     private fun createManagedRoute(
         adc: AuroraDeploymentSpec,
         azureFeature: AzureFeature
@@ -104,7 +104,7 @@ class AuroraAzureAppSubPart {
         ) {
             errors.add(
                 AuroraDeploymentSpecValidationException(
-                    "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"
+                    "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}."
                 )
             )
         }
@@ -114,6 +114,15 @@ class AuroraAzureAppSubPart {
                 errors.add(
                     AuroraDeploymentSpecValidationException(
                         "${ConfigPath.azureAppFqdn} must be a valid dns address"
+                    )
+                )
+            }
+        }
+        adc.azureAppFqdn?.matches(fqdnRegex)?.let { valid: Boolean ->
+            if (!valid) {
+                errors.add(
+                    AuroraDeploymentSpecValidationException(
+                        "${ConfigPath.azureAppFqdn} must be a fully qualified domain name (for example: foo.amutv.skead.no)"
                     )
                 )
             }
