@@ -70,8 +70,7 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
-                         | nodeSelector:
-            complex.json |   type: "test"
+            complex.json | nodeSelector: {"node-role.kubernetes.io/largemem":true}
                          | deployStrategy:
             complex.json |   type: "recreate"
             complex.json | serviceAccount: "aurora-fraggle"

@@ -583,7 +583,7 @@
         ],
         "dnsPolicy": "ClusterFirst",
         "nodeSelector": {
-          "type": "test"
+          "node-role.kubernetes.io/largemem": "true"
         },
         "restartPolicy": "Always",
         "serviceAccount": "aurora-fraggle",

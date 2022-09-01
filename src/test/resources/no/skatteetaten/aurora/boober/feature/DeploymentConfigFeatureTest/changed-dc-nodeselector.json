@@ -69,7 +69,7 @@
         "dnsPolicy": "ClusterFirst",
         "nodeSelector": {
           "selector1": "test",
-          "selector2": "test"
+          "selector2/sub": "test"
         },
         "restartPolicy": "Always",
         "topologySpreadConstraints": [
