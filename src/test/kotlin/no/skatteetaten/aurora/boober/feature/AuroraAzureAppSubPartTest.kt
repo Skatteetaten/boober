@@ -145,18 +145,18 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @ParameterizedTest
-    @CsvSource("invalid", "@foo", "invalid.notam.skead.no", "multiple.dots.amutv.skead.no", "invalid.skead.no")
+    @CsvSource("invalid", "invalid.notam.skead.no", "multiple.dots.amutv.skead.no", "invalid.skead.no")
     fun `it is an error if azureAppFqdn is not a valid fqdn for azure`(fqdn: String) {
-        Assertions.assertThrows(MultiApplicationValidationException::class.java) {
-            generateResources(
+        assertThat {
+            createAuroraConfigFieldHandlers(
                 """{
              "azure" : {
-                "azureAppFqdn": "$fqdn" 
+                "azureAppFqdn": "$fqdn",
+                "groups": ["APP_dev", "APP_DRIFT"]
               }
-           }""",
-                createEmptyDeploymentConfig(), createdResources = 0
+           }"""
             )
-        }
+        }.singleApplicationError("must be a fully qualified domain name ")
     }
 
     @Test
