@@ -104,7 +104,7 @@ class AuroraAzureAppSubPart {
         ) {
             errors.add(
                 AuroraDeploymentSpecValidationException(
-                    "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}"
+                    "You need to configure either both or none of ${ConfigPath.azureAppFqdn} and ${ConfigPath.groups}."
                 )
             )
         }
