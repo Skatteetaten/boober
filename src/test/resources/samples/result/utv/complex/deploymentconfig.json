@@ -42,6 +42,16 @@
       "recreateParams": {
         "timeoutSeconds": 180
       },
+      "resources": {
+        "limits": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        }
+      },
       "type": "Recreate"
     },
     "template": {

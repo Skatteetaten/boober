@@ -2,6 +2,7 @@ package no.skatteetaten.aurora.boober.feature
 
 import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.resources
+import com.fkorotkov.openshift.resources
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
 import io.fabric8.kubernetes.api.model.LabelSelectorBuilder
@@ -158,6 +159,13 @@ class DeploymentConfigFeature() : Feature {
                 adc.nodeSelector?.let { nodeSelector ->
                     dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelector) ?: nodeSelector
                 }
+
+                dc.setStrategyRequestsLimitsResources(
+                    mapOf(
+                        "cpu" to Quantity("30m"),
+                        "memory" to Quantity("512Mi")
+                    )
+                )
             } else if (it.resource.kind == "Deployment") {
                 val deployment: Deployment = it.resource as Deployment
 
@@ -240,6 +248,13 @@ class DeploymentConfigFeature() : Feature {
         val segment: String? = adc.getOrNull("segment")
         // APP_VERSION is available for all images created by Architect
         return "${segment ?: adc.affiliation}/${adc.artifactId}/\${APP_VERSION}"
+    }
+
+    fun DeploymentConfig.setStrategyRequestsLimitsResources(resourceMap: Map<String, Quantity>) {
+        this.spec.strategy.resources {
+            limits = resourceMap
+            requests = resourceMap
+        }
     }
 
     fun DeploymentConfig.setTopologySpreadConstraints(appName: String) {
