@@ -712,18 +712,16 @@
     }
   },
   "nodeSelector": {
-    "source": "complex.json",
-    "value": {
-      "node-role.kubernetes.io/largemem": true
-    },
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": {
-          "node-role.kubernetes.io/largemem": true
+    "node-role.kubernetes.io|largemem": {
+      "source": "complex.json",
+      "value": true,
+      "sources": [
+        {
+          "name": "complex.json",
+          "value": true
         }
-      }
-    ]
+      ]
+    }
   },
   "deployStrategy": {
     "type": {

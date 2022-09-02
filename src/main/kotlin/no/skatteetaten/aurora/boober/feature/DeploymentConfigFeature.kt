@@ -21,7 +21,6 @@ import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.allNonSideCarContainers
 import no.skatteetaten.aurora.boober.utils.disallowedPattern
 import no.skatteetaten.aurora.boober.utils.boolean
-import no.skatteetaten.aurora.boober.utils.convertValueToString
 import no.skatteetaten.aurora.boober.utils.ensureStartWith
 import no.skatteetaten.aurora.boober.utils.filterNullValues
 import no.skatteetaten.aurora.boober.utils.normalizeLabels
@@ -55,25 +54,19 @@ val AuroraDeploymentSpec.managementPath
         "$port$path"
     }
 
-fun AuroraContextCommand.nodeSelectorHandlers(): Set<AuroraConfigFieldHandler> {
-    val subHandlers = this.applicationFiles
-        .findSubHandlers("nodeSelector")
-        .toSet()
-    return if (subHandlers.isNotEmpty()) {
-        subHandlers.addIfNotNull(AuroraConfigFieldHandler("nodeSelector"))
-    } else {
-        emptySet()
-    }
-}
+fun AuroraContextCommand.nodeSelectorHandlers(): Set<AuroraConfigFieldHandler> = this.applicationFiles
+    .findSubHandlers("nodeSelector", validatorFn = { key ->
+        {
+            if (key.contains("/")) {
+                IllegalArgumentException("NodeSelector key $key cannot contain '/'. Use '|' instead")
+            } else null
+        }
+    })
+    .toSet()
 
-val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = this.getOrNull<Map<String, Any?>>("nodeSelector")
-    ?.map { k ->
-        k.value?.let {
-            v ->
-            k.key to convertValueToString(v)
-        } ?: run { k.key to "" }
-    }
-    ?.toMap()
+val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = getSubKeysMap("nodeSelector/")
+    .mapKeys { kv -> kv.key.replace("|", "/") }
+    .let { it.ifEmpty { null } }
 
 @Service
 class DeploymentConfigFeature() : Feature {

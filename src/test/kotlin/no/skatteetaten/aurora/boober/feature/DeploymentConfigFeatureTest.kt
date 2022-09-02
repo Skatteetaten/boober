@@ -241,7 +241,7 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
                 "version" : "1",
                 "nodeSelector": {
                     "selector1": "test",
-                    "selector2/sub": "test"
+                    "selector2|sub": "test"
                 }
            }""",
             resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
