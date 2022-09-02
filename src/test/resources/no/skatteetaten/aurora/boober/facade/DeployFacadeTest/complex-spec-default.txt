@@ -71,7 +71,6 @@ utv/about-alternate.json |   ignoreMissingSchema: true
             complex.json | pause: true
             complex.json | splunkIndex: "test-index"
             complex.json | debug: true
-            complex.json | nodeSelector: ["node-role.kubernetes.io/largemem=true"]
                 fileName | artifactId: "complex"
             complex.json | version: "1"
                          | resources:
@@ -81,6 +80,7 @@ utv/about-alternate.json |   ignoreMissingSchema: true
                          |   memory:
             complex.json |     min: "64Mi"
             complex.json |     max: "128Mi"
+            complex.json | nodeSelector: {"node-role.kubernetes.io/largemem":true}
                          | deployStrategy:
             complex.json |   type: "recreate"
                  default |   timeout: 180

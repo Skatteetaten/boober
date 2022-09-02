@@ -537,20 +537,6 @@
       }
     ]
   },
-  "nodeSelector": {
-    "source": "complex.json",
-    "value": [
-      "node-role.kubernetes.io/largemem=true"
-    ],
-    "sources": [
-      {
-        "name": "complex.json",
-        "value": [
-          "node-role.kubernetes.io/largemem=true"
-        ]
-      }
-    ]
-  },
   "artifactId": {
     "source": "fileName",
     "value": "complex",
@@ -632,6 +618,20 @@
         ]
       }
     }
+  },
+  "nodeSelector": {
+    "source": "complex.json",
+    "value": {
+      "node-role.kubernetes.io/largemem": true
+    },
+    "sources": [
+      {
+        "name": "complex.json",
+        "value": {
+          "node-role.kubernetes.io/largemem": true
+        }
+      }
+    ]
   },
   "deployStrategy": {
     "type": {

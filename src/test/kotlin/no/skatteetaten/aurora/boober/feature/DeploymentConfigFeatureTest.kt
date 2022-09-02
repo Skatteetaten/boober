@@ -239,10 +239,10 @@ class DeploymentConfigFeatureTest : AbstractFeatureTest() {
             app = """{
                 "groupId": "no.skatteetaten.aurora",
                 "version" : "1",
-                "nodeSelector": [
-                    "selector1=test",
-                    "selector2/sub = test"
-                ]
+                "nodeSelector": {
+                    "selector1": "test",
+                    "selector2/sub": "test"
+                }
            }""",
             resources = mutableSetOf(createEmptyDeploymentConfig(), createEmptyApplicationDeployment()),
             files = listOf(AuroraConfigFile("simple.json", """{ "pause" : true }""", override = true)),
