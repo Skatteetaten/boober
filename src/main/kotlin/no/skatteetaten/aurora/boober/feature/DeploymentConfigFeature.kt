@@ -163,7 +163,7 @@ class DeploymentConfigFeature() : Feature {
                 }
 
                 adc.nodeSelector?.let { nodeSelector ->
-                    dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelector) ?: nodeSelector
+                    dc.spec.template.spec.nodeSelector = nodeSelector
                 }
             } else if (it.resource.kind == "Deployment") {
                 val deployment: Deployment = it.resource as Deployment
