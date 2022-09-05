@@ -249,4 +249,26 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
         assertThat(alternativeRoute).auroraResourceCreatedByTarget(AzureFeature::class.java)
             .auroraResourceMatchesFile("aurora-azure-route-timeout.json")
     }
+
+    @Test
+    fun `AuroraAzureApp should be turned off by false`() {
+        val (_) = generateResources(
+            """{
+              "azure": false
+              }
+            }""",
+            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 0
+        )
+    }
+
+    @Test
+    fun `AuroraAzureApp should ignore just azure set to true`() {
+        val (_) = generateResources(
+            """{
+              "azure": true
+              }
+            }""",
+            mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 0
+        )
+    }
 }

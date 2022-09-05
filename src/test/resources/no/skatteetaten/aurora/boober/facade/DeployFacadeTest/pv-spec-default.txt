@@ -57,16 +57,7 @@ utv/about.json | cluster: "utv"
        pv.json |   POSTGRESQL_PASSWORD: "postgres"
        pv.json | template: "aurora-postgres-ocp4-pv"
        default | webseal: false
-               | azure:
-               |   jwtToStsConverter:
-       default |     enabled: false
-       default |     version: "0"
-       default |     jwksUrl: "http://login-microsoftonline-com.app2ext.sikker-prod.skead.no/common/discovery/keys"
-       default |     ivGroupsRequired: false
-       default |     ldapUserVaultName: ""
-       default |     ldapUrl: "http://localhost"
-               |   apim:
-       default |     enabled: false
+       default | azure: false
                | logging:
        default |   bufferSize: 20
        default | toxiproxy: false
