@@ -111,7 +111,18 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
              "name": "test%qwe)"
             }"""
             )
-        }.singleApplicationErrorResult("Name must be alphanumeric and no more than 40 characters")
+        }.singleApplicationErrorResult("The first character of name must be a letter [a-z] and the last character must be alphanumeric. Total length needs to be no more than 40 characters. The rest of the characters can be alphanumeric or a hyphen.")
+    }
+
+    @Test
+    fun `Should fail when name is not lowercase`() {
+        assertThat {
+            createAuroraDeploymentContext(
+                """{
+             "name": "UpperCase"
+            }"""
+            )
+        }.singleApplicationErrorResult("The first character of name must be a letter [a-z] and the last character must be alphanumeric. Total length needs to be no more than 40 characters. The rest of the characters can be alphanumeric or a hyphen.")
     }
 
     @Test
@@ -172,7 +183,7 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 "utv/this-name-is-stupid-stupid-stupidly-long-for-no-reason.json" to
                     """{ "version" : "1" }"""
             )
-        }.singleApplicationErrorResult("Name must be alphanumeric and no more than 40 characters")
+        }.singleApplicationErrorResult("The first character of name must be a letter [a-z] and the last character must be alphanumeric. Total length needs to be no more than 40 characters. The rest of the characters can be alphanumeric or a hyphen.")
     }
 
     enum class PermissionsTestData(val values: String) {
