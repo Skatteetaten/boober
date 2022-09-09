@@ -42,6 +42,16 @@
       "recreateParams": {
         "timeoutSeconds": 180
       },
+      "resources": {
+        "limits": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        }
+      },
       "type": "Recreate"
     },
     "template": {
@@ -587,6 +597,28 @@
         },
         "restartPolicy": "Always",
         "serviceAccount": "aurora-fraggle",
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "komplex"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "komplex"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          }
+        ],
         "volumes": [
           {
             "emptyDir": { },

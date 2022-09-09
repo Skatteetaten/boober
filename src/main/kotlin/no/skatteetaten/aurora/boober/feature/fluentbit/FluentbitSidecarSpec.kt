@@ -26,6 +26,7 @@ import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 
 val fluentbitContainerSupportedTypes = listOf(TemplateType.deploy, TemplateType.development)
+val fluentbitAdditionalAllowedDeployTypes = listOf(TemplateType.localTemplate, TemplateType.template)
 
 private fun getHecSecretName(name: String) = "$name-hec"
 private const val FEATURE_FIELD_NAME = "logging"
@@ -46,7 +47,16 @@ data class LoggingConfig(
     val excludePattern: String
 )
 
-fun AuroraDeploymentSpec.shouldCreateFluentbitContainer(): Boolean = this.type in fluentbitContainerSupportedTypes
+fun AuroraDeploymentSpec.isAdditionalTypeEnabledAndEqual(): Boolean {
+    if (this.type in fluentbitAdditionalAllowedDeployTypes) {
+        return this.getOrNull("$FEATURE_FIELD_NAME/enableForAdditionalTypes/${this.type}") ?: false
+    }
+
+    return false
+}
+
+fun AuroraDeploymentSpec.shouldCreateFluentbitContainer(): Boolean =
+    this.type in fluentbitContainerSupportedTypes || isAdditionalTypeEnabledAndEqual()
 
 fun AuroraDeploymentSpec.validateFluentbit(): List<Exception> {
     val loggingField = this.getSubKeyValues(FEATURE_FIELD_NAME)
@@ -150,7 +160,8 @@ fun AuroraDeploymentSpec.isFluentbitDisabled(): Boolean {
     return isNotcustomConfig && loggingIndexNotSet
 }
 
-val supportedFluentbitSourcetypes = listOf("_json", "access_combined", "gc_log", "log4j", "evalevent_xml", "ats:eval:xml")
+val supportedFluentbitSourcetypes =
+    listOf("_json", "access_combined", "gc_log", "log4j", "evalevent_xml", "ats:eval:xml")
 
 fun logTypeToSourcetype(logType: String): String =
     when (logType) {

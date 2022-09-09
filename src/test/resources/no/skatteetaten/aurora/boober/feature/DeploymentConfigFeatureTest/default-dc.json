@@ -15,6 +15,16 @@
       "name": "simple"
     },
     "strategy": {
+      "resources": {
+        "limits": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        }
+      },
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
@@ -65,7 +75,29 @@
           }
         ],
         "dnsPolicy": "ClusterFirst",
-        "restartPolicy": "Always"
+        "restartPolicy": "Always",
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "simple"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "simple"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          }
+        ]
       }
     },
     "triggers": [

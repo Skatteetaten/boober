@@ -2,10 +2,14 @@ package no.skatteetaten.aurora.boober.feature
 
 import org.springframework.stereotype.Service
 import com.fkorotkov.kubernetes.resources
+import com.fkorotkov.openshift.resources
 import io.fabric8.kubernetes.api.model.EnvVar
 import io.fabric8.kubernetes.api.model.EnvVarBuilder
+import io.fabric8.kubernetes.api.model.LabelSelectorBuilder
 import io.fabric8.kubernetes.api.model.ObjectMeta
 import io.fabric8.kubernetes.api.model.Quantity
+import io.fabric8.kubernetes.api.model.TopologySpreadConstraint
+import io.fabric8.kubernetes.api.model.TopologySpreadConstraintBuilder
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
 import no.skatteetaten.aurora.boober.model.AuroraConfigFieldHandler
@@ -146,6 +150,7 @@ class DeploymentConfigFeature() : Feature {
                     ANNOTATION_BOOBER_DEPLOYTAG to adc.version
                 )
                 dc.metadata.labels = it.resource.metadata.labels?.addIfNotNull(dcLabels) ?: dcLabels
+                dc.setTopologySpreadConstraints(adc.name)
 
                 if (adc.pause) {
                     dc.spec.replicas = 0
@@ -154,6 +159,13 @@ class DeploymentConfigFeature() : Feature {
                 adc.nodeSelector?.let { nodeSelector ->
                     dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelector) ?: nodeSelector
                 }
+
+                dc.setStrategyRequestsLimitsResources(
+                    mapOf(
+                        "cpu" to Quantity("30m"),
+                        "memory" to Quantity("512Mi")
+                    )
+                )
             } else if (it.resource.kind == "Deployment") {
                 val deployment: Deployment = it.resource as Deployment
 
@@ -237,4 +249,28 @@ class DeploymentConfigFeature() : Feature {
         // APP_VERSION is available for all images created by Architect
         return "${segment ?: adc.affiliation}/${adc.artifactId}/\${APP_VERSION}"
     }
+
+    fun DeploymentConfig.setStrategyRequestsLimitsResources(resourceMap: Map<String, Quantity>) {
+        this.spec.strategy.resources {
+            limits = resourceMap
+            requests = resourceMap
+        }
+    }
+
+    fun DeploymentConfig.setTopologySpreadConstraints(appName: String) {
+        this.spec.template.spec.topologySpreadConstraints.addAll(
+            listOf(
+                topologySpreadConstraint(appName, "topology.kubernetes.io/region"),
+                topologySpreadConstraint(appName, "topology.kubernetes.io/zone")
+            )
+        )
+    }
+
+    private fun topologySpreadConstraint(appName: String, topologyKey: String): TopologySpreadConstraint =
+        TopologySpreadConstraintBuilder()
+            .withLabelSelector(LabelSelectorBuilder().addToMatchLabels("name", appName).build())
+            .withMaxSkew(1)
+            .withTopologyKey(topologyKey)
+            .withWhenUnsatisfiable("ScheduleAnyway")
+            .build()
 }

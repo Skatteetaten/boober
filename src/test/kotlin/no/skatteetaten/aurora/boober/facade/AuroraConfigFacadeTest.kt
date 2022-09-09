@@ -8,6 +8,7 @@ import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotEmpty
 import assertk.assertions.isNotNull
 import assertk.assertions.isNotZero
+import assertk.assertions.matchesPredicate
 import assertk.assertions.messageContains
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -46,7 +47,7 @@ class AuroraConfigFacadeTest(
         preprateTestVault("foo", mapOf("latest.properties" to "FOO=bar\nBAR=baz\n".toByteArray()))
 
         applicationDeploymentGenerationMock {
-            rule({ path.contains("resource?claimedBy=$booberAdId") }) {
+            rule({ path?.contains("resource?claimedBy=$booberAdId") }) {
                 val folder = "$packageName/DeployFacadeTest"
                 MockResponse().setBody(loadBufferResource("herkimerResponseBucketAdmin.json", folder))
                     .addHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
@@ -351,7 +352,20 @@ class AuroraConfigFacadeTest(
         )
 
         val warnings = validated[ApplicationDeploymentRef("utv", "complex")]
-        assertThat(warnings?.size).isEqualTo(6)
+        assertThat { warnings }.matchesPredicate {
+            it.isSuccess &&
+                it.getOrNull()?.size == 6 &&
+                it.getOrNull()?.containsAll(
+                setOf(
+                    "Config key=THIS.VALUE was normalized to THIS_VALUE",
+                    "The property 'connection' on alerts is deprecated. Please use the connections property",
+                    "Both Webseal-route and OpenShift-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
+                    "Both Webseal-route and Azure-Route generated for application. If your application relies on WebSeal security this can be harmful! Set webseal/strict to false to remove this warning.",
+                    "Both sts and certificate feature has generated a cert. Turn off certificate if you are using the new STS service",
+                    "The external url=test.ske/api is not uniquely defined. Only the last applied configuration will be valid. The following configurations references it=[utv/complex, utv/simple]"
+                )
+            ) == true
+        }
     }
 
     @Test
@@ -439,7 +453,7 @@ class AuroraConfigFacadeTest(
         }
 
         cantusMock {
-            rule({ path.endsWith("/manifest") }) {
+            rule({ path?.endsWith("/manifest") }) {
                 val cantusManifestResponseFile = "cantusManifestResponse.json"
                 MockResponse()
                     .setBody(loadBufferResource(cantusManifestResponseFile, "$packageName/DeployFacadeTest"))
@@ -456,7 +470,7 @@ class AuroraConfigFacadeTest(
 
         bitbucketMock {
             rule {
-                mockJsonFromFile(this.requestUrl.pathSegments().last())
+                mockJsonFromFile(this.requestUrl!!.pathSegments.last())
             }
         }
 

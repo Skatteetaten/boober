@@ -1,12 +1,12 @@
 package no.skatteetaten.aurora.boober.feature
 
+import org.junit.jupiter.api.Test
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import no.skatteetaten.aurora.boober.model.AuroraConfigFile
 import no.skatteetaten.aurora.boober.model.openshift.ApplicationDeployment
 import no.skatteetaten.aurora.boober.utils.AbstractFeatureTest
 import no.skatteetaten.aurora.boober.utils.singleApplicationErrorResult
-import org.junit.jupiter.api.Test
 
 class LocalTemplateFeatureTest : AbstractFeatureTest() {
     override val feature: Feature
@@ -22,10 +22,30 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 """{ 
             "type" : "localTemplate",
-            "templateFile" : "templates/atomhopper.json"
+            "templateFile" : "templates/atomhopper.json",
+            "version": "0"
             }"""
             )
         }.singleApplicationErrorResult("Config for application simple in environment utv contains errors. The file named templates/atomhopper.json does not exist in AuroraConfig.")
+    }
+
+    @Test
+    fun `should get error when version is not set`() {
+
+        assertThat {
+            createAuroraDeploymentContext(
+                """{ 
+            "type" : "localTemplate", 
+            "templateFile" : "templates/atomhopper.json",
+            "splunkIndex" : "foo",
+            "parameters" : {
+              "FEED_NAME" : "simple", 
+              "DB_NAME" : "simple"
+             }
+            }""",
+                files = templateFile,
+            )
+        }.singleApplicationErrorResult("Field is required")
     }
 
     @Test
@@ -35,7 +55,8 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             createAuroraDeploymentContext(
                 """{ 
             "type" : "localTemplate", 
-            "templateFile" : "templates/atomhopper.json"
+            "templateFile" : "templates/atomhopper.json",
+            "version": "0"
             }""",
                 files = templateFile
             )
@@ -52,7 +73,8 @@ class LocalTemplateFeatureTest : AbstractFeatureTest() {
             "parameters" : {
               "FEED_NAME" : "simple", 
               "DB_NAME" : "simple"
-             }
+             },
+            "version": "0"
            }""",
             files = templateFile,
             resource = createEmptyApplicationDeployment(),

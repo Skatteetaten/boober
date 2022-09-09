@@ -11,6 +11,7 @@ import no.skatteetaten.aurora.boober.model.AuroraContextCommand
 import no.skatteetaten.aurora.boober.model.AuroraDeploymentSpec
 import no.skatteetaten.aurora.boober.model.AuroraResource
 import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.utils.boolean
 
 /**
  * Azure feature collects several azure related items. These are:
@@ -35,16 +36,32 @@ class AzureFeature(
     private val auroraAzureApp = AuroraAzureAppSubPart()
     private val auroraApim = AuroraAzureApimSubPart()
 
-    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
-        return spec.isJwtToStsConverterEnabled || spec.isAzureAppFqdnEnabled || spec.isApimEnabled
+    object ConfigPath {
+        const val azure = "azure"
     }
+
+    override fun isActive(spec: AuroraDeploymentSpec): Boolean {
+        return !isAzureSpecificallyDisabled(spec) &&
+            (spec.isJwtToStsConverterEnabled || spec.isAzureAppFqdnEnabled || spec.isApimEnabled)
+    }
+
+    private fun isAzureSpecificallyDisabled(spec: AuroraDeploymentSpec): Boolean =
+        spec.isSimplifiedAndDisabled(ConfigPath.azure)
 
     override fun enable(header: AuroraDeploymentSpec): Boolean {
         return !header.isJob
     }
 
     override fun handlers(header: AuroraDeploymentSpec, cmd: AuroraContextCommand): Set<AuroraConfigFieldHandler> {
-        return jwtToStsConverter.handlers(sidecarVersion, defaultLdapUrl, defaultAzureJwks) +
+        return setOf(
+            AuroraConfigFieldHandler(
+                "azure",
+                validator = { it.boolean(required = false) },
+                defaultValue = false,
+                canBeSimplifiedConfig = true
+            ),
+        ) +
+            jwtToStsConverter.handlers(sidecarVersion, defaultLdapUrl, defaultAzureJwks) +
             auroraAzureApp.handlers() +
             auroraApim.handlers(cmd.applicationFiles)
     }

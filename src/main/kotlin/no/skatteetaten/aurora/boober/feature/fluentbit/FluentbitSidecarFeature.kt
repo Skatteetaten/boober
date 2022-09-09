@@ -23,6 +23,7 @@ import no.skatteetaten.aurora.boober.service.CantusService
 import no.skatteetaten.aurora.boober.utils.addIfNotNull
 import no.skatteetaten.aurora.boober.utils.oneOf
 import no.skatteetaten.aurora.boober.utils.allowedPattern
+import no.skatteetaten.aurora.boober.utils.boolean
 import no.skatteetaten.aurora.boober.utils.required
 
 const val SPLUNK_CONNECT_EXCLUDE_TAG = "splunk.com/exclude"
@@ -83,10 +84,14 @@ class FluentbitSidecarFeature(
         val customLogger = getCustomLoggerHandlers(cmd.applicationFiles)
         val loggers = getLoggerHandlers()
 
+        val additionalTypesConfigHandlers = fluentbitAdditionalAllowedDeployTypes.map { type ->
+            AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/enableForAdditionalTypes/$type", validator = { it.boolean() })
+        }
+
         return setOf(
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/index"),
             AuroraConfigFieldHandler("$FEATURE_FIELD_NAME/bufferSize", defaultValue = 20)
-        ) + loggers + customLogger + header.versionHandler
+        ) + loggers + customLogger + header.versionHandler + additionalTypesConfigHandlers
     }
 
     override fun validate(

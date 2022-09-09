@@ -59,6 +59,16 @@
       }
     ]
   },
+  "version": {
+    "source": "utv/simple.json",
+    "value": "0",
+    "sources": [
+      {
+        "name": "utv/simple.json",
+        "value": "0"
+      }
+    ]
+  },
   "management": {
     "source": "default",
     "value": false,

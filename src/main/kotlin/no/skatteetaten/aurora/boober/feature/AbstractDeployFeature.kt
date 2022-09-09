@@ -165,7 +165,7 @@ val AuroraDeploymentSpec.versionHandler: AuroraConfigFieldHandler
                 it.allowedPattern(
                     pattern = "^[\\w][\\w.-]{0,127}$",
                     message = "Version must be a 128 characters or less, alphanumeric and can contain dots and dashes",
-                    required = this.type.versionAndGroupRequired
+                    required = true
                 )
             }
         )
@@ -177,7 +177,7 @@ val AuroraDeploymentSpec.groupIdHandler: AuroraConfigFieldHandler
             it.length(
                 length = 200,
                 message = "GroupId must be set and be shorter then 200 characters",
-                required = this.type.versionAndGroupRequired
+                required = this.type.isGroupIdRequired
             )
         }
     )

@@ -34,7 +34,16 @@
       "name": "postgres"
     },
     "strategy": {
-      "resources": { },
+      "resources": {
+        "limits": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        }
+      },
       "type": "Recreate"
     },
     "template": {
@@ -184,6 +193,28 @@
               "limits": { },
               "requests": { }
             }
+          }
+        ],
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "pv"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "pv"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
           }
         ],
         "volumes": [

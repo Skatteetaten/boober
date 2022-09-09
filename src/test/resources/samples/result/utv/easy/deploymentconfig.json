@@ -33,6 +33,16 @@
       "name": "easy"
     },
     "strategy": {
+      "resources": {
+        "limits": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        },
+        "requests": {
+          "cpu": "30m",
+          "memory": "512Mi"
+        }
+      },
       "rollingParams": {
         "intervalSeconds": 1,
         "maxSurge": "25%",
@@ -284,6 +294,28 @@
         ],
         "dnsPolicy": "ClusterFirst",
         "restartPolicy": "Always",
+        "topologySpreadConstraints": [
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "easy"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/region",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          },
+          {
+            "labelSelector": {
+              "matchLabels": {
+                "name": "easy"
+              }
+            },
+            "maxSkew": 1,
+            "topologyKey": "topology.kubernetes.io/zone",
+            "whenUnsatisfiable": "ScheduleAnyway"
+          }
+        ],
         "volumes": [
           {
             "emptyDir": { },
