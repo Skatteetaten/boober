@@ -56,10 +56,17 @@ val AuroraDeploymentSpec.managementPath
     }
 
 fun AuroraContextCommand.nodeSelectorHandlers(): Set<AuroraConfigFieldHandler> = this.applicationFiles
-    .findSubHandlers("nodeSelector")
+    .findSubHandlers("nodeSelector", validatorFn = { key ->
+        {
+            if (key.contains("/")) {
+                IllegalArgumentException("NodeSelector key $key cannot contain '/'. Use '|' instead")
+            } else null
+        }
+    })
     .toSet()
 
 val AuroraDeploymentSpec.nodeSelector: Map<String, String>? get() = getSubKeysMap("nodeSelector/")
+    .mapKeys { kv -> kv.key.replace("|", "/") }
     .let { it.ifEmpty { null } }
 
 @Service
@@ -157,7 +164,7 @@ class DeploymentConfigFeature() : Feature {
                 }
 
                 adc.nodeSelector?.let { nodeSelector ->
-                    dc.spec.template.spec.nodeSelector = dc.spec.template.spec.nodeSelector?.addIfNotNull(nodeSelector) ?: nodeSelector
+                    dc.spec.template.spec.nodeSelector = nodeSelector
                 }
 
                 dc.setStrategyRequestsLimitsResources(

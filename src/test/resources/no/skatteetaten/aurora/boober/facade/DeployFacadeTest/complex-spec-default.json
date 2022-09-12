@@ -712,13 +712,13 @@
     }
   },
   "nodeSelector": {
-    "type": {
+    "node-role.kubernetes.io|largemem": {
       "source": "complex.json",
-      "value": "test",
+      "value": true,
       "sources": [
         {
           "name": "complex.json",
-          "value": "test"
+          "value": true
         }
       ]
     }

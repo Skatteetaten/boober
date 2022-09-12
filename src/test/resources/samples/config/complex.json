@@ -16,7 +16,7 @@
     "path": "/foobar"
   },
   "nodeSelector": {
-    "type": "test"
+    "node-role.kubernetes.io|largemem": true
   },
   "serviceAccount": "aurora-fraggle",
   "mounts": {
