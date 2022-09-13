@@ -1,13 +1,22 @@
 package no.skatteetaten.aurora.boober.feature
 
 import assertk.assertThat
+import assertk.assertions.isFalse
+import assertk.assertions.isGreaterThan
+import assertk.assertions.isNotNull
 import io.mockk.every
 import io.mockk.mockk
 import no.skatteetaten.aurora.boober.feature.azure.AzureFeature
+import no.skatteetaten.aurora.boober.model.AuroraContextCommand
+import no.skatteetaten.aurora.boober.service.AuroraConfigRef
+import no.skatteetaten.aurora.boober.service.AuroraDeploymentContextService
 import no.skatteetaten.aurora.boober.service.CantusService
+import no.skatteetaten.aurora.boober.service.IdService
+import no.skatteetaten.aurora.boober.service.IdServiceFallback
 import no.skatteetaten.aurora.boober.service.ImageMetadata
 import no.skatteetaten.aurora.boober.service.MultiApplicationValidationException
 import no.skatteetaten.aurora.boober.utils.AbstractMultiFeatureTest
+import no.skatteetaten.aurora.boober.utils.AuroraConfigSamples.Companion.createAuroraConfig
 import no.skatteetaten.aurora.boober.utils.singleApplicationError
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
@@ -17,13 +26,16 @@ import org.junit.jupiter.params.provider.CsvSource
 import org.opentest4j.AssertionFailedError
 
 class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
-    override val features: List<Feature>
-        get() = listOf(
-            WebsealFeature(".test.skead.no"),
-            AzureFeature(cantusService, "0", "ldap://default", "http://jwks")
-        )
-
     private val cantusService: CantusService = mockk()
+    private val azureFeature = AzureFeature(cantusService, "0", "ldap://default", "http://jwks")
+
+    override val features: List<Feature>
+        get() {
+            return listOf(
+                WebsealFeature(".test.skead.no"),
+                azureFeature
+            )
+        }
 
     @BeforeEach
     fun setupMock() {
@@ -118,17 +130,15 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
     }
 
     @Test
-    fun `it is an error if only groups are present`() {
-        Assertions.assertThrows(MultiApplicationValidationException::class.java) {
-            generateResources(
-                """{
+    fun `it is ignored if only groups are present`() {
+        generateResources(
+            """{
              "azure" : {
                 "groups": [] 
               }
            }""",
-                createEmptyDeploymentConfig(), createdResources = 0
-            )
-        }
+            createEmptyDeploymentConfig(), createdResources = 0
+        )
     }
 
     @Test
@@ -270,5 +280,53 @@ class AuroraAzureAppSubPartTest : AbstractMultiFeatureTest() {
             }""",
             mutableSetOf(createEmptyDeploymentConfig(), createEmptyDeploymentConfig()), createdResources = 0
         )
+    }
+
+    @Test
+    fun `validate azure false in sub resource should not complain about missing azureFqdn`() {
+        val idService = mockk<IdService>().also {
+            every { it.generateOrFetchId(any()) } returns "1234567890"
+        }
+
+        val idServiceFallback = mockk<IdServiceFallback>().also {
+            every { it.generateOrFetchId(any(), any()) } returns "fallbackid"
+        }
+
+        val service = AuroraDeploymentContextService(
+            features = features,
+            idService = idService,
+            idServiceFallback = idServiceFallback
+        )
+
+        val localConfig = mutableMapOf(
+            "about.json" to FEATURE_ABOUT,
+            "$environment/about.json" to """{ }""",
+            "$appName.json" to """{
+              "azure": {
+                "groups": [],
+                "jwtToStsConverter": {
+                  "enabled": true
+                }
+              }
+            }
+            """.trimIndent(),
+            "$environment/$appName.json" to """{ 
+                "azure": false
+            }
+            """.trimIndent()
+        )
+
+        val deployCommand = AuroraContextCommand(
+            auroraConfig = createAuroraConfig(localConfig),
+            applicationDeploymentRef = aid,
+            auroraConfigRef = AuroraConfigRef("test", "master", "123abb"),
+        )
+
+        val contexts = service.createValidatedAuroraDeploymentContexts(listOf(deployCommand), true)
+
+        val validContexts = contexts.first
+        assertThat(validContexts).isNotNull()
+        assertThat(validContexts.size).isGreaterThan(0)
+        assertThat(azureFeature.isActive(contexts.first[0].spec)).isFalse()
     }
 }

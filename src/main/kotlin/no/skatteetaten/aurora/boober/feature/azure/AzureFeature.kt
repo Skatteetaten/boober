@@ -89,7 +89,9 @@ class AzureFeature(
         resources: Set<AuroraResource>,
         context: FeatureContext
     ) {
-        jwtToStsConverter.modify(adc, resources, context.imageMetadata, this)
+        if (isActive(adc)) {
+            jwtToStsConverter.modify(adc, resources, context.imageMetadata, this)
+        }
     }
 
     override fun generate(adc: AuroraDeploymentSpec, context: FeatureContext): Set<AuroraResource> {
@@ -101,7 +103,9 @@ class AzureFeature(
         fullValidation: Boolean,
         context: FeatureContext
     ): List<Exception> {
-        return auroraAzureApp.validate(adc) + auroraApim.validate(adc) + jwtToStsConverter.validate(adc)
+        return if (isActive(adc))
+            auroraAzureApp.validate(adc) + auroraApim.validate(adc) + jwtToStsConverter.validate(adc)
+        else listOf()
     }
 
     fun getDeprecations(adc: AuroraDeploymentSpec): List<String>? {
