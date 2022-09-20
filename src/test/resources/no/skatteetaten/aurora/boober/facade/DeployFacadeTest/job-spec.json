@@ -191,6 +191,20 @@
       }
     ]
   },
+  "s3": {
+    "default": {
+      "bucketName": {
+        "source": "job.json",
+        "value": "mybucket",
+        "sources": [
+          {
+            "name": "job.json",
+            "value": "mybucket"
+          }
+        ]
+      }
+    }
+  },
   "secretVaults": {
     "foo": {
       "keys": {

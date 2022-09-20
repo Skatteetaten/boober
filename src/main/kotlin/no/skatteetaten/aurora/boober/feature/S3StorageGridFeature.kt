@@ -31,8 +31,6 @@ class S3StorageGridFeature(
         logger.info("Enabling StorageGrid S3 Feature")
     }
 
-    override fun enable(header: AuroraDeploymentSpec) = !header.isJob
-
     override fun createContext(spec: AuroraDeploymentSpec, cmd: AuroraContextCommand, validationContext: Boolean):
         Map<String, Any> = emptyMap()
 

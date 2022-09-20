@@ -18,6 +18,9 @@ utv/about.json | cluster: "utv"
       job.json | version: "1"
       job.json | serviceAccount: "foo"
       job.json | schedule: "0/5 * * * *"
+               | s3:
+               |   default:
+      job.json |     bucketName: "mybucket"
                | secretVaults:
                |   foo:
       job.json |     keys: ["BAR","FOO"]

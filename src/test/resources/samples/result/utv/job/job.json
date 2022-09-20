@@ -71,6 +71,66 @@
                     "value": "job"
                   },
                   {
+                    "name": "S3_BUCKETS_DEFAULT_SERVICEENDPOINT",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "serviceEndpoint",
+                        "name": "job-default-s3",
+                        "optional": false
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_BUCKETS_DEFAULT_ACCESSKEY",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "accessKey",
+                        "name": "job-default-s3",
+                        "optional": false
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_BUCKETS_DEFAULT_SECRETKEY",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "secretKey",
+                        "name": "job-default-s3",
+                        "optional": false
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_BUCKETS_DEFAULT_BUCKETREGION",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "bucketRegion",
+                        "name": "job-default-s3",
+                        "optional": false
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_BUCKETS_DEFAULT_BUCKETNAME",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "bucketName",
+                        "name": "job-default-s3",
+                        "optional": false
+                      }
+                    }
+                  },
+                  {
+                    "name": "S3_BUCKETS_DEFAULT_OBJECTPREFIX",
+                    "valueFrom": {
+                      "secretKeyRef": {
+                        "key": "objectPrefix",
+                        "name": "job-default-s3",
+                        "optional": false
+                      }
+                    }
+                  },
+                  {
                     "name": "FOO",
                     "valueFrom": {
                       "secretKeyRef": {

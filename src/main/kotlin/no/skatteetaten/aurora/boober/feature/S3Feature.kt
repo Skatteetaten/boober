@@ -33,8 +33,6 @@ import no.skatteetaten.aurora.boober.utils.findResourcesByType
 import no.skatteetaten.aurora.boober.utils.allowedPattern
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 
-private val logger = KotlinLogging.logger {}
-
 private const val BUCKET_OBJECT_AREA_CONTEXT_KEY = "bucketObjectAreas"
 
 private val FeatureContext.bucketObjectArea: List<S3BucketObjectArea>
@@ -81,10 +79,6 @@ class S3Feature(
 
     init {
         logger.info("Enabling Minio S3 Feature")
-    }
-
-    override fun enable(header: AuroraDeploymentSpec): Boolean {
-        return !header.isJob
     }
 
     override fun createContext(
