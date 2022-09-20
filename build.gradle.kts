@@ -26,11 +26,8 @@ dependencies {
     implementation("commons-io:commons-io:2.11.0")
 
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.4")
-    constraints {
-        implementation("org.yaml:snakeyaml:1.32") {
-            because("version 1.30 from jackson-dataformat-yaml:2.13.4 is blocked")
-        }
-    }
+    // version 1.30 from jackson-dataformat-yaml:2.13.4 is blocked
+    implementation("org.yaml:snakeyaml:1.32") {
 
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.0.1")
 
