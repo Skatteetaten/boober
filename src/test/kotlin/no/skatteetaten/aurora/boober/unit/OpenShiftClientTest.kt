@@ -1,23 +1,6 @@
 package no.skatteetaten.aurora.boober.unit
 
-import assertk.assertThat
-import assertk.assertions.isEqualTo
-import assertk.assertions.isFalse
-import assertk.assertions.isNotNull
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.convertValue
-import com.fasterxml.jackson.module.kotlin.readValue
-import io.mockk.clearAllMocks
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
-import no.skatteetaten.aurora.boober.service.OpenShiftException
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
-import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
-import no.skatteetaten.aurora.boober.service.openshift.OperationType
-import no.skatteetaten.aurora.boober.utils.ResourceLoader
-import no.skatteetaten.aurora.boober.utils.jsonMapper
+import java.nio.charset.Charset
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -30,7 +13,28 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.OK
 import org.springframework.http.ResponseEntity
 import org.springframework.web.client.HttpClientErrorException
-import java.nio.charset.Charset
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.convertValue
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.fkorotkov.openshift.metadata
+import com.fkorotkov.openshift.newRoute
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isNotNull
+import assertk.assertions.isSuccess
+import io.fabric8.kubernetes.api.model.HasMetadata
+import io.mockk.clearAllMocks
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
+import no.skatteetaten.aurora.boober.service.OpenShiftException
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenShiftResourceClient
+import no.skatteetaten.aurora.boober.service.openshift.OpenshiftCommand
+import no.skatteetaten.aurora.boober.service.openshift.OperationType
+import no.skatteetaten.aurora.boober.utils.ResourceLoader
+import no.skatteetaten.aurora.boober.utils.jsonMapper
 
 private val userClient = mockk<OpenShiftResourceClient>()
 private val serviceAccountClient = mockk<OpenShiftResourceClient>()
@@ -227,5 +231,22 @@ class OpenShiftClientTest : ResourceLoader() {
         assertTrue(openShiftClient.k8sVersionOfAtLeast("1.18.3"))
         assertFalse(openShiftClient.k8sVersionOfAtLeast("1.19"))
         assertFalse(openShiftClient.k8sVersionOfAtLeast("1.18.4"))
+    }
+
+    @Test
+    fun `should handle nullable annotations on route`() {
+        val route = newRoute {
+            metadata {
+                annotations = null
+            }
+        }
+
+        val command = OpenshiftCommand(OperationType.UPDATE, "", route.toJsonNode())
+        assertThat { command.setWebsealDone() }.isSuccess()
+    }
+
+    private fun <T : HasMetadata> T.toJsonNode(): JsonNode {
+        val str = mapper.writeValueAsString(this)
+        return mapper.readTree(str)
     }
 }
