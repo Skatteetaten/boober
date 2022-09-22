@@ -17,5 +17,10 @@
         "BAR": "BAZ"
       }
     }
+  },
+  "s3": {
+    "default": {
+      "bucketName": "mybucket"
+    }
   }
 }

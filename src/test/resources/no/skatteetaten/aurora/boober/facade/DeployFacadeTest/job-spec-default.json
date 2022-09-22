@@ -505,6 +505,72 @@
       }
     }
   },
+  "s3": {
+    "default": {
+      "bucketName": {
+        "source": "job.json",
+        "value": "mybucket",
+        "sources": [
+          {
+            "name": "job.json",
+            "value": "mybucket"
+          }
+        ]
+      },
+      "objectArea": {
+        "source": "default",
+        "value": "default",
+        "sources": [
+          {
+            "name": "default",
+            "value": "default"
+          }
+        ]
+      },
+      "enabled": {
+        "source": "default",
+        "value": true,
+        "sources": [
+          {
+            "name": "default",
+            "value": true
+          }
+        ]
+      }
+    }
+  },
+  "s3Defaults": {
+    "bucketName": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    },
+    "objectArea": {
+      "source": "default",
+      "value": "",
+      "sources": [
+        {
+          "name": "default",
+          "value": ""
+        }
+      ]
+    },
+    "tenant": {
+      "source": "default",
+      "value": "paas-utv",
+      "sources": [
+        {
+          "name": "default",
+          "value": "paas-utv"
+        }
+      ]
+    }
+  },
   "secretVaults": {
     "foo": {
       "name": {

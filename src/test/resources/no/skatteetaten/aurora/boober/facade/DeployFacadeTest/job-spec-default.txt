@@ -55,6 +55,15 @@ utv/about.json | cluster: "utv"
                |   azure:
        default |     enabled: false
        default |     cnameTtl: 300
+               | s3:
+               |   default:
+      job.json |     bucketName: "mybucket"
+       default |     objectArea: "default"
+       default |     enabled: true
+               | s3Defaults:
+       default |   bucketName: ""
+       default |   objectArea: ""
+       default |   tenant: "paas-utv"
                | secretVaults:
                |   foo:
        default |     name: "foo"
