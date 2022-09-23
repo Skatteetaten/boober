@@ -29,6 +29,9 @@ dependencies {
     // version 1.30 from jackson-dataformat-yaml:2.13.4 is blocked
     implementation("org.yaml:snakeyaml:1.32")
 
+    // Security vulnerability in version 3.1.1
+    implementation("org.apache.kafka:kafka-clients:3.1.2")
+
     implementation("com.github.fkorotkov:k8s-kotlin-dsl:3.0.1")
 
     implementation("org.springframework.boot:spring-boot-starter-web")
