@@ -55,8 +55,8 @@ data class OpenshiftCommand(
     }
 
     fun setWebsealDone(): OpenshiftCommand {
-        val annotations = payload.get("metadata").get("annotations") as ObjectNode?
-        annotations?.replace(WEBSEAL_DONE_ANNOTATION, TextNode(previous?.annotation(WEBSEAL_DONE_ANNOTATION)))
+        val annotations = payload.get("metadata").get("annotations") as ObjectNode? ?: return this
+        annotations.replace(WEBSEAL_DONE_ANNOTATION, TextNode(previous?.annotation(WEBSEAL_DONE_ANNOTATION)))
         return this.copy(payload = payload)
     }
 }
