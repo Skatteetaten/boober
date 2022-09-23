@@ -23,7 +23,6 @@ import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNotNull
 import assertk.assertions.isSuccess
-import io.fabric8.kubernetes.api.model.HasMetadata
 import io.mockk.clearAllMocks
 import io.mockk.every
 import io.mockk.mockk
@@ -241,12 +240,7 @@ class OpenShiftClientTest : ResourceLoader() {
             }
         }
 
-        val command = OpenshiftCommand(OperationType.UPDATE, "", route.toJsonNode())
+        val command = OpenshiftCommand(OperationType.UPDATE, "", mapper.valueToTree(route))
         assertThat { command.setWebsealDone() }.isSuccess()
-    }
-
-    private fun <T : HasMetadata> T.toJsonNode(): JsonNode {
-        val str = mapper.writeValueAsString(this)
-        return mapper.readTree(str)
     }
 }
