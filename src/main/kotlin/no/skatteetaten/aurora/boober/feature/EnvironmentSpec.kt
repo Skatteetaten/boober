@@ -10,7 +10,8 @@ val AuroraDeploymentSpec.envTTL: Duration?
 
 data class Permissions(
     val admin: Permission,
-    val view: Permission? = null
+    val view: Permission? = null,
+    val edit: Permission? = null
 )
 
 data class Permission(
@@ -21,12 +22,14 @@ data class Permission(
 val AuroraDeploymentSpec.permissions: Permissions
     get() {
         val viewGroups = getDelimitedStringOrArrayAsSet("permissions/view", " ")
+        val editGroups = getDelimitedStringOrArrayAsSet("permissions/edit", " ")
         val adminGroups = getDelimitedStringOrArrayAsSet("permissions/admin", " ")
         // if sa present add to admin users.
         val adminUsers = getDelimitedStringOrArrayAsSet("permissions/adminServiceAccount", " ")
 
         val adminPermission = Permission(adminGroups, adminUsers)
         val viewPermission = if (viewGroups.isNotEmpty()) Permission(viewGroups) else null
+        val editPermission = if (editGroups.isNotEmpty()) Permission(editGroups) else null
 
-        return Permissions(admin = adminPermission, view = viewPermission)
+        return Permissions(admin = adminPermission, view = viewPermission, edit = editPermission)
     }

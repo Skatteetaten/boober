@@ -211,6 +211,7 @@ class HeaderHandlers private constructor(defaultAppName: String, defaultEnvName:
             AuroraConfigFieldHandler("cluster", validator = { it.notBlank("Cluster must be set") }),
             AuroraConfigFieldHandler("permissions/admin", allowedFilesTypes = aboutFileTypes),
             AuroraConfigFieldHandler("permissions/view", allowedFilesTypes = aboutFileTypes),
+            AuroraConfigFieldHandler("permissions/edit", allowedFilesTypes = aboutFileTypes),
             AuroraConfigFieldHandler("permissions/adminServiceAccount", allowedFilesTypes = aboutFileTypes),
             // Max length of OpenShift project names is 63 characters. Project name = affiliation + "-" + envName.
             AuroraConfigFieldHandler(
