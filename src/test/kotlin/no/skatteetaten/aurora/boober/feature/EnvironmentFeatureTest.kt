@@ -214,7 +214,9 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                "schemaVersion": "v1",
                "affiliation" : "paas",
                "permissions": {
-                 "admin": ${permissions.values}
+                 "admin": ${permissions.values},
+                 "edit": "APP_PaaS_ref",
+                 "view": "APP_PaaS_test"
                },
                "type": "deploy",
                "cluster": "utv"
@@ -228,6 +230,18 @@ class EnvironmentFeatureTest : AbstractFeatureTest() {
                 setOf(
                     "APP_PaaS_utv",
                     "APP_PaaS_drift"
+                )
+            )
+        assertThat(valid.first().spec.getDelimitedStringOrArrayAsSet("permissions/edit", " "))
+            .isEqualTo(
+                setOf(
+                    "APP_PaaS_ref"
+                )
+            )
+        assertThat(valid.first().spec.getDelimitedStringOrArrayAsSet("permissions/view", " "))
+            .isEqualTo(
+                setOf(
+                    "APP_PaaS_test"
                 )
             )
     }
