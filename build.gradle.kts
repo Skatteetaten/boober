@@ -1,6 +1,6 @@
 plugins {
     id("java")
-    id("no.skatteetaten.gradle.aurora") version "4.5.4"
+    id("no.skatteetaten.gradle.aurora") version "4.5.6"
 }
 
 aurora {
@@ -11,6 +11,7 @@ aurora {
         javaSourceCompatibility = "17"
     }
 }
+extra["snakeyaml.version"] = "1.32"
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-slf4j:1.6.4")

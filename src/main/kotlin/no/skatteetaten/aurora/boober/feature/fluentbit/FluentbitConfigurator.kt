@@ -235,10 +235,10 @@ class FluentbitConfigurator {
             |   Match *
             |   Add   host $ {POD_NAME}
             |   Add   environment $ {POD_NAMESPACE}
-            |   Add   version $version
+            |   Add   applicationVersionUnique $version
             |   Add   nodetype openshift
-            |   Add   name $application
-            |   Add   cluster $cluster
+            |   Add   applicationNameUnique $application
+            |   Add   clusterNameUnique $cluster
         """.trimMargin()
 
         /**
@@ -272,11 +272,11 @@ class FluentbitConfigurator {
                 |   event_sourcetype           $sourceType
                 |   event_host                 $ {POD_NAME}
                 |   event_source               ${'$'}source
-                |   event_field                application ${'$'}name
-                |   event_field                cluster ${'$'}cluster
+                |   event_field                application ${'$'}applicationNameUnique
+                |   event_field                cluster ${'$'}clusterNameUnique
                 |   event_field                environment ${'$'}environment
                 |   event_field                nodetype ${'$'}nodetype
-                |   event_field                version ${'$'}version
+                |   event_field                version ${'$'}applicationVersionUnique
                 |   event_key                  ${'$'}event
                 |   net.keepalive_idle_timeout 10
             """.trimMargin() + retryConfigOrEmpty
