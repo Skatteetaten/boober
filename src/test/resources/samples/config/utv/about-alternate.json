@@ -1,5 +1,9 @@
 {
   "cluster": "utv",
+  "permissions": {
+    "edit": "APP_PaaS_edit",
+    "view": "APP_PaaS_view"
+  },
   "env": {
     "ttl": "1d"
   },
