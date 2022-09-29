@@ -10,8 +10,8 @@ import com.fkorotkov.kubernetes.metadata
 import com.fkorotkov.kubernetes.newNamespace
 import com.fkorotkov.kubernetes.newObjectReference
 import com.fkorotkov.openshift.metadata
-import com.fkorotkov.openshift.newRoleBinding
 import com.fkorotkov.openshift.newProjectRequest
+import com.fkorotkov.openshift.newRoleBinding
 import com.fkorotkov.openshift.roleRef
 import io.fabric8.kubernetes.api.model.HasMetadata
 import io.fabric8.kubernetes.api.model.Namespace
@@ -19,8 +19,8 @@ import io.fabric8.kubernetes.api.model.ObjectReference
 import io.fabric8.kubernetes.api.model.PodTemplateSpec
 import io.fabric8.kubernetes.api.model.apps.Deployment
 import io.fabric8.openshift.api.model.DeploymentConfig
-import io.fabric8.openshift.api.model.RoleBinding
 import io.fabric8.openshift.api.model.ProjectRequest
+import io.fabric8.openshift.api.model.RoleBinding
 import mu.KotlinLogging
 import no.skatteetaten.aurora.boober.feature.ApplicationDeploymentFeature
 import no.skatteetaten.aurora.boober.feature.Permission
@@ -281,7 +281,8 @@ class OpenShiftDeployer(
         }.map { resource ->
             val podTemplateSpec = getPodTemplateIfApplicable(resource.resource)
             if (podTemplateSpec != null) {
-                podTemplateSpec.metadata.labels = podTemplateSpec.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
+                podTemplateSpec.metadata.labels =
+                    podTemplateSpec.metadata.labels.addIfNotNull("booberDeployId" to deployCommand.deployId)
             }
 
             resource.resource.metadata.labels =
@@ -357,7 +358,11 @@ fun generateRolebindings(adc: EnvironmentSpec): Set<RoleBinding> {
         createRoleBinding("view", it, adc.namespace)
     }
 
-    return listOf(admin).addIfNotNull(view).toSet()
+    val edit = permissions.edit?.let {
+        createRoleBinding("edit", it, adc.namespace)
+    }
+
+    return listOf(admin).addIfNotNull(view).addIfNotNull(edit).toSet()
 }
 
 fun createRoleBinding(

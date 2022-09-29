@@ -6,7 +6,7 @@
     "namespace": "paas-utv"
   },
   "groupNames": [
-    "APP_PaaS_test"
+    "APP_PaaS_view"
   ],
   "roleRef": {
     "name": "view"
@@ -14,8 +14,8 @@
   "subjects": [
     {
       "kind": "Group",
-      "name": "APP_PaaS_test"
+      "name": "APP_PaaS_view"
     }
   ],
-  "userNames": []
+  "userNames": [ ]
 }

@@ -161,6 +161,26 @@
           "value": "APP_PaaS_drift APP_PaaS_utv"
         }
       ]
+    },
+    "view": {
+      "source": "utv/about-alternate.json",
+      "value": "APP_PaaS_view",
+      "sources": [
+        {
+          "name": "utv/about-alternate.json",
+          "value": "APP_PaaS_view"
+        }
+      ]
+    },
+    "edit": {
+      "source": "utv/about-alternate.json",
+      "value": "APP_PaaS_edit",
+      "sources": [
+        {
+          "name": "utv/about-alternate.json",
+          "value": "APP_PaaS_edit"
+        }
+      ]
     }
   },
   "envName": {

@@ -21,6 +21,8 @@
 utv/about-alternate.json | cluster: "utv"
                          | permissions:
               about.json |   admin: "APP_PaaS_drift APP_PaaS_utv"
+utv/about-alternate.json |   view: "APP_PaaS_view"
+utv/about-alternate.json |   edit: "APP_PaaS_edit"
               folderName | envName: "utv"
             complex.json | name: "komplex"
                          | env:

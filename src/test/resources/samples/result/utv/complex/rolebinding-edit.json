@@ -1,0 +1,21 @@
+{
+  "apiVersion": "authorization.openshift.io/v1",
+  "kind": "RoleBinding",
+  "metadata": {
+    "name": "edit",
+    "namespace": "paas-utv"
+  },
+  "groupNames": [
+    "APP_PaaS_edit"
+  ],
+  "roleRef": {
+    "name": "edit"
+  },
+  "subjects": [
+    {
+      "kind": "Group",
+      "name": "APP_PaaS_edit"
+    }
+  ],
+  "userNames": [ ]
+}
